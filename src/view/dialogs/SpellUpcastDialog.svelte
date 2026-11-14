@@ -4,7 +4,10 @@
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
-	import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+	import {
+		isResourceSpendingAutomationEnabled,
+		isRuleAutomationEnabled,
+	} from '../../settings/automationSettings.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import { computeUpcastBounds } from '../../utils/spell/computeUpcastBounds.js';
 	import { formatSpellCostLabel, resolveEffectiveCastTier } from '../../utils/spell/spellCost.js';
@@ -67,17 +70,21 @@
 		offersLessManaFor(actor as never, { system: spell } as never),
 	);
 	let lessMana = $state(false);
+	// With Feature Effects off the player ticks each Held Change; none starts ticked.
+	const choosesHeldChanges = !isRuleAutomationEnabled();
 	const heldLines = untrack(() =>
 		heldLinesForItem(
 			actor,
 			{ system: spell },
 			{
 				ignoresDisadvantage: data.ignoreDisadvantage,
+				choosing: choosesHeldChanges,
 			},
 		),
 	);
+	let chosenHeldChanges = $state<string[]>([]);
 	const keptAmount = untrack(() => keptAmountFor(actor, { system: spell }));
-	let usesKeptAmount = $state(keptAmount !== null);
+	let usesKeptAmount = $state(keptAmount !== null && !choosesHeldChanges);
 	const keptInUse = $derived(!!keptAmount && usesKeptAmount);
 	const damageMultiplier = untrack(() => damageMultiplierOf(spell?.parent ?? dialog?.item));
 	let usesDamageMultiplier = $state(false);
@@ -365,6 +372,7 @@
 			rollHidden: shouldRollBeHidden,
 			maxDamage: maxDamageChoice,
 			...(keptAmount ? { keptAmount: usesKeptAmount } : {}),
+			...(choosesHeldChanges ? { heldChosen: [...chosenHeldChanges] } : {}),
 			...(damageMultiplier ? { damageMultiplier: usesDamageMultiplier } : {}),
 			lessMana,
 			upcast: canUpcast
@@ -424,9 +432,13 @@
 	{/if}
 	{#if offersLessMana}<LessManaField bind:checked={lessMana} />{/if}
 
-	{#if !maxDamageChoice && !keptInUse}
+	{#if choosesHeldChanges}
+		<HeldChangeLines lines={heldLines} choosing bind:chosen={chosenHeldChanges} />
+	{:else if !maxDamageChoice && !keptInUse}
 		<HeldChangeLines lines={heldLines} />
+	{/if}
 
+	{#if !maxDamageChoice && !keptInUse}
 		<RollModifierFields bind:situationalModifiers bind:primaryDieValue bind:primaryDieModifier />
 	{/if}
 

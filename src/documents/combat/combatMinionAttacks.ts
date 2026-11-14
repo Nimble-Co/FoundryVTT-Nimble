@@ -4,6 +4,7 @@ import type { HeldChange } from '#types/heldChange.d.ts';
 import { pendingCardLines } from '#utils/chat/cardEvents.js';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
 	getUnsupportedActivationEffectTypes,
@@ -282,6 +283,8 @@ async function rollSingleMinionAttack(params: {
 			),
 			// Only the conditions give a minion group attack disadvantage.
 			noDisadvantageToIgnore: !conditions.some((line) => line.step < 0),
+			// No window opens, so with Feature Effects off no change is ticked.
+			chosen: isRuleAutomationEnabled() ? null : new Set(),
 		});
 		checkFormulaReferences(
 			formula,

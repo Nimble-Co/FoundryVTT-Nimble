@@ -221,6 +221,57 @@ describe('rollUnarmedStrike', () => {
 		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
 	});
 
+	it('uses only the held changes ticked in its window with Feature Effects off', async () => {
+		const actor = createHeroicCharacter({ proficient: true });
+		const deleteEmbeddedDocuments = vi.fn(async () => []);
+		Object.assign(actor, {
+			uuid: 'Actor.hero',
+			deleteEmbeddedDocuments,
+			effects: [
+				{
+					id: 'held',
+					name: 'Nullify',
+					origin: null,
+					system: {
+						rules: [
+							{
+								id: 'held-rule',
+								type: 'heldRoll',
+								heldKind: 'ignoreDisadvantage',
+								whichRoll: 'holderAttacks',
+								usedUp: true,
+								value: 0,
+							},
+						],
+					},
+					flags: {},
+				},
+			],
+		});
+		globals.fromUuidSync = vi.fn((uuid: string) => (uuid === 'Actor.hero' ? actor : null));
+		heroicGlobals().game.settings = {
+			get: vi.fn((_scope: string, key: string) => key !== 'automation.applyRuleEffects'),
+		};
+
+		dialogResult({ rollMode: -1, heldChosen: [] });
+		await rollUnarmedStrike(actor);
+		expect(damageRollMock).toHaveBeenLastCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ rollMode: -1 }),
+		);
+		expect(deleteEmbeddedDocuments).not.toHaveBeenCalled();
+
+		dialogResult({ rollMode: -1, heldChosen: ['Actor.hero.held.held-rule'] });
+		await rollUnarmedStrike(actor);
+		expect(damageRollMock).toHaveBeenLastCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ rollMode: 0 }),
+		);
+		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
+	});
+
 	it('puts the ended line of a held change it uses up on its card', async () => {
 		dialogResult({ rollMode: -1 });
 		const actor = createHeroicCharacter({ proficient: true });

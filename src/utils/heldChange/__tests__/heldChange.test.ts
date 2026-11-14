@@ -8,6 +8,7 @@ import {
 	heldRollSource,
 } from '../../../../tests/fixtures/heldRollEffect.js';
 import { NIMBLE_EFFECT_TYPE } from '../../../models/activeEffect/nimbleEffectChoices.js';
+import { AUTOMATION_SETTING_KEYS } from '../../../settings/automationSettings.js';
 import {
 	cardDamageTotal,
 	createHeldChange,
@@ -941,5 +942,74 @@ describe('a change that waits on the target of a feature', () => {
 		const holder = creature('A', [greased]);
 		expect(heldVulnerabilityTo(holder, 'fire')?.kind).toBe('vulnerableOnce');
 		expect(heldVulnerabilityTo(holder, 'cold')).toBeNull();
+	});
+});
+
+describe('with Feature Effects off', () => {
+	let savedSettings: unknown;
+	let savedTargets: unknown;
+
+	beforeEach(() => {
+		savedSettings = globals.game.settings;
+		savedTargets = globals.game.user?.targets;
+		globals.game.settings = {
+			get: vi.fn((_scope: string, key: string) => key !== AUTOMATION_SETTING_KEYS.applyRuleEffects),
+		};
+	});
+
+	afterEach(() => {
+		globals.game.settings = savedSettings;
+		if (globals.game.user) globals.game.user.targets = savedTargets;
+	});
+
+	const attack = (activation: Record<string, unknown> = {}) => ({
+		system: {
+			activation: {
+				effects: [{ type: 'damage', canCrit: true, canMiss: true }],
+				targets: { attackType: 'reach' },
+				...activation,
+			},
+		},
+	});
+
+	it('lists a minus Primary Die change next to ignoring disadvantage, so each one is a choice', () => {
+		const attacker = creature('A', [{ kind: 'ignoreDisadvantage', whichRoll: 'holderAttacks' }]);
+		const target = creature('T', [{ label: 'Anticipate Danger', value: -1 }]);
+		globals.game.user.targets = [{ actor: target }];
+
+		const lines = heldLinesForItem(attacker, attack(), { choosing: true });
+
+		expect(lines.map((line) => line.key)).toEqual(['A.e0.e0-rule', 'T.e0.e0-rule']);
+		expect(lines[1].source).toBe('From Mira. If you tick it, this roll spends it.');
+	});
+
+	it('keys the line of a kept amount that an area attack ends as each other change', () => {
+		const attacker = creature('A', [
+			{ kind: 'wholeAmount', value: 13, whichRoll: 'holderAttacks' },
+		]);
+		const area = attack({ acquireTargetsFromTemplate: true, template: { shape: 'circle' } });
+
+		const [line] = heldLinesForItem(attacker, area, { choosing: true });
+
+		expect(line.key).toBe('A.e0.e0-rule');
+		expect(line.source).toBe('From Mira. If you tick it, this roll ends it.');
+	});
+
+	it('does not spend the change that ignores disadvantage on another action', async () => {
+		const hero = creature('H', [{ kind: 'ignoreDisadvantage', whichRoll: 'holderAttacks' }]);
+
+		await spendHeldIgnoreDisadvantage(hero as never, 'Shove');
+
+		expect(hero.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('gives no one-use vulnerability and no area maximize to Apply Damage, as no window ticks them', () => {
+		const target = creature('T', [
+			{ kind: 'vulnerableOnce', whichRoll: 'attacksOnHolder', damageType: 'fire' },
+			{ kind: 'maximize', label: 'Doomed' },
+		]);
+
+		expect(heldVulnerabilityTo(target, 'fire')).toBeNull();
+		expect(heldMaximizeOnAreaTarget(target, creature('A'), null)).toBeNull();
 	});
 });

@@ -32,7 +32,10 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
-import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
+import {
+	isResourceSpendingAutomationEnabled,
+	isRuleAutomationEnabled,
+} from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
@@ -68,6 +71,7 @@ import { poolRollEvent } from '../utils/dicePool/poolEvents.js';
 import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import {
 	firstTargetActor,
+	heldChangeKey,
 	isAttackRoll,
 	keptAmountEndedBy,
 	keptAmountFor,
@@ -312,6 +316,9 @@ class ItemActivationManager {
 	/** The kept amount of this actor that ends with this roll, used or not. */
 	#keptAmountToEnd: HeldChange | null = null;
 
+	/** With Feature Effects off, the keys of the Held Changes the player ticked; null when all apply. */
+	#heldChosen: ReadonlySet<string> | null = null;
+
 	/** What the tick of a damage multiplier gave this use. */
 	#damageMultiplier = 1;
 
@@ -542,9 +549,17 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
+		this.#heldChosen = isRuleAutomationEnabled() ? null : new Set(dialogData.heldChosen ?? []);
 		const usableAmount = keptAmountFor(this.actor, this.#item);
-		this.#keptAmountToEnd = usableAmount ?? keptAmountEndedBy(this.actor, this.#item);
-		this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
+		if (this.#heldChosen) {
+			const ended = keptAmountEndedBy(this.actor, this.#item);
+			this.#keptAmount = dialogData.keptAmount === true ? usableAmount : null;
+			this.#keptAmountToEnd =
+				this.#keptAmount ?? (ended && this.#heldChosen.has(heldChangeKey(ended)) ? ended : null);
+		} else {
+			this.#keptAmountToEnd = usableAmount ?? keptAmountEndedBy(this.actor, this.#item);
+			this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
+		}
 		this.#damageMultiplier =
 			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
@@ -767,6 +782,7 @@ class ItemActivationManager {
 						keptToEnd: this.#keptAmountToEnd,
 						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
 						extraDamage: true,
+						chosen: this.#heldChosen,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
 					const offerSource = this.#offerSource();
@@ -1881,8 +1897,10 @@ namespace ItemActivationManager {
 		rollHidden?: boolean;
 		/** The Max Damage tick the player picked. */
 		maxDamage?: MaxDamageChoice | null;
-		/** False when the player unticked a kept amount. */
+		/** False when the player unticked a kept amount; with Feature Effects off, true when ticked. */
 		keptAmount?: boolean;
+		/** With Feature Effects off, the keys of the Held Changes the player ticked. */
+		heldChosen?: string[];
 		/** The weapon an ability attacks with. */
 		weaponUuid?: string;
 		/**

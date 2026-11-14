@@ -5449,7 +5449,9 @@
 				"maximize": "{label}: every die rolls its highest number",
 				"extraDamage": "{label}: {formula} {damageType} damage on a hit",
 				"endsSource": "From {source}. This roll ends it.",
+				"endsIfTicked": "From {source}. If you tick it, this roll ends it.",
 				"spends": "From {source}. This roll spends it.",
+				"spendsIfTicked": "From {source}. If you tick it, this roll spends it.",
 				"stays": "From {source}. It stays until its time ends."
 			}
 		},

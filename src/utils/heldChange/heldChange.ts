@@ -9,6 +9,7 @@ import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import localize from '#utils/localize.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
+import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	type AttackDelivery,
 	deliveryOfAttack,
@@ -214,6 +215,11 @@ export function heldExtraDamageForAttack(input: AttackInput): HeldChange[] {
 	return changesForAttack(input, 'extraDamage').filter((held) => !!held.formula?.trim());
 }
 
+/** The key of a change: one Held Roll rule of one effect on one creature. */
+export function heldChangeKey(change: HeldChange): string {
+	return `${change.holderUuid}.${change.effectId}.${change.ruleId}`;
+}
+
 /** The change that makes every die of the attack roll its highest number, from the single target. */
 export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 	if (input.area) return null;
@@ -223,12 +229,14 @@ export function heldMaximizeForAttack(input: AttackInput): HeldChange | null {
 /**
  * The change on one target of an area attack that maximizes the roll against it. The area rolls
  * once, so only this target takes the highest total; it is spent when the damage is applied.
+ * With Feature Effects off no roll window can tick it, so it does not apply.
  */
 export function heldMaximizeOnAreaTarget(
 	target: Holder | null | undefined,
 	attacker: Holder | null | undefined,
 	delivery: AttackDelivery,
 ): HeldChange | null {
+	if (!isRuleAutomationEnabled()) return null;
 	return (
 		heldChangesOn(target).find(
 			(held) =>
@@ -253,12 +261,12 @@ export function mustAttackOtherChange(attacker: Holder | null | undefined): Held
 	return heldChangesOn(attacker).find((held) => held.kind === 'mustAttackOther') ?? null;
 }
 
-/** The one-use vulnerability of a creature to this damage type. */
+/** The one-use vulnerability of a creature to this damage type. With Feature Effects off no roll window can tick it. */
 export function heldVulnerabilityTo(
 	holder: Holder | null | undefined,
 	damageType: string | undefined,
 ): HeldChange | null {
-	if (!damageType) return null;
+	if (!damageType || !isRuleAutomationEnabled()) return null;
 	return (
 		heldChangesOn(holder).find(
 			(held) => held.kind === 'vulnerableOnce' && held.damageType === damageType,
@@ -289,17 +297,19 @@ function lineText(change: HeldChange): string {
 	});
 }
 
-/** The read-only lines of a roll window. */
-export function heldLines(held: HeldChange[]) {
+function spendWord(change: HeldChange, choosing: boolean): string {
+	if (change.spentBy !== 'oneRoll') return 'stays';
+	return choosing ? 'spendsIfTicked' : 'spends';
+}
+
+/** The lines of a roll window. With `choosing`, the player ticks each line the roll uses. */
+export function heldLines(held: HeldChange[], choosing = false) {
 	return held.map((change) => ({
-		key: `${change.holderUuid}.${change.effectId}.${change.ruleId}`,
+		key: heldChangeKey(change),
 		text: lineText(change),
-		source: localize(
-			`NIMBLE.heldChange.line.${change.spentBy === 'oneRoll' ? 'spends' : 'stays'}`,
-			{
-				source: change.sourceName,
-			},
-		),
+		source: localize(`NIMBLE.heldChange.line.${spendWord(change, choosing)}`, {
+			source: change.sourceName,
+		}),
 	}));
 }
 
@@ -331,12 +341,17 @@ interface ActivatedItem {
 	};
 }
 
-/** The lines for the roll window of an item, with what is targeted now. */
+/**
+ * The lines for the roll window of an item, with what is targeted now. With `choosing` (Feature
+ * Effects off) the player ticks each change, so the minus Primary Die changes show even next to a
+ * change that ignores them.
+ */
 export function heldLinesForItem(
 	attacker: Holder | null | undefined,
 	item: ActivatedItem,
-	options: { ignoresDisadvantage?: boolean } = {},
+	options: { ignoresDisadvantage?: boolean; choosing?: boolean } = {},
 ) {
+	const choosing = options.choosing === true;
 	const activation = item.system?.activation;
 	const node = firstDamageNode(activation?.effects);
 	const ended = keptAmountEndedBy(attacker, item);
@@ -344,16 +359,18 @@ export function heldLinesForItem(
 	const endedLines = ended
 		? [
 				{
-					key: ended.effectId,
+					key: heldChangeKey(ended),
 					text: localize('NIMBLE.heldChange.line.wholeAmountEnds', {
 						label: ended.label,
 						value: String(ended.value),
 					}),
-					source: localize('NIMBLE.heldChange.line.endsSource', { source: ended.sourceName }),
+					source: localize(`NIMBLE.heldChange.line.${choosing ? 'endsIfTicked' : 'endsSource'}`, {
+						source: ended.sourceName,
+					}),
 				},
 			]
 		: [];
-	const mustAttackLines = heldLines(mustAttack ? [mustAttack] : []);
+	const mustAttackLines = heldLines(mustAttack ? [mustAttack] : [], choosing);
 	if (!activation || !isAttackRoll(activation.targets?.attackType, node)) {
 		return [...mustAttackLines, ...endedLines];
 	}
@@ -368,13 +385,16 @@ export function heldLinesForItem(
 	return [
 		...mustAttackLines,
 		...endedLines,
-		...heldLines([
-			...(ignore ? [ignore] : []),
-			...heldAdvantageForAttack(attack),
-			...(maximize ? [maximize] : []),
-			...heldChangesForAttack({ ...attack, ignoresNegative: !!ignore }),
-			...heldExtraDamageForAttack(attack),
-		]),
+		...heldLines(
+			[
+				...(ignore ? [ignore] : []),
+				...heldAdvantageForAttack(attack),
+				...(maximize ? [maximize] : []),
+				...heldChangesForAttack({ ...attack, ignoresNegative: !!ignore && !choosing }),
+				...heldExtraDamageForAttack(attack),
+			],
+			choosing,
+		),
 	];
 }
 
@@ -575,12 +595,16 @@ export async function takeBackHeldChanges(
 	return ids.size;
 }
 
-/** It lasts for the next action. An attack spends it at its roll; any other action spends it here. */
+/**
+ * It lasts for the next action. An attack spends it at its roll; any other action spends it here.
+ * With Feature Effects off only a tick in a roll window spends it.
+ */
 export async function spendHeldIgnoreDisadvantage(
 	holder: Holder,
 	usedItemName?: string | null,
 	lines: SpendLines | null = null,
 ): Promise<void> {
+	if (!isRuleAutomationEnabled()) return;
 	const held = ignoreDisadvantageChange(holder);
 	if (held && held.label !== usedItemName) await spendHeldChanges([held], lines, USED_BY_ACTION);
 }

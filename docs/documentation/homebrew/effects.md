@@ -135,6 +135,8 @@ An effect with a **Held Roll Change** rule (on its **Rules** tab) changes a late
 
 For example, True Strike holds advantage for the next attack of its target, until the end of their next turn. The roll window shows a line for each held change that the attack uses. The card of the attack then has a line in **Events** for each change that the roll used up, with **Undo**.
 
+With **Feature Effects** off, each held change is a tick box in the roll window, and no box starts ticked. Only a ticked change goes on the roll, and only a ticked change ends when the roll uses it up. A change you do not tick stays on. A kept amount also starts unticked. With no roll window (Alt-click), no change goes on the roll.
+
 ![The roll window of Grug's Battleaxe: True Strike, +1 advantage, this roll spends it](/images/documentation/held-roll-window.png)
 
 ::: details More about held changes
@@ -146,6 +148,7 @@ For example, True Strike holds advantage for the next attack of its target, unti
 - A **Dice Consumer** rule set to **giveEffect** spends a die the player picks and puts the item's effect (one that does not go on the owner) on each creature they target, as Shining Mandate does. With no target, nothing is spent.
 - Out of combat, a change that a feature holds for you (Assess, for example) is not held.
 - **Ignore all disadvantage** lasts for your next action. A Move, a paid Assess or an item use that costs an action and is not an attack also ends it. The card of that action has the line in **Events**, with **Undo**.
+- With **Feature Effects** off, some changes have no roll window to tick them, so they do not apply and do not end: a one-use vulnerability, **every die at its highest number** on a target of an area attack, and every change in a minion group attack. An action that is not an attack does not end **Ignore all disadvantage**. Apply these by hand, and remove the effect when it is used.
 :::
 
 ## Damage each turn

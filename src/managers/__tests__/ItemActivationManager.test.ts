@@ -1616,6 +1616,140 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					});
 				});
 
+				describe('with Feature Effects off', () => {
+					const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+					let realSettings: unknown;
+
+					beforeEach(() => {
+						realSettings = gameGlobal.game.settings;
+						gameGlobal.game.settings = {
+							get: (_namespace: string, key: string) => key !== 'automation.applyRuleEffects',
+						};
+					});
+
+					afterEach(() => {
+						gameGlobal.game.settings = realSettings;
+						dialogState.result = undefined;
+					});
+
+					async function rollThroughWindow(
+						result: Record<string, unknown>,
+						activation: Record<string, unknown> = { targets: { attackType: 'reach' } },
+					) {
+						dialogState.result = { rollMode: 0, ...result };
+						manager = new ItemActivationManager(
+							mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+							{},
+						);
+						manager.activationData = {
+							effects: [
+								{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+							],
+							...activation,
+						};
+						mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects);
+						vi.mocked(DamageRoll).mockImplementation(
+							createMockConstructorImplementation({
+								evaluate: vi.fn().mockResolvedValue(undefined),
+								toJSON: vi.fn().mockReturnValue({ total: 4 }),
+								primaryDie: { faces: 8 },
+							}),
+						);
+						await manager.getData();
+						await manager.applyDeferredPoolNodes();
+						return vi.mocked(DamageRoll).mock.calls.at(-1) as unknown[];
+					}
+
+					it('uses and spends a change the player ticked', async () => {
+						const target = targetWithOpening();
+
+						const [, , options] = await rollThroughWindow({
+							heldChosen: ['Actor.ogre.opening.opening-rule'],
+						});
+
+						expect(options).toEqual(expect.objectContaining({ primaryDieModifier: 1 }));
+						expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', [
+							'opening',
+						]);
+					});
+
+					it('neither uses nor spends a change the player left unticked', async () => {
+						const target = targetWithOpening();
+
+						const [, , options] = await rollThroughWindow({ heldChosen: [] });
+
+						expect(options).toEqual(expect.objectContaining({ primaryDieModifier: 0 }));
+						expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+					});
+
+					it('uses no change with no window', async () => {
+						const target = targetWithOpening();
+
+						await rollAttack('reach');
+						await manager.applyDeferredPoolNodes();
+
+						expect(DamageRoll).toHaveBeenCalledWith(
+							'1d8',
+							expect.anything(),
+							expect.objectContaining({ primaryDieModifier: 0 }),
+						);
+						expect(target.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+					});
+
+					function holdKept() {
+						const deleteEmbeddedDocuments = vi.fn(async () => []);
+						Object.assign(mockActor, {
+							effects: [
+								heldRollEffect('kept', 'Rampage', {
+									heldKind: 'wholeAmount',
+									value: 13,
+									whichRoll: 'holderAttacks',
+								}),
+							],
+							isOwner: true,
+							deleteEmbeddedDocuments,
+						});
+						(globalThis as unknown as Record<string, any>).fromUuidSync = vi.fn(() => mockActor);
+						(mockItem.system.activation as { effects: unknown[] }).effects = [
+							{ id: 'damage-1', type: 'damage', canCrit: true, canMiss: true, formula: '1d8' },
+						];
+						return deleteEmbeddedDocuments;
+					}
+
+					it('rolls and keeps a kept amount that is not ticked', async () => {
+						const deleted = holdKept();
+
+						const [formula] = await rollThroughWindow({});
+
+						expect(formula).toBe('1d8');
+						expect(deleted).not.toHaveBeenCalled();
+					});
+
+					it('uses and ends a kept amount that is ticked', async () => {
+						const deleted = holdKept();
+
+						const [formula] = await rollThroughWindow({ keptAmount: true });
+
+						expect(formula).toBe('13');
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+
+					it('ends a kept amount on an area attack only when its line is ticked', async () => {
+						const deleted = holdKept();
+						const activation = (mockItem.system as { activation: Record<string, unknown> })
+							.activation;
+						activation.acquireTargetsFromTemplate = true;
+						activation.template = { shape: 'circle' };
+						const area = { targets: { attackType: 'range' } };
+
+						await rollThroughWindow({ heldChosen: [] }, area);
+						expect(deleted).not.toHaveBeenCalled();
+
+						await rollThroughWindow({ heldChosen: ['actor-uuid-123.kept.kept-rule'] }, area);
+						expect(deleted).toHaveBeenCalledWith('ActiveEffect', ['kept']);
+					});
+				});
+
 				it('spends nothing when the roll has no Primary Die', async () => {
 					const target = targetWithOpening();
 					await rollAttack('reach', null);

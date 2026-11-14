@@ -203,6 +203,61 @@ describe('performMinionGroupAttack Lasts Until events', () => {
 		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
 	});
 
+	it('uses and spends no held change with Feature Effects off, as the group attack has no window', async () => {
+		const actor = minionActor('a');
+		const held = {
+			id: 'held',
+			uuid: 'Actor.a.ActiveEffect.held',
+			name: 'Opening',
+			img: 'opening.svg',
+			origin: null,
+			parent: actor,
+			toObject: () => ({ _id: 'held', name: 'Opening' }),
+			system: {
+				rules: [
+					{
+						id: 'held-rule',
+						type: 'heldRoll',
+						heldKind: 'primaryDie',
+						whichRoll: 'holderAttacks',
+						usedUp: true,
+						value: 1,
+					},
+				],
+			},
+			flags: {},
+		};
+		Object.assign(actor, {
+			uuid: 'Actor.a',
+			isOwner: true,
+			effects: [held],
+			deleteEmbeddedDocuments: vi.fn(async () => []),
+		});
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) => (uuid.includes('ActiveEffect') ? held : actor)),
+		);
+		gameGlobal.user = { ...(gameGlobal.user as object), isActiveGM: true };
+		vi.mocked(ChatMessage.create).mockResolvedValueOnce({
+			id: 'card',
+			flags: {},
+			update: vi.fn(async () => undefined),
+		} as never);
+		const settings = gameGlobal as unknown as { settings: unknown };
+		const realSettings = settings.settings;
+		settings.settings = {
+			get: (_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+		};
+
+		try {
+			await attack([member('m-a', actor)]);
+		} finally {
+			settings.settings = realSettings;
+		}
+
+		expect(actor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
 	it('does not end the Despair of a member itself: the attack event ends it', async () => {
 		const actor = Object.assign(minionActor('despairing'), {
 			getDomain: vi.fn(() => new Set(['self:despair'])),

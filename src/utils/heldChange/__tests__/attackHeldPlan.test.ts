@@ -429,3 +429,81 @@ describe('attackHeldPlanOf extra damage', () => {
 		expect(warn).toHaveBeenCalled();
 	});
 });
+
+describe('attackHeldPlanOf with the changes the player ticked', () => {
+	const extra: HeldSpec = {
+		kind: 'extraDamage',
+		label: 'Shining Mandate',
+		whichRoll: 'holderAttacks',
+		formula: '1d8',
+		damageType: 'radiant',
+	};
+
+	it('uses and spends only the ticked changes, on the attacker and on the target', async () => {
+		const attacker = creature('A', [
+			{ ...advantage(), whichRoll: 'holderAttacks' },
+			{ ...maximize, whichRoll: 'holderAttacks' },
+			extra,
+		]);
+		const target = creature('T', [{ value: 2 }, { label: 'Opening', value: 3 }]);
+
+		const plan = attackHeldPlanOf({
+			attacker,
+			target,
+			area: false,
+			attack: true,
+			extraDamage: true,
+			chosen: new Set(['A.A-e0.A-e0-rule', 'T.T-e1.T-e1-rule']),
+		});
+		const options: Record<string, any> = { rollMode: 0 };
+		plan.applyToRoll(options as never);
+		await plan.spend();
+
+		expect(plan.primaryDieBonus).toBe(3);
+		expect(options.rollModeSources).toEqual([0, 1]);
+		expect(options.maxDamage).toBeUndefined();
+		expect(plan.extraDamage).toEqual([]);
+		expect(spentIds(attacker, target)).toEqual(['A-e0', 'T-e1']);
+	});
+
+	it('uses and spends nothing when no change is ticked', async () => {
+		const attacker = creature('A', [
+			ignore,
+			mustAttack,
+			{ ...advantage(), whichRoll: 'holderAttacks' },
+		]);
+		const target = creature('T', [{ value: 2 }]);
+
+		const plan = attackHeldPlanOf({
+			attacker,
+			target,
+			area: false,
+			attack: true,
+			chosen: new Set(),
+		});
+		const options: Record<string, any> = { rollMode: -1 };
+		plan.applyToRoll(options as never);
+		await plan.spend();
+
+		expect(plan.primaryDieBonus).toBe(0);
+		expect(plan.ignoreDisadvantage).toBeNull();
+		expect(plan.mustAttackOther).toBeNull();
+		expect(options).toEqual({ rollMode: -1 });
+		expect(spentIds(attacker, target)).toEqual([]);
+	});
+
+	it('keeps a ticked minus Primary Die change when ignoring disadvantage is not ticked', () => {
+		const attacker = creature('A', [ignore]);
+		const target = creature('T', [{ label: 'Anticipate Danger', value: -1 }]);
+
+		const plan = attackHeldPlanOf({
+			attacker,
+			target,
+			area: false,
+			attack: true,
+			chosen: new Set(['T.T-e0.T-e0-rule']),
+		});
+
+		expect(plan.primaryDieBonus).toBe(-1);
+	});
+});

@@ -32,7 +32,10 @@ import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js'
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
-import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import {
+	isActionTrackingAutomationEnabled,
+	isRuleAutomationEnabled,
+} from '../../settings/automationSettings.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
 /**
@@ -133,7 +136,9 @@ export async function rollUnarmedStrike(
 	});
 
 	const keptAmount = keptAmountFor(actor, unarmedItem);
-	const kept = result.keptAmount === false ? null : keptAmount;
+	const chosen = isRuleAutomationEnabled() ? null : new Set<string>(result.heldChosen ?? []);
+	const usesKept = chosen ? result.keptAmount === true : result.keptAmount !== false;
+	const kept = usesKept ? keptAmount : null;
 	const held = attackHeldPlanOf({
 		attacker: actor,
 		target: firstTargetActor(),
@@ -141,8 +146,9 @@ export async function rollUnarmedStrike(
 		attack: true,
 		delivery,
 		kept,
-		keptToEnd: keptAmount,
+		keptToEnd: chosen ? kept : keptAmount,
 		extraDamage: true,
+		chosen,
 	});
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {

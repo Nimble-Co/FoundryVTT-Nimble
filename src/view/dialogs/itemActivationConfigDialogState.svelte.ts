@@ -22,7 +22,7 @@ import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
-import { keptAmountFor } from '#utils/heldChange/heldChange.js';
+import { heldLinesForItem, keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
 import {
 	rollModeWithoutConditions,
@@ -31,7 +31,10 @@ import {
 import { attackConditionLines } from '#utils/rolls/attackConditionLines.js';
 import { MAX_ROLL_MODE, openRollModeTicks } from '#utils/rolls/rollModeTicks.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
-import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+import {
+	isResourceSpendingAutomationEnabled,
+	isRuleAutomationEnabled,
+} from '../../settings/automationSettings.js';
 import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
 import {
 	buildAutoBonusFormula,
@@ -50,6 +53,8 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	item: () => Item;
 	initialRollMode?: number;
 	hideRollsDefault: boolean;
+	/** The roll ignores disadvantage already, so the change that ignores it has no line. */
+	ignoresDisadvantage?: boolean;
 }
 
 export function createItemActivationConfigDialogState(
@@ -118,8 +123,15 @@ export function createItemActivationConfigDialogState(
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
 	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
+	// With Feature Effects off the player ticks each Held Change; none starts ticked.
+	const choosesHeldChanges = !isRuleAutomationEnabled();
+	const heldLines = heldLinesForItem(actor, item, {
+		ignoresDisadvantage: options.ignoresDisadvantage,
+		choosing: choosesHeldChanges,
+	});
+	let chosenHeldChanges = $state<string[]>([]);
 	const keptAmount = keptAmountFor(actor, item);
-	let usesKeptAmount = $state(keptAmount !== null);
+	let usesKeptAmount = $state(keptAmount !== null && !choosesHeldChanges);
 	const damageMultiplier = damageMultiplierOf(item);
 	let usesDamageMultiplier = $state(false);
 
@@ -445,6 +457,14 @@ export function createItemActivationConfigDialogState(
 			return unpaid ? localize('NIMBLE.rollWindow.noCharge', { pool: unpaid.label }) : '';
 		},
 		keptAmount,
+		heldLines,
+		choosesHeldChanges,
+		get chosenHeldChanges() {
+			return chosenHeldChanges;
+		},
+		set chosenHeldChanges(value: string[]) {
+			chosenHeldChanges = value;
+		},
 		damageMultiplier,
 		get usesDamageMultiplier() {
 			return usesDamageMultiplier;

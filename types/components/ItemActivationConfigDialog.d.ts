@@ -78,6 +78,8 @@ export interface ItemActivationConfigDialogSubmitData {
 	consumedVariableCharges?: ConsumedChargePool[];
 	/** The condition ticks that were on, apart from `rollMode`. */
 	conditionRollModes?: ConditionRollMode[];
+	/** With Feature Effects off, the keys of the Held Changes the player ticked. */
+	heldChosen?: string[];
 }
 
 export interface ItemActivationConfigDialogInstance {

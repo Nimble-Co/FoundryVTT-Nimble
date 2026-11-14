@@ -1,21 +1,32 @@
 <!--
 @component
-The Held Changes a roll will use, read-only, each with its source.
+The Held Changes a roll will use, each with its source. Read-only lines, or with `choosing`
+(Feature Effects off) a tick box for each one, bound to the keys in `chosen`.
 -->
 <script lang="ts">
 	import type { HeldChangeLinesProps } from '#types/components/HeldChangeLines.d.ts';
 
-	let { lines }: HeldChangeLinesProps = $props();
+	let { lines, choosing = false, chosen = $bindable([]) }: HeldChangeLinesProps = $props();
 </script>
 
 {#each lines as line (line.key)}
-	<div class="held">
-		<i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
-		<div>
-			{line.text}
-			<small>{line.source}</small>
+	{#if choosing}
+		<label class="check">
+			<input type="checkbox" value={line.key} bind:group={chosen} />
+			<span>
+				{line.text}
+				<small>{line.source}</small>
+			</span>
+		</label>
+	{:else}
+		<div class="held">
+			<i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+			<div>
+				{line.text}
+				<small>{line.source}</small>
+			</div>
 		</div>
-	</div>
+	{/if}
 {/each}
 
 <style>
