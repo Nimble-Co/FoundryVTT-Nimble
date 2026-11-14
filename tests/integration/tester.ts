@@ -88,9 +88,12 @@ function setup(config: SerializedConfig) {
 }
 
 class Runner extends VitestTestRunner {
-	// Not declared on VitestTestRunner in vitest 4.0.8; newer versions (4.0.15+)
-	// call it during runs, so keep it for a future vitest bump.
-	trace = <T>(_name: string, attributes: Record<string, unknown> | (() => T), cb?: () => T): T => {
+	// The base `trace` needs traces this custom runner never sets.
+	override trace = <T>(
+		_name: string,
+		attributes: Record<string, unknown> | (() => T),
+		cb?: () => T,
+	): T => {
 		return typeof attributes === 'function' ? attributes() : cb!();
 	};
 
