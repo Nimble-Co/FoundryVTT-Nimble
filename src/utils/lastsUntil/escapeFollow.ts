@@ -318,7 +318,8 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 		(event) => event.action?.kind === 'undoEnd' && sameEffect(link, event.action.row),
 	);
 	const ruling = rulingLineOf(card, link);
-	const waiting = waitingLineOf(card, link);
+	const automated = isRuleAutomationEnabled();
+	const waiting = automated ? undefined : waitingLineOf(card, link);
 	const effect = holderOf(link)?.effects.get(link.effectId);
 	/** The escape no longer stands: the effect and the damage of the escape go back. */
 	const putBack = async () => {
@@ -344,7 +345,7 @@ async function follow(card: EscapeCard, link: EscapeRollLink, outcome: string): 
 
 	if (outcome === 'pass') {
 		if (ended || !effect) return true;
-		if (isRuleAutomationEnabled()) {
+		if (automated) {
 			await escapeNow(card, link, escapedReason(card));
 		} else if (!waiting && card.id) {
 			const moment = endMoment(link.effectName, card.id, escapedReason(card));

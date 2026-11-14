@@ -194,6 +194,40 @@ describe('followEscape with Feature Effects off', () => {
 	});
 });
 
+describe('followEscape with Feature Effects on', () => {
+	it('reads no other card for a waiting line', async () => {
+		game.game.settings = { get: () => true };
+		card.flags[SYSTEM_ID].escapeRoll = { ...link, noDc: true };
+		card.flags[SYSTEM_ID].events = [
+			{
+				id: 'ruling',
+				kind: 'escape',
+				icon: 'x',
+				text: { key: 'x' },
+				action: { kind: 'escapeRuling', ...link, state: 'waiting' },
+				at: 1,
+			},
+		];
+		let reads = 0;
+		const messages = game.game.messages as object;
+		game.game.messages = Object.defineProperty({ ...messages }, 'contents', {
+			get: () => {
+				reads += 1;
+				return [card, ...otherCards];
+			},
+		});
+
+		await followEscape({ messageId: 's1', outcome: 'fail' });
+
+		expect(reads).toBe(0);
+		expect(replaceCardEvent).toHaveBeenCalledWith(
+			card,
+			'ruling',
+			expect.objectContaining({ action: expect.objectContaining({ state: 'failed' }) }),
+		);
+	});
+});
+
 describe('escapeOnEnd', () => {
 	const marked = { hostId: 's1', eventId: 'waitingEnd.Actor.tessa.grab.3' };
 	const markLine = () => {
