@@ -2123,10 +2123,6 @@
 				"wounds": {
 					"label": "Wounds",
 					"hint": "The Wounds the trigger also gives, up to the max of the track. A creature with no Wound track takes none. 0: no Wounds."
-				},
-				"attackSource": {
-					"label": "Source",
-					"hint": "Only attacks made with a weapon, or only with a spell. \"Any\" counts both."
 				}
 			},
 			"armorClass": {

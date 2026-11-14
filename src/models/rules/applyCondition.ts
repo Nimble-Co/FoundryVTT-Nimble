@@ -152,8 +152,8 @@ function schema() {
 				nullable: false,
 				initial: 'any',
 				choices: choiceLabels('attackOutcome', 'attackSource', ATTACK_SOURCES),
-				label: 'NIMBLE.rules.applyCondition.attackSource.label',
-				hint: 'NIMBLE.rules.applyCondition.attackSource.hint',
+				label: 'NIMBLE.rules.attackOutcome.attackSource.label',
+				hint: 'NIMBLE.rules.attackOutcome.attackSource.hint',
 				showWhen: (data: Record<string, unknown>) =>
 					hasAttackSource(String(data.trigger ?? 'onCrit')),
 			}),
@@ -354,7 +354,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	/** As for Attack Outcome, an attack with no item found counts as a weapon attack. */
 	#matchesSource(item: { type?: string } | null | undefined): boolean {
-		return matchesAttackSource(this.attackSource ?? 'any', item);
+		return matchesAttackSource(this.attackSource, item);
 	}
 
 	#matchesAttackContext(context: { isCritical: boolean; isMiss: boolean }): boolean {
