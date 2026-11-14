@@ -22,11 +22,25 @@
 			},
 			"effects": [
 				{
-					"id": "r5ukBBJ3p1I8awLr",
-					"type": "applyEffect",
-					"effectId": "v0YvmeL7XTwk2mYu",
-					"recipient": "targets",
-					"tempHealingNodeId": null,
+					"id": "Gr0zbhdJknO7xUIA",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"saveDC": "10+@intelligence",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "r5ukBBJ3p1I8awLr",
+								"type": "applyEffect",
+								"effectId": "v0YvmeL7XTwk2mYu",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "Gr0zbhdJknO7xUIA"
+							}
+						],
+						"passedSave": []
+					},
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -71,7 +85,19 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
@@ -100,7 +126,19 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "zeroHp",
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [

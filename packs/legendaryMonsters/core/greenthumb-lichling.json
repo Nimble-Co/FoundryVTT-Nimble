@@ -255,10 +255,9 @@
 						{
 							"id": "greenRootSave001",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "11",
 							"on": {
 								"failedSave": [
@@ -320,9 +319,25 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "takeDamage",
+								"effectName": "",
+								"damageTypes": [
+									"slashing",
+									"fire"
+								]
+							}
+						],
 						"escape": {
-							"dc": "",
+							"dc": "11",
 							"saves": [
 								"strength",
 								"dexterity"

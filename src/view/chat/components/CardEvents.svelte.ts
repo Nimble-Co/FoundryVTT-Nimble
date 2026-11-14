@@ -14,6 +14,7 @@ import { canEmptyPool, emptyPoolFromLine } from '#utils/dicePool/emptyPoolLine.j
 import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import { canEndWaiting, endWaiting } from '#utils/lastsUntil/endWaiting.js';
 import { canRuleEscape, endEscape } from '#utils/lastsUntil/escapeFollow.js';
+import { actOnZeroHp, canActOnZeroHp } from '#utils/lastsUntil/zeroHpAtEnd.js';
 import localize from '#utils/localize.js';
 import { canSettleCritDiceLine, settleCritDiceLine } from '#utils/rolls/critDiceSaveLine.js';
 import { canRollRequest, rollRequestedSave } from '#utils/saveRequest/saveRequests.js';
@@ -118,6 +119,11 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		}
 	}
 
+	/** Drops a waiting line to 0 HP, or gives back the HP a dropped line took. */
+	function actOnZero(event: CardEvent) {
+		return clickLine(event, actOnZeroHp, 'Nimble | Could not change the 0 HP of an ended effect.');
+	}
+
 	/** Ends a waiting effect through the end path of its moment. */
 	function end(event: CardEvent) {
 		return clickLine(event, endWaiting, 'Nimble | Could not end a waiting effect.');
@@ -168,6 +174,8 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		empty,
 		canSettleCrit: canSettleCritDiceLine,
 		settleCrit,
+		canActOnZero: canActOnZeroHp,
+		actOnZero,
 		backStatus,
 	};
 }

@@ -9,7 +9,7 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "Attacked",
+				"details": "",
 				"quantity": 5,
 				"type": "action",
 				"isReaction": false
@@ -19,7 +19,26 @@
 				"quantity": 1,
 				"type": "minute"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "vHfxPNVypdZ1fYmb",
+					"type": "healing",
+					"healingType": "tempHealing",
+					"formula": "10*@level",
+					"parentContext": null,
+					"parentNode": null,
+					"recipient": "self"
+				},
+				{
+					"id": "4XHVVY04Ri3MkyZ0",
+					"type": "applyEffect",
+					"effectId": "OmTb2Zx7ddwUbVNp",
+					"recipient": "self",
+					"tempHealingNodeId": "vHfxPNVypdZ1fYmb",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -51,7 +70,90 @@
 		"school": "fire",
 		"tier": 9
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "OmTb2Zx7ddwUbVNp",
+			"name": "Dragonform",
+			"img": "icons/magic/fire/flame-burning-eye.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "HwfbkOv25TCSw6QR",
+						"identifier": "",
+						"label": "Dragonform",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "12"
+					},
+					{
+						"type": "armorClass",
+						"disabled": false,
+						"id": "gDZfV3vdFdBosuVq",
+						"identifier": "",
+						"label": "Dragonform",
+						"predicate": {},
+						"priority": 1,
+						"formula": "@level",
+						"mode": "add"
+					},
+					{
+						"type": "zeroHpAtEnd",
+						"disabled": false,
+						"id": "D7pa8tzXHv7NPldz",
+						"identifier": "",
+						"label": "Dragonform",
+						"predicate": {},
+						"priority": 1
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "tempHpGone",
+						"effectName": ""
+					},
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 10,
+						"units": "minutes",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

@@ -17,6 +17,32 @@
 				"priority": 1,
 				"formula": "8",
 				"mode": "add"
+			},
+			{
+				"type": "defendOption",
+				"disabled": false,
+				"id": "io7sGnwZrWnq6p35",
+				"identifier": "",
+				"label": "Resolute Fangs, Golden Bastion",
+				"predicate": {},
+				"priority": 1,
+				"way": "withDefend",
+				"attackDelivery": "melee",
+				"outcome": "none",
+				"armorBonus": "",
+				"useReroll": false,
+				"alsoInterpose": false,
+				"attackerEffectId": "d7uecrEc77Yinpyc",
+				"reminder": "The shield grapples 1 creature at most.",
+				"useItem": false,
+				"withInterpose": false,
+				"wholeRound": false,
+				"range": "2",
+				"chargePoolIdentifier": "",
+				"chargeCost": 1,
+				"actionCost": 0,
+				"manaCost": 0,
+				"woundCost": 0
 			}
 		],
 		"activation": {
@@ -79,7 +105,36 @@
 			"denomination": "gp"
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "d7uecrEc77Yinpyc",
+			"name": "Grappled",
+			"img": "systems/nimble/assets/icons/grappled.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "20",
+					"saves": [
+						"strength"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"grappled"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

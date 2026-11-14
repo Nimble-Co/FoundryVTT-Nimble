@@ -468,10 +468,9 @@
 						{
 							"id": "aFniZwcm1eNQhnHK",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "18",
 							"on": {},
 							"sharedRolls": []

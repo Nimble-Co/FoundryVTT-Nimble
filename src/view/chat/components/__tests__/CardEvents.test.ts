@@ -60,6 +60,17 @@ vi.mock('#utils/actor/stackGainLine.js', () => ({
 		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
 }));
 
+const { actOnZeroHp } = vi.hoisted(() => ({
+	actOnZeroHp: vi.fn(async (..._args: unknown[]) => true),
+}));
+
+vi.mock('#utils/lastsUntil/zeroHpAtEnd.js', () => ({
+	actOnZeroHp,
+	canActOnZeroHp: (action: { holderUuid: string }) =>
+		!!(globalThis as Globals).game.user?.isGM ||
+		!!(globalThis as Globals).fromUuidSync(action.holderUuid)?.isOwner,
+}));
+
 const { endEscape } = vi.hoisted(() => ({
 	endEscape: vi.fn(async (..._args: unknown[]) => true),
 }));
@@ -544,6 +555,52 @@ describe('CardEvents', () => {
 		other.unmount();
 
 		renderEvents(makeCard([stackLine('undone')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByRole('status')).toHaveTextContent('Undone');
+	});
+
+	it('a 0 HP line has Drop to 0 HP while it waits, Undo once dropped, and a badge once undone', async () => {
+		const zeroLine = (
+			state: 'waiting' | 'dropped' | 'undone',
+			holderUuid = 'Actor.tessa',
+		): CardEvent => ({
+			id: 'zeroHp1',
+			kind: 'healthState',
+			icon: 'fa-solid fa-heart-crack',
+			text: { key: 'NIMBLE.chat.zeroHpAtEnd.drops', data: { name: 'Tessa' } },
+			cause: { key: 'NIMBLE.chat.zeroHpAtEnd.cause', data: { effect: 'Dragonform' } },
+			action: {
+				kind: 'zeroHp',
+				holderUuid,
+				holderName: 'Tessa',
+				effectName: 'Dragonform',
+				state,
+			},
+			at: 1,
+		});
+		globals.game.user = { isGM: false };
+
+		const waiting = renderEvents(makeCard([zeroLine('waiting')]));
+		expect(screen.getByText('Tessa drops to 0 HP')).toBeInTheDocument();
+		const drop = screen.getByRole('button', { name: 'Tessa drops to 0 HP: Dragonform ended' });
+		expect(drop).toHaveTextContent('Drop to 0 HP');
+		await fireEvent.click(drop);
+		expect(actOnZeroHp).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'card' }),
+			expect.objectContaining({ id: 'zeroHp1' }),
+		);
+		waiting.unmount();
+
+		const dropped = renderEvents(makeCard([zeroLine('dropped')]));
+		await fireEvent.click(screen.getByRole('button', { name: /give back to Tessa the HP/ }));
+		expect(actOnZeroHp).toHaveBeenCalledTimes(2);
+		dropped.unmount();
+
+		const other = renderEvents(makeCard([zeroLine('dropped', 'Actor.goblin')]));
+		expect(screen.queryByRole('button')).toBeNull();
+		other.unmount();
+
+		renderEvents(makeCard([zeroLine('undone')]));
 		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.getByRole('status')).toHaveTextContent('Undone');
 	});

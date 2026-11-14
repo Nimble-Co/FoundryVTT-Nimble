@@ -20,7 +20,7 @@
 				"armorBonus": "",
 				"useReroll": false,
 				"attackerEffectId": "",
-				"reminder": "Until the start of your next turn, deal KEY damage (+KEY for each upcast, ignoring armor) to each melee attacker against you and give them Smoldering.",
+				"reminder": "",
 				"useItem": true,
 				"withInterpose": false,
 				"wholeRound": false,
@@ -45,7 +45,17 @@
 				"quantity": 1,
 				"type": "round"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "t2bKcqbT5jp1B2vI",
+					"type": "applyEffect",
+					"effectId": "06i3brixL33GbXK5",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -75,9 +85,118 @@
 			"selected": []
 		},
 		"school": "fire",
-		"tier": 3
+		"tier": 3,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "raiseEffectRule",
+					"value": null,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "t2bKcqbT5jp1B2vI",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "OQREZp7N2LOIHoz0",
+					"ruleField": "formula",
+					"formula": "@key",
+					"momentIndex": null
+				}
+			],
+			"choices": null
+		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "06i3brixL33GbXK5",
+			"name": "Flame Barrier",
+			"img": "icons/magic/fire/barrier-wall-flame-ring-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "OQREZp7N2LOIHoz0",
+						"identifier": "",
+						"label": "Flame Barrier",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "attacked",
+						"attackDelivery": "melee",
+						"notOnAllies": false,
+						"onlyCrits": false,
+						"answeredAttack": true,
+						"amount": "formula",
+						"formula": "@key",
+						"damageType": "",
+						"ignoreArmor": true,
+						"woundDoubles": false,
+						"attackerEffectId": "roZq2Lqimjnh11pZ"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "start",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "roZq2Lqimjnh11pZ",
+			"name": "Smoldering",
+			"img": "icons/svg/fire.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"smoldering"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

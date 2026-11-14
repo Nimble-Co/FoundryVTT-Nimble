@@ -15,6 +15,7 @@ import {
 } from '#utils/lastsUntil/endLines.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
 import { withoutEndWaits } from '#utils/lastsUntil/waitEndEffects.js';
+import { zeroHpAtEndEvents } from '#utils/lastsUntil/zeroHpAtEnd.js';
 import localize from '#utils/localize.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
@@ -80,7 +81,7 @@ async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void
 		const lines = live.map((effect) =>
 			endedEffectEvent(endedEffectRow(effect), at, moment.reason, endedByOf(effect, moment)),
 		);
-		// With Feature Effects on, the delete empties the pools (emptyPoolsAtEnd).
+		// With Feature Effects on, the delete empties the pools (emptyPoolsAtEnd); the option only stops its waiting line.
 		const automated = isRuleAutomationEnabled();
 		const poolLines = automated ? [] : emptyPoolEvents(live, Date.now());
 		const byHolder = new Map<Actor, string[]>();
@@ -89,14 +90,11 @@ async function endHere(effects: ActiveEffect[], moment: EndMoment): Promise<void
 			byHolder.set(holder, [...(byHolder.get(holder) ?? []), effect.id as string]);
 		}
 		for (const [holder, ids] of byHolder) {
-			if (automated) await holder.deleteEmbeddedDocuments('ActiveEffect', ids);
-			else {
-				await holder.deleteEmbeddedDocuments('ActiveEffect', ids, {
-					[END_LINES_OPTION]: true,
-				} as never);
-			}
+			await holder.deleteEmbeddedDocuments('ActiveEffect', ids, {
+				[END_LINES_OPTION]: true,
+			} as never);
 		}
-		await postEnded(moment, [...lines, ...poolLines]);
+		await postEnded(moment, [...lines, ...poolLines, ...(await zeroHpAtEndEvents(live, at))]);
 	} finally {
 		for (const effect of live) ending.delete(effect.uuid ?? '');
 	}

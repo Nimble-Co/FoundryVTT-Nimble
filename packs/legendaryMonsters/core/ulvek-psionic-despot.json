@@ -274,10 +274,9 @@
 						{
 							"id": "U5zHDdQC8EF5I0uv",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "15",
 							"on": {
 								"failedSave": [
@@ -405,6 +404,15 @@
 							"on": {
 								"hit": [
 									{
+										"id": "BTEq6p0NFIsxLxO1",
+										"type": "applyEffect",
+										"effectId": "VA5zdIeIkP1H8hnu",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
+										"parentContext": "hit",
+										"parentNode": "zJ04oIjTSeF6cw0b"
+									},
+									{
 										"id": "oSeAq5QVK303pFtq",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
@@ -437,7 +445,38 @@
 			},
 			"_id": "ahBtNfFFrLm9hITw",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-needles-purple.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "VA5zdIeIkP1H8hnu",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							],
+							"noDc": true
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -472,10 +511,9 @@
 						{
 							"id": "DFwOUZi32wJtN40s",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "15",
 							"on": {
 								"failedSave": [

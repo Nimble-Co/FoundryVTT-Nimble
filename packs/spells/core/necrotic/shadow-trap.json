@@ -58,6 +58,15 @@
 								"outcome": "fullDamage",
 								"parentContext": "hit",
 								"parentNode": "tMyTaEsCtivi63VN"
+							},
+							{
+								"id": "SWSYtxeju2vFYNkI",
+								"type": "applyEffect",
+								"effectId": "7JIUBvHBSBQEWhPB",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "hit",
+								"parentNode": "tMyTaEsCtivi63VN"
 							}
 						]
 					},
@@ -96,9 +105,82 @@
 			]
 		},
 		"school": "necrotic",
-		"tier": 1
+		"tier": 1,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "raiseEffectRule",
+					"value": null,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "SWSYtxeju2vFYNkI",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "OSKv95PlQNIK5D4P",
+					"ruleField": "formula",
+					"formula": "1d12",
+					"momentIndex": null
+				}
+			],
+			"choices": null
+		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "7JIUBvHBSBQEWhPB",
+			"name": "Restrained",
+			"img": "icons/svg/net.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "escapeDamage",
+						"disabled": false,
+						"id": "OSKv95PlQNIK5D4P",
+						"identifier": "",
+						"label": "Shadow Trap",
+						"predicate": {},
+						"priority": 1,
+						"formula": "",
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "10+@key",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"restrained"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.350",

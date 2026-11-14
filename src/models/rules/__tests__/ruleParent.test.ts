@@ -265,6 +265,7 @@ describe('rule types that need an effect', () => {
 			'freeSpellCost',
 			'heldRoll',
 			'saveOnEvent',
+			'zeroHpAtEnd',
 		]);
 	});
 });

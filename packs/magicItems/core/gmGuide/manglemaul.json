@@ -33,6 +33,15 @@
 					"on": {
 						"hit": [
 							{
+								"id": "8mamyxZm27ZibwQe",
+								"type": "applyEffect",
+								"effectId": "qkxtcf3PcXRWu02S",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "hit",
+								"parentNode": "ManglemaulDmg"
+							},
+							{
 								"id": "ManglemaulFullDmg",
 								"type": "damageOutcome",
 								"outcome": "fullDamage",
@@ -92,7 +101,37 @@
 			"denomination": "gp"
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "qkxtcf3PcXRWu02S",
+			"name": "Grappled",
+			"img": "systems/nimble/assets/icons/grappled.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "10",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"grappled"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.345",

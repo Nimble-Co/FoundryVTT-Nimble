@@ -1,0 +1,162 @@
+{
+	"name": "Explosive Tunnels Gas.",
+	"type": "monsterFeature",
+	"img": "icons/magic/air/fog-gas-smoke-blue-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "VZpwtMir36JrlMHw",
+					"type": "applyEffect",
+					"effectId": "r0p25DqrliFoZ54E",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "Yv6s75e5UE8cBPB3",
+					"type": "applyEffect",
+					"effectId": "rb6MnAUttLibiU1B",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "MBbo4WjrHqUXq1QN",
+					"type": "wound",
+					"amount": 1,
+					"recipient": "targets",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Each hero may make skill checks, saves, or otherwise be creative to navigate in the dark (DC 12). Roll twice:</p><p>0 Failures. How lucky! You gain inspiration (the ability to reroll any single die, once).</p><p>1 Failure. Gas makes you dizzy, -1 speed until you leave the sewers.</p><p>2 Failures. Fumesick. Suffer 1 wound, poisoned, and -1 speed until you leave the sewers.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "r0p25DqrliFoZ54E",
+			"name": "Dizzy",
+			"img": "icons/magic/air/fog-gas-smoke-blue-gray.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "speedBonus",
+						"disabled": false,
+						"id": "s4RorW1BOEBAEk2j",
+						"identifier": "",
+						"label": "Dizzy",
+						"predicate": {},
+						"priority": 1,
+						"value": "-1",
+						"movementType": null
+					}
+				],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Until you leave the sewers.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "rb6MnAUttLibiU1B",
+			"name": "Fumesick",
+			"img": "icons/svg/poison.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "speedBonus",
+						"disabled": false,
+						"id": "fQz2Ytid6j9HomGS",
+						"identifier": "",
+						"label": "Fumesick",
+						"predicate": {},
+						"priority": 1,
+						"value": "-1",
+						"movementType": null
+					}
+				],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Until you leave the sewers.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"poisoned"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "bkXHcv8MLicRyXhG"
+}

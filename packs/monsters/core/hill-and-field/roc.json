@@ -218,7 +218,7 @@
 						"rules": [],
 						"lastsUntil": [],
 						"escape": {
-							"dc": "",
+							"dc": "18",
 							"saves": [
 								"strength",
 								"dexterity"

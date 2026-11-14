@@ -714,6 +714,25 @@
 			"zephyr": "OgeGMnmIkuDVb36X"
 		}
 	},
+	"hazards": {
+		"core": {
+			"a-sleepy-trick": "j03TdOKXKjtEyZpb",
+			"adventurers-bane": "3EYEnfCmfVfr5Ob4",
+			"cauldron": "JkgziFzKVpLkuVyv",
+			"explosive-tunnels-gas": "bkXHcv8MLicRyXhG",
+			"fetid-gas": "wT2Kv0EEkQcVxbsy",
+			"fetid-stench": "jdWpwhoAlkwNU257",
+			"glacial-river": "VadadAFoozP0ySeM",
+			"pill-bugs": "i6OM1449SYjr8nZP",
+			"poison-vent": "z8fLgHbn177vgGUb",
+			"rat-bite": "DqUi6SecM3DdUzqs",
+			"rootbreaker-pit": "HmNpWxEnG3HKUBdl",
+			"sand-madness": "5jXjrQ7BZjPG0QSL",
+			"sleepy-oasis": "xf97LnHfi0ZXjrhv",
+			"spear-of-lightning": "uzLr2imPfsCMOola",
+			"thorn-briars": "AHMbfixH1nXzoPXO"
+		}
+	},
 	"items": {
 		"core": {
 			"armors": {
@@ -955,6 +974,55 @@
 			}
 		}
 	},
+	"monsterAbilities": {
+		"core": {
+			"acid-blood": "TyfSnZScEpFMBqLb",
+			"aggressive": "50ZaQRZA6gfGvZHt",
+			"blinding-spit": "U3g5drqV6BjwYWq0",
+			"bloodthirsty": "dASdR0Y3MtdzMrBV",
+			"brawler": "BebvlKuYeQcz8QWQ",
+			"brute": "TvkghIAYyfyQkJiO",
+			"burning-aura": "F6BS0fxyMlIFrT6z",
+			"climbing": "u2EJnTfTZNZzeD0A",
+			"controlling": "xlWbr9bVq6OhN6fT",
+			"disgusting-venomous-heavy-blows": "UTuRg6UTzhR7TXGR",
+			"disintegrating-armor": "a83OzgTtXhHUkhEu",
+			"doom": "ILVsBvtQabED5Vos",
+			"explosive-death": "9qDLixkX1e0pLQhU",
+			"fast": "XfjZ8a7xThrOGgh4",
+			"fearsome": "OvVUUnsaP0cFHLdb",
+			"flying": "2RQFX3lKoD6wYbWP",
+			"formation": "cnTNOMGtIXbYe7xn",
+			"frenzied": "LkauWljaQGPuF4qh",
+			"grappler": "95tXlGgYhQYv2aS1",
+			"gravity-manipulator": "leTFIKy6UHsgkhYc",
+			"hates-the-light": "v8AraJR7I5Jkdi4z",
+			"hypnotic-gaze": "7sontbNfIGReIa6l",
+			"invulnerable": "5qRmRqVSHYVs1E3F",
+			"mounted": "qWtjWKnj9KI5SNGP",
+			"obstinate": "zXpDurQuwmi1uiC6",
+			"pack-tactics": "FmiqWbC51LtQhj9L",
+			"parry": "UjIq52qxQ2W5hCC3",
+			"ranged": "qHBIEgYnJPzHkF7e",
+			"retaliate": "qC1P7BfB4cTGcTCX",
+			"savage": "V66qFcIXzvmDmf06",
+			"shifty": "azmp6504oDpmvATv",
+			"silencer": "nS1oc5THeeqbKK5F",
+			"size-up-spot-weakness-pin-down": "mE3R66Syyx62UO8F",
+			"sneak": "emsHeBb3oyCeO8g3",
+			"spiked": "fCwD1e2V1bUMmWD4",
+			"standard-bearer": "bt0FUbqG54kIKALw",
+			"sturdy-undying": "iWk9y0xyMAWAF2q4",
+			"summoner": "PooABnjeJEviItRN",
+			"terrible-roar-creepy-monologue-taunt": "lbC5qIanwKfPi1Rd",
+			"toss-around-telekinetic-shove": "g0yuxBEhJ0PSmqAQ",
+			"tricky": "NlbxahoCuC7V1O8V",
+			"vicious": "H4evmogU7sDPhv2Z",
+			"warping-touch": "QPASj2GucgLLyT1v",
+			"webslinger": "Zf5wPm4TmtPB8Dnn",
+			"wind-up-breathe-in": "uMubL71NEpWCVF4z"
+		}
+	},
 	"monsters": {
 		"core": {
 			"bandits": {
@@ -1089,7 +1157,8 @@
 			},
 			"wind": {
 				"greater-windform": "21OMcsYYwn5C7CLR",
-				"lesser-windform": "eX8CJssX3F2vqFi1"
+				"lesser-windform": "eX8CJssX3F2vqFi1",
+				"longstrider": "pxWolaIQExZS615L"
 			}
 		}
 	},

@@ -94,6 +94,7 @@ These rules work with the effects of an item. A state such as Rage uses them: se
 - **Damage on escape** (under **Triggers**) works only on an effect. When the holder escapes the effect, it takes the **Damage**, and the roll card of the escape gets a line. The damage ignores armor and Defend.
 - **Max Actions Bonus** (under **Bonuses**) adds to the creature's max actions while it is on, for example "+1 max action". It also works on an effect.
 - **Empty pools at end** (under **Resources**) works only on an effect. When the effect ends by any path, the dice pools in **Pools** are emptied. A new use that replaces the effect is not an end.
+- **0 HP at end** (under **Triggers**) works only on an effect. When the effect ends by any path, also a removal by hand, the creature drops to 0 HP. A line on the card of the end tells it, with Undo. With Feature Effects off, the line has a **Drop to 0 HP** button. A new use that replaces the effect is not an end. Dragonform uses it.
 - **Change an effect** (under **Conditions**) works only on an item. **Item identifier** names another item. When that item gives an effect to this creature, **Does not end when** takes moments out of its Lasts Until, and **Also ends when** adds moments. The change occurs when the effect is made.
 - **Use an item for free** (under **Triggers**) works only on an item. **Item identifier** names another item. On one of its **Triggers**, when the Condition box matches, the creature uses that item with no window. The use never spends an action. **Free of** sets what else it does not spend: **Use limits** and **Mana**, both on by default, as for a free action (Core rules). The card tells why the use was free, such as "For free: an enemy hit you with a crit (Titan's Fury)".
 
@@ -104,6 +105,7 @@ These rules work with the effects of an item. A state such as Rage uses them: se
 - The rule does nothing while the Feature Effects automation setting is off.
 - Apply Condition uses the same list of triggers. The list has **An enemy crits you** and **You start Dying** too.
 - An Apply Condition with a hit, crit or miss trigger has a row on the attack card. When the rule gives the condition as the GM applies the damage, the row says "On" and names that target in place of its **Apply to Targets** button. A click cannot give the condition a second time.
+- On an attack trigger, Apply Condition has a **Source** field. **Weapon** or **Spell** limits it to attacks made with that kind of item, and **Any** counts both. Enchant Weapon uses it to give Smoldering on a weapon crit only.
 - **You cast a spell** has a **Mana at least** field. The cast must cost that much mana or more. The system counts the cost after it takes off any mana the cast is free of, and the 1 mana less of a Chaos cast. A cast paid from a charge pool costs 0, and so does a cantrip. With 0, any cast counts. Primordial Force (2+ mana) uses it.
 :::
 

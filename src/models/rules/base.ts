@@ -89,6 +89,8 @@ interface ItemUsedContext {
 interface ActivationCardContext {
 	isCritical: boolean;
 	isMiss: boolean;
+	/** The item the card was made with, when it can be found. */
+	sourceItem?: { type?: string } | null;
 }
 
 // Context passed to onItemActivated — fires once when an item is used, regardless of

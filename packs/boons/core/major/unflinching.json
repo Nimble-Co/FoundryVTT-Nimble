@@ -6,7 +6,28 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "situationalRollMode",
+				"disabled": false,
+				"id": "T7vaOTWNYBOm7ZVp",
+				"identifier": "",
+				"label": "Unflinching",
+				"predicate": {
+					"$and": [
+						"save:keep:concentration"
+					]
+				},
+				"priority": 1,
+				"value": 1,
+				"checkType": "savingThrow",
+				"saves": [
+					"strength"
+				],
+				"abilities": [],
+				"skills": []
+			}
+		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your focus is unbroken even in the face of danger. Advantage on Concentration checks. [M]</span></p>",
 		"boonType": "major"
 	},

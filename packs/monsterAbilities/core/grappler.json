@@ -1,0 +1,108 @@
+{
+	"name": "Grappler.",
+	"type": "monsterFeature",
+	"img": "icons/magic/control/debuff-chains-shackle-movement-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "applyCondition",
+				"disabled": false,
+				"id": "aeMXe9UQuN4BssoA",
+				"identifier": "",
+				"label": "Grappled",
+				"predicate": {},
+				"priority": 1,
+				"condition": "grappled",
+				"trigger": "onHit",
+				"effectId": "iqbbGgq32J0VLE3j"
+			},
+			{
+				"type": "applyCondition",
+				"disabled": false,
+				"id": "CL6txcWDM9b5W3OP",
+				"identifier": "",
+				"label": "Grappled",
+				"predicate": {},
+				"priority": 1,
+				"condition": "grappled",
+				"trigger": "onCrit",
+				"effectId": "iqbbGgq32J0VLE3j"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>On hit: Grapples.</p>",
+		"subtype": "feature",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "iqbbGgq32J0VLE3j",
+			"name": "Grappled",
+			"img": "systems/nimble/assets/icons/grappled.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					],
+					"noDc": true
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"grappled"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "95tXlGgYhQYv2aS1"
+}

@@ -169,15 +169,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "kFtiHRPIIs6l4gDP",
-										"type": "applyEffect",
-										"effectId": "s1XPJYu6tzoxXQFC",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "M6hnSUAyIO8XbKoo"
-									},
-									{
 										"id": "XsGa32Fvj5Av3B1h",
 										"type": "applyEffect",
 										"effectId": "trrgMKwGO1eSC0tb",
@@ -218,35 +209,6 @@
 			"img": "icons/creatures/claws/claw-hooked-barbed.webp",
 			"effects": [
 				{
-					"_id": "s1XPJYu6tzoxXQFC",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "trrgMKwGO1eSC0tb",
 					"name": "Grappled",
 					"img": "systems/nimble/assets/icons/grappled.svg",
@@ -256,7 +218,7 @@
 						"rules": [],
 						"lastsUntil": [],
 						"escape": {
-							"dc": "",
+							"dc": "17",
 							"saves": [
 								"strength",
 								"dexterity"

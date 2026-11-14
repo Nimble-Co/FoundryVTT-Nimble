@@ -71,7 +71,7 @@
 					"id": "TsTauntNote01x9",
 					"type": "note",
 					"noteType": "reminder",
-					"text": "Use after you hit a creature. It is Taunted by you until the end of its next turn.",
+					"text": "Use after you hit a creature.",
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -107,7 +107,19 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [

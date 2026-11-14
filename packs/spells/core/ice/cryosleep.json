@@ -26,7 +26,6 @@
 					"savingThrowType": "strength",
 					"parentContext": null,
 					"parentNode": null,
-					"saveType": "strength",
 					"on": {
 						"failedSave": [
 							{
@@ -96,6 +95,19 @@
 					"condition": null,
 					"targetEffectId": null,
 					"durationType": null
+				},
+				{
+					"operation": "lengthenLastsUntil",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "cfrn6ZtFHnDOvGd9",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": null,
+					"ruleField": null,
+					"formula": null,
+					"momentIndex": 0
 				}
 			],
 			"choices": null
@@ -110,7 +122,30 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": 2,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "takeDamage",
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [

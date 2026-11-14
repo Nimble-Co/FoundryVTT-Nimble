@@ -221,15 +221,6 @@
 										"parentNode": "fpYTjiKcPYII10tZ"
 									},
 									{
-										"id": "58PWXSKjDsRMohWr",
-										"type": "applyEffect",
-										"effectId": "Fn9JoExpzFFZmQkc",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "fpYTjiKcPYII10tZ"
-									},
-									{
 										"id": "5RjOSlSFeSFACwgD",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
@@ -286,35 +277,6 @@
 					"transfer": false,
 					"statuses": [
 						"prone"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
-					"_id": "Fn9JoExpzFFZmQkc",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
 					],
 					"flags": {},
 					"folder": null
@@ -375,10 +337,9 @@
 						{
 							"id": "b2eM1wlJ1rVqDhMw",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "12",
 							"on": {
 								"failedSave": [

@@ -6,7 +6,26 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "conditionalBonus",
+				"disabled": false,
+				"id": "YxlrHitpIxVvLld3",
+				"identifier": "",
+				"label": "Assist Me, My Friend!",
+				"predicate": {},
+				"priority": 1,
+				"advantage": 0,
+				"damageBonus": "",
+				"damageType": "",
+				"damageOfItem": "lifebinding-spirit",
+				"startsChosen": false,
+				"delivery": "melee",
+				"source": "any",
+				"targetCondition": {},
+				"doubleFor": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

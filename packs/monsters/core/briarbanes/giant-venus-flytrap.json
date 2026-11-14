@@ -264,9 +264,58 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "zeroHp",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "die",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "gain",
+								"effectName": "incapacitated"
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "takeDamage",
+								"effectName": "",
+								"damageTypes": [
+									"fire",
+									"slashing"
+								]
+							}
+						],
 						"escape": {
-							"dc": "",
+							"dc": "12",
 							"saves": [
 								"strength",
 								"dexterity"

@@ -145,7 +145,7 @@
 				"identifier": "",
 				"rules": [],
 				"activation": {
-					"acquireTargetsFromTemplate": false,
+					"acquireTargetsFromTemplate": true,
 					"cost": {
 						"details": "",
 						"quantity": 1,
@@ -157,7 +157,31 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "iwS9pX1EUmo7gGKH",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveDC": "max(10, @damageTaken)",
+							"on": {
+								"failedSave": [
+									{
+										"id": "6lQkka67lvKlq37Q",
+										"type": "applyEffect",
+										"effectId": "zgRBl9P7Fv4JM7BP",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
+										"parentContext": "failedSave",
+										"parentNode": "iwS9pX1EUmo7gGKH"
+									}
+								],
+								"passedSave": []
+							},
+							"sharedRolls": []
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -165,14 +189,54 @@
 					},
 					"template": {
 						"length": 1,
-						"radius": 1,
-						"shape": "",
+						"radius": 2,
+						"shape": "emanation",
 						"width": 1
 					}
 				},
 				"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "zgRBl9P7Fv4JM7BP",
+					"name": "Stink Cloud",
+					"img": "icons/magic/death/skull-poison-green.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": null,
+								"span": "currentRound",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "Cannot take reactions this round. Must spend the next action vomiting.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

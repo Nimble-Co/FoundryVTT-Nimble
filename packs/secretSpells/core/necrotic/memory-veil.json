@@ -24,12 +24,23 @@
 				{
 					"id": "UwlrMMyPLgwUatZb",
 					"type": "savingThrow",
-					"savingThrowType": "strength",
+					"savingThrowType": "will",
 					"sharedRolls": [],
-					"on": {},
+					"on": {
+						"failedSave": [
+							{
+								"id": "VvJ0dI5qR9c1G1Ax",
+								"type": "applyEffect",
+								"effectId": "6rmaEiGArebm8IzE",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "UwlrMMyPLgwUatZb"
+							}
+						]
+					},
 					"parentContext": null,
-					"parentNode": null,
-					"saveType": "will"
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -66,7 +77,47 @@
 		"school": "necrotic",
 		"tier": 3
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "6rmaEiGArebm8IzE",
+			"name": "Memory Veil",
+			"img": "icons/magic/unholy/orb-hands-pink.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Memories of the event are concealed or changed.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.350",

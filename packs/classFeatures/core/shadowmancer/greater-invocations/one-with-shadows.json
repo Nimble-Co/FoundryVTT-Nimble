@@ -12,7 +12,7 @@
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,7 +20,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "8N1mL4AwrO3BA88l",
+					"type": "applyEffect",
+					"effectId": "zqHmf264uD1KFPWg",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -47,7 +57,60 @@
 			18
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "zqHmf264uD1KFPWg",
+			"name": "Invisible",
+			"img": "icons/svg/invisible.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "move",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "attack",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"invisible"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

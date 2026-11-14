@@ -37,7 +37,6 @@
 								"savingThrowType": "strength",
 								"parentContext": "hit",
 								"parentNode": "6pEXpZ8znbQP6LiP",
-								"saveType": "strength",
 								"on": {
 									"failedSave": [
 										{
@@ -62,6 +61,15 @@
 							}
 						]
 					}
+				},
+				{
+					"id": "pcAqmVaCTnBmXcfH",
+					"type": "applyEffect",
+					"effectId": "bJ8iCbaG6RzjiX10",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
 				}
 			],
 			"showDescription": true,
@@ -106,7 +114,19 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "rounds",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
@@ -118,6 +138,47 @@
 				"minor": false
 			},
 			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"incapacitated"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "bJ8iCbaG6RzjiX10",
+			"name": "Encased in Ice",
+			"img": "icons/magic/water/beam-ice-impact.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "start",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Immune to damage and negative effects.",
 			"disabled": false,
 			"origin": null,
 			"transfer": false,

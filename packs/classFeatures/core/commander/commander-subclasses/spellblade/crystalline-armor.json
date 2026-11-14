@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "crystalline-armor-use-pool",
+				"identifier": "crystalline-armor-use",
+				"label": "Crystalline Armor use",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "encounterStart",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "crystalline-armor-use-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "crystalline-armor-use",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +53,43 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "38rVsPOdjPaS3HMa",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "3 * @level",
+					"targetDisposition": "friendly",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "hRc6IjAJ5ntlfXHA",
+					"type": "healing",
+					"healingType": "tempHealing",
+					"formula": "3 * @level",
+					"targetDisposition": "friendly",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "uq8yBDrGpvvQQHiw",
+					"type": "applyEffect",
+					"effectId": "zbPWYA3RgXRxQ8wm",
+					"recipient": "targets",
+					"tempHealingNodeId": "hRc6IjAJ5ntlfXHA",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "LHfBSwmWYwMo9bRu",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Set their HP to 3× your LVL: this heals a creature at 0 HP to that amount.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +112,143 @@
 			1
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "zbPWYA3RgXRxQ8wm",
+			"name": "Hold the Line!",
+			"img": "icons/magic/water/barrier-ice-crystal-wall-green.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "JKwqzkb6VSF5AvIY",
+						"identifier": "",
+						"label": "Crystalline Armor",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "tempHpReduced",
+						"attackDelivery": "melee",
+						"notOnAllies": true,
+						"onlyCrits": false,
+						"answeredAttack": false,
+						"amount": "none",
+						"formula": "",
+						"damageType": "",
+						"ignoreArmor": true,
+						"woundDoubles": false,
+						"attackerEffectId": "xBpv8unFMPPHSL8h"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "tempHpGone",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "xBpv8unFMPPHSL8h",
+			"name": "Crystalline Armor",
+			"img": "icons/magic/water/barrier-ice-crystal-wall-green.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [
+					{
+						"key": "system.attributes.movement.walk",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.fly",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.climb",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.swim",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.burrow",
+						"type": "multiplyDown",
+						"value": "0.5",
+						"phase": "afterRules",
+						"priority": null
+					}
+				],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

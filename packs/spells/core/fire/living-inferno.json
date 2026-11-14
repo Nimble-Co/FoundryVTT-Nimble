@@ -19,7 +19,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "aWI0x5RsLsc0LSRd",
+					"type": "applyEffect",
+					"effectId": "Ymg2lJUKLsi7Rmp1",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -49,9 +59,118 @@
 			"selected": []
 		},
 		"school": "fire",
-		"tier": 7
+		"tier": 7,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "raiseEffectRule",
+					"value": null,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "aWI0x5RsLsc0LSRd",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "3z6ERZiSNQacw3HS",
+					"ruleField": "formula",
+					"formula": "@key",
+					"momentIndex": null
+				}
+			],
+			"choices": null
+		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "Ymg2lJUKLsi7Rmp1",
+			"name": "Flame Barrier",
+			"img": "icons/magic/fire/projectile-wave-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "3z6ERZiSNQacw3HS",
+						"identifier": "",
+						"label": "Flame Barrier",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "attacked",
+						"attackDelivery": "melee",
+						"notOnAllies": false,
+						"onlyCrits": false,
+						"answeredAttack": false,
+						"amount": "formula",
+						"formula": "@key",
+						"damageType": "",
+						"ignoreArmor": true,
+						"woundDoubles": false,
+						"attackerEffectId": "wAKImMcTZGnV3lzq"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "start",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "wAKImMcTZGnV3lzq",
+			"name": "Smoldering",
+			"img": "icons/svg/fire.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"smoldering"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

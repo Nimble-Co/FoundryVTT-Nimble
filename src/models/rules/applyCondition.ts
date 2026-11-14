@@ -19,6 +19,11 @@ import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { recordAppliedEffects } from '#utils/chat/applyEffectFromCard.js';
 import { giveWoundsOnCard } from '#utils/chat/woundFromCard.js';
+import {
+	ATTACK_SOURCES,
+	type AttackSourceFilter,
+	matchesAttackSource,
+} from '#utils/damage/attackDelivery.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -90,6 +95,11 @@ interface SaveCard {
 	update(data: Record<string, unknown>): Promise<unknown>;
 }
 
+/** The triggers that come from an attack, whose source the rule can limit. */
+function hasAttackSource(trigger: string): boolean {
+	return isAttackOutcomeTrigger(trigger) || trigger === 'onCritReceived';
+}
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -136,6 +146,18 @@ function schema() {
 			label: 'NIMBLE.rules.applyCondition.wounds.label',
 			hint: 'NIMBLE.rules.applyCondition.wounds.hint',
 		}),
+		attackSource: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: choiceLabels('attackOutcome', 'attackSource', ATTACK_SOURCES),
+				label: 'NIMBLE.rules.attackOutcome.attackSource.label',
+				hint: 'NIMBLE.rules.attackOutcome.attackSource.hint',
+				showWhen: (data: Record<string, unknown>) =>
+					hasAttackSource(String(data.trigger ?? 'onCrit')),
+			}),
+		),
 		manaAtLeast: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -166,6 +188,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	declare trigger: ApplyConditionTrigger;
 	declare effectId: string;
 	declare wounds: number;
+	declare attackSource: AttackSourceFilter;
 
 	declare manaAtLeast: number;
 
@@ -188,6 +211,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				],
 				['effectId', 'string'],
 				['wounds', 'number'],
+				['attackSource', 'string'],
 				['manaAtLeast', 'number'],
 			]),
 		);
@@ -203,6 +227,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
 		if (!this.#isAttackTrigger()) return [];
 		if (!this.#matchesAttackContext(context)) return [];
+		if (!this.#matchesSource(context.sourceItem)) return [];
 		const effect = this.#itemEffect();
 		const nodes: EffectNode[] = [];
 		if (effect || this.condition) {
@@ -252,6 +277,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (context.targetActor !== this.actor) return;
 		if (!firesCritTriggers(context)) return;
 		if (!isEnemyAttacker(context.sourceActor, this.actor, context.card)) return;
+		if (!this.#matchesSource(context.sourceItem)) return;
 		await this.#applyConditionToSelf();
 	}
 
@@ -322,7 +348,13 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	#shouldFireOnItemUsed(context: ItemUsedContext): boolean {
 		if (!this.test()) return false;
 		if (context.sourceActor !== this.actor) return false;
+		if (!this.#matchesSource(context.sourceItem)) return false;
 		return this.#matchesAttackContext(context);
+	}
+
+	/** As for Attack Outcome, an attack with no item found counts as a weapon attack. */
+	#matchesSource(item: { type?: string } | null | undefined): boolean {
+		return matchesAttackSource(this.attackSource, item);
 	}
 
 	#matchesAttackContext(context: { isCritical: boolean; isMiss: boolean }): boolean {

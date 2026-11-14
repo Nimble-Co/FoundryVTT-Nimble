@@ -303,10 +303,9 @@
 						{
 							"id": "cdMn884JTaizvyNP",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "dexterity",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "dexterity",
 							"saveDC": "17",
 							"sharedRolls": [
 								{

@@ -20,7 +20,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "nHYqJWtSItN4fcWa",
+					"type": "applyEffect",
+					"effectId": "DHj9JXyXkSXGhSdo",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -50,7 +60,71 @@
 			18
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "DHj9JXyXkSXGhSdo",
+			"name": "Sundered Armor",
+			"img": "icons/magic/air/air-smoke-casting.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "attackOutcome",
+						"disabled": false,
+						"id": "YmTQwnL7JrdmiYGe",
+						"identifier": "",
+						"label": "Sundered Armor",
+						"predicate": {},
+						"priority": 1,
+						"side": "attacksAgainstYou",
+						"cannotMiss": false,
+						"critRange": 0,
+						"forceCrit": "none",
+						"ignoreArmor": true,
+						"anyDieCrits": false,
+						"critD20": false,
+						"viciousCrits": false,
+						"attackDelivery": "melee",
+						"thisItemOnly": false,
+						"attackSource": "any",
+						"exceptItemIdentifier": "",
+						"otherCreature": {},
+						"chargePoolIdentifier": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "start",
+						"clock": "source",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

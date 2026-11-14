@@ -106,6 +106,16 @@ export interface TurnDamageAction extends HolderLine {
 	woundsGained?: number;
 }
 
+/** The drop to 0 HP of a 0 HP at End rule when its effect ended, and how it stands. */
+export interface ZeroHpAction extends HolderLine {
+	kind: 'zeroHp';
+	effectName: string;
+	/** waiting: Feature Effects off, a click drops the HP. dropped: done. undone: given back. */
+	state: 'waiting' | 'dropped' | 'undone';
+	/** The HP the drop took, so Undo gives back the same. */
+	hpLost?: number;
+}
+
 /** The "At N stacks" effect of a stacking effect, and how it stands. */
 export interface StackGainAction extends HolderLine {
 	kind: 'stackGain';
@@ -182,6 +192,7 @@ export type CardEventAction =
 	| WaitingEndAction
 	| EmptyPoolAction
 	| CritDiceSaveAction
+	| ZeroHpAction
 	| { kind: 'undoEnd'; row: EndedEffectRow }
 	| { kind: 'movementOffer'; node: MoveNode; offers: MovementOffer[] };
 

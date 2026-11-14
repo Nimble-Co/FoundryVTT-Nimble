@@ -25,7 +25,7 @@ Read the rulebook before answering a mechanics question. If a rule is not in the
 - Each class has exactly one advantage save and one disadvantage save.
 
 ## Where content lives
-`packs/` holds ancestries, ancestryBonuses, backgrounds, boons, classes, classFeatures, items, legendaryMonsters, magicItems, monsters, secretSpells, spells (by school folder), subclasses, tables, plus `ids.json`. Glob the directory rather than trusting a remembered list — content is added often.
+`packs/` holds ancestries, ancestryBonuses, backgrounds, boons, classes, classFeatures, hazards, items, legendaryMonsters, magicItems, monsterAbilities, monsters, secretSpells, spells (by school folder), subclasses, tables, plus `ids.json`. Glob the directory rather than trusting a remembered list — content is added often.
 
 ## What you check
 - Ability, skill, school, tier, and hit-die values are inside the enumerations above.

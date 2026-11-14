@@ -1,0 +1,73 @@
+{
+	"name": "Spiked.",
+	"type": "monsterFeature",
+	"img": "icons/commodities/biological/tail-spiked-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "damageBack",
+				"disabled": false,
+				"id": "iWQlqhanWBWfmHpO",
+				"identifier": "",
+				"label": "Spiked",
+				"predicate": {},
+				"priority": 1,
+				"trigger": "damaged",
+				"attackDelivery": "melee",
+				"notOnAllies": false,
+				"onlyCrits": false,
+				"answeredAttack": false,
+				"amount": "formula",
+				"formula": "1d4",
+				"damageType": "piercing",
+				"ignoreArmor": true,
+				"woundDoubles": false,
+				"attackerEffectId": ""
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When hit by a melee attack, the attacker takes 1d4 piercing damage in return.</p>",
+		"subtype": "feature",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "fCwD1e2V1bUMmWD4"
+}

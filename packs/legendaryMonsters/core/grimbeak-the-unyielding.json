@@ -274,10 +274,9 @@
 						{
 							"id": "xZIueLkPzG1imQG4",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "11",
 							"on": {
 								"failedSave": [
@@ -324,7 +323,19 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "time",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": 1,
+								"units": "rounds",
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [

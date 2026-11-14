@@ -1,4 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import type { RuleSource } from '#types/ruleSource.d.ts';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import {
 	type Application,
@@ -12,6 +14,16 @@ import { type StackingEffect, stackingCopyOf, stackUp } from './effectStacks.js'
 
 /** The delete option of an effect that a new application replaces: it does not end, so no "effect ends" moment. */
 export const CONDITION_REPLACED_OPTION = 'nimbleConditionReplaced';
+
+/** A delete that only starts the effect again. A replaced Concentration ends its activity, so it ends. */
+export function replacedWithoutEnd(
+	effect: { statuses?: ReadonlySet<string> | null },
+	options: Record<string, unknown> | undefined,
+): boolean {
+	return (
+		!!options?.[CONDITION_REPLACED_OPTION] && !effect.statuses?.has(STATUS_EFFECT_IDS.concentration)
+	);
+}
 
 /** A create that puts back or replaces a copy: the holder gains nothing new. */
 export const EFFECT_RECREATED_OPTION = 'nimbleEffectRecreated';
@@ -122,7 +134,7 @@ export interface ApplyConditionOptions {
 interface StatusEffectEntry {
 	id: string;
 	_id?: string;
-	system?: { lastsUntil?: Moment[] };
+	system?: { lastsUntil?: Moment[]; rules?: RuleSource[] };
 }
 
 /**
@@ -218,6 +230,21 @@ function lastsUntilOf(conditionId: string, options: ApplyConditionOptions): Mome
 }
 
 /**
+ * The authored effect's rules, then each rule of the status entry whose id it does not have.
+ * Null when the status entry has no rules.
+ */
+function withStatusRules(
+	conditionId: string,
+	effectData: Record<string, unknown>,
+): RuleSource[] | null {
+	const entryRules = findStatusEffectEntry(conditionId)?.system?.rules ?? [];
+	if (entryRules.length < 1) return null;
+	const authored = (effectData.system as { rules?: RuleSource[] } | undefined)?.rules ?? [];
+	const ids = new Set(authored.map((rule) => rule.id));
+	return [...authored, ...entryRules.filter((rule) => !ids.has(rule.id))];
+}
+
+/**
  * The uuid recorded as the effect's origin, which is what the conditions
  * readout resolves into a source name. The item is preferred so the readout
  * names the feature; the actor is the fallback so it at least names the
@@ -293,6 +320,8 @@ async function createConditionEffect(
 		effect.updateSource(options.effectData);
 		const authored = (options.effectData.statuses as string[] | undefined) ?? [];
 		effect.updateSource({ statuses: [...new Set([...linked, ...authored])] });
+		const rules = withStatusRules(conditionId, options.effectData);
+		if (rules) effect.updateSource({ 'system.rules': rules });
 	}
 
 	const patch: Record<string, unknown> = {};

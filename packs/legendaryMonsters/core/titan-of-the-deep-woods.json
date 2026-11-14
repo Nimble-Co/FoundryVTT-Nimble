@@ -393,15 +393,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "yFwlQsb7CX6sTfrG",
-										"type": "applyEffect",
-										"effectId": "apkxpj9tj87zsOSM",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "jzrLfKyxPi7ujvTJ"
-									},
-									{
 										"id": "B1YABCFhco1zvVrl",
 										"type": "applyEffect",
 										"effectId": "zPgnX5v3WagTMMth",
@@ -442,35 +433,6 @@
 			"_id": "ekNtNgYbJXn9Lv7b",
 			"img": "icons/skills/movement/feet-bladed-boots-fire.webp",
 			"effects": [
-				{
-					"_id": "apkxpj9tj87zsOSM",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
 				{
 					"_id": "zPgnX5v3WagTMMth",
 					"name": "Prone",
@@ -539,7 +501,6 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"saveDC": "16",
 							"on": {
 								"failedSave": [

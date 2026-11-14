@@ -31,6 +31,8 @@
 		empty,
 		canSettleCrit,
 		settleCrit,
+		canActOnZero,
+		actOnZero,
 		backStatus,
 	} = strip;
 
@@ -280,6 +282,32 @@
 								icon: 'fa-dice-d20',
 								text: localize('NIMBLE.chat.critDiceSave.apply'),
 								onclick: () => settleCrit(event),
+							})}
+						{/if}
+					{/if}
+
+					{#if event.action?.kind === 'zeroHp'}
+						{@const zero = event.action}
+						{#if zero.state === 'undone'}
+							<span class="nimble-card-events__back" role="status">
+								<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+								{localize('NIMBLE.chat.zeroHpAtEnd.undone')}
+							</span>
+						{:else if canActOnZero(zero)}
+							{@render lineAction(event.id, {
+								label: localize(
+									zero.state === 'waiting'
+										? 'NIMBLE.chat.zeroHpAtEnd.dropLabel'
+										: 'NIMBLE.chat.zeroHpAtEnd.undoLabel',
+									{ name: zero.holderName, effect: zero.effectName },
+								),
+								icon: zero.state === 'waiting' ? 'fa-heart-crack' : 'fa-rotate-left',
+								text: localize(
+									zero.state === 'waiting'
+										? 'NIMBLE.chat.zeroHpAtEnd.drop'
+										: 'NIMBLE.chat.events.undo',
+								),
+								onclick: () => actOnZero(event),
 							})}
 						{/if}
 					{/if}

@@ -86,3 +86,4 @@ export { Migration085NimbleEffectType } from './Migration085NimbleEffectType.js'
 export { Migration086ApplyEffectNodes } from './Migration086ApplyEffectNodes.js';
 export { Migration087HeldChangeEffects } from './Migration087HeldChangeEffects.js';
 export { Migration088LastsUntilVocabularies } from './Migration088LastsUntilVocabularies.js';
+export { Migration089TimedEffectsContent } from './Migration089TimedEffectsContent.js';

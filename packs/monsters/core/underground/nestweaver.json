@@ -230,15 +230,6 @@
 										"parentNode": "onbSGIp1YeUKh8my"
 									},
 									{
-										"id": "zmT16cgFpTaD2ct6",
-										"type": "applyEffect",
-										"effectId": "qOJw1MYwW3mVRmnZ",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "onbSGIp1YeUKh8my"
-									},
-									{
 										"id": "Rtfe5XGO98ulCLob",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
@@ -271,15 +262,31 @@
 			"effects": [
 				{
 					"_id": "eJqNvlBMI0ZpzuFx",
-					"name": "Grappled",
-					"img": "systems/nimble/assets/icons/grappled.svg",
+					"name": "Restrained",
+					"img": "icons/svg/net.svg",
 					"type": "nimble",
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "takeDamage",
+								"effectName": "",
+								"damageTypes": [
+									"slashing",
+									"fire"
+								]
+							}
+						],
 						"escape": {
-							"dc": "",
+							"dc": "12",
 							"saves": [
 								"strength",
 								"dexterity"
@@ -293,36 +300,7 @@
 					"origin": null,
 					"transfer": false,
 					"statuses": [
-						"grappled"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
-					"_id": "qOJw1MYwW3mVRmnZ",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
+						"restrained"
 					],
 					"flags": {},
 					"folder": null

@@ -68,13 +68,37 @@
 	"effects": [
 		{
 			"_id": "beELyM7GlJ7PlLY7",
-			"name": "Invisible",
+			"name": "Greater Windform",
 			"img": "icons/svg/invisible.svg",
 			"type": "nimble",
 			"system": {
 				"changes": [],
-				"rules": [],
-				"lastsUntil": [],
+				"rules": [
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "GMN4G9ml2UjgSkzj",
+						"identifier": "",
+						"label": "Greater Windform",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "@attributes.movement.walk"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
@@ -83,9 +107,10 @@
 					]
 				},
 				"tempHp": null,
-				"minor": false
+				"minor": false,
+				"readsHolder": true
 			},
-			"description": "",
+			"description": "Can slip through any space that wind can pass through.",
 			"disabled": false,
 			"origin": null,
 			"transfer": false,

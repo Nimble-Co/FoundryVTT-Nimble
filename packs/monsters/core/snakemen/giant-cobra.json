@@ -213,6 +213,17 @@
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
+								"criticalHit": [
+									{
+										"id": "uiC5nhoZAAbRIqba",
+										"type": "applyEffect",
+										"effectId": "2NmKyu5TXNDdwsXG",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
+										"parentContext": "criticalHit",
+										"parentNode": "wKgNy9NrBh9WIEEi"
+									}
+								],
 								"hit": [
 									{
 										"id": "MlsVogw1c5BclNhc",
@@ -246,7 +257,37 @@
 			},
 			"_id": "Fh17GpWpLrxaPugM",
 			"img": "icons/creatures/reptiles/snake-fangs-bite-green.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "2NmKyu5TXNDdwsXG",
+					"name": "Grappled",
+					"img": "systems/nimble/assets/icons/grappled.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "10",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"grappled"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},

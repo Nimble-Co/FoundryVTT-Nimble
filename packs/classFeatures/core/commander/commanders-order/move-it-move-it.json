@@ -21,10 +21,28 @@
 			},
 			"effects": [
 				{
+					"id": "JzfrDLkiJgpyGN2K",
+					"type": "applyEffect",
+					"effectId": "rRHKxww44o2KwdDx",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "8qb3Mhrhv5FWlKPQ",
+					"type": "applyEffect",
+					"effectId": "rRHKxww44o2KwdDx",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
 					"id": "JyS0bPpvH6ttPAoG",
 					"type": "note",
 					"noteType": "reminder",
-					"text": "Roll Initiative with advantage, and give one ally advantage on theirs. Both of you gain +3 speed for 1 round.",
+					"text": "Roll Initiative with advantage, and give one ally advantage on theirs.",
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -60,7 +78,59 @@
 			"2": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "rRHKxww44o2KwdDx",
+			"name": "Move it! Move it!",
+			"img": "icons/skills/movement/feet-winged-boots-glowing-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "speedBonus",
+						"disabled": false,
+						"id": "GhdfA4BbT6hImoFD",
+						"identifier": "",
+						"label": "Move it! Move it!",
+						"predicate": {},
+						"priority": 1,
+						"value": "3",
+						"movementType": null
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "rounds",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": "6a51bc6ac831498c",
 	"flags": {},
 	"_stats": {

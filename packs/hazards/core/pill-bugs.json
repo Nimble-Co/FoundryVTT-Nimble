@@ -1,0 +1,175 @@
+{
+	"name": "Pill Bugs.",
+	"type": "monsterFeature",
+	"img": "icons/creatures/invertebrates/beetle-grub-larvae-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "PlSE6L74fZvFLNOz",
+					"type": "savingThrow",
+					"savingThrowType": "dexterity",
+					"saveDC": "12",
+					"sharedRolls": [],
+					"on": {
+						"failedSave": [
+							{
+								"id": "FENpwPbgg4uAS0VK",
+								"type": "applyEffect",
+								"effectId": "4TcI9ZXXTDXt6eXu",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "PlSE6L74fZvFLNOz"
+							},
+							{
+								"id": "9s747Rg9vaML7SBf",
+								"type": "applyEffect",
+								"effectId": "2rJeemsHlasBGTjv",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "failedSave",
+								"parentNode": "PlSE6L74fZvFLNOz"
+							}
+						],
+						"passedSave": []
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": "",
+				"attackType": "",
+				"distance": 1
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Stepping on the litter on the floor or speaking above a whisper causes pill bugs to drop from the ceiling onto their heads and try and suffocate them. DC 12 DEX save or Grappled, Blinded, and suffocating: Take 1 Wound/round until you escape. Fire, bright lights, or dealing 10 or more damage in a single turn could also cause a bug to flee.</p>",
+		"subtype": "action",
+		"parentItemId": "",
+		"lastStandHp": 0
+	},
+	"effects": [
+		{
+			"_id": "4TcI9ZXXTDXt6eXu",
+			"name": "Grappled",
+			"img": "systems/nimble/assets/icons/grappled.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					],
+					"noDc": true
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"grappled"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "2rJeemsHlasBGTjv",
+			"name": "Smothered",
+			"img": "icons/svg/blind.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "turnDamage",
+						"disabled": false,
+						"id": "qRU3LT8sYTxPcpFK",
+						"identifier": "",
+						"label": "Smothered",
+						"predicate": {},
+						"priority": 1,
+						"at": "turnStart",
+						"who": "holder",
+						"reach": 1,
+						"formula": "",
+						"damageType": "",
+						"wounds": 1
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "effectEnds",
+						"effectName": "Grappled"
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"blinded"
+			],
+			"flags": {},
+			"folder": null
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.350",
+		"systemId": "nimble",
+		"systemVersion": "0.2.0",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1762397253681,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "i6OM1449SYjr8nZP"
+}

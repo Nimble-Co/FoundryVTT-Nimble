@@ -50,7 +50,7 @@
 				"armorBonus": "",
 				"useReroll": true,
 				"attackerEffectId": "",
-				"reminder": "Give each later ranged attack against you disadvantage this round.",
+				"reminder": "",
 				"useItem": true,
 				"upcastArmor": 3,
 				"withInterpose": false,
@@ -76,7 +76,17 @@
 				"quantity": 1,
 				"type": "round"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "vo3RqBHbtOYQAf47",
+					"type": "applyEffect",
+					"effectId": "sMc8Kkx9r2S61017",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -108,7 +118,65 @@
 		"school": "wind",
 		"tier": 2
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "sMc8Kkx9r2S61017",
+			"name": "Barrier of Wind",
+			"img": "icons/magic/air/wind-swirl-gray-blue.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "mgdozXtYBN8rMC7T",
+						"identifier": "",
+						"label": "Barrier of Wind",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": -1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": false,
+						"meleeOnly": false,
+						"rangedOnly": true,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": null,
+						"span": "currentRound",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

@@ -297,15 +297,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "6MsROoUtyiRYSHAH",
-										"type": "applyEffect",
-										"effectId": "zlWRyqIOi1s22NnM",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "WTN0fnMszWjCsCmH"
-									},
-									{
 										"id": "oxZe7MzGLW0V9yyJ",
 										"type": "applyEffect",
 										"effectId": "xv8Fc5vWRAQjUAMY",
@@ -347,35 +338,6 @@
 			"img": "icons/weapons/misc/whip-red-yellow.webp",
 			"effects": [
 				{
-					"_id": "zlWRyqIOi1s22NnM",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "xv8Fc5vWRAQjUAMY",
 					"name": "Grappled",
 					"img": "systems/nimble/assets/icons/grappled.svg",
@@ -383,9 +345,54 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "zeroHp",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "die",
+								"effectName": ""
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "gain",
+								"effectName": "incapacitated"
+							},
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "useAgain",
+								"effectName": ""
+							}
+						],
 						"escape": {
-							"dc": "",
+							"dc": "17",
 							"saves": [
 								"strength",
 								"dexterity"

@@ -80,6 +80,8 @@ The system ships with everything from the rulebook, ready to drag onto a scene:
 
 - **Nimble Monsters**: the standard bestiary, organized into folders by family (bandits, goblins, kobolds, horrors, and so on). Contains NPCs and minions.
 - **Nimble Legendary Monsters**: the legendary monsters as solo monster actors, plus the companion minions some of them summon.
+- **Nimble Monster Abilities**: the flavorful monster abilities and the legendary optional actions, such as *Grappler.* or *Terrible Roar/Creepy Monologue/Taunt.* Drag an ability onto a monster's sheet to give it to that monster.
+- **Nimble Hazards**: room and travel hazards from the adventures, such as *Thorn Briars.* Drag a hazard onto any monster's sheet, then use it from there with the heroes targeted.
 - **Nimble Tables**: roll tables used by game content, including the Chaos Table, the Control Table, and Lodging Boons.
 
 Drag a monster from a compendium into the sidebar or straight onto a scene. Imported monsters are regular actors: edit them freely without affecting the compendium copy.

@@ -37,13 +37,21 @@
 								"savingThrowType": "strength",
 								"parentContext": "hit",
 								"parentNode": "6pEXpZ8znbQP6LiP",
-								"saveType": "strength",
 								"on": {
 									"failedSave": [
 										{
 											"id": "xU1H46GErvHeHktL",
 											"type": "applyEffect",
 											"effectId": "lw6Gq5oQtvrk7XUC",
+											"recipient": "targets",
+											"tempHealingNodeId": null,
+											"parentContext": "failedSave",
+											"parentNode": "P2MHYNyCBVrBNjGJ"
+										},
+										{
+											"id": "a6RLCsrsfSXb1byr",
+											"type": "applyEffect",
+											"effectId": "NczHQZDEzrGeEAPD",
 											"recipient": "targets",
 											"tempHealingNodeId": null,
 											"parentContext": "failedSave",
@@ -120,7 +128,19 @@
 			"system": {
 				"changes": [],
 				"rules": [],
-				"lastsUntil": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
@@ -137,6 +157,47 @@
 			"transfer": false,
 			"statuses": [
 				"restrained"
+			],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "NczHQZDEzrGeEAPD",
+			"name": "Incapacitated",
+			"img": "systems/nimble/assets/icons/incapacitated.svg",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [],
+				"lastsUntil": [
+					{
+						"kind": "turn",
+						"boundary": "end",
+						"clock": "holder",
+						"span": "nextTurn",
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [
+				"incapacitated"
 			],
 			"flags": {},
 			"folder": null

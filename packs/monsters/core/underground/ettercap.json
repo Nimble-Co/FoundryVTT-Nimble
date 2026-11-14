@@ -169,15 +169,6 @@
 							"on": {
 								"hit": [
 									{
-										"id": "gfmvkiuQsUQbZaXK",
-										"type": "applyEffect",
-										"effectId": "Zj7lgcSdsmDciBNB",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "hit",
-										"parentNode": "3c21wnL6rWn5YikO"
-									},
-									{
 										"id": "Qt5yk5Gne9Sjso6i",
 										"type": "applyEffect",
 										"effectId": "V4xINB5KiKg3sXGs",
@@ -227,35 +218,6 @@
 			"img": "icons/creatures/webs/webthin-blue.webp",
 			"effects": [
 				{
-					"_id": "Zj7lgcSdsmDciBNB",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "V4xINB5KiKg3sXGs",
 					"name": "Grappled",
 					"img": "systems/nimble/assets/icons/grappled.svg",
@@ -265,7 +227,7 @@
 						"rules": [],
 						"lastsUntil": [],
 						"escape": {
-							"dc": "",
+							"dc": "13",
 							"saves": [
 								"strength",
 								"dexterity"
@@ -292,7 +254,19 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "effectEnds",
+								"effectName": "Grappled"
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [

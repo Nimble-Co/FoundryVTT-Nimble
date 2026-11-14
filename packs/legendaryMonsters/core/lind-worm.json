@@ -358,7 +358,7 @@
 						"rules": [],
 						"lastsUntil": [],
 						"escape": {
-							"dc": "",
+							"dc": "10",
 							"saves": [
 								"strength",
 								"dexterity"
@@ -471,7 +471,19 @@
 					"system": {
 						"changes": [],
 						"rules": [],
-						"lastsUntil": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "healed",
+								"effectName": ""
+							}
+						],
 						"escape": {
 							"dc": "",
 							"saves": [

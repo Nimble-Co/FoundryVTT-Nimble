@@ -6,7 +6,42 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "illuminate-soul-pool",
+				"identifier": "illuminate-soul",
+				"label": "Illuminate Soul",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "max(@will, 0)",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": true,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "illuminate-soul-consumer",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 2,
+				"poolIdentifier": "illuminate-soul",
+				"poolScope": "item",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +55,26 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "Lyu4xBE08Rxx97xD",
+					"type": "applyEffect",
+					"effectId": "fCHMqezPDolfZ3sp",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "FkBz4gIOreVtOZWT",
+					"type": "applyEffect",
+					"effectId": "bezhH1AumMIqiAal",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -48,7 +102,122 @@
 			"5": 2
 		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "fCHMqezPDolfZ3sp",
+			"name": "Illuminate Soul (advantage)",
+			"img": "icons/magic/light/beam-explosion-orange.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "xM9YqN8s0flTVyTP",
+						"identifier": "",
+						"label": "Illuminate Soul",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": 1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": false,
+						"meleeOnly": false,
+						"rangedOnly": false,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "rounds",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		},
+		{
+			"_id": "bezhH1AumMIqiAal",
+			"name": "Illuminate Soul (disadvantage)",
+			"img": "icons/magic/light/beam-explosion-orange.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "heldRoll",
+						"disabled": false,
+						"id": "8GqOKqjmMv8SGC0P",
+						"identifier": "",
+						"label": "Illuminate Soul",
+						"predicate": {},
+						"priority": 1,
+						"heldKind": "advantage",
+						"value": -1,
+						"whichRoll": "attacksOnHolder",
+						"usedUp": false,
+						"meleeOnly": false,
+						"rangedOnly": false,
+						"fromSourceOnly": false,
+						"damageType": ""
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "rounds",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

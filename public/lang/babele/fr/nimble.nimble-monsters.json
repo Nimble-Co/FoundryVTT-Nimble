@@ -339,7 +339,12 @@
 				},
 				"Fanatical Zeal.": {
 					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-					"name": "Fanatical Zeal."
+					"name": "Fanatical Zeal.",
+					"rules": {
+						"w3QijfphVbI6UI6M": {
+							"label": "Fanatical Zeal: Despair on crit"
+						}
+					}
 				},
 				"Oblation of Blood!": {
 					"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
@@ -443,7 +448,12 @@
 				},
 				"Fanatical Zeal.": {
 					"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-					"name": "Fanatical Zeal."
+					"name": "Fanatical Zeal.",
+					"rules": {
+						"mxNftjimzcHEnNC8": {
+							"label": "Fanatical Zeal: Despair on crit"
+						}
+					}
 				},
 				"Oblation of Blood!": {
 					"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
@@ -1200,7 +1210,12 @@
 				},
 				"Spines.": {
 					"description": "<p>Melee attackers take 3 damage.</p>",
-					"name": "Spines."
+					"name": "Spines.",
+					"rules": {
+						"UhQHd7PqJHyWeImo": {
+							"label": "Spines"
+						}
+					}
 				}
 			},
 			"name": "Spiny Fiend"

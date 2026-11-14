@@ -207,7 +207,17 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "HjLkMitgdjBjQzJP",
+							"type": "applyEffect",
+							"effectId": "8DBml2GlAUU0jWMp",
+							"recipient": "self",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -222,7 +232,47 @@
 				},
 				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"_id": "8DBml2GlAUU0jWMp",
+					"name": "FLAWED",
+					"img": "icons/magic/air/air-burst-spiral-teal-green.webp",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "turn",
+								"boundary": "end",
+								"clock": "nextHero",
+								"span": "nextTurn",
+								"value": null,
+								"units": null,
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "Dravok's plans are FLAWED: My plans, flawless! does not apply.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -422,7 +472,17 @@
 						"quantity": 1,
 						"type": "none"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "t2l2OoT4QsqUaNFA",
+							"type": "applyEffect",
+							"effectId": "PjEGd8oZToPlzW65",
+							"recipient": "targets",
+							"tempHealingNodeId": null,
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -443,7 +503,84 @@
 			},
 			"_id": "En4fdOj40xF7Q1mj",
 			"img": "icons/magic/light/beam-rays-yellow-blue-large.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "PjEGd8oZToPlzW65",
+					"name": "Dazed",
+					"img": "systems/nimble/assets/icons/dazed.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "holder",
+								"event": "healed",
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false,
+						"stacks": {
+							"on": true,
+							"count": 1,
+							"at": 3,
+							"effectId": "lgth5x78Q2QChdto"
+						}
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "lgth5x78Q2QChdto",
+					"name": "Petrified",
+					"img": "systems/nimble/assets/icons/petrified.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"petrified"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -489,10 +626,11 @@
 							"on": {
 								"hit": [
 									{
-										"id": "5qyte95rBYaomW24",
-										"type": "note",
-										"noteType": "warning",
-										"text": "TERRIFIED: You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.",
+										"id": "AUunO4XCUc0PAXWC",
+										"type": "applyEffect",
+										"effectId": "8ysb4ovwBkSZAu6y",
+										"recipient": "targets",
+										"tempHealingNodeId": null,
 										"parentContext": "hit",
 										"parentNode": "hp79M6PwhC6h3dXu"
 									},
@@ -527,7 +665,49 @@
 			},
 			"_id": "x3uAQ8Y4Pog85I7f",
 			"img": "icons/magic/light/beam-rays-red-large.webp",
-			"effects": [],
+			"effects": [
+				{
+					"_id": "8ysb4ovwBkSZAu6y",
+					"name": "Terrified",
+					"img": "icons/svg/terror.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "event",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": null,
+								"units": null,
+								"who": "source",
+								"event": "gain",
+								"effectName": "FLAWED"
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false
+					},
+					"description": "Cannot spend resources; spent actions come back afterward. Your screams give allies within 6 spaces disadvantage on rolls.",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"frightened"
+					],
+					"flags": {},
+					"folder": null
+				}
+			],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
@@ -648,10 +828,9 @@
 						{
 							"id": "GghZB0H4VODtiT8Y",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "16",
 							"on": {
 								"passedSave": [
@@ -738,7 +917,6 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"saveDC": "16",
 							"on": {
 								"passedSave": [

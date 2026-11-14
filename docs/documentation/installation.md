@@ -42,6 +42,8 @@ Open the **Compendium Packs** tab in the sidebar and you'll find the full Nimble
 | **Nimble Magic Items** | Magic items from the core rules and GM guide, including wands and spell scrolls. |
 | **Nimble Monsters** | The standard bestiary, including minions. |
 | **Nimble Legendary Monsters** | Solo boss monsters, built on their own sheet type. |
+| **Nimble Monster Abilities** | The flavorful monster abilities and the legendary optional actions from the GM guide, as monster features. |
+| **Nimble Hazards** | Room and travel hazards from the GM guide adventures, as monster features. |
 | **Nimble Tables** | Roll tables used by certain features and boons, such as the chaos table. |
 
 ::: tip Copy before you customize

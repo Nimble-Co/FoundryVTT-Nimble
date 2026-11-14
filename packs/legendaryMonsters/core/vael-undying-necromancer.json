@@ -252,10 +252,9 @@
 						{
 							"id": "gMA6miL1QWbAFXoG",
 							"type": "savingThrow",
-							"savingThrowType": "strength",
+							"savingThrowType": "will",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "will",
 							"saveDC": "14",
 							"on": {
 								"failedSave": [],
@@ -443,10 +442,9 @@
 									{
 										"id": "9lU7mLOLojuA9QOc",
 										"type": "savingThrow",
-										"savingThrowType": "strength",
+										"savingThrowType": "will",
 										"parentContext": "hit",
 										"parentNode": "AochU3QSpr6aqMqa",
-										"saveType": "will",
 										"saveDC": "14",
 										"on": {
 											"failedSave": []

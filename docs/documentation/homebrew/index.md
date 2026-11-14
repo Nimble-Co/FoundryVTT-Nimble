@@ -4,53 +4,55 @@ title: "What You Can (and Can't) Change"
 
 # What You Can (and Can't) Change
 
-The golden rule of homebrewing in this system: **everything in this section is point-and-click.** No coding, no modules, no editing files. If a page in the Homebrewing section describes it, you can build it with sheets, fields, and buttons inside Foundry, using the same tools the official content is built with.
+Everything in the Homebrewing section is point-and-click. You need no code, no modules and no file edits. If a page in this section describes it, you can build it in Foundry with sheets, fields and buttons, the same tools that the official content uses.
 
 ## You can do all of this without touching code
 
-- **Custom weapons, armor, and gear** with working attack rolls, damage, and properties, indistinguishable from pack items at the table.
-- **Custom spells**, including upcasting, with the same casting flow as the official spells.
-- **Full custom monsters**: standard NPCs, minions, and solo bosses, complete with their own attacks and abilities.
-- **Complete character options**: whole classes, subclasses, ancestries, backgrounds, and boons, delivered through the same character creator and level-up flow as the official ones.
-- **Passive bonuses** to stats, armor, speed, skills, saving throws, and maximum hit points (and more, such as damage, initiative, and wounds).
-- **Granting things automatically**: an item or feature that gives the bearer other items, spells, proficiencies, or new movement types like flying or swimming.
-- **Custom conditions**: your own statuses, with their own name, description, and icon, added by the GM from Game Settings → Configure Settings → Nimble → Manage Conditions. They appear in the token HUD and condition lists beside the built-in ones, and can be applied by rules like any other condition.
-- **Condition immunity**: creatures or items that make their owner immune to specific conditions.
-- **Conditions applied on a hit**: a blade that dazes on a crit, a monster attack that poisons.
-- **Charges and dice pools**: limited-use abilities that track and spend their own resource.
-- **Inline roll buttons** in any description: clickable skill checks, saving throws, and condition links right in the text.
+- Weapons, armor and gear with working attack rolls, damage and properties, which work at the table like pack items.
+- Spells, with upcasting, that cast the same way as the official spells.
+- Monsters: NPCs, minions and solo bosses, with their own attacks and abilities.
+- Whole classes, subclasses, ancestries, backgrounds and boons, through the same character creator and level-up steps as the official ones.
+- Passive bonuses to stats, armor, speed, skills, saving throws and max hit points, and more, such as damage, initiative and Wounds.
+- An item or feature that grants other items, spells, proficiencies, or movement types such as flying or swimming.
+- Custom conditions with their own name, description and icon. The GM adds them from **Game Settings → Configure Settings → Nimble → Manage Conditions**. They show in the token HUD and the condition lists next to the built-in ones, and rules can apply them like any other condition.
+- Condition immunity, from a creature or an item that makes its owner immune to a condition.
+- Conditions applied on a hit, such as a blade that dazes on a crit or a monster attack that poisons.
+- Charges and dice pools for limited-use abilities that track and spend their own resource.
+- Inline roll buttons in any description: skill checks, saving throws and condition links that you click in the text.
 
-All of the automatic behavior above is powered by **rules** that you attach to items with the Rules Builder, and each rule can carry **conditions (the Condition box)** so it only applies when you want it to: while bloodied, while the item is equipped, and so on.
+The automatic parts come from **rules** that you add to items with the Rules Builder. Each rule can have conditions in **the Condition box**, so that it applies only when you want, such as while Bloodied or while the item is equipped.
 
 ![The Rules Builder on a homebrew item, showing a couple of configured rules](/images/documentation/rules-builder-example-item.png)
 
 ## You can't (without a module or code changes)
 
-Being honest about the edges saves you time:
+These need a module or a change to the system's code:
 
-- **New condition *behavior*.** You can add your own conditions, but they are markers: the system won't give them built-in mechanics the way it does for the official ones (which conditions count as others, which ones are applied together, which ones stack, which ones apply automatically).
-- **Brand-new rule types.** You combine the rule types the system ships with; you can't define a new kind of rule from inside Foundry.
-- **Changing the core dice math.** How attacks, saves, and criticals resolve is built in.
-- **New sheet layouts.** You can't rearrange or redesign the character and monster sheets.
-- **New actor kinds** beyond character, NPC, minion, and solo monster.
+- **New condition behavior.** Your own conditions are only markers. They do not get the built-in behavior of the official ones: which conditions count as others, which go on together, which stack, and which go on by themselves.
+- **New rule types.** You combine the rule types that the system ships. You cannot make a new kind of rule inside Foundry.
+- **Core dice math.** How attacks, saves and crits resolve is built in.
+- **New sheet layouts.** You cannot rearrange or redesign the character sheet or the NPC sheet.
+- **New actor kinds** beyond character, NPC, minion and solo monster.
 
-If you genuinely need one of these, it's a feature request: bring it to the [GitHub issues page](https://github.com/Nimble-Co/FoundryVTT-Nimble/issues) or the Discord.
+If you need one of these, ask for it as a feature request on the [GitHub issues page](https://github.com/Nimble-Co/FoundryVTT-Nimble/issues) or in the Discord.
 
 ## Homebrew safely
 
-Never edit compendium packs directly: system updates replace their contents, and your changes with them. Instead, drag (or duplicate) the closest official example into your world and modify the copy. This has a second benefit: starting from working official content is the fastest way to learn how anything is built. Open a pack item's sheet, look at its rules and activation, and copy the pattern.
+Do not edit compendium packs. A system update replaces their contents, and your changes with them. Drag or duplicate the closest official example into your world and change the copy. Open a pack item's sheet, look at its rules and activation, and copy the pattern.
 
 ::: tip Reverse-engineer the packs
-Stuck on how to build something? Find an official item that does something similar and open it. Every trick in these pages is used somewhere in the shipped content.
+The shipped content uses every method on these pages. To learn how to build something, open an official item that does something similar.
 :::
 
 ## Where to go next
 
-| I want to make... | Read |
+| To make... | Read |
 | --- | --- |
 | A weapon, armor, shield, or piece of gear | [Items & Equipment](items.md) |
-| An item or feature that *does* something when used | [Activations](activations.md) |
-| An effect that ends at a turn, after a time, or when something happens | [Effects and Lasts Until](effects.md) |
+| An item or feature that *does* something when used | [Activations](activations.md) and [On Use Steps](activation-steps.md) |
+| An effect that an item or a step gives | [Effects](effects.md) |
+| An effect that ends at a turn, after a time, or when something happens | [Lasts Until, Stacks and Escape](lasts-until.md) |
+| An effect that changes a later attack, or deals damage each turn | [Held Changes and Damage Each Turn](held-changes.md) |
 | A spell (including upcasting) | [Spells](spells.md) |
 | A monster, minion, or solo boss | [Monsters](monsters.md) |
 | A class, subclass, ancestry, background, or boon | [Character Options](character-options.md) |

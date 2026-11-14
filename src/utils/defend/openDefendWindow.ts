@@ -187,8 +187,9 @@ export function defendWindowPlan(card: NimbleChatMessage, reactor: DefendReactor
 	const defendTicks = keysOf(
 		tickPicks.filter(
 			(pick) =>
-				!pick.rule.useReroll ||
-				!!cardRerollFor(card, pick.rule.parentDocument?.uuid, reactor.targetTokenUuid),
+				!pick.rule.withInterpose &&
+				(!pick.rule.useReroll ||
+					!!cardRerollFor(card, pick.rule.parentDocument?.uuid, reactor.targetTokenUuid)),
 		),
 	);
 	const bothTicks = keysOf(tickPicks);

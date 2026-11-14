@@ -738,6 +738,14 @@
 				"undoLabel": "Undo: give back to {name} what this line took",
 				"undone": "Undone"
 			},
+			"zeroHpAtEnd": {
+				"drops": "{name} drops to 0 HP",
+				"cause": "{effect} ended",
+				"drop": "Drop to 0 HP",
+				"dropLabel": "{name} drops to 0 HP: {effect} ended",
+				"undoLabel": "Undo: give back to {name} the HP this line took",
+				"undone": "Undone"
+			},
 			"stackGain": {
 				"gains": "{name} gains {effect}: {count} stacks of {stacked}",
 				"has": "{name} has {count} stacks of {stacked}",
@@ -767,10 +775,6 @@
 					"unknown": "The save has no result"
 				},
 				"apply": "Apply"
-			},
-			"swallowedDamage": {
-				"text": "{name} takes {amount} damage",
-				"cause": "Swallowed"
 			},
 			"critBack": {
 				"text": "{creature} lives. Choose an attack: it is free, targets {hero} and is a crit.",
@@ -2039,6 +2043,7 @@
 			"tags": "Tags",
 			"turnDamage": "Damage each turn",
 			"escapeDamage": "Damage on escape",
+			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
 			"reroll": "Reroll"
@@ -3184,7 +3189,7 @@
 				},
 				"withInterpose": {
 					"label": "Only when you Interpose",
-					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend."
+					"hint": "The free Defend shows only with an Interpose, as Interpose and Defend. On a tick: the tick shows only on a row with an Interpose, not on a Defend alone."
 				},
 				"wholeRound": {
 					"label": "Every attack this round",
@@ -3614,6 +3619,9 @@
 					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
 				},
 				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
+			},
+			"zeroHpAtEnd": {
+				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",

@@ -206,15 +206,6 @@
 					},
 					"effects": [
 						{
-							"id": "MfjSOilSNlsrh2mc",
-							"type": "applyEffect",
-							"effectId": "G9crCQkiJNblvBai",
-							"recipient": "targets",
-							"tempHealingNodeId": null,
-							"parentContext": null,
-							"parentNode": null
-						},
-						{
 							"id": "uYpDvr5EZunKsGIU",
 							"type": "applyEffect",
 							"effectId": "ZpvDniNo2gCf7N30",
@@ -245,35 +236,6 @@
 			"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
 			"effects": [
 				{
-					"_id": "G9crCQkiJNblvBai",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
 					"_id": "ZpvDniNo2gCf7N30",
 					"name": "Dazed",
 					"img": "systems/nimble/assets/icons/dazed.svg",
@@ -281,6 +243,53 @@
 					"system": {
 						"changes": [],
 						"rules": [],
+						"lastsUntil": [
+							{
+								"kind": "time",
+								"boundary": null,
+								"clock": null,
+								"span": null,
+								"value": 10,
+								"units": "minutes",
+								"who": null,
+								"event": null,
+								"effectName": ""
+							}
+						],
+						"escape": {
+							"dc": "",
+							"saves": [
+								"strength",
+								"dexterity"
+							]
+						},
+						"tempHp": null,
+						"minor": false,
+						"stacks": {
+							"on": true,
+							"count": 1,
+							"at": 3,
+							"effectId": "kjy7NmqePMhAB9bw"
+						}
+					},
+					"description": "",
+					"disabled": false,
+					"origin": null,
+					"transfer": false,
+					"statuses": [
+						"dazed"
+					],
+					"flags": {},
+					"folder": null
+				},
+				{
+					"_id": "kjy7NmqePMhAB9bw",
+					"name": "Petrified",
+					"img": "systems/nimble/assets/icons/petrified.svg",
+					"type": "nimble",
+					"system": {
+						"changes": [],
+						"rules": [],
 						"lastsUntil": [],
 						"escape": {
 							"dc": "",
@@ -297,7 +306,7 @@
 					"origin": null,
 					"transfer": false,
 					"statuses": [
-						"dazed"
+						"petrified"
 					],
 					"flags": {},
 					"folder": null

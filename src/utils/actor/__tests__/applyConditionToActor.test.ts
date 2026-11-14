@@ -9,7 +9,10 @@ const fromStatusEffect = vi.fn();
 const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
-import applyConditionToActor from '../applyConditionToActor.js';
+import applyConditionToActor, {
+	CONDITION_REPLACED_OPTION,
+	replacedWithoutEnd,
+} from '../applyConditionToActor.js';
 
 interface FakeEffect {
 	id: string;
@@ -458,6 +461,37 @@ describe('applyConditionToActor effectData', () => {
 		expect(result).toBeNull();
 		expect(createEffect).not.toHaveBeenCalled();
 	});
+
+	describe("the status entry's rules", () => {
+		const swallowedDamage = { id: 'swallowedDamage', type: 'turnDamage', formula: '20' };
+
+		beforeEach(() => {
+			(CONFIG as { statusEffects?: unknown }).statusEffects = [
+				{ id: 'swallowed', system: { rules: [swallowedDamage] } },
+			];
+		});
+
+		async function rulesAfter(effectData: Record<string, unknown>) {
+			const effect = createFakeEffect();
+			fromStatusEffect.mockResolvedValueOnce(effect);
+			await applyConditionToActor(createTargetActor(), 'swallowed', { effectData });
+			return effect.sourceData['system.rules'];
+		}
+
+		it('stay on an authored effect that has no rules', async () => {
+			expect(await rulesAfter({ name: 'Swallow', system: { rules: [] } })).toEqual([
+				swallowedDamage,
+			]);
+		});
+
+		it('come after the authored rules, and an authored rule with the same id wins', async () => {
+			const own = { id: 'swallowedDamage', type: 'turnDamage', formula: '30' };
+			const other = { id: 'other', type: 'note' };
+
+			expect(await rulesAfter({ system: { rules: [own, other] } })).toEqual([own, other]);
+			expect(await rulesAfter({ system: { rules: [other] } })).toEqual([other, swallowedDamage]);
+		});
+	});
 });
 
 describe("applyConditionToActor the status entry's Lasts Until", () => {
@@ -589,5 +623,20 @@ describe('applyConditionToActor stacks', () => {
 			await applyConditionToActor(other, 'dazed', { effectData: effectData(false) }),
 		).toBeNull();
 		expect(copy.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('replacedWithoutEnd', () => {
+	const replaced = { [CONDITION_REPLACED_OPTION]: true };
+
+	it('is true for a replaced copy: it only starts again', () => {
+		expect(replacedWithoutEnd({ statuses: new Set(['dazed']) }, replaced)).toBe(true);
+		expect(replacedWithoutEnd({}, replaced)).toBe(true);
+	});
+
+	it('is false for a replaced Concentration, and for a delete that is not a replacement', () => {
+		expect(replacedWithoutEnd({ statuses: new Set(['concentration']) }, replaced)).toBe(false);
+		expect(replacedWithoutEnd({ statuses: new Set(['dazed']) }, {})).toBe(false);
+		expect(replacedWithoutEnd({}, undefined)).toBe(false);
 	});
 });

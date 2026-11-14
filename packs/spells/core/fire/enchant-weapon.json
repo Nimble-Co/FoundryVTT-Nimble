@@ -19,7 +19,17 @@
 				"quantity": 1,
 				"type": "minute"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "o73PPpwDKRMI9nmf",
+					"type": "applyEffect",
+					"effectId": "HUXisKDcEGPaocJJ",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -51,9 +61,96 @@
 			]
 		},
 		"school": "fire",
-		"tier": 2
+		"tier": 2,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "raiseEffectRule",
+					"value": null,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "o73PPpwDKRMI9nmf",
+					"durationType": null,
+					"maxDieFaces": null,
+					"ruleId": "QQ5TnC8iBfc5IoRW",
+					"ruleField": "value",
+					"formula": "@key",
+					"momentIndex": null
+				}
+			],
+			"choices": null
+		}
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "HUXisKDcEGPaocJJ",
+			"name": "Enchant Weapon",
+			"img": "icons/magic/fire/dagger-rune-enchant-flame-orange.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "damageBonus",
+						"disabled": false,
+						"id": "QQ5TnC8iBfc5IoRW",
+						"identifier": "",
+						"label": "Enchant Weapon",
+						"predicate": {},
+						"priority": 1,
+						"value": "@key",
+						"damageType": "",
+						"delivery": "any",
+						"source": "weapon",
+						"itemIdentifier": ""
+					},
+					{
+						"type": "applyCondition",
+						"disabled": false,
+						"id": "fShcLcI2lJcuxvRw",
+						"identifier": "",
+						"label": "Enchant Weapon",
+						"predicate": {},
+						"priority": 1,
+						"condition": "smoldering",
+						"trigger": "onCrit",
+						"effectId": "",
+						"attackSource": "weapon"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"folder": null,
 	"flags": {},
 	"_stats": {

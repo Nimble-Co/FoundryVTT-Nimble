@@ -166,15 +166,6 @@
 							"tempHealingNodeId": null,
 							"parentContext": null,
 							"parentNode": null
-						},
-						{
-							"id": "7Xvl3e22HkkWcTGi",
-							"type": "applyEffect",
-							"effectId": "CjJd3Ft3JDj1h6UJ",
-							"recipient": "targets",
-							"tempHealingNodeId": null,
-							"parentContext": null,
-							"parentNode": null
 						}
 					],
 					"showDescription": true,
@@ -217,35 +208,6 @@
 					"transfer": false,
 					"statuses": [
 						"prone"
-					],
-					"flags": {},
-					"folder": null
-				},
-				{
-					"_id": "CjJd3Ft3JDj1h6UJ",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
 					],
 					"flags": {},
 					"folder": null
@@ -476,19 +438,9 @@
 							"savingThrowType": "strength",
 							"parentContext": null,
 							"parentNode": null,
-							"saveType": "strength",
 							"saveDC": "14",
 							"on": {
 								"failedSave": [
-									{
-										"id": "LwJ8iS6H76SUg9YT",
-										"type": "applyEffect",
-										"effectId": "wiSSsa3KBuGd8TkW",
-										"recipient": "targets",
-										"tempHealingNodeId": null,
-										"parentContext": "failedSave",
-										"parentNode": "XSsMqXrm3eke0Gj6"
-									},
 									{
 										"id": "0Oh2HN5dMuWgedki",
 										"type": "applyEffect",
@@ -524,35 +476,6 @@
 			"_id": "engJrYwHNhUUoJ0h",
 			"img": "icons/commodities/biological/wing-green.webp",
 			"effects": [
-				{
-					"_id": "wiSSsa3KBuGd8TkW",
-					"name": "Hampered",
-					"img": "systems/nimble/assets/icons/hampered.svg",
-					"type": "nimble",
-					"system": {
-						"changes": [],
-						"rules": [],
-						"lastsUntil": [],
-						"escape": {
-							"dc": "",
-							"saves": [
-								"strength",
-								"dexterity"
-							]
-						},
-						"tempHp": null,
-						"minor": false
-					},
-					"description": "",
-					"disabled": false,
-					"origin": null,
-					"transfer": false,
-					"statuses": [
-						"hampered"
-					],
-					"flags": {},
-					"folder": null
-				},
 				{
 					"_id": "UzjyEJKtYZ2z8AB6",
 					"name": "Prone",

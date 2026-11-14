@@ -280,7 +280,12 @@
 		},
 		"Unflinching": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your focus is unbroken even in the face of danger. Advantage on Concentration checks. [M]</span></p>",
-			"name": "Unflinching"
+			"name": "Unflinching",
+			"rules": {
+				"T7vaOTWNYBOm7ZVp": {
+					"label": "Unflinching"
+				}
+			}
 		},
 		"Unnatural Talent": {
 			"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Learn any 1 Utility Spell. [M]</span></p>",

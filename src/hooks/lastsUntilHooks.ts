@@ -11,6 +11,7 @@ import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import {
 	CONDITION_REPLACED_OPTION,
 	EFFECT_RECREATED_OPTION,
+	replacedWithoutEnd,
 } from '#utils/actor/applyConditionToActor.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { STACKED_OPTION } from '#utils/actor/effectStacks.js';
@@ -22,6 +23,7 @@ import { endEffectsAt, endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.j
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
 import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
+import { dropToZeroOnDelete } from '#utils/lastsUntil/zeroHpAtEnd.js';
 import { requestSaves } from '#utils/saveRequest/saveRequests.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
 
@@ -208,12 +210,15 @@ function onDeleteEffect(
 ): void {
 	takeBackEffectTempHp(effect, options, userId);
 	if (!isActiveGm() || !(effect.parent instanceof Actor)) return;
-	// A new Concentration ends the old activity; any other replaced copy only starts again.
-	const concentration = effect.statuses?.has(STATUS_EFFECT_IDS.concentration) ?? false;
-	if (options?.[CONDITION_REPLACED_OPTION] && !concentration) return;
+	void dropToZeroOnDelete(
+		effect,
+		options,
+		eventHeading('effectEnds', { name: effect.parent.name, effect: effect.name }),
+	);
+	if (replacedWithoutEnd(effect, options)) return;
 	const holder = effect.parent;
 	fireEvent('effectEnds', holder, { effectName: effect.name, effect: effect.name });
-	if (concentration) fireEvent('loseConcentration', holder);
+	if (effect.statuses?.has(STATUS_EFFECT_IDS.concentration)) fireEvent('loseConcentration', holder);
 }
 
 interface UseItemContext {

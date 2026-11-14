@@ -24,10 +24,9 @@
 				{
 					"id": "xFH2PgXT97EPr8jr",
 					"type": "savingThrow",
-					"savingThrowType": "strength",
+					"savingThrowType": "intelligence",
 					"parentContext": null,
 					"parentNode": null,
-					"saveType": "intelligence",
 					"on": {
 						"failedSave": [
 							{

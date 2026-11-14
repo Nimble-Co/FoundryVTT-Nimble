@@ -39,6 +39,15 @@
 								"outcome": "fullDamage",
 								"parentContext": "hit",
 								"parentNode": "pJVehDWw1M3Synrn"
+							},
+							{
+								"id": "U0sd0dN52ehz1P8h",
+								"type": "applyEffect",
+								"effectId": "MV9xuCB91OuPcEHg",
+								"recipient": "targets",
+								"tempHealingNodeId": null,
+								"parentContext": "hit",
+								"parentNode": "pJVehDWw1M3Synrn"
 							}
 						],
 						"miss": [
@@ -97,7 +106,60 @@
 		"school": "necrotic",
 		"tier": 0
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "MV9xuCB91OuPcEHg",
+			"name": "Considered Undead",
+			"img": "icons/magic/unholy/hand-fire-skeleton-pink.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "tags",
+						"disabled": false,
+						"id": "sRAgD5M6hdosstqA",
+						"identifier": "",
+						"label": "Considered Undead",
+						"predicate": {},
+						"priority": 1,
+						"tags": [
+							"target:undead"
+						]
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "rounds",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "This creature counts as undead.",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.350",

@@ -10,17 +10,68 @@
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
-				"details": "",
+				"details": "When you roll Initiative",
 				"quantity": 1,
-				"type": "action",
+				"type": "special",
 				"isReaction": false
 			},
 			"duration": {
 				"details": "",
 				"quantity": 1,
-				"type": "none"
+				"type": "round"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "oZYVGUG34tTprD5i",
+					"type": "applyEffect",
+					"effectId": "xrvCpK6zYlq5Mjzd",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "nXG7GqKx3inJsM7y",
+					"type": "applyEffect",
+					"effectId": "xrvCpK6zYlq5Mjzd",
+					"recipient": "targets",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "W2Za2uUKWIpGeHFu",
+					"type": "move",
+					"kind": "free",
+					"recipient": "self",
+					"distance": "@speed",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": false,
+					"direction": "any",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "gMFNL47Kko7oe7QA",
+					"type": "move",
+					"kind": "free",
+					"recipient": "targets",
+					"distance": "@speed",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": false,
+					"direction": "any",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "EVBCIHjSPDCvDSzq",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Roll Initiative with advantage, and give one ally advantage on theirs.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +94,71 @@
 			1
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "xrvCpK6zYlq5Mjzd",
+			"name": "Borne upon the Wind",
+			"img": "icons/magic/air/air-wave-gust-smoke-yellow.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "speedBonus",
+						"disabled": false,
+						"id": "ZJeQ8GSf70QCMG3O",
+						"identifier": "",
+						"label": "Borne upon the Wind",
+						"predicate": {},
+						"priority": 1,
+						"value": "3",
+						"movementType": null
+					},
+					{
+						"type": "grantMovement",
+						"disabled": false,
+						"id": "lfLgiBQR8O4OL8uc",
+						"identifier": "",
+						"label": "Borne upon the Wind",
+						"predicate": {},
+						"priority": 1,
+						"mode": "fly",
+						"speed": "@attributes.movement.walk"
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "time",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": 1,
+						"units": "rounds",
+						"who": null,
+						"event": null,
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false,
+				"readsHolder": true
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

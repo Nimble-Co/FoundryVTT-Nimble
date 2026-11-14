@@ -80,13 +80,99 @@
 	"effects": [
 		{
 			"_id": "ODT8SBxBsXv1g9vQ",
-			"name": "Charged",
+			"name": "Electrocharge",
 			"img": "systems/nimble/assets/icons/charged.svg",
 			"type": "nimble",
 			"system": {
-				"changes": [],
-				"rules": [],
-				"lastsUntil": [],
+				"changes": [
+					{
+						"key": "system.attributes.movement.walk",
+						"type": "multiplyDown",
+						"value": "2",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.fly",
+						"type": "multiplyDown",
+						"value": "2",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.climb",
+						"type": "multiplyDown",
+						"value": "2",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.swim",
+						"type": "multiplyDown",
+						"value": "2",
+						"phase": "afterRules",
+						"priority": null
+					},
+					{
+						"key": "system.attributes.movement.burrow",
+						"type": "multiplyDown",
+						"value": "2",
+						"phase": "afterRules",
+						"priority": null
+					}
+				],
+				"rules": [
+					{
+						"type": "armorClass",
+						"disabled": false,
+						"id": "zzb2pfwx10aFfgMY",
+						"identifier": "",
+						"label": "Electrocharge",
+						"predicate": {},
+						"priority": 1,
+						"formula": "5",
+						"mode": "add"
+					},
+					{
+						"type": "maxActionBonus",
+						"disabled": false,
+						"id": "OsMIjxWyEmctEN1h",
+						"identifier": "",
+						"label": "Electrocharge",
+						"predicate": {},
+						"priority": 1,
+						"value": "1"
+					},
+					{
+						"type": "situationalRollMode",
+						"disabled": false,
+						"id": "yh3AnVU3EeQc2EEI",
+						"identifier": "",
+						"label": "Electrocharge",
+						"predicate": {},
+						"priority": 1,
+						"value": 1,
+						"checkType": "savingThrow",
+						"saves": [
+							"dexterity"
+						],
+						"abilities": [],
+						"skills": []
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "source",
+						"event": "loseConcentration",
+						"effectName": ""
+					}
+				],
 				"escape": {
 					"dc": "",
 					"saves": [
