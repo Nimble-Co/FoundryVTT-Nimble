@@ -132,7 +132,7 @@ describe('endWaiting', () => {
 		const card = cardWith('turnCard', line);
 
 		expect(await endWaiting(card, line)).toBe(false);
-		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, 'wait1', line);
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, 'wait1', line, { ifState: 'ending' });
 	});
 
 	it('an error puts the line back to waiting', async () => {
@@ -141,7 +141,7 @@ describe('endWaiting', () => {
 		const card = cardWith('turnCard', line);
 
 		await expect(endWaiting(card, line)).rejects.toThrow('locked');
-		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, 'wait1', line);
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, 'wait1', line, { ifState: 'ending' });
 	});
 
 	it('a line that is not waiting does nothing', async () => {
@@ -197,11 +197,20 @@ describe('endWaiting for an Escape that passed', () => {
 			'roll1',
 			line.action,
 			{ key: 'Escaped' },
-			{
-				eventId: 'wait1',
-				at: 5,
-			},
+			{ hostId: 'roll1', eventId: 'wait1' },
+			{ eventId: 'wait1', at: 5 },
 		);
+	});
+
+	it('an escape that a reroll took back ends nothing, and its line is not put back', async () => {
+		escapeOnEnd.mockResolvedValueOnce(false);
+		const line = escapeLine();
+		const card = cardWith('roll1', line);
+
+		expect(await endWaiting(card, line)).toBe(false);
+
+		expect(effects.has('blind')).toBe(true);
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, 'wait1', line, { ifState: 'ending' });
 	});
 
 	it('a line that moved for its readers escapes on the roll card and goes', async () => {
@@ -210,7 +219,13 @@ describe('endWaiting for an Escape that passed', () => {
 
 		expect(await endWaiting(card, line)).toBe(true);
 
-		expect(escapeOnEnd).toHaveBeenCalledWith('roll1', line.action, { key: 'Escaped' }, undefined);
+		expect(escapeOnEnd).toHaveBeenCalledWith(
+			'roll1',
+			line.action,
+			{ key: 'Escaped' },
+			{ hostId: 'forTessa', eventId: 'wait1' },
+			undefined,
+		);
 		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, 'wait1', null);
 	});
 });

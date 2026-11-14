@@ -64,6 +64,7 @@ async function endFromLine(
 		action.escapeRollId,
 		action,
 		action.end.reason ?? { key: '' },
+		{ hostId: card.id, eventId: line.id },
 		onRollCard ? replaces : undefined,
 	);
 	if (!onRollCard && !holderOf(action)?.effects.get(action.effectId)) {
@@ -73,7 +74,8 @@ async function endFromLine(
 
 /**
  * On the active GM. The line is marked first, only while it still waits, so of two clicks one
- * ends it. An end that did not take, or failed, puts the line back to waiting.
+ * ends it. An end that did not take, or failed, puts the line back to waiting, only while it is
+ * still marked: a reroll can take it off or change it meanwhile.
  */
 async function endHere(card: LineCard, eventId: string): Promise<boolean> {
 	const line = cardEventsOf(card as never).find((each) => each.id === eventId);
@@ -91,11 +93,11 @@ async function endHere(card: LineCard, eventId: string): Promise<boolean> {
 	try {
 		await endFromLine(card as LineCard & { id: string }, line, action, effect);
 	} catch (error) {
-		await replaceCardEvent(card as never, eventId, line);
+		await replaceCardEvent(card as never, eventId, line, { ifState: 'ending' });
 		throw error;
 	}
 	if (!holder?.effects.get(action.effectId)) return true;
-	await replaceCardEvent(card as never, eventId, line);
+	await replaceCardEvent(card as never, eventId, line, { ifState: 'ending' });
 	return false;
 }
 

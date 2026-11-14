@@ -180,19 +180,36 @@ async function escapeNow(
 
 const queue = keyedQueue();
 
+/** The waiting line of an End click, which the click marked `ending`. */
+interface MarkedLine {
+	hostId: string;
+	eventId: string;
+}
+
+/** A reroll to a fail takes the marked line off, or puts a ruling line in its place. */
+function stillMarked({ hostId, eventId }: MarkedLine): boolean {
+	const host = game.messages?.get(hostId);
+	const line = host ? cardEventsOf(host as never).find((event) => event.id === eventId) : undefined;
+	return line?.action?.kind === 'waitingEnd' && line.action.state === 'ending';
+}
+
 /**
  * On the active GM, End on the waiting line of an Escape that passed: the effect ends as a pass
- * ends it with Feature Effects on, on the roll card, with its damage.
+ * ends it with Feature Effects on, on the roll card, with its damage. Nothing ends when the line
+ * is no longer the one this click marked.
  */
 export function escapeOnEnd(
 	rollMessageId: string,
 	target: EscapeTarget,
 	reason: CardEventText,
+	marked: MarkedLine,
 	replaces?: EndMoment['replaces'],
 ): Promise<boolean> {
 	const card = game.messages?.get(rollMessageId) as unknown as EscapeCard | undefined;
 	if (!card?.id) return Promise.resolve(false);
-	return queue.run(card.id, () => escapeNow(card, target, reason, replaces));
+	return queue.run(card.id, async () =>
+		stillMarked(marked) ? escapeNow(card, target, reason, replaces) : false,
+	);
 }
 
 /**

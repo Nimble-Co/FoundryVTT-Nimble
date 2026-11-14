@@ -195,11 +195,22 @@ describe('followEscape with Feature Effects off', () => {
 });
 
 describe('escapeOnEnd', () => {
+	const marked = { hostId: 's1', eventId: 'waitingEnd.Actor.tessa.grab.3' };
+	const markLine = () => {
+		const line = waitingLine();
+		card.flags[SYSTEM_ID].events = [
+			{ ...line, action: { ...(line.action as object), state: 'ending' } },
+		];
+	};
+
 	it('ends the effect on the roll card in place of the waiting line, with its damage', async () => {
 		const rules = [{ formula: '1d6', damageType: 'fire' }];
 		escapeDamageRulesOf.mockReturnValueOnce(rules);
+		markLine();
 
-		expect(await escapeOnEnd('s1', link, { key: 'Escaped' }, { eventId: 'w', at: 3 })).toBe(true);
+		expect(
+			await escapeOnEnd('s1', link, { key: 'Escaped' }, marked, { eventId: 'w', at: 3 }),
+		).toBe(true);
 
 		expect(endEffects).toHaveBeenCalledWith([grappled], {
 			heading: { key: 'NIMBLE.escape.note', data: { effect: 'Grappled' } },
@@ -216,7 +227,42 @@ describe('escapeOnEnd', () => {
 	});
 
 	it('a roll card that is gone ends nothing', async () => {
-		expect(await escapeOnEnd('gone', link, { key: 'Escaped' })).toBe(false);
+		expect(await escapeOnEnd('gone', link, { key: 'Escaped' }, marked)).toBe(false);
+		expect(endEffects).not.toHaveBeenCalled();
+	});
+
+	it('a reroll to a fail during the click: the line goes and nothing ends', async () => {
+		markLine();
+		replaceCardEvent.mockImplementationOnce(async (_card, eventId, next) => {
+			const events = card.flags[SYSTEM_ID].events as CardEvent[];
+			card.flags[SYSTEM_ID].events = events.flatMap((event) =>
+				event.id !== eventId ? [event] : next ? [next] : [],
+			);
+			return true;
+		});
+
+		const [, escaped] = await Promise.all([
+			followEscape({ messageId: 's1', outcome: 'fail' }),
+			escapeOnEnd('s1', link, { key: 'Escaped' }, marked),
+		]);
+
+		expect(escaped).toBe(false);
+		expect(card.flags[SYSTEM_ID].events).toEqual([]);
+		expect(endEffects).not.toHaveBeenCalled();
+		expect(addCardEvents).not.toHaveBeenCalled();
+		expect(effects.has('grab')).toBe(true);
+	});
+
+	it('with no DC, a failed line in the place of the marked line ends nothing', async () => {
+		card.flags[SYSTEM_ID].events = [
+			{
+				...waitingLine(),
+				kind: 'escape',
+				action: { kind: 'escapeRuling', ...link, state: 'failed' },
+			},
+		];
+
+		expect(await escapeOnEnd('s1', link, { key: 'Escaped' }, marked)).toBe(false);
 		expect(endEffects).not.toHaveBeenCalled();
 	});
 });
