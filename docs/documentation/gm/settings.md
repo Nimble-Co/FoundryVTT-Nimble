@@ -12,8 +12,15 @@ How much the system does on its own is controlled from one place: the **Configur
 
 **Features and Effects**
 
-- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and rerolls happen. Casting a Concentration spell starts Concentration. An effect that an item gives to its user goes on when the item is used, and features that use an item for free do so. Effects end by themselves at their Lasts Until, when an Escape succeeds, and when a save to keep them fails. An Empty pools at end rule empties its pools as its effect ends, and the save of a Save for Max Crit Dice rule changes the dice or gives the use back. When off, the chat card shows a button for each one instead, such as **Apply to You**, **End**, **Empty** or **Apply**, and nothing is used for free. An effect then stays on until someone clicks **End** on its line or removes it. Using an item and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md#when-an-effect-ends).
+- **Feature Effects.** When a feature's rule triggers (say, an attack that frightens on a hit), the condition lands on the target automatically, targets are marked, and rerolls happen. Casting a Concentration spell starts Concentration. An effect that an item gives to its user goes on when the item is used, and features that use an item for free do so. Held Changes go on the next roll by themselves. Effects end by themselves at their Lasts Until, when an Escape succeeds, and when a save to keep them fails. When off, the chat card shows a button for each one instead, such as **Apply to You** or **End**, the roll window shows each Held Change as a tick box, and nothing is used for free. Using an item and spending pool dice always work regardless of this toggle. See [Conditions](../playing/conditions.md#when-an-effect-ends).
 - **Linked Conditions.** A condition adds and removes the conditions that come with it, such as Hampered while Dazed, Grappled, Prone, Slowed, or Restrained.
+
+::: details More about Feature Effects off
+- An effect stays on until someone clicks **End** on its line or removes it.
+- Only a Held Change you tick goes on the roll, and only a ticked one is used up. A roll with no window (Alt-click) uses none. See [Hold a change for the next attack](../homebrew/effects.md#hold-a-change-for-the-next-attack).
+- An Empty Pools at End rule does not empty its pools when its effect ends. The card of the end gets an **Empty** button for each pool that holds dice.
+- After the save of a Save for Max Crit Dice rule, the save card gets an **Apply** button. It sets the dice to their max after a failed save, or gives the use back after a passed one.
+:::
 
 **Resources**
 

@@ -91,12 +91,14 @@ It estimates each in rounds and keeps the first moment: the end of the current t
 
 ### Escape
 
-An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save or the check (you pick when more than one is allowed) and spends 1 action in combat. The roll card reads "Escape Grappled". On a success the effect ends, and the roll card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected. With **Feature Effects** off, a success ends nothing. The roll card gets a line with **End** in place of the ended line, and a reroll to a failure takes that line off.
+An effect such as Grappled can have an Escape button on its row, for example **Escape DC 13**. It rolls the save or the check (you pick when more than one is allowed) and spends 1 action in combat. The roll card reads "Escape Grappled". On a success the effect ends, and the roll card gets its ended line in **Events**, with **Undo**. A reroll that turns the success into a failure puts the effect back. As with every other end, a GM must be connected.
 
 An Escape with no DC has the button **Escape** with no number. A natural 20 escapes and a natural 1 fails. On any other roll, the roll card gets the line "Tessa tries to escape Grappled" with an **Escapes** button. When the table judges that the roll escapes, the owner of the creature or the GM clicks **Escapes**. The effect ends, with its ended line and **Undo** on the roll card. If nobody clicks, the effect stays.
 
-::: details Rerolls and private rolls
+::: details More about Escape
 A later reroll to a result the table must judge keeps the ruling of **Escapes**. When the owner cannot read the roll card (a GM's private roll), the line goes on a card for the owner and the GMs. A later reroll changes the line there or removes it.
+
+With **Feature Effects** off, a success ends nothing. The roll card gets a line with **End** in place of the ended line, and a reroll to a failure takes that line off.
 :::
 
 ### When an effect ends
@@ -111,7 +113,7 @@ With **Feature Effects** off, no effect ends by itself. Where the ended line wou
 - A turn, a round, a time or the end of combat gives an effect one line. An event such as "until they attack" gives a line on each card that causes it, while the effect is on.
 - This also holds for Minor Statuses at the end of combat, for a Grappled whose grappler drops, and for Concentration at 0 HP or Incapacitated.
 - If someone removed the effect before the click, the line says "Blinded is no longer on Tessa" and has no button.
-- An effect with an Empty pools at end rule does not empty its pools when it ends. The card of the end gets a line "Empty Fury Dice" with an **Empty** button for each pool that holds dice. An effect removed by hand puts these lines on a message of their own.
+- An effect with an Empty Pools at End rule does not empty its pools when it ends. The card of the end gets a line "Empty Fury Dice" with an **Empty** button for each pool that holds dice. An effect removed by hand puts these lines on a message of their own.
 :::
 
 The pictures of every step are in [How an effect works](../homebrew/effects.md#how-an-effect-works).

@@ -93,13 +93,13 @@ These rules work with the effects of an item. A state such as Rage uses them: se
 - **Save on an Event** (under **Triggers**) asks the owner for a save on the card that caused the event: when a crit hits the creature, or when it takes damage. A failure ends the effect the rule is on. Concentration uses it for its DC 10 STR save on a crit.
 - **Damage on escape** (under **Triggers**) works only on an effect. When the holder escapes the effect, it takes the **Damage**, and the roll card of the escape gets a line. The damage ignores armor and Defend.
 - **Max Actions Bonus** (under **Bonuses**) adds to the creature's max actions while it is on, for example "+1 max action". It also works on an effect.
-- **Empty pools at end** (under **Resources**) works only on an effect. When the effect ends by any path, the dice pools in **Pools** are emptied. A new use that replaces the effect is not an end.
+- **Empty Pools at End** (under **Resources**) works only on an effect. When the effect ends by any path, the dice pools in **Pools** are emptied. A new use that replaces the effect is not an end.
 - **Change an effect** (under **Conditions**) works only on an item. **Item identifier** names another item. When that item gives an effect to this creature, **Does not end when** takes moments out of its Lasts Until, and **Also ends when** adds moments. The change occurs when the effect is made.
 - **Use an item for free** (under **Triggers**) works only on an item. **Item identifier** names another item. On one of its **Triggers**, when the Condition box matches, the creature uses that item with no window. The use never spends an action. **Free of** sets what else it does not spend: **Use limits** and **Mana**, both on by default, as for a free action (Core rules). The card tells why the use was free, such as "For free: an enemy hit you with a crit (Titan's Fury)".
 
 ::: details More about these rules
 - A rule that reads the tags before the other rules run needs a higher **Priority** than the Tags rule.
-- Empty pools at end looks for each pool on the item that gave the effect first, then on the creature.
+- Empty Pools at End looks for each pool on the item that gave the effect first, then on the creature.
 - With **Use limits** on, a free use does not count toward a limit such as 1/turn, and it needs no use left.
 - The rule does nothing while the Feature Effects automation setting is off.
 - Apply Condition uses the same list of triggers. The list has **An enemy crits you** and **You start Dying** too.

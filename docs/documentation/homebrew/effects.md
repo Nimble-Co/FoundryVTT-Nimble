@@ -69,7 +69,7 @@ A rule can also pick an effect of its item: the **Effect** of an Apply Condition
 A state that a creature turns on, such as Rage, is an item effect. The effect is the state: the creature is Raging while it has the effect.
 
 1. On the item's **Effects** tab, click **New effect** under **Given when something uses them**. Set its name, its Lasts Until and what it does.
-2. On the effect's **Rules** tab, add a **Tags** rule, such as `self:raging`, so that other rules can read the state. Add an **Empty pools at end** rule for each dice pool that the end empties.
+2. On the effect's **Rules** tab, add a **Tags** rule, such as `self:raging`, so that other rules can read the state. Add an **Empty Pools at End** rule for each dice pool that the end empties.
 3. On **Activation → On use**, add an **Apply Effect** step. Set **Who takes it** to **The creature that uses this**, and pick the effect.
 
 ![The Effects tab of the Rage item: the Raging effect, its Lasts Until, and Used by: On use: Apply Effect](/images/documentation/item-effects-tab.png)
@@ -135,7 +135,7 @@ An effect with a **Held Roll Change** rule (on its **Rules** tab) changes a late
 
 For example, True Strike holds advantage for the next attack of its target, until the end of their next turn. The roll window shows a line for each held change that the attack uses. The card of the attack then has a line in **Events** for each change that the roll used up, with **Undo**.
 
-With **Feature Effects** off, each held change is a tick box in the roll window, and no box starts ticked. Only a ticked change goes on the roll, and only a ticked change ends when the roll uses it up. A change you do not tick stays on. A kept amount also starts unticked. With no roll window (Alt-click), no change goes on the roll.
+With **Feature Effects** off, each held change is a tick box in the roll window, and no box starts ticked. Only a ticked change goes on the roll, and only a ticked change ends when the roll uses it up. A change you do not tick stays on.
 
 ![The roll window of Grug's Battleaxe: True Strike, +1 advantage, this roll spends it](/images/documentation/held-roll-window.png)
 
@@ -148,6 +148,7 @@ With **Feature Effects** off, each held change is a tick box in the roll window,
 - A **Dice Consumer** rule set to **giveEffect** spends a die the player picks and puts the item's effect (one that does not go on the owner) on each creature they target, as Shining Mandate does. With no target, nothing is spent.
 - Out of combat, a change that a feature holds for you (Assess, for example) is not held.
 - **Ignore all disadvantage** lasts for your next action. A Move, a paid Assess or an item use that costs an action and is not an attack also ends it. The card of that action has the line in **Events**, with **Undo**.
+- With **Feature Effects** off, a kept amount also starts unticked. With no roll window (Alt-click), no change goes on the roll.
 - With **Feature Effects** off, some changes have no roll window to tick them, so they do not apply and do not end: a one-use vulnerability, **every die at its highest number** on a target of an area attack, and every change in a minion group attack. An action that is not an attack does not end **Ignore all disadvantage**. Apply these by hand, and remove the effect when it is used.
 :::
 
@@ -172,11 +173,13 @@ Escape is the way out of an effect such as Restrained. Set the **DC** (a number 
 
 A blank DC means the effect has no escape. Turn on **No DC** for an escape that the table judges, such as a monster grapple with no printed DC. For what the holder sees, see [Escape](../playing/conditions.md#escape).
 
-::: details A monster and a skill check escape
+::: details More about Escape
 Monsters have no skills. A monster rolls the save of the skill's stat instead, such as a DEX save for Finesse. When a save and a check use the same stat, the monster gets that save once.
+
+With **Feature Effects** off, an Escape roll that succeeds gives a line with **End**, and the damage comes when someone clicks it, with a **Take Damage** button on its line.
 :::
 
-A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. The damage ignores armor and Defend, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. As with Damage each turn, the line goes on the card before the damage is dealt. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. With **Feature Effects** off, an Escape roll that succeeds gives a line with **End**, and the damage comes when someone clicks it, with a **Take Damage** button on its line. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
+A **Damage on escape** rule on the effect deals its damage once, when the holder escapes: the Escape roll succeeds, or the table clicks **Escapes**. The damage ignores armor and Defend, as with [Damage each turn](#damage-each-turn). Its line goes on the roll card of the escape, after the ended line, with **Undo**. As with Damage each turn, the line goes on the card before the damage is dealt. Another end (a moment, Undo, a delete by hand) deals nothing. A reroll that turns the escape into a failure puts the effect back and gives the damage back. An upcast can add dice to its **Damage**, even when it is blank, as Shadow Trap does: see [Raise Effect Rule](spells.md#step-4-upcasting-the-spell-scaling-section).
 
 ## Related pages
 
