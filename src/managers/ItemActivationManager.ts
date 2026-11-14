@@ -66,7 +66,11 @@ import {
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import { poolRollEvent } from '../utils/dicePool/poolEvents.js';
 import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
-import { firstTargetActor, isAttackRoll, spendHeldChanges } from '../utils/heldChange/heldChange.js';
+import {
+	firstTargetActor,
+	isAttackRoll,
+	spendHeldChanges,
+} from '../utils/heldChange/heldChange.js';
 import { heldChosenOf, keptAmountOfRoll } from '../utils/heldChange/heldChoice.js';
 import {
 	applyPostRollIncomingBehavior,
