@@ -1,5 +1,6 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { RuleSource } from '#types/ruleSource.d.ts';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NIMBLE_EFFECT_TYPE } from '../../models/activeEffect/nimbleEffectChoices.js';
 import {
 	type Application,
@@ -13,6 +14,17 @@ import { type StackingEffect, stackingCopyOf, stackUp } from './effectStacks.js'
 
 /** The delete option of an effect that a new application replaces: it does not end, so no "effect ends" moment. */
 export const CONDITION_REPLACED_OPTION = 'nimbleConditionReplaced';
+
+/** A delete that only starts the effect again. A replaced Concentration ends its activity, so it ends. */
+export function replacedWithoutEnd(
+	effect: { statuses?: ReadonlySet<string> | null },
+	options: Record<string, unknown> | undefined,
+): boolean {
+	return (
+		!!options?.[CONDITION_REPLACED_OPTION] &&
+		!effect.statuses?.has(STATUS_EFFECT_IDS.concentration)
+	);
+}
 
 /** A create that puts back or replaces a copy: the holder gains nothing new. */
 export const EFFECT_RECREATED_OPTION = 'nimbleEffectRecreated';

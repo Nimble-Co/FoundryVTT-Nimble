@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CardEvent, ZeroHpAction } from '#types/cardEvent.d.ts';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 
 const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
 const addMomentEvents = vi.fn(async (..._args: unknown[]) => true);
@@ -157,6 +158,29 @@ describe('dropToZeroOnDelete (an end with no line of its own, such as a removal 
 	it('does nothing for an end that writes its own lines, or a copy that replaces it', async () => {
 		await zero.dropToZeroOnDelete(endingEffect(tessa), { [zero.END_LINES_OPTION]: true }, heading);
 		await zero.dropToZeroOnDelete(endingEffect(tessa), { nimbleConditionReplaced: true }, heading);
+
+		expect(tessa.update).not.toHaveBeenCalled();
+		expect(addMomentEvents).not.toHaveBeenCalled();
+	});
+
+	it('drops the holder when a new Concentration replaces the one with the rule: it ends', async () => {
+		const concentrating = {
+			...endingEffect(tessa),
+			statuses: new Set(['concentration']),
+		};
+
+		await zero.dropToZeroOnDelete(concentrating, { nimbleConditionReplaced: true }, heading);
+
+		expect(tessa.system.attributes.hp.value).toBe(0);
+		expect(addMomentEvents).toHaveBeenCalledTimes(1);
+	});
+
+	it('does nothing when an undo takes the application back', async () => {
+		await zero.dropToZeroOnDelete(
+			endingEffect(tessa),
+			{ [UNDO_APPLICATION_OPTION]: true },
+			heading,
+		);
 
 		expect(tessa.update).not.toHaveBeenCalled();
 		expect(addMomentEvents).not.toHaveBeenCalled();

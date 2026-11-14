@@ -9,7 +9,10 @@ const fromStatusEffect = vi.fn();
 const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
-import applyConditionToActor from '../applyConditionToActor.js';
+import applyConditionToActor, {
+	CONDITION_REPLACED_OPTION,
+	replacedWithoutEnd,
+} from '../applyConditionToActor.js';
 
 interface FakeEffect {
 	id: string;
@@ -620,5 +623,20 @@ describe('applyConditionToActor stacks', () => {
 			await applyConditionToActor(other, 'dazed', { effectData: effectData(false) }),
 		).toBeNull();
 		expect(copy.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('replacedWithoutEnd', () => {
+	const replaced = { [CONDITION_REPLACED_OPTION]: true };
+
+	it('is true for a replaced copy: it only starts again', () => {
+		expect(replacedWithoutEnd({ statuses: new Set(['dazed']) }, replaced)).toBe(true);
+		expect(replacedWithoutEnd({}, replaced)).toBe(true);
+	});
+
+	it('is false for a replaced Concentration, and for a delete that is not a replacement', () => {
+		expect(replacedWithoutEnd({ statuses: new Set(['concentration']) }, replaced)).toBe(false);
+		expect(replacedWithoutEnd({ statuses: new Set(['dazed']) }, {})).toBe(false);
+		expect(replacedWithoutEnd({}, undefined)).toBe(false);
 	});
 });

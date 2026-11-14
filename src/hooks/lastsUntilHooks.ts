@@ -11,6 +11,7 @@ import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import {
 	CONDITION_REPLACED_OPTION,
 	EFFECT_RECREATED_OPTION,
+	replacedWithoutEnd,
 } from '#utils/actor/applyConditionToActor.js';
 import { chargeOnLightning } from '#utils/actor/chargedOnLightning.js';
 import { STACKED_OPTION } from '#utils/actor/effectStacks.js';
@@ -214,12 +215,10 @@ function onDeleteEffect(
 		options,
 		eventHeading('effectEnds', { name: effect.parent.name, effect: effect.name }),
 	);
-	// A new Concentration ends the old activity; any other replaced copy only starts again.
-	const concentration = effect.statuses?.has(STATUS_EFFECT_IDS.concentration) ?? false;
-	if (options?.[CONDITION_REPLACED_OPTION] && !concentration) return;
+	if (replacedWithoutEnd(effect, options)) return;
 	const holder = effect.parent;
 	fireEvent('effectEnds', holder, { effectName: effect.name, effect: effect.name });
-	if (concentration) fireEvent('loseConcentration', holder);
+	if (effect.statuses?.has(STATUS_EFFECT_IDS.concentration)) fireEvent('loseConcentration', holder);
 }
 
 interface UseItemContext {

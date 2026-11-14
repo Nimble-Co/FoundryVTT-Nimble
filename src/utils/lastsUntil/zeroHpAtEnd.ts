@@ -1,6 +1,7 @@
 import type { CardEvent, CardEventText, ZeroHpAction } from '#types/cardEvent.d.ts';
 import { undoDamageOption } from '#utils/actor/actorHpChangePaths.js';
-import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { replacedWithoutEnd } from '#utils/actor/applyConditionToActor.js';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { addMomentEvents, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
 import { END_LINES_OPTION } from '#utils/dicePool/emptyPoolLine.js';
@@ -22,6 +23,7 @@ export interface ZeroHpEffect {
 	id?: string | null;
 	name?: string | null;
 	img?: string | null;
+	statuses?: ReadonlySet<string> | null;
 	parent?: unknown;
 	rules?: unknown;
 	system?: unknown;
@@ -112,7 +114,8 @@ export async function zeroHpAtEndEvents(
 
 /**
  * An end with no line of its own (a removal by hand, a deleted origin item): on the active GM, the
- * drop and its line go on a card of their own. A copy that replaces the effect is not an end.
+ * drop and its line go on a card of their own. A copy that replaces the effect, or an undo of its
+ * application, is not an end; a replaced Concentration is.
  */
 export async function dropToZeroOnDelete(
 	effect: ZeroHpEffect,
@@ -120,7 +123,8 @@ export async function dropToZeroOnDelete(
 	heading: CardEventText,
 ): Promise<void> {
 	if (!game.user?.isActiveGM) return;
-	if (options?.[END_LINES_OPTION] || options?.[CONDITION_REPLACED_OPTION]) return;
+	if (options?.[END_LINES_OPTION] || options?.[UNDO_APPLICATION_OPTION]) return;
+	if (replacedWithoutEnd(effect, options)) return;
 	try {
 		const lines = await zeroHpAtEndEvents([effect], Date.now());
 		if (lines.length < 1) return;
