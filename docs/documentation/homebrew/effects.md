@@ -126,7 +126,7 @@ Some effects build up: "Dazed 3 times = Petrified". On the effect's **Details** 
 An effect with Stacks off never stacks: a second Dazed keeps the one that lasts longer.
 
 ::: details A stack with no card
-A stack with no card that caused it (a dice pool spend, a turn) puts its line on a card of its own.
+A stack with no card that caused it (a dice pool spend, a turn) puts its line on a card of its own. When the line has no button (the count only, with nothing to gain), no card is made.
 :::
 
 ## Hold a change for the next attack

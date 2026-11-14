@@ -49,7 +49,10 @@ export function stackGainEvent(
 	return { ...event, text: stackGainText(base, action.state === 'gained'), action };
 }
 
-/** Writes the line on the card that caused the stack, or with no such card, on a card of its own. */
+/**
+ * Writes the line on the card that caused the stack. With no such card, a line with a button gets
+ * a card of its own; a count with nothing to gain gets no card.
+ */
 export async function postStackGain(
 	holder: StackHolder,
 	reached: StackReached,
@@ -58,6 +61,7 @@ export async function postStackGain(
 	const line = stackGainEvent(holder, reached);
 	const card = cardId ? game.messages?.get(cardId) : null;
 	if (card) return addCardEvents(card as never, [line]);
+	if (!line.action) return false;
 	const heading = { key: 'NIMBLE.chat.events.forHeading', data: { names: holder.name ?? '' } };
 	return addMomentEvents({ key: `once:${foundry.utils.randomID()}`, heading }, [line]);
 }
