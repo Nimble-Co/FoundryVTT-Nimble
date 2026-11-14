@@ -2,7 +2,7 @@ The Defend Option rule is something the owner can do with a Defend. It shows in 
 
 **Shows as** picks the kind:
 
-- **With Defend**: a tick under "When you Defend". It works only with a row that Defends.
+- **With Defend**: a tick under "When you Defend". It works only with a row that Defends. **Only when you Interpose** shows the tick only on Interpose and Defend, not on a Defend alone.
 - **Free Defend**: a row of its own that Defends with no action. It still uses the Defend for the round. **Use this item** casts the item (a spell pays its own mana and action); **More armor per upcast** adds armor for each step the player upcasts it. **Only when you Interpose** shows the row only as Interpose and Defend.
 - **Second Defend**: the owner can Defend one more time in a round, until their next turn begins.
 - **When an Ally Defends**: a button on the card for the owner after an ally within **Range** Defends. **Range** is a formula, so `@auraReach` follows the owner's aura.
