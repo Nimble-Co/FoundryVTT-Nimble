@@ -48,19 +48,6 @@ export default defineConfigWithTheme<NimbleThemeConfig>({
 				],
 			},
 			{ text: 'System', link: '/system/' },
-			{
-				text: 'Planning',
-				items: [
-					{ text: 'Project Vision', link: '/planning/product-vision' },
-					{ text: 'Architecture', link: '/planning/architecture' },
-					{
-						text: 'UX Design',
-						link: '/planning/ux-design-specification',
-						items: [{ text: 'Design Directions', link: '/planning/ux-design-directions' }],
-					},
-					{ text: 'Epics & Stories', link: '/planning/epics' },
-				],
-			},
 			...betaNav,
 		],
 
@@ -161,20 +148,6 @@ export default defineConfigWithTheme<NimbleThemeConfig>({
 				{
 					text: 'System',
 					items: [{ text: 'Overview', link: '/system/' }],
-				},
-				{
-					text: 'Planning',
-					collapsed: true,
-					items: [
-						{ text: 'Project Vision', link: '/planning/product-vision' },
-						{ text: 'Architecture', link: '/planning/architecture' },
-						{
-							text: 'UX Design',
-							link: '/planning/ux-design-specification',
-							items: [{ text: 'Design Directions', link: '/planning/ux-design-directions' }],
-						},
-						{ text: 'Epics & Stories', link: '/planning/epics' },
-					],
 				},
 			],
 		},
