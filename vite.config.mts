@@ -155,6 +155,7 @@ const config = defineConfig({
 	test: {
 		globals: true,
 		environment: 'happy-dom',
+		pool: 'threads',
 		include: ['src/**/*.{test,spec}.{js,ts}', 'build/**/*.{test,spec}.{js,mjs,ts}'],
 		root: '.',
 		setupFiles: ['./tests/setup.ts'],
