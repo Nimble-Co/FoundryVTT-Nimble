@@ -1,16 +1,16 @@
 import type { CardEvent, CardEventText, ZeroHpAction } from '#types/cardEvent.d.ts';
-import { undoDamageOption } from '#utils/actor/actorHpChangePaths.js';
+import { ACTOR_HP_PATHS, undoDamageOption } from '#utils/actor/actorHpChangePaths.js';
 import { replacedWithoutEnd } from '#utils/actor/applyConditionToActor.js';
 import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { addMomentEvents, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
 import { END_LINES_OPTION } from '#utils/dicePool/emptyPoolLine.js';
+import { rulesOfEffect } from '#utils/documents/rulesOfEffect.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 export { END_LINES_OPTION };
 
 const WORDS = 'NIMBLE.chat.zeroHpAtEnd';
-const HP_PATH = 'system.attributes.hp';
 
 interface RuleSource {
 	type?: string;
@@ -43,12 +43,7 @@ interface LineCard {
 
 /** Whether the effect has a 0 HP at End rule that is on: its prepared rules, else its rule data. */
 export function dropsToZeroAtEnd(effect: ZeroHpEffect): boolean {
-	const prepared = effect.rules as { values?(): Iterable<RuleSource> } | undefined;
-	const rules =
-		typeof prepared?.values === 'function'
-			? [...prepared.values()]
-			: ((effect.system as { rules?: RuleSource[] } | undefined)?.rules ?? []);
-	return rules.some(
+	return rulesOfEffect<RuleSource>(effect).some(
 		(rule) =>
 			rule?.type === 'zeroHpAtEnd' &&
 			!rule.disabled &&
@@ -57,16 +52,15 @@ export function dropsToZeroAtEnd(effect: ZeroHpEffect): boolean {
 }
 
 function hpOf(holder: ZeroHpHolder): { value: number; max: number } {
-	const read = (field: string) =>
-		Number(foundry.utils.getProperty(holder, `${HP_PATH}.${field}`)) || 0;
-	return { value: read('value'), max: read('max') };
+	const read = (path: string) => Number(foundry.utils.getProperty(holder, path)) || 0;
+	return { value: read(ACTOR_HP_PATHS.value), max: read(ACTOR_HP_PATHS.max) };
 }
 
 /** Sets the HP to 0 and says how many it took. */
 async function dropToZero(holder: ZeroHpHolder): Promise<number> {
 	const { value } = hpOf(holder);
 	if (value <= 0) return 0;
-	await holder.update({ [`${HP_PATH}.value`]: 0 });
+	await holder.update({ [ACTOR_HP_PATHS.value]: 0 });
 	return value;
 }
 
@@ -158,7 +152,7 @@ export async function actOnZeroHp(card: LineCard, event: CardEvent): Promise<boo
 	if (action.hpLost) {
 		const { value, max } = hpOf(holder);
 		await holder.update(
-			{ [`${HP_PATH}.value`]: Math.min(max, value + action.hpLost) },
+			{ [ACTOR_HP_PATHS.value]: Math.min(max, value + action.hpLost) },
 			undoDamageOption(),
 		);
 	}
