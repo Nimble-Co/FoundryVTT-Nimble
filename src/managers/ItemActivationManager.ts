@@ -69,14 +69,8 @@ import {
 import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import { poolRollEvent } from '../utils/dicePool/poolEvents.js';
 import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
-import {
-	firstTargetActor,
-	heldChangeKey,
-	isAttackRoll,
-	keptAmountEndedBy,
-	keptAmountFor,
-	spendHeldChanges,
-} from '../utils/heldChange/heldChange.js';
+import { firstTargetActor, isAttackRoll, spendHeldChanges } from '../utils/heldChange/heldChange.js';
+import { keptAmountOfRoll } from '../utils/heldChange/heldChoice.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -550,16 +544,12 @@ class ItemActivationManager {
 		this.#deferPoolSpends(dialogData);
 
 		this.#heldChosen = isRuleAutomationEnabled() ? null : new Set(dialogData.heldChosen ?? []);
-		const usableAmount = keptAmountFor(this.actor, this.#item);
-		if (this.#heldChosen) {
-			const ended = keptAmountEndedBy(this.actor, this.#item);
-			this.#keptAmount = dialogData.keptAmount === true ? usableAmount : null;
-			this.#keptAmountToEnd =
-				this.#keptAmount ?? (ended && this.#heldChosen.has(heldChangeKey(ended)) ? ended : null);
-		} else {
-			this.#keptAmountToEnd = usableAmount ?? keptAmountEndedBy(this.actor, this.#item);
-			this.#keptAmount = dialogData.keptAmount === false ? null : usableAmount;
-		}
+		const keptAmount = keptAmountOfRoll(this.actor, this.#item, {
+			tick: dialogData.keptAmount,
+			chosen: this.#heldChosen,
+		});
+		this.#keptAmount = keptAmount.kept;
+		this.#keptAmountToEnd = keptAmount.toEnd;
 		this.#damageMultiplier =
 			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
