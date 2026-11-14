@@ -17,8 +17,9 @@ const {
 	fireItemUseEventsMock: vi.fn((..._args: unknown[]) => undefined),
 }));
 
-vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
-	endEffects: endEffectsMock,
+vi.mock('../../utils/lastsUntil/endEffects.js', () => ({ endEffects: endEffectsMock }));
+vi.mock('../../utils/lastsUntil/endEffectsAt.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('../../utils/lastsUntil/endEffectsAt.js')>()),
 	endEffectsAt: endEffectsAtMock,
 }));
 vi.mock('../../utils/damage/turnDamage.js', () => ({ dealTurnDamage: dealTurnDamageMock }));
@@ -136,11 +137,15 @@ describe('turn and round moments', () => {
 		hook('nimbleCombatTurnEnd')(goblin, { round: 2 });
 
 		// The same card as the other ends of that turn, with the reason on the line.
-		expect(endEffectsMock).toHaveBeenCalledWith([idle], {
-			key: 'combat1:2:cGoblin:turnEnd',
-			heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
-			reason: 'inactiveRound:Goblin',
-		});
+		expect(endEffectsMock).toHaveBeenCalledWith(
+			[idle],
+			{
+				key: 'combat1:2:cGoblin:turnEnd',
+				heading: { key: 'NIMBLE.lastsUntil.chat.heading.turnEnd', data: { name: 'Goblin' } },
+				reason: 'inactiveRound:Goblin',
+			},
+			undefined,
+		);
 		expect(endEffectsAtMock.mock.calls[0][1]).toMatchObject({ key: 'combat1:2:cGoblin:turnEnd' });
 		expect(endEffectsAtMock.mock.calls[0][2]).toBe(combat);
 	});

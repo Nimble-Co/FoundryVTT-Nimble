@@ -1,6 +1,5 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent, CardEventText, CritDiceSaveAction } from '#types/cardEvent.d.ts';
-import { askActiveGm } from '#utils/askActiveGm.js';
 import {
 	addCardEvents,
 	cardEventsOf,
@@ -8,6 +7,7 @@ import {
 	replaceCardEvent,
 } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
+import { activeGmLine, type LineCard, runMarked } from '#utils/chat/lineClick.js';
 import {
 	type CritDiceSaveLink,
 	critDiceSaveState,
@@ -16,12 +16,6 @@ import {
 
 const WORDS = 'NIMBLE.chat.critDiceSave';
 const QUERY_NAME = `${SYSTEM_ID}.critDiceSaveLine`;
-
-interface LineCard {
-	id?: string | null;
-	flags?: Record<string, unknown>;
-	getFlag?(scope: string, key: string): unknown;
-}
 
 type Outcome = CritDiceSaveAction['outcome'];
 
@@ -53,9 +47,6 @@ function lineOf(action: CritDiceSaveAction, at: number): CardEvent {
 	};
 }
 
-const asOutcome = (outcome: string): Outcome =>
-	outcome === 'pass' || outcome === 'fail' ? outcome : 'unknown';
-
 /**
  * Feature Effects off, on the active GM, each time the result of a crit dice save changes: its
  * save card gets a waiting line with what the result asks. A result that what a click did already
@@ -64,13 +55,12 @@ const asOutcome = (outcome: string): Outcome =>
 export async function showCritDiceSaveLine(
 	saveCard: LineCard,
 	link: CritDiceSaveLink,
-	result: string,
+	outcome: Outcome,
 ): Promise<void> {
 	const attack = game.messages?.get(link.attackMessageId) as
 		| { getFlag(scope: string, key: string): unknown }
 		| undefined;
 	if (!attack || !saveCard.id) return;
-	const outcome = asOutcome(result);
 	const state = critDiceSaveState(attack);
 	const id = lineIdOf(saveCard.id);
 	const host = cardHoldingEvent(id, saveCard as never);
@@ -113,10 +103,7 @@ export function canSettleCritDiceLine(action: CritDiceSaveAction): boolean {
 	return mayActHere(action.actorUuid);
 }
 
-/**
- * On the active GM. The line is marked done first, only while it still waits, so of two clicks one
- * acts; an error puts it back.
- */
+/** On the active GM. The line is marked done first (`runMarked`). */
 async function settleHere(card: LineCard, eventId: string): Promise<boolean> {
 	const line = cardEventsOf(card as never).find((event) => event.id === eventId);
 	const action = line?.action;
@@ -126,36 +113,22 @@ async function settleHere(card: LineCard, eventId: string): Promise<boolean> {
 	if (!link) return false;
 	const done: CritDiceSaveAction = { ...action, state: 'done' };
 	const marked: CardEvent = { ...line, text: textOf(done), action: done };
-	if (!(await replaceCardEvent(card as never, eventId, marked, { ifState: 'waiting' }))) {
-		return false;
-	}
-	try {
+	return runMarked(card, line, marked, async () => {
 		await settleCritDiceSave(link, action.outcome);
-	} catch (error) {
-		await replaceCardEvent(card as never, eventId, line);
-		throw error;
-	}
-	return true;
+		return true;
+	});
 }
+
+const settleClick = activeGmLine(QUERY_NAME, settleHere);
 
 /** Feature Effects off: a click does what the result of the save asks, as Feature Effects on does. */
 export async function settleCritDiceLine(card: LineCard, event: CardEvent): Promise<boolean> {
 	const action = event.action;
-	if (action?.kind !== 'critDiceSave' || action.state !== 'waiting' || !card.id) return false;
+	if (action?.kind !== 'critDiceSave' || action.state !== 'waiting') return false;
 	if (!canSettleCritDiceLine(action)) return false;
-	if (!game.user?.isActiveGM) {
-		return (await askActiveGm(QUERY_NAME, { messageId: card.id, eventId: event.id })) === true;
-	}
-	return settleHere(card, event.id);
+	return settleClick.click(card, event);
 }
 
 export function registerCritDiceSaveLineQuery(): void {
-	Hooks.once('init', () => {
-		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
-		queries[QUERY_NAME] = async (data: { messageId?: string; eventId?: string }) => {
-			const card = game.messages?.get(data.messageId ?? '') as unknown as LineCard | undefined;
-			if (!card?.id || !data.eventId) return false;
-			return settleHere(card, data.eventId);
-		};
-	});
+	settleClick.register();
 }

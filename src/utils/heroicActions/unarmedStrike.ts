@@ -21,7 +21,7 @@ import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import { attackHeldPlanOf } from '#utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor } from '#utils/heldChange/heldChange.js';
-import { keptAmountOfRoll } from '#utils/heldChange/heldChoice.js';
+import { heldChosenOf, keptAmountOfRoll } from '#utils/heldChange/heldChoice.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -33,10 +33,7 @@ import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js'
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
-import {
-	isActionTrackingAutomationEnabled,
-	isRuleAutomationEnabled,
-} from '../../settings/automationSettings.js';
+import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
 /**
@@ -136,7 +133,7 @@ export async function rollUnarmedStrike(
 		damageTypes: ['bludgeoning'],
 	});
 
-	const chosen = isRuleAutomationEnabled() ? null : new Set<string>(result.heldChosen ?? []);
+	const chosen = heldChosenOf(result.heldChosen);
 	const { kept, toEnd } = keptAmountOfRoll(actor, unarmedItem, {
 		tick: result.keptAmount,
 		chosen,

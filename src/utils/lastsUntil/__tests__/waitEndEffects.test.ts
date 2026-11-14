@@ -18,9 +18,9 @@ vi.doMock('#utils/dicePool/emptyPoolLine.js', () => ({
 	END_LINES_OPTION: 'nimbleEndLines',
 	emptyPoolEvents,
 }));
-const { endEffects, endEffectsAt, undoEndedEffect, waitEndEffects } = await import(
-	'../endEffects.js'
-);
+const { endEffects, undoEndedEffect } = await import('../endEffects.js');
+const { endEffectsAt } = await import('../endEffectsAt.js');
+const { waitEndEffects } = await import('../waitEndEffects.js');
 
 const UNTIL_THEY_ATTACK: Moment = {
 	kind: 'event',

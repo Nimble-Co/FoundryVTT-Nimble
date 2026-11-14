@@ -6,7 +6,8 @@ const waitEndEffects = vi.fn(async (..._args: unknown[]) => true);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 vi.resetModules();
-vi.doMock('../endEffects.js', () => ({ effectsEndingAt, endEffects, waitEndEffects }));
+vi.doMock('../endEffects.js', () => ({ effectsEndingAt, endEffects }));
+vi.doMock('../waitEndEffects.js', () => ({ waitEndEffects }));
 const { fireEvent } = await import('../lastsUntilEvents.js');
 
 const tessa = { name: 'Tessa' };
@@ -36,6 +37,7 @@ describe('an event with Feature Effects off', () => {
 				hostId: 'attack1',
 			},
 			{ check: { type: 'event', event: 'attack', actor: tessa } },
+			{},
 		);
 	});
 

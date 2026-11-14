@@ -89,42 +89,24 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 		return canRollRequest(action);
 	}
 
-	async function rollSave(event: CardEvent) {
-		if (busy[event.id]) return;
-		busy[event.id] = true;
-		try {
-			await rollRequestedSave(getMessage() as never, event);
-		} finally {
-			busy[event.id] = false;
-		}
+	function rollSave(event: CardEvent) {
+		return clickLine(event, rollRequestedSave);
 	}
 
 	function canRule(action: EscapeRulingAction): boolean {
 		return canRuleEscape(action);
 	}
 
-	async function rule(event: CardEvent) {
-		if (busy[event.id]) return;
-		busy[event.id] = true;
-		try {
-			await endEscape(getMessage() as never, event);
-		} finally {
-			busy[event.id] = false;
-		}
+	function rule(event: CardEvent) {
+		return clickLine(event, endEscape);
 	}
 
 	function canChoose(action: TempHpChoiceAction): boolean {
 		return canChooseTempHp(action);
 	}
 
-	async function choose(event: CardEvent, take: boolean) {
-		if (busy[event.id]) return;
-		busy[event.id] = true;
-		try {
-			await chooseTempHp(getMessage() as never, event, take);
-		} finally {
-			busy[event.id] = false;
-		}
+	function choose(event: CardEvent, take: boolean) {
+		return clickLine(event, (card, line) => chooseTempHp(card, line, take));
 	}
 
 	function canActOnDamage(action: TurnDamageAction): boolean {
@@ -132,18 +114,10 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 	}
 
 	/** Deals a waiting line, or gives back what a dealt line took. */
-	async function actOnDamage(event: CardEvent) {
-		if (busy[event.id]) return;
-		busy[event.id] = true;
-		try {
-			const action = event.action as TurnDamageAction;
-			const run = action.state === 'waiting' ? takeTurnDamage : undoTurnDamage;
-			await run(getMessage() as never, event).catch((error) =>
-				console.error('Nimble | Could not change the damage of a turn.', error),
-			);
-		} finally {
-			busy[event.id] = false;
-		}
+	function actOnDamage(event: CardEvent) {
+		const action = event.action as TurnDamageAction;
+		const run = action.state === 'waiting' ? takeTurnDamage : undoTurnDamage;
+		return clickLine(event, run, 'Nimble | Could not change the damage of a turn.');
 	}
 
 	function canActOnStack(action: StackGainAction): boolean {
@@ -151,28 +125,25 @@ export function createCardEventsState(getMessage: () => NimbleChatMessage) {
 	}
 
 	/** Puts a waiting effect on, or takes a gained one off. */
-	async function actOnStack(event: CardEvent) {
-		if (busy[event.id]) return;
-		busy[event.id] = true;
-		try {
-			await actOnStackGain(getMessage() as never, event).catch((error) =>
-				console.error('Nimble | Could not change the effect of a stack count.', error),
-			);
-		} finally {
-			busy[event.id] = false;
-		}
+	function actOnStack(event: CardEvent) {
+		return clickLine(
+			event,
+			actOnStackGain,
+			'Nimble | Could not change the effect of a stack count.',
+		);
 	}
 
-	/** One click on a line at a time; a failed click is logged. */
+	/** One click on a line at a time. With `failure`, a failed click is logged. */
 	async function clickLine(
 		event: CardEvent,
-		run: (card: never, event: CardEvent) => Promise<boolean>,
-		failure: string,
+		run: (card: never, event: CardEvent) => Promise<unknown>,
+		failure?: string,
 	) {
 		if (busy[event.id]) return;
 		busy[event.id] = true;
 		try {
-			await run(getMessage() as never, event).catch((error) => console.error(failure, error));
+			const done = run(getMessage() as never, event);
+			await (failure ? done.catch((error) => console.error(failure, error)) : done);
 		} finally {
 			busy[event.id] = false;
 		}

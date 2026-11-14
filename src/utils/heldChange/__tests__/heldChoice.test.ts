@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { heldRollEffect } from '../../../../tests/fixtures/heldRollEffect.js';
 import { heldChangeKey } from '../heldChange.js';
-import { keptAmountOfRoll } from '../heldChoice.js';
+import { heldChosenOf, keptAmountOfRoll } from '../heldChoice.js';
 
 const MIRA = 'Actor.mira';
 
@@ -90,5 +90,23 @@ describe('keptAmountOfRoll with Feature Effects off', () => {
 		});
 		expect(ticked.kept).toBeNull();
 		expect(ticked.toEnd?.value).toBe(13);
+	});
+});
+
+describe('heldChosenOf', () => {
+	const game = (globalThis as unknown as { game: Record<string, unknown> }).game;
+	afterEach(() => {
+		delete game.settings;
+	});
+
+	it('is null with Feature Effects on, so every change applies', () => {
+		game.settings = { get: () => true };
+		expect(heldChosenOf(['a'])).toBeNull();
+	});
+
+	it('with Feature Effects off, holds what was ticked, and nothing with no window', () => {
+		game.settings = { get: () => false };
+		expect(heldChosenOf(['a'])).toEqual(new Set(['a']));
+		expect(heldChosenOf()).toEqual(new Set());
 	});
 });

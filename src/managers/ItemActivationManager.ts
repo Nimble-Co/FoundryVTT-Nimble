@@ -32,10 +32,7 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
-import {
-	isResourceSpendingAutomationEnabled,
-	isRuleAutomationEnabled,
-} from '../settings/automationSettings.js';
+import { isResourceSpendingAutomationEnabled } from '../settings/automationSettings.js';
 import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
@@ -70,7 +67,7 @@ import { DicePoolRuleConfig } from '../utils/dicePool/dicePoolRuleConfig.js';
 import { poolRollEvent } from '../utils/dicePool/poolEvents.js';
 import { attackHeldPlanOf } from '../utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor, isAttackRoll, spendHeldChanges } from '../utils/heldChange/heldChange.js';
-import { keptAmountOfRoll } from '../utils/heldChange/heldChoice.js';
+import { heldChosenOf, keptAmountOfRoll } from '../utils/heldChange/heldChoice.js';
 import {
 	applyPostRollIncomingBehavior,
 	computeIncomingAttackPlan,
@@ -543,7 +540,7 @@ class ItemActivationManager {
 		// against are capped by one reading of the pools.
 		this.#deferPoolSpends(dialogData);
 
-		this.#heldChosen = isRuleAutomationEnabled() ? null : new Set(dialogData.heldChosen ?? []);
+		this.#heldChosen = heldChosenOf(dialogData.heldChosen);
 		const keptAmount = keptAmountOfRoll(this.actor, this.#item, {
 			tick: dialogData.keptAmount,
 			chosen: this.#heldChosen,

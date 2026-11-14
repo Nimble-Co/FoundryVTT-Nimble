@@ -196,7 +196,7 @@ describe('settleCritDiceLine', () => {
 		settleCritDiceSave.mockRejectedValueOnce(new Error('locked'));
 
 		await expect(settleCritDiceLine(saveCard, line)).rejects.toThrow('locked');
-		expect(replaceCardEvent).toHaveBeenLastCalledWith(saveCard, line.id, line);
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(saveCard, line.id, line, { ifState: 'done' });
 	});
 
 	it('the owner of the creature asks the active GM; another player cannot click', async () => {

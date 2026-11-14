@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { seatOf } from '../effectSubject.js';
-import { endEffectsAt } from '../endEffects.js';
+import { endEffectsAt } from '../endEffectsAt.js';
 import type { LastsUntilCheck, Moment } from '../momentReached.js';
 
 const COMBAT = 'combat1';

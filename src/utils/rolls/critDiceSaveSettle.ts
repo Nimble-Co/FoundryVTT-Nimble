@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import type { CritDiceSaveAction } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import { refundRuleCharge, spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import {
@@ -69,7 +70,10 @@ async function changeDice(
  * The attack card and the use follow the result of a crit dice save: a failure sets the dice to
  * their max, a pass gives the use back, and a result that goes away undoes both.
  */
-export async function settleCritDiceSave(link: CritDiceSaveLink, outcome: string): Promise<void> {
+export async function settleCritDiceSave(
+	link: CritDiceSaveLink,
+	outcome: CritDiceSaveAction['outcome'],
+): Promise<void> {
 	const attack = game.messages?.get(link.attackMessageId) as FlagDocument | undefined;
 	const actor = fromUuidSync(link.actorUuid as `Actor.${string}`) as Actor | null;
 	if (!attack) return;

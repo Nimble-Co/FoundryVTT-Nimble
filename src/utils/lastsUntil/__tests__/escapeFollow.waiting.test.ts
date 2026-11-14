@@ -38,11 +38,8 @@ const cardEvents = await vi.importActual<typeof import('#utils/chat/cardEvents.j
 	'#utils/chat/cardEvents.js',
 );
 vi.doMock('#utils/chat/cardEvents.js', () => ({ ...cardEvents, addCardEvents, replaceCardEvent }));
-vi.doMock('#utils/lastsUntil/endEffects.js', () => ({
-	endEffects,
-	undoEndedEffect,
-	waitingEndLine,
-}));
+vi.doMock('#utils/lastsUntil/endEffects.js', () => ({ endEffects, undoEndedEffect }));
+vi.doMock('#utils/lastsUntil/waitingEndLine.js', () => ({ waitingEndLine }));
 vi.doMock('#utils/damage/escapeDamage.js', () => ({
 	escapeDamageRulesOf,
 	dealEscapeDamage,
@@ -242,9 +239,9 @@ describe('escapeOnEnd', () => {
 		escapeDamageRulesOf.mockReturnValueOnce(rules);
 		markLine();
 
-		expect(
-			await escapeOnEnd('s1', link, { key: 'Escaped' }, marked, { eventId: 'w', at: 3 }),
-		).toBe(true);
+		expect(await escapeOnEnd('s1', link, { key: 'Escaped' }, marked, { eventId: 'w', at: 3 })).toBe(
+			true,
+		);
 
 		expect(endEffects).toHaveBeenCalledWith([grappled], {
 			heading: { key: 'NIMBLE.escape.note', data: { effect: 'Grappled' } },

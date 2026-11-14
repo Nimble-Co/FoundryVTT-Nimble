@@ -18,13 +18,12 @@ import { followTempHpChange, takeBackTempHp } from '#utils/actor/effectTempHp.js
 import { effectCardIdOf } from '#utils/damage/damageCard.js';
 import { dealTurnDamage } from '#utils/damage/turnDamage.js';
 import { seatOf, sourceOf } from '#utils/lastsUntil/effectSubject.js';
-import { endEffects, endEffectsAt, waitEndEffects } from '#utils/lastsUntil/endEffects.js';
+import { endEffectsAt, endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
 import { effectsInactiveAt } from '#utils/lastsUntil/inactiveRound.js';
 import { eventHeading, fireEvent, fireItemUseEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { requestSaves } from '#utils/saveRequest/saveRequests.js';
 import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
-import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 
 type HookFn = (...args: never[]) => unknown;
 const on = (event: string, handler: HookFn) =>
@@ -51,8 +50,7 @@ function onTurn(type: TurnMomentType) {
 		if (type === 'turnEnd') {
 			const idle = effectsInactiveAt(combat, seat, round);
 			const reason = eventHeading('inactiveRound', { name: combatant.name });
-			if (isRuleAutomationEnabled()) void endEffects(idle, { ...moment, reason });
-			else void waitEndEffects(idle, { ...moment, reason }, undefined, { once: 'inactiveRound' });
+			void endOrWaitEffects(idle, { ...moment, reason }, undefined, { once: 'inactiveRound' });
 		}
 	};
 }

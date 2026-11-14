@@ -9,11 +9,11 @@ import {
 } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import { endEffects, undoEndedEffect, waitEndEffects } from '#utils/lastsUntil/endEffects.js';
+import { undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
+import { endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
 import localize from '#utils/localize.js';
 import { resolveSaveNodeDC } from '#utils/rolls/saveNodeDC.js';
 import type { SaveOnEvent } from '../../models/rules/saveOnEvent.js';
-import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 const WORDS = 'NIMBLE.chat.saveRequest';
 
@@ -255,13 +255,11 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 		await replaceCardEvent(card as never, line.id, null);
 		const effect = holderOfRequest(asked)?.effects.get(asked.effectId);
 		if (effect) {
-			const moment = {
+			await endOrWaitEffects([effect], {
 				heading: link.event.text,
 				hostId: card.id,
 				reason: { key: `${WORDS}.rolled`, data: rolled },
-			};
-			if (isRuleAutomationEnabled()) await endEffects([effect], moment);
-			else await waitEndEffects([effect], moment);
+			});
 		}
 		return true;
 	}

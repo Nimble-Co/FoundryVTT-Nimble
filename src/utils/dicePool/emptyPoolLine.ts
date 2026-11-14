@@ -1,6 +1,6 @@
 import type { CardEvent, EmptyPoolAction } from '#types/cardEvent.d.ts';
-import { replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
+import { type LineCard, runMarked } from '#utils/chat/lineClick.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { type EndingEffect, poolsEmptiedAtEnd } from '#utils/dicePool/poolsEmptiedAtEnd.js';
 
@@ -9,12 +9,8 @@ export const END_LINES_OPTION = 'nimbleEndLines';
 
 const WORDS = 'NIMBLE.chat.emptyPool';
 
-interface LineCard {
-	id?: string | null;
-	flags?: Record<string, unknown>;
-}
-
-interface NamedEffect extends EndingEffect {
+/** An ending effect, with the name its waiting pool lines give. */
+export interface NamedEffect extends EndingEffect {
 	name?: string | null;
 }
 
@@ -60,10 +56,7 @@ export function canEmptyPool(action: EmptyPoolAction): boolean {
 	return mayActHere(action.holderUuid);
 }
 
-/**
- * A click empties the pool of a waiting line. The line is marked first, only while it still waits,
- * so of two clicks one empties; an error puts it back.
- */
+/** A click empties the pool of a waiting line. The line is marked first (`runMarked`). */
 export async function emptyPoolFromLine(card: LineCard, event: CardEvent): Promise<boolean> {
 	const action = event.action;
 	if (action?.kind !== 'emptyPool' || action.state !== 'waiting' || !card.id) return false;
@@ -75,14 +68,8 @@ export async function emptyPoolFromLine(card: LineCard, event: CardEvent): Promi
 		text: { key: `${WORDS}.emptied`, data: { pool: action.poolLabel } },
 		action: { ...action, state: 'emptied' },
 	};
-	if (!(await replaceCardEvent(card as never, event.id, emptied, { ifState: 'waiting' }))) {
-		return false;
-	}
-	try {
+	return runMarked(card, event, emptied, async () => {
 		await setPoolFaces(holder, action.poolId, []);
-	} catch (error) {
-		await replaceCardEvent(card as never, event.id, event);
-		throw error;
-	}
-	return true;
+		return true;
+	});
 }

@@ -12,11 +12,8 @@ const cardEvents = await vi.importActual<typeof import('#utils/chat/cardEvents.j
 	'#utils/chat/cardEvents.js',
 );
 vi.doMock('#utils/chat/cardEvents.js', () => ({ ...cardEvents, addCardEvents, replaceCardEvent }));
-vi.doMock('#utils/lastsUntil/endEffects.js', () => ({
-	endEffects,
-	undoEndedEffect,
-	waitEndEffects,
-}));
+vi.doMock('#utils/lastsUntil/endEffects.js', () => ({ endEffects, undoEndedEffect }));
+vi.doMock('#utils/lastsUntil/waitEndEffects.js', () => ({ waitEndEffects }));
 const { followSaveRequest, saveRequestEvents } = await import('../saveRequests.js');
 
 const concentrating = {
@@ -93,14 +90,19 @@ describe('a failed requested save with Feature Effects off', () => {
 
 		expect(replaceCardEvent).toHaveBeenCalledWith(card, line.id, null);
 		expect(endEffects).not.toHaveBeenCalled();
-		expect(waitEndEffects).toHaveBeenCalledWith([concentrating], {
-			heading: line.text,
-			hostId: 'm1',
-			reason: {
-				key: 'NIMBLE.chat.saveRequest.rolled',
-				data: { save: { key: 'NIMBLE.effectSheet.escape.saves.strength' }, total: 6, dc: 10 },
+		expect(waitEndEffects).toHaveBeenCalledWith(
+			[concentrating],
+			{
+				heading: line.text,
+				hostId: 'm1',
+				reason: {
+					key: 'NIMBLE.chat.saveRequest.rolled',
+					data: { save: { key: 'NIMBLE.effectSheet.escape.saves.strength' }, total: 6, dc: 10 },
+				},
 			},
-		});
+			undefined,
+			{},
+		);
 	});
 
 	it('a reroll to a pass puts the kept line in place of the waiting line', async () => {

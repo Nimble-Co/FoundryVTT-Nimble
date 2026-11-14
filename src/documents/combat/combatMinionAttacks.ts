@@ -2,9 +2,9 @@ import type { ConditionCreature } from '#types/conditionRollMode.d.ts';
 import type { FormulaActor, FormulaOwner } from '#types/formulaReferences.d.ts';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import { pendingCardLines } from '#utils/chat/cardEvents.js';
+import { heldChosenOf } from '#utils/heldChange/heldChoice.js';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
-import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import {
 	getPrimaryDamageFormulaFromActivationEffects,
 	getUnsupportedActivationEffectTypes,
@@ -284,7 +284,7 @@ async function rollSingleMinionAttack(params: {
 			// Only the conditions give a minion group attack disadvantage.
 			noDisadvantageToIgnore: !conditions.some((line) => line.step < 0),
 			// No window opens, so with Feature Effects off no change is ticked.
-			chosen: isRuleAutomationEnabled() ? null : new Set(),
+			chosen: heldChosenOf(),
 		});
 		checkFormulaReferences(
 			formula,

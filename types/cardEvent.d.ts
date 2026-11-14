@@ -125,12 +125,16 @@ export interface StackGainAction {
 	payload?: EffectPayload;
 }
 
-/** Where the ended line of a waiting end goes, as `endEffects` reads it. */
+/** The moment that ends effects: where their ended lines go and why. `EndMoment` adds to it. */
 export interface WaitingEndMoment {
+	/** Finds the card of the moment (`momentKeys`). Without a key, the ends get their own card. */
 	key?: string;
 	heading: CardEventText;
+	/** Why they ended, on each line, when the heading does not say it. */
 	reason?: CardEventText;
+	/** The card of the action that ended them. Its Events strip takes the lines, not a moment card. */
 	hostId?: string;
+	/** Who sees the card of the moment. Empty or missing: everyone. */
 	whisper?: string[];
 }
 

@@ -14,13 +14,10 @@ import {
 	takeBackEscapeDamage,
 } from '#utils/damage/escapeDamage.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
-import {
-	type EndMoment,
-	endEffects,
-	undoEndedEffect,
-	waitingEndLine,
-} from '#utils/lastsUntil/endEffects.js';
+import { endEffects, undoEndedEffect } from '#utils/lastsUntil/endEffects.js';
 import { endReasonOf } from '#utils/lastsUntil/endedEffectEvent.js';
+import type { EndMoment } from '#utils/lastsUntil/endLines.js';
+import { waitingEndLine } from '#utils/lastsUntil/waitingEndLine.js';
 import localize from '#utils/localize.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 

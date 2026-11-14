@@ -5,11 +5,12 @@ const { endEffectsMock, waitEndEffectsMock } = vi.hoisted(() => ({
 	waitEndEffectsMock: vi.fn(async (..._args: unknown[]) => true),
 }));
 
-vi.mock('../../utils/lastsUntil/endEffects.js', () => ({
-	endEffects: endEffectsMock,
+vi.mock('../../utils/lastsUntil/endEffects.js', () => ({ endEffects: endEffectsMock }));
+vi.mock('../../utils/lastsUntil/endEffectsAt.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('../../utils/lastsUntil/endEffectsAt.js')>()),
 	endEffectsAt: vi.fn(async () => undefined),
-	waitEndEffects: waitEndEffectsMock,
 }));
+vi.mock('../../utils/lastsUntil/waitEndEffects.js', () => ({ waitEndEffects: waitEndEffectsMock }));
 vi.mock('../../utils/damage/turnDamage.js', () => ({ dealTurnDamage: vi.fn(async () => {}) }));
 vi.mock('../../utils/saveRequest/saveRequests.js', () => ({ requestSaves: vi.fn(async () => {}) }));
 vi.mock('../../utils/lastsUntil/lastsUntilEvents.js', () => ({

@@ -1,19 +1,12 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent, WaitingEndAction } from '#types/cardEvent.d.ts';
-import { askActiveGm } from '#utils/askActiveGm.js';
 import { cardEventsOf, replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
+import { activeGmLine, type LineCard, runMarked } from '#utils/chat/lineClick.js';
 import { endEffects } from '#utils/lastsUntil/endEffects.js';
 import { escapeOnEnd } from '#utils/lastsUntil/escapeFollow.js';
 
 const QUERY_NAME = `${SYSTEM_ID}.endWaiting`;
-
-interface LineCard {
-	id?: string | null;
-	type?: string;
-	flags?: Record<string, unknown>;
-	system?: unknown;
-}
 
 interface WaitingHolder {
 	effects: { get(id: string): ActiveEffect | undefined };
@@ -73,9 +66,8 @@ async function endFromLine(
 }
 
 /**
- * On the active GM. The line is marked first, only while it still waits, so of two clicks one
- * ends it. An end that did not take, or failed, puts the line back to waiting, only while it is
- * still marked: a reroll can take it off or change it meanwhile.
+ * On the active GM. The line is marked first (`runMarked`). An end that did not take puts the line
+ * back to waiting, only while it is still marked: a reroll can take it off or change it meanwhile.
  */
 async function endHere(card: LineCard, eventId: string): Promise<boolean> {
 	const line = cardEventsOf(card as never).find((each) => each.id === eventId);
@@ -84,41 +76,27 @@ async function endHere(card: LineCard, eventId: string): Promise<boolean> {
 		return false;
 	}
 	const marked: CardEvent = { ...line, action: { ...action, state: 'ending' } };
-	if (!(await replaceCardEvent(card as never, eventId, marked, { ifState: 'waiting' }))) {
-		return false;
-	}
-	const holder = holderOf(action);
-	const effect = holder?.effects.get(action.effectId);
-	if (!effect) return replaceCardEvent(card as never, eventId, goneLine(line, action));
-	try {
+	return runMarked(card, line, marked, async () => {
+		const holder = holderOf(action);
+		const effect = holder?.effects.get(action.effectId);
+		if (!effect) return replaceCardEvent(card as never, eventId, goneLine(line, action));
 		await endFromLine(card as LineCard & { id: string }, line, action, effect);
-	} catch (error) {
+		if (!holder?.effects.get(action.effectId)) return true;
 		await replaceCardEvent(card as never, eventId, line, { ifState: 'ending' });
-		throw error;
-	}
-	if (!holder?.effects.get(action.effectId)) return true;
-	await replaceCardEvent(card as never, eventId, line, { ifState: 'ending' });
-	return false;
+		return false;
+	});
 }
+
+const endClick = activeGmLine(QUERY_NAME, endHere);
 
 /** Feature Effects off: End on a waiting line. The active GM ends it; another client asks it. */
 export async function endWaiting(card: LineCard, event: CardEvent): Promise<boolean> {
 	const action = event.action;
-	if (action?.kind !== 'waitingEnd' || action.state !== 'waiting' || !card.id) return false;
+	if (action?.kind !== 'waitingEnd' || action.state !== 'waiting') return false;
 	if (!canEndWaiting(action)) return false;
-	if (!game.user?.isActiveGM) {
-		return (await askActiveGm(QUERY_NAME, { messageId: card.id, eventId: event.id })) === true;
-	}
-	return endHere(card, event.id);
+	return endClick.click(card, event);
 }
 
 export function registerEndWaitingQuery(): void {
-	Hooks.once('init', () => {
-		const queries = CONFIG.queries as unknown as Record<string, (data: never) => Promise<boolean>>;
-		queries[QUERY_NAME] = async (data: { messageId?: string; eventId?: string }) => {
-			const card = game.messages?.get(data.messageId ?? '') as unknown as LineCard | undefined;
-			if (!card?.id || !data.eventId) return false;
-			return endHere(card, data.eventId);
-		};
-	});
+	endClick.register();
 }

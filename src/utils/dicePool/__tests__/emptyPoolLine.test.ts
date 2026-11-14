@@ -104,7 +104,7 @@ describe('emptyPoolFromLine', () => {
 		setPoolFaces.mockRejectedValueOnce(new Error('locked'));
 
 		await expect(emptyPoolFromLine(card, line)).rejects.toThrow('locked');
-		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, line.id, line);
+		expect(replaceCardEvent).toHaveBeenLastCalledWith(card, line.id, line, { ifState: 'emptied' });
 	});
 
 	it('a player who does not own the holder cannot empty it', async () => {

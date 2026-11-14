@@ -1,16 +1,12 @@
 import type { CardEventText, EventHost } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
-import {
-	type EndMoment,
-	effectsEndingAt,
-	endEffects,
-	waitEndEffects,
-} from '#utils/lastsUntil/endEffects.js';
+import { effectsEndingAt } from '#utils/lastsUntil/endEffects.js';
+import { endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
+import type { EndMoment } from '#utils/lastsUntil/endLines.js';
 import { noteActivity } from '#utils/lastsUntil/inactiveRound.js';
 import type { LastsUntilCheck } from '#utils/lastsUntil/momentReached.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import type { LastsUntilEvent } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 
 interface UsedItem {
 	uuid?: string | null;
@@ -79,9 +75,7 @@ export function fireEvents(
 	for (const { check, heading } of events) {
 		const effects = effectsEndingAt(check).filter((effect) => !taken.has(effect));
 		for (const effect of effects) taken.add(effect);
-		const moment = endMomentOn(heading, host);
-		if (isRuleAutomationEnabled()) void endEffects(effects, moment, { check });
-		else void waitEndEffects(effects, moment, { check });
+		void endOrWaitEffects(effects, endMomentOn(heading, host), { check });
 	}
 }
 

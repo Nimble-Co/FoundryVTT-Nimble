@@ -1,12 +1,14 @@
 import { CONDITION_REPLACED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import { addMomentEvents } from '#utils/chat/cardEvents.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
-import { END_LINES_OPTION, emptyPoolEvents } from '#utils/dicePool/emptyPoolLine.js';
-import { type EndingEffect, poolsEmptiedAtEnd } from '#utils/dicePool/poolsEmptiedAtEnd.js';
+import {
+	END_LINES_OPTION,
+	emptyPoolEvents,
+	type NamedEffect,
+} from '#utils/dicePool/emptyPoolLine.js';
+import { poolsEmptiedAtEnd } from '#utils/dicePool/poolsEmptiedAtEnd.js';
 import { eventHeading } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
-
-type NamedEffect = EndingEffect & { name?: string | null };
 
 /**
  * Feature Effects off: the pools wait for a click. An end that posts its own lines (`endEffects`)
