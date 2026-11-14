@@ -1,7 +1,11 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { HeldChange, HeldChangeData, HeldChangeEnd } from '#types/heldChange.d.ts';
-import { formulaWithStacks, stacksOf } from '#utils/actor/effectStacks.js';
+import {
+	formulaWithStacks,
+	stacksOf,
+	UNDO_APPLICATION_OPTION,
+} from '#utils/actor/effectStacks.js';
 import { askActiveGm } from '#utils/askActiveGm.js';
 import { endedEffectRow } from '#utils/lastsUntil/endEffects.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
@@ -84,7 +88,7 @@ interface Holder {
 	isOwner?: boolean;
 	effects?: Iterable<HolderEffect>;
 	createEmbeddedDocuments?(type: string, data: object[]): Promise<unknown>;
-	deleteEmbeddedDocuments?(type: string, ids: string[]): Promise<unknown>;
+	deleteEmbeddedDocuments?(type: string, ids: string[], options?: object): Promise<unknown>;
 }
 
 /** The creature that applied the effect, and the name of what made it. */
@@ -486,13 +490,26 @@ async function createHere(holder: Holder, change: HeldChangeData): Promise<void>
 	await holder.createEmbeddedDocuments?.('ActiveEffect', [heldChangeEffect(change)]);
 }
 
-async function deleteHere(holder: Holder, effectId: string): Promise<void> {
-	await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId]);
+/** `undo`: the delete takes back the card's application, so the change does not end. */
+async function deleteHere(holder: Holder, effectId: string, undo = false): Promise<void> {
+	if (!undo) await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId]);
+	else {
+		await holder.deleteEmbeddedDocuments?.('ActiveEffect', [effectId], {
+			[UNDO_APPLICATION_OPTION]: true,
+		});
+	}
 }
 
-async function deleteHeld(holder: Holder, effectId: string): Promise<void> {
-	if (holder.isOwner) await deleteHere(holder, effectId);
-	else await askActiveGm(QUERY_NAME, { action: 'delete', actorUuid: holder.uuid, effectId });
+async function deleteHeld(holder: Holder, effectId: string, undo = false): Promise<void> {
+	if (holder.isOwner) await deleteHere(holder, effectId, undo);
+	else {
+		await askActiveGm(QUERY_NAME, {
+			action: 'delete',
+			actorUuid: holder.uuid,
+			effectId,
+			...(undo ? { undo } : {}),
+		});
+	}
 }
 
 /**
@@ -551,7 +568,7 @@ export async function takeBackHeldChanges(
 			.filter((held) => held.sourceMessageId === sourceMessageId)
 			.map((held) => held.effectId),
 	);
-	for (const id of ids) await deleteHeld(holder, id);
+	for (const id of ids) await deleteHeld(holder, id, true);
 	return ids.size;
 }
 
@@ -573,11 +590,14 @@ export function registerHeldChangeQuery(): void {
 			actorUuid: string;
 			change?: HeldChangeData;
 			effectId?: string;
+			undo?: boolean;
 		}) => {
 			const holder = fromUuidSync(data.actorUuid) as unknown as Holder | null;
 			if (!holder) return false;
 			if (data.action === 'create' && data.change) await createHere(holder, data.change);
-			if (data.action === 'delete' && data.effectId) await deleteHere(holder, data.effectId);
+			if (data.action === 'delete' && data.effectId) {
+				await deleteHere(holder, data.effectId, data.undo === true);
+			}
 			return true;
 		};
 	});

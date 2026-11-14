@@ -4,6 +4,7 @@ import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '#utils/actor/applyConditionToActor.js';
 import { applyEffectToActor, payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import {
 	giveWounds,
 	takeBackWounds,
@@ -76,7 +77,7 @@ type WoundCard = Parameters<typeof giveWoundsOnCard>[0];
 
 interface ConditionOwner {
 	effects?: Iterable<OwnedConditionEffect>;
-	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[]): Promise<unknown>;
+	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[], options?: object): Promise<unknown>;
 }
 
 interface SaveCard {
@@ -382,7 +383,9 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				ids.push(effect.id);
 			}
 		}
-		if (ids.length > 0) await owner.deleteEmbeddedDocuments('ActiveEffect', ids);
+		if (ids.length > 0) {
+			await owner.deleteEmbeddedDocuments('ActiveEffect', ids, { [UNDO_APPLICATION_OPTION]: true });
+		}
 	}
 
 	#itemEffect(): ItemEffect | null {

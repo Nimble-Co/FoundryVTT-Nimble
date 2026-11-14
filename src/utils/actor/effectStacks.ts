@@ -9,6 +9,9 @@ import { roundSeconds, secondsOf } from '#utils/lastsUntil/secondsOf.js';
 /** The update option of a stack: the holder gains the effect again. */
 export const STACKED_OPTION = 'nimbleEffectStacked';
 
+/** The delete option of an effect whose application is undone or taken back: it does not end. */
+export const UNDO_APPLICATION_OPTION = 'nimbleApplicationUndone';
+
 export interface StackFields {
 	on: boolean;
 	count: number;
@@ -112,12 +115,12 @@ export async function stackUp(
 
 /** Takes back one application: one stack off, or the effect off at its last stack. */
 export async function takeBackStack(
-	effect: StackingEffect & { delete(): Promise<unknown> },
+	effect: StackingEffect & { delete(options?: object): Promise<unknown> },
 ): Promise<void> {
 	const stacks = stacksOf(effect.system);
 	if (stacks && stacks.count > 1) {
 		await effect.update({ 'system.stacks.count': stacks.count - 1 });
 		return;
 	}
-	await effect.delete();
+	await effect.delete({ [UNDO_APPLICATION_OPTION]: true });
 }

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HeldChangeData } from '#types/heldChange.d.ts';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import {
 	type HeldRollEffectSpec,
@@ -483,13 +484,15 @@ describe('spendHeldIgnoreDisadvantage', () => {
 });
 
 describe('takeBackHeldChanges', () => {
+	const undoApplication = { [UNDO_APPLICATION_OPTION]: true };
+
 	it('deletes only the changes that the card made', async () => {
 		const target = creature('T', [{ messageId: 'm1' }, { messageId: 'm2' }]);
 
 		const count = await takeBackHeldChanges(target, 'm1');
 
 		expect(count).toBe(1);
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0'], undoApplication);
 	});
 
 	it('deletes a disabled effect that the card made', async () => {
@@ -498,7 +501,7 @@ describe('takeBackHeldChanges', () => {
 		const count = await takeBackHeldChanges(target, 'm1');
 
 		expect(count).toBe(1);
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0'], undoApplication);
 	});
 
 	it('deletes an effect with a disabled rule that the card made', async () => {
@@ -506,7 +509,7 @@ describe('takeBackHeldChanges', () => {
 
 		await takeBackHeldChanges(target, 'm1');
 
-		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0']);
+		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['e0'], undoApplication);
 	});
 
 	it('deletes an effect with two Held Roll rules once', async () => {
@@ -516,6 +519,23 @@ describe('takeBackHeldChanges', () => {
 
 		expect(count).toBe(1);
 		expect(target.deleteEmbeddedDocuments).toHaveBeenCalledTimes(1);
+	});
+
+	it('asks the GM to delete it as an undone application when the player does not own the holder', async () => {
+		const target = creature('T', [{ messageId: 'm1' }], false);
+		const query = vi.fn(async () => true);
+		const users = globals.game.users;
+		globals.game.users = { activeGM: { query } };
+
+		await takeBackHeldChanges(target, 'm1');
+
+		globals.game.users = users;
+		expect(query).toHaveBeenCalledWith('nimble.heldChange', {
+			action: 'delete',
+			actorUuid: 'T',
+			effectId: 'e0',
+			undo: true,
+		});
 	});
 });
 

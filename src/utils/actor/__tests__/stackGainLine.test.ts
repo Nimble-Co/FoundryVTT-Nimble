@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CardEvent, StackGainAction } from '#types/cardEvent.d.ts';
 import type { StackReached } from '#types/effectPayload.d.ts';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 
 const replaceCardEvent = vi.fn(async (..._args: unknown[]) => true);
 const applyEffectToActor = vi.fn();
@@ -127,7 +128,7 @@ describe('the clicks of the line', () => {
 
 		await line.actOnStackGain(card, event);
 
-		expect(stone.delete).toHaveBeenCalled();
+		expect(stone.delete).toHaveBeenCalledWith({ [UNDO_APPLICATION_OPTION]: true });
 		expect((replaced().action as StackGainAction).state).toBe('undone');
 	});
 

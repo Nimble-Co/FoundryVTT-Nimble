@@ -1,5 +1,6 @@
 import type { CardEvent, StackGainAction } from '#types/cardEvent.d.ts';
 import { applyEffectToActor } from '#utils/actor/applyEffectToActor.js';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { stackGainText } from '#utils/actor/stackGainEvent.js';
 import { replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
@@ -41,10 +42,10 @@ async function gain(card: LineCard, event: CardEvent, action: StackGainAction): 
 async function undo(card: LineCard, event: CardEvent, action: StackGainAction): Promise<boolean> {
 	const effect = action.gainedUuid
 		? (fromUuidSync(action.gainedUuid as never, { strict: false }) as {
-				delete(): Promise<unknown>;
+				delete(options?: object): Promise<unknown>;
 			} | null)
 		: null;
-	await effect?.delete();
+	await effect?.delete({ [UNDO_APPLICATION_OPTION]: true });
 	return replaceCardEvent(card as never, event.id, {
 		...event,
 		action: { ...action, state: 'undone' },

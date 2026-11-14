@@ -2,7 +2,7 @@ import { SYSTEM_ID, systemHookName } from '#system';
 import type { ApplyEffectNode, EffectNode } from '#types/effectTree.js';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
 import type { AppliedEffect } from '#utils/actor/applyEffectToActor.js';
-import { takeBackStack } from '#utils/actor/effectStacks.js';
+import { takeBackStack, UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import { actOnStackGain } from '#utils/actor/stackGainLine.js';
 import {
 	applyEffectFromCard,
@@ -91,9 +91,9 @@ async function takeBackGained(host: EffectCard, gainedUuid: string): Promise<voi
 	);
 	if (line && (await actOnStackGain(host, line))) return;
 	const gained = fromUuidSync(gainedUuid as never, { strict: false }) as {
-		delete(): Promise<unknown>;
+		delete(options?: object): Promise<unknown>;
 	} | null;
-	await gained?.delete();
+	await gained?.delete({ [UNDO_APPLICATION_OPTION]: true });
 }
 
 function recordOf(stepId: string, applied: AppliedEffect): SaverRecord {

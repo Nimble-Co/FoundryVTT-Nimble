@@ -8,6 +8,7 @@ import {
 	stacksOf,
 	stackUp,
 	takeBackStack,
+	UNDO_APPLICATION_OPTION,
 } from '../effectStacks.js';
 
 const endOfNextTurn: Moment = {
@@ -164,7 +165,7 @@ describe('takeBackStack', () => {
 
 		expect(three.update).toHaveBeenCalledWith({ 'system.stacks.count': 2 });
 		expect(three.delete).not.toHaveBeenCalled();
-		expect(one.delete).toHaveBeenCalled();
+		expect(one.delete).toHaveBeenCalledWith({ [UNDO_APPLICATION_OPTION]: true });
 	});
 
 	it('takes off an effect that does not stack', async () => {
@@ -174,7 +175,7 @@ describe('takeBackStack', () => {
 
 		await takeBackStack(plain);
 
-		expect(plain.delete).toHaveBeenCalled();
+		expect(plain.delete).toHaveBeenCalledWith({ [UNDO_APPLICATION_OPTION]: true });
 	});
 });
 

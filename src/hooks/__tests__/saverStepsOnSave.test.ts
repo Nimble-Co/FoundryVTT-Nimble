@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import type { EffectNode } from '#types/effectTree.js';
 import { EFFECT_RECREATED_OPTION } from '#utils/actor/applyConditionToActor.js';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 
 const applyEffectFromCard = vi.fn();
 const forgetAppliedEffect = vi.fn(async (..._args: unknown[]) => {});
@@ -182,6 +183,7 @@ describe('followSaverSteps', () => {
 
 		expect(takeBackStack).toHaveBeenCalledWith(counterEffect);
 		expect(stone.delete).toHaveBeenCalledTimes(1);
+		expect(stone.delete).toHaveBeenCalledWith({ [UNDO_APPLICATION_OPTION]: true });
 	});
 
 	it('a take-back marks the "At N stacks" line on the card undone, as its Undo does', async () => {

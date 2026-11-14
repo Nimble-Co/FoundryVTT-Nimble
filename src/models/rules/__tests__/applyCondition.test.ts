@@ -9,6 +9,7 @@ const createEffect = vi.fn();
 vi.stubGlobal('ActiveEffect', { implementation: { fromStatusEffect, create: createEffect } });
 
 import { SYSTEM_ID } from '#system';
+import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
 import {
 	ApplyConditionRule,
 	type ApplyConditionTrigger,
@@ -555,6 +556,11 @@ describe('ApplyConditionRule', () => {
 
 			await saveResolved(rule, actor, 'pass');
 			expect(actor.effects).toHaveLength(0);
+			expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith(
+				'ActiveEffect',
+				expect.any(Array),
+				{ [UNDO_APPLICATION_OPTION]: true },
+			);
 		});
 
 		describe('with Feature Effects off', () => {
