@@ -1,7 +1,26 @@
-import { defineConfig } from 'vitepress';
+import { type DefaultTheme, defineConfigWithTheme, type HeadConfig } from 'vitepress';
 
-export default defineConfig({
-	title: 'Nimble FoundryVTT',
+export interface NimbleThemeConfig extends DefaultTheme.Config {
+	betaBanner?: { version: string; stableUrl: string };
+}
+
+const SITE_PATH = '/FoundryVTT-Nimble/';
+const SITE_URL = `https://nimble-co.github.io${SITE_PATH}`;
+
+// The deploy workflow sets these; a local build is the Stable Docs with no beta.
+const isBeta = process.env.DOCS_CHANNEL === 'beta';
+const betaVersion = process.env.DOCS_BETA_VERSION || '';
+const base = isBeta ? `${SITE_PATH}beta/` : SITE_PATH;
+
+const betaHead: HeadConfig[] = isBeta ? [['meta', { name: 'robots', content: 'noindex' }]] : [];
+
+const betaNav: DefaultTheme.NavItem[] =
+	!isBeta && betaVersion
+		? [{ text: `Beta (${betaVersion})`, link: `${SITE_URL}beta/`, target: '_self', noIcon: true }]
+		: [];
+
+export default defineConfigWithTheme<NimbleThemeConfig>({
+	title: isBeta ? 'Nimble FoundryVTT (Beta)' : 'Nimble FoundryVTT',
 	description: 'Documentation hub for the Nimble FoundryVTT system',
 
 	// Exclude agent-only docs and reference partials (inlined by the generator) from the site build
@@ -10,12 +29,13 @@ export default defineConfig({
 	// Ignore dead links from included CONTRIBUTING.md (repo-relative links to source files)
 	ignoreDeadLinks: true,
 
-	// Set base path for GitHub Pages, update if using a custom domain
-	base: '/FoundryVTT-Nimble/',
+	base,
 
-	head: [['link', { rel: 'icon', type: 'image/x-icon', href: '/FoundryVTT-Nimble/favicon.ico' }]],
+	head: [['link', { rel: 'icon', type: 'image/x-icon', href: `${base}favicon.ico` }], ...betaHead],
 
 	themeConfig: {
+		betaBanner: isBeta ? { version: betaVersion, stableUrl: SITE_URL } : undefined,
+
 		nav: [
 			{ text: 'Home', link: '/' },
 			{ text: 'Documentation', link: '/documentation/' },
@@ -28,19 +48,7 @@ export default defineConfig({
 				],
 			},
 			{ text: 'System', link: '/system/' },
-			{
-				text: 'Planning',
-				items: [
-					{ text: 'Project Vision', link: '/planning/product-vision' },
-					{ text: 'Architecture', link: '/planning/architecture' },
-					{
-						text: 'UX Design',
-						link: '/planning/ux-design-specification',
-						items: [{ text: 'Design Directions', link: '/planning/ux-design-directions' }],
-					},
-					{ text: 'Epics & Stories', link: '/planning/epics' },
-				],
-			},
+			...betaNav,
 		],
 
 		sidebar: {
@@ -140,20 +148,6 @@ export default defineConfig({
 				{
 					text: 'System',
 					items: [{ text: 'Overview', link: '/system/' }],
-				},
-				{
-					text: 'Planning',
-					collapsed: true,
-					items: [
-						{ text: 'Project Vision', link: '/planning/product-vision' },
-						{ text: 'Architecture', link: '/planning/architecture' },
-						{
-							text: 'UX Design',
-							link: '/planning/ux-design-specification',
-							items: [{ text: 'Design Directions', link: '/planning/ux-design-directions' }],
-						},
-						{ text: 'Epics & Stories', link: '/planning/epics' },
-					],
 				},
 			],
 		},

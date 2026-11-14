@@ -1,10 +1,9 @@
 import DefaultTheme from 'vitepress/theme';
-import FullscreenIframe from './components/FullscreenIframe.vue';
+import { h } from 'vue';
+import BetaBanner from './components/BetaBanner.vue';
 import './style.css';
 
 export default {
 	extends: DefaultTheme,
-	enhanceApp({ app }) {
-		app.component('FullscreenIframe', FullscreenIframe);
-	},
+	Layout: () => h(DefaultTheme.Layout, null, { 'layout-top': () => h(BetaBanner) }),
 };
