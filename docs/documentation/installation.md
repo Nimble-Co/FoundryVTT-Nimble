@@ -58,18 +58,18 @@ The first time a Gamemaster logs into a world after an update, the system checks
 
 When an update changes none of the items and monsters you copied from a compendium, it runs by itself, and you see a short note when it finishes. When it changes some of them, such as a spell on a character or a monster on a scene, the **World Migration** window opens first and lists each Compendium Copy that changes:
 
-- **By Item** and **By Actor** sort the same list two ways. Open a group to see where each copy is and which changes it gets.
+- The left side lists the groups of copies. **By Item** and **By Actor** sort them two ways. Pick a group to see its copies at the right: where each copy is, and which changes it gets. A ban icon on a group shows that you keep some of its copies out.
 - Tick **Choose Copies** to keep a copy out. A copy you keep out keeps its old rules, effects and text. Changes with a lock icon fix the shape of the data. They always run, because the copy stops working without them.
-- **Start Migration** writes the changes, and a bar shows the progress. **Later** closes the window, and it opens again at your next login.
+- **Start Migration** writes the changes, and a bar shows the progress. Each group shows a check when it is done. **Later** closes the window, and it opens again at your next login.
 
-When the migration finishes, the window shows the Migration Report: what changed, the copies you kept out, and any errors. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings.
+When the migration finishes, the window shows the Migration Report: what changed, the copies you kept out, and any errors. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings and pick a report at the left, newest first.
 
 ::: warning Back up before you start
 A migration cannot be undone. Make a backup of your world from the Foundry setup screen before you click **Start Migration**.
 :::
 
 ::: details If the migration stops
-If Foundry closes during a migration, the window opens again at the next GM login with **Continue Migration**. It keeps the copies you kept out, and you cannot change them. The report says that the run continued an earlier one.
+If Foundry closes during a migration, or an error stops it, the window opens again at the next GM login with **Continue Migration**. After an error, reload the world to continue. It keeps the copies you kept out, and you cannot change them. The report says that the run continued an earlier one.
 :::
 
 ## Before your first session
