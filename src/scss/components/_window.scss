@@ -32,7 +32,9 @@
 		color: var(--nimble-ui-ink);
 	}
 
+	// Only the tile and the name go over the Foundry header; the rest of the head moves the window.
 	.nimble-window__head {
+		z-index: auto;
 		padding: 12px 12px 0;
 	}
 
