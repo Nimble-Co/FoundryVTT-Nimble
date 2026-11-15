@@ -38,6 +38,11 @@ function stackLines(stack: string | null | undefined): string[] {
 		);
 }
 
+/** "Nimble | ...", "Nimble: ..." and "[Nimble][CT] ...". */
+function isNimbleLine(first: unknown): boolean {
+	return typeof first === 'string' && /^\[?Nimble\b/.test(first);
+}
+
 function packageOf(lines: string[]): string | null {
 	for (const line of lines) {
 		const match = line.match(/\b(?:modules|systems)\/([^/]+)\//);
@@ -92,5 +97,5 @@ class SupportLog {
 	}
 }
 
-export { SupportLog };
+export { isNimbleLine, SupportLog };
 export type { LogEntry, LogInput, LogLevel, LogSource };

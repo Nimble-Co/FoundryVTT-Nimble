@@ -1,4 +1,4 @@
-import { type LogLevel, SupportLog } from './supportLog.js';
+import { isNimbleLine, type LogLevel, SupportLog } from './supportLog.js';
 
 /** The one log of this page. It starts when the system's code loads. */
 const supportLog = new SupportLog();
@@ -15,10 +15,19 @@ function callerStack(): string {
 	return (new Error().stack ?? '').split('\n').slice(3).join('\n');
 }
 
+/** The code that asked for the popup, past Foundry's own Notifications methods. */
+function popupCaller(): string {
+	return (new Error().stack ?? '')
+		.split('\n')
+		.slice(3)
+		.filter((line) => !/\bat Notifications\./.test(line))
+		.join('\n');
+}
+
 function wrapConsole(method: 'warn' | 'error', level: LogLevel): void {
 	const original = console[method].bind(console);
 	console[method] = (...args: unknown[]) => {
-		if (typeof args[0] === 'string' && args[0].startsWith('Nimble')) {
+		if (isNimbleLine(args[0])) {
 			const error = args.find((arg): arg is Error => arg instanceof Error);
 			supportLog.record({
 				level,
@@ -43,7 +52,7 @@ function wrapNotifications(): void {
 				level: type === 'error' ? 'error' : 'warning',
 				source: 'popup',
 				message: String(notification?.message ?? message).replace(/<[^>]*>/g, ''),
-				stack: message instanceof Error ? message.stack : callerStack(),
+				stack: message instanceof Error ? message.stack : popupCaller(),
 			});
 		}
 		return notification;

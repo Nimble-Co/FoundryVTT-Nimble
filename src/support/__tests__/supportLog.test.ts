@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SupportLog } from '../supportLog.js';
+import { isNimbleLine, SupportLog } from '../supportLog.js';
 
 const STACK = [
 	'TypeError: Cannot read properties of undefined',
@@ -55,5 +55,15 @@ describe('SupportLog', () => {
 
 		expect(log.entries).toHaveLength(200);
 		expect(log.dropped).toBe(5);
+	});
+});
+
+describe('isNimbleLine', () => {
+	it('knows the console lines that Nimble writes', () => {
+		expect(isNimbleLine('Nimble | Rule x is not of a recognizable type.')).toBe(true);
+		expect(isNimbleLine('Nimble: no token')).toBe(true);
+		expect(isNimbleLine('[Nimble][CT] drop failed')).toBe(true);
+		expect(isNimbleLine('Dice So Nice | no dice')).toBe(false);
+		expect(isNimbleLine(42)).toBe(false);
 	});
 });
