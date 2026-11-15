@@ -18,6 +18,10 @@ interface RunProgress {
 	done: number;
 	total: number;
 	part: RunPart;
+	/** The documents being written now. */
+	writing: string[];
+	/** The documents written since the last report. */
+	written: string[];
 }
 
 interface RunResult {
@@ -213,9 +217,11 @@ class MigrationRunner extends MigrationRunnerBase {
 			try {
 				for (let start = 0; start < group.length; start += BATCH) {
 					const batch = group.slice(start, start + BATCH);
+					const uuids = batch.map((entry) => entry.root.uuid);
+					onProgress({ done, total, part: target.part, writing: uuids, written: [] });
 					await this.#writeBatch(batch);
 					done += batch.length;
-					onProgress({ done, total, part: target.part });
+					onProgress({ done, total, part: target.part, writing: [], written: uuids });
 				}
 			} finally {
 				if (pack && wasLocked) await pack.configure({ locked: true });
