@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { MigrationReportViewProps } from './MigrationReportView.types.ts';
-	import type { MigrationReport } from '../../../migration/migrationReport.js';
+	import { countText, type MigrationReport } from '../../../migration/migrationReport.js';
 	import MigrationPanes from './MigrationPanes.svelte';
+	import MigrationReportChanges from './MigrationReportChanges.svelte';
+	import MigrationReportShown from './MigrationReportShown.svelte';
 	import MigrationPickList from './MigrationPickList.svelte';
 	import { formatDate, formatShortDate, reportWord, whereLabel } from './worldMigrationWords.js';
 
@@ -46,8 +48,8 @@
 			<dd>{formatDate(report.date)}</dd>
 			<dt>{reportWord('changed')}</dt>
 			<dd>
-				{reportWord('documents', { count: report.documents })},
-				{reportWord('copies', { count: report.copies })}
+				{countText(reportWord, 'documents', report.documents)},
+				{countText(reportWord, 'copies', report.copies)}
 			</dd>
 			<dt>{reportWord('keptOut')}</dt>
 			<dd>{report.keptOut.length}</dd>
@@ -61,6 +63,8 @@
 				{reportWord('stoppedRun', { date: formatDate(report.stoppedRun) })}
 			</p>
 		{/if}
+
+		<MigrationReportChanges migrations={report.migrations ?? []} />
 
 		{#if report.keptOut.length > 0}
 			<fieldset class="nimble-world-migration__section">
@@ -93,6 +97,8 @@
 				{/each}
 			</fieldset>
 		{/if}
+
+		<MigrationReportShown shown={report.shown ?? []} />
 	{:else}
 		<p class="nimble-world-migration__empty">{reportWord('none')}</p>
 	{/if}

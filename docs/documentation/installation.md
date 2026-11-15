@@ -62,7 +62,7 @@ When an update changes none of the items and monsters you copied from a compendi
 - Tick **Choose Copies** to keep a copy out. A copy you keep out keeps its old rules, effects and text. Changes with a lock icon fix the shape of the data. They always run, because the copy stops working without them.
 - **Start Migration** writes the changes, and a bar shows the progress. Each group shows a check when it is done. **Later** closes the window, and it opens again at your next login.
 
-When the migration finishes, the window shows the Migration Report: what changed, the copies you kept out, and any errors. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings and pick a report at the left, newest first.
+When the migration finishes, the window shows the Migration Report: each migration that ran, with the Compendium Copies it changed and where they are, the copies you kept out, any errors, and the popups that showed during the run. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings and pick a report at the left, newest first.
 
 ::: warning Back up before you start
 A migration cannot be undone. Make a backup of your world from the Foundry setup screen before you click **Start Migration**.
