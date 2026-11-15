@@ -19,26 +19,21 @@ abstract class MigrationBase {
 
 	abstract readonly kind: MigrationKind;
 
-	requiresFlush = false;
+	updateActor?(source: any, context?: MigrationContext): Promise<void>;
 
-	updateActor?(source: any): Promise<void>;
+	updateItem?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateItem?(source: any, parent?: any): Promise<void>;
+	updateEffect?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateEffect?(source: any, parent?: any): Promise<void>;
+	updateMessage?(source: any, context?: MigrationContext): Promise<void>;
 
-	updateJournalEntry?(source: any): Promise<void>;
+	/** The structure part of a content migration: it runs on a copy the GM keeps out, too. */
+	alwaysUpdateItem?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateMacro?(source: any): Promise<void>;
+	/** The structure part of a content migration, for an effect on an actor or an item. */
+	alwaysUpdateEffect?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateTable?(source: any): Promise<void>;
-
-	updateToken?(source: any, actor: any, scene: any): Promise<void>;
-
-	updateScene?(source: any): Promise<void>;
-
-	updateUser?(source: any): Promise<void>;
-
+	/** Writes outside the documents the runner migrates. The plan cannot see them. */
 	migrate?(): Promise<void>;
 
 	protected getSourceId(source: any): string | undefined {
