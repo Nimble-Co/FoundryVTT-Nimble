@@ -45,12 +45,35 @@ const parry = copy('Actor.gorm.Item.parry', 'Parry', [89], {
 	actorUuid: 'Actor.gorm',
 });
 
+const constrictOnToken = (token: string) =>
+	copy(`Scene.temple.Token.${token}.Actor.cobra.Item.constrict`, 'Constrict', [87], {
+		kind: 'token',
+		actorName: 'Cobra Captain',
+		sceneName: 'Sunken Temple',
+	});
+
 const report = buildReport({
 	copies: [constrict, whip, parry],
 	excluded: new Set([constrict.uuid, whip.uuid]),
+	applied: [
+		{ ...constrict, versions: [87] },
+		parry,
+		constrictOnToken('t1'),
+		constrictOnToken('t2'),
+	],
+	documents: new Map([
+		[87, 3],
+		[88, 0],
+		[89, 1],
+		[90, 83],
+	]),
+	shown: [{ level: 'error', message: 'Invalid roll formula: @key', count: 2 }],
 	errors: [{ uuid: 'Actor.treant.Item.crush', name: 'Crush', version: 89, message: 'Bad rules' }],
 	written: 1184,
-	titles: TITLES,
+	titles: new Map([
+		...TITLES,
+		[90, { title: 'Inspiration starts off', kind: 'structure' as const }],
+	]),
 	systemVersion: '0.11.0',
 	fromSchema: 86,
 	toSchema: 90,
@@ -82,10 +105,37 @@ describe('buildReport', () => {
 		);
 	});
 
+	it('lists each migration that changed something, with the copies it changed', () => {
+		expect(
+			(report.migrations ?? []).map((migration) => ({
+				title: migration.title,
+				documents: migration.documents,
+				copies: migration.copies.map((group) => [group.name, group.holders.length]),
+			})),
+		).toEqual([
+			{
+				title: 'Held changes become Held Roll rules',
+				documents: 3,
+				copies: [['Constrict', 3]],
+			},
+			{ title: 'Timed effects content', documents: 1, copies: [['Parry', 1]] },
+			{ title: 'Inspiration starts off', documents: 83, copies: [] },
+		]);
+	});
+
+	it('keeps the popups shown during the run apart from the errors', () => {
+		expect(report.shown).toEqual([
+			{ level: 'error', message: 'Invalid roll formula: @key', count: 2 },
+		]);
+	});
+
 	it('records a run that stopped and continued', () => {
 		const continued = buildReport({
 			copies: [],
 			excluded: new Set(),
+			applied: [],
+			documents: new Map(),
+			shown: [],
 			errors: [],
 			written: 3,
 			titles: TITLES,
@@ -110,9 +160,15 @@ describe('reportText', () => {
 				'heading(0.11.0)',
 				'version: 0.11.0 (86-90)',
 				'date: 2026-11-15T20:41:00.000Z',
-				'changed: documents(1184), copies(1)',
+				'changed: documents(1184), copiesOne(1)',
 				'keptOut: 2',
 				'errors: 1',
+				'',
+				'Held changes become Held Roll rules: copies(3), documents(3)',
+				'- Constrict: repeated(on Cobra Captain,3)',
+				'Timed effects content: copiesOne(1), documentsOne(1)',
+				'- Parry: on Gorm',
+				'Inspiration starts off: documents(83)',
 				'',
 				'keptOutHeading',
 				'- Constrict on Cobra Captain: Timed effects content',
@@ -121,6 +177,9 @@ describe('reportText', () => {
 				'',
 				'errorsHeading',
 				'- Crush (Timed effects content): Bad rules',
+				'',
+				'shownHeading',
+				'- levelError, times(2): Invalid roll formula: @key',
 			].join('\n'),
 		);
 	});

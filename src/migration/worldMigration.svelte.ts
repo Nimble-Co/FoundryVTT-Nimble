@@ -10,8 +10,8 @@ import {
 import { MigrationList } from './MigrationList.js';
 import type { MigrationRunner, RunProgress } from './MigrationRunner.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
-import { buildReport, type MigrationReport } from './migrationReport.js';
-import type { MigrationPlan } from './planMigration.js';
+import { buildReport, type MigrationReport, type ShownMessage } from './migrationReport.js';
+import type { MigrationPlan, PlanError, PlannedRoot } from './planMigration.js';
 
 const REPORTS_SETTING = 'migrationReports';
 const RUN_SETTING = 'migrationRun';
@@ -52,6 +52,46 @@ function readRun(): SavedRun | null {
 		excluded: Array.isArray(run.excluded) ? run.excluded : [],
 		startedAt: String(run.startedAt ?? ''),
 	};
+}
+
+/**
+ * Runs `task` and records each error and warning popup it shows, once with a count. Update hooks
+ * of the written documents can raise them.
+ */
+async function recordPopups<T>(task: () => Promise<T>): Promise<[T, ShownMessage[]]> {
+	const shown = new Map<string, ShownMessage>();
+	const notifications = ui.notifications as unknown as Record<string, (...args: any[]) => unknown>;
+	const originals = { error: notifications.error, warn: notifications.warn };
+	const record = (level: ShownMessage['level'], method: 'error' | 'warn') =>
+		function (this: unknown, message: unknown, ...rest: unknown[]) {
+			const text = String(message).replace(/<[^>]*>/g, '');
+			const key = `${level}|${text}`;
+			const entry = shown.get(key) ?? { level, message: text, count: 0 };
+			entry.count += 1;
+			shown.set(key, entry);
+			return originals[method].call(notifications, message, ...rest);
+		};
+	notifications.error = record('error', 'error');
+	notifications.warn = record('warning', 'warn');
+	try {
+		return [await task(), [...shown.values()]];
+	} finally {
+		notifications.error = originals.error;
+		notifications.warn = originals.warn;
+	}
+}
+
+/** Documents written per migration version. A document that failed to write does not count. */
+function documentsPerVersion(roots: PlannedRoot[], errors: PlanError[]): Map<number, number> {
+	const failed = new Set(
+		errors.filter((error) => error.version === null).map((error) => error.uuid),
+	);
+	const counts = new Map<number, number>();
+	for (const entry of roots) {
+		if (failed.has(entry.root.uuid)) continue;
+		for (const version of entry.versions) counts.set(version, (counts.get(version) ?? 0) + 1);
+	}
+	return counts;
 }
 
 /** What the World Migration window shows and does. */
@@ -180,17 +220,22 @@ class WorldMigration {
 		await setSetting(RUN_SETTING, { toSchema, excluded: [...excluded], startedAt });
 
 		const plan = await runner.plan(excluded);
-		const result = await runner.apply(plan, (progress) => {
-			this.progress = progress;
-			this.#writing = new Set(progress.writing);
-			if (progress.written.length > 0) {
-				this.#written = new Set([...this.#written, ...progress.written]);
-			}
-		});
+		const [result, shown] = await recordPopups(() =>
+			runner.apply(plan, (progress) => {
+				this.progress = progress;
+				this.#writing = new Set(progress.writing);
+				if (progress.written.length > 0) {
+					this.#written = new Set([...this.#written, ...progress.written]);
+				}
+			}),
+		);
 
 		const report = buildReport({
 			copies: this.plan?.copies ?? plan.copies,
 			excluded,
+			applied: plan.copies,
+			documents: documentsPerVersion(plan.roots, result.errors),
+			shown,
 			errors: result.errors,
 			written: result.written,
 			titles: this.titles,

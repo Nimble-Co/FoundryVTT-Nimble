@@ -112,6 +112,16 @@ describe('planMigration', () => {
 		expect(plan.roots.map((root) => root.changed)).toEqual([true, true]);
 	});
 
+	it('records which migrations changed each document, for the report counts', async () => {
+		const untouched = migration(95, 'structure', {});
+		const plan = await planMigration(
+			[actorRoot([packItem('parry', 'Parry'), item('bite', 'Bite')])],
+			[newDescription, untouched],
+		);
+
+		expect(plan.roots[0].versions).toEqual([91]);
+	});
+
 	it('never lists a chat message, but plans its change', async () => {
 		const cards = migration(94, 'structure', {
 			async updateMessage(source: any) {

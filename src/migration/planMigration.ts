@@ -24,6 +24,8 @@ interface PlannedRoot {
 	root: PlanRoot;
 	after: any;
 	changed: boolean;
+	/** The migrations that changed the document or one of its items. */
+	versions: number[];
 }
 
 /** A Compendium Copy that the pending migrations change. */
@@ -316,7 +318,13 @@ async function planMigration(
 	for (const root of roots) {
 		const run = new RootRun(root, excluded);
 		for (const migration of migrations) await run.step(migration);
-		plan.roots.push({ root, after: run.data, changed: run.changes.size > 0 });
+		const versions = new Set([...run.changes.values()].flatMap((entry) => [...entry.versions]));
+		plan.roots.push({
+			root,
+			after: run.data,
+			changed: versions.size > 0,
+			versions: [...versions].sort((a, b) => a - b),
+		});
 		plan.copies.push(...copiesOf(run));
 		plan.errors.push(...run.errors);
 	}
