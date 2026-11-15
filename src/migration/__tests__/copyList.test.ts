@@ -67,6 +67,20 @@ describe('copyGroups', () => {
 		);
 	});
 
+	it('puts a copy matched by name in the group of the compendium item with that name', () => {
+		const matched = copy({
+			uuid: 'Item.oldMark',
+			rootUuid: 'Item.oldMark',
+			name: "Hunter's Mark ",
+			sourceId: null,
+			matchedByName: true,
+			holder: { kind: 'sidebar' },
+		});
+		const groups = copyGroups([matched, wrenMark], 'item', TITLES);
+
+		expect(groups.map((group) => [group.name, group.count])).toEqual([["Hunter's Mark", 2]]);
+	});
+
 	it('groups by actor, with the tokens, the sidebar and the compendiums after the actors', () => {
 		const groups = copyGroups(copies, 'actor', TITLES);
 

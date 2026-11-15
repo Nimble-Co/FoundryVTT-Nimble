@@ -45,8 +45,23 @@ type CheckState = 'on' | 'off' | 'mixed' | 'none';
 
 const HOLDER_ORDER: Record<string, number> = { actor: 0, token: 1, sidebar: 2, compendium: 3 };
 
-function itemKey(copy: PlannedCopy): string {
-	return copy.sourceId ?? `${copy.documentName}|${copy.type}|${copy.name.trim().toLowerCase()}`;
+function nameKey(copy: PlannedCopy): string {
+	return `${copy.documentName}|${copy.type}|${copy.name.trim().toLowerCase()}`;
+}
+
+/** The group key per copy. A copy matched by name joins a sourced copy with its name. */
+function itemKeys(copies: PlannedCopy[]): Map<string, string> {
+	const sourced = new Map<string, string>();
+	for (const copy of copies) {
+		if (!copy.matchedByName && copy.sourceId && !sourced.has(nameKey(copy)))
+			sourced.set(nameKey(copy), copy.sourceId);
+	}
+	return new Map(
+		copies.map((copy) => [
+			copy.uuid,
+			(copy.matchedByName ? sourced.get(nameKey(copy)) : copy.sourceId) ?? nameKey(copy),
+		]),
+	);
 }
 
 function holderKey(holder: Holder): string {
@@ -70,11 +85,17 @@ function titlesOf(copy: PlannedCopy, titles: TitleIndex): CopyTitle[] {
 }
 
 /** The copies, one row each, with the same copy on tokens of one actor in one scene merged. */
-function rowsOf(copies: PlannedCopy[], titles: TitleIndex): CopyRow[] {
+function rowsOf(
+	copies: PlannedCopy[],
+	titles: TitleIndex,
+	itemKeyOf: Map<string, string>,
+): CopyRow[] {
 	const rows = new Map<string, CopyRow>();
 	for (const copy of copies) {
 		const key =
-			copy.holder.kind === 'token' ? `${holderKey(copy.holder)}|${itemKey(copy)}` : copy.uuid;
+			copy.holder.kind === 'token'
+				? `${holderKey(copy.holder)}|${itemKeyOf.get(copy.uuid)}`
+				: copy.uuid;
 		const row = rows.get(key);
 		if (row) {
 			row.uuids.push(copy.uuid);
@@ -117,19 +138,17 @@ function byName(a: CopyGroup, b: CopyGroup): number {
 
 /** The listed Compendium Copies, sorted By Item or By Actor. */
 function copyGroups(copies: PlannedCopy[], sort: CopySort, titles: TitleIndex): CopyGroup[] {
+	const itemKeyOf = itemKeys(copies);
 	const buckets = new Map<string, CopyRow[]>();
-	const firstOf = new Map<string, CopyRow>();
-	for (const row of rowsOf(copies, titles)) {
-		const copy = copies.find((entry) => entry.uuid === row.uuids[0])!;
-		const key = sort === 'item' ? itemKey(copy) : holderKey(row.holder);
+	for (const row of rowsOf(copies, titles, itemKeyOf)) {
+		const key = sort === 'item' ? itemKeyOf.get(row.uuids[0])! : holderKey(row.holder);
 		const rows = buckets.get(key) ?? [];
 		rows.push(row);
 		buckets.set(key, rows);
-		if (!firstOf.has(key)) firstOf.set(key, row);
 	}
 
 	const groups = [...buckets].map(([key, rows]) => {
-		const first = firstOf.get(key)!;
+		const first = rows.find((row) => !row.matchedByName) ?? rows[0];
 		if (sort === 'item')
 			return group(key, rows, { kind: 'item', name: first.name, img: first.img });
 		const holder = first.holder;
