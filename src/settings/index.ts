@@ -14,6 +14,7 @@ import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerDiceSoNiceSettings } from './registerDiceSoNiceSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
+import { registerSupportReportMenu } from './registerSupportReportMenu.js';
 import { registerWorldMigrationMenu } from './registerWorldMigrationMenu.js';
 import { registerSpellScrollSettings } from './spellScrollSettings.js';
 
@@ -94,6 +95,7 @@ export default function registerSystemSettings() {
 
 	registerAutomationSettings();
 	registerWorldMigrationMenu();
+	registerSupportReportMenu();
 
 	registerCombatTrackerSettings();
 	registerDiceSoNiceSettings();
