@@ -1,5 +1,5 @@
 import type { MigrationReport } from '../migration/migrationReport.js';
-import type { ChangedSetting } from './changedSettings.js';
+import type { ChangedSetting, Words } from './changedSettings.js';
 import type { LogEntry } from './supportLog.js';
 
 const ISSUES_URL = 'https://github.com/Nimble-Co/FoundryVTT-Nimble/issues/new';
@@ -35,8 +35,6 @@ interface SupportReport {
 	actor: { name: string; type: string; json: string } | null;
 }
 
-type Words = (key: string, data?: Record<string, string>) => string;
-
 function migrationSummary(report: MigrationReport | undefined): MigrationSummary | null {
 	if (!report) return null;
 	return {
@@ -50,6 +48,11 @@ function migrationSummary(report: MigrationReport | undefined): MigrationSummary
 		errors: report.errors.length,
 		shown: (report.shown ?? []).reduce((sum, shown) => sum + shown.count, 0),
 	};
+}
+
+/** Every time an error or warning came, not only the different ones. */
+function errorTotal(entries: LogEntry[]): number {
+	return entries.reduce((sum, entry) => sum + entry.count, 0);
 }
 
 /** "Popup", "Nimble", or "Uncaught - monks-tokenbar". */
@@ -103,7 +106,7 @@ function supportReportText(report: SupportReport, words: Words): string {
 		`== ${heading} ==`,
 		...(lines.length > 0 ? lines : [words('none')]),
 	];
-	const total = report.errors.reduce((sum, entry) => sum + entry.count, 0);
+	const total = errorTotal(report.errors);
 	const blocks = [
 		[
 			words('title'),
@@ -160,5 +163,5 @@ function githubIssueUrl(foundry: string, nimble: string): string {
 	return `${ISSUES_URL}?${query}`;
 }
 
-export { entryHeading, githubIssueUrl, migrationSummary, sourceText, supportReportText };
-export type { MigrationSummary, SupportReport, Words };
+export { errorTotal, githubIssueUrl, migrationSummary, sourceText, supportReportText };
+export type { MigrationSummary, SupportReport };

@@ -55,4 +55,4 @@ function changedSettings(settings: SettingInfo[], words: Words): ChangedSetting[
 }
 
 export { changedSettings };
-export type { ChangedSetting, SettingInfo };
+export type { ChangedSetting, SettingInfo, Words };

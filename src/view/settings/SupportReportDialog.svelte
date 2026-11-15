@@ -5,7 +5,9 @@
 	import { supportWindowWord } from './supportReport/supportReportWords.js';
 
 	const view = createSupportReportDialogState();
-	const { entries, dropped, githubUrl, discordUrl, setWithActor, save, copy } = view;
+	const { githubUrl, discordUrl, setWithActor, save, copy } = view;
+	const entries = $derived(view.entries);
+	const dropped = $derived(view.dropped);
 	const ready = $derived(view.ready);
 	const text = $derived(view.text);
 	const also = $derived(view.also);
@@ -18,7 +20,9 @@
 
 	<SupportReportLinks {githubUrl} {discordUrl} />
 
-	<SupportReportErrors {entries} {dropped} />
+	{#if ready}
+		<SupportReportErrors {entries} {dropped} />
+	{/if}
 
 	<fieldset class="nimble-support-report__section">
 		<legend class="nimble-support-report__legend">{supportWindowWord('alsoHeading')}</legend>
@@ -107,7 +111,7 @@
 			color: var(--nimble-medium-text-color);
 		}
 
-		&__section {
+		:global(.nimble-support-report__section) {
 			min-width: 0;
 			margin: 0;
 			padding: 0.25rem 0.625rem 0.375rem;
@@ -116,7 +120,7 @@
 			border-radius: 4px;
 		}
 
-		&__legend {
+		:global(.nimble-support-report__legend) {
 			padding: 0 0.25rem;
 			font-size: var(--nimble-xs-text);
 			font-weight: 900;

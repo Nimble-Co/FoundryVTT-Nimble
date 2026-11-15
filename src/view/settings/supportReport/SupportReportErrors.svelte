@@ -2,7 +2,7 @@
 	import type { SupportReportErrorsProps } from './SupportReportErrors.types.ts';
 	import type { LogEntry } from '../../../support/supportLog.js';
 	import { supportWord } from '../../../support/collectSupportReport.js';
-	import { sourceText } from '../../../support/supportReport.js';
+	import { errorTotal, sourceText } from '../../../support/supportReport.js';
 	import { supportWindowWord } from './supportReportWords.js';
 
 	/** The window shows the first stack lines only; the saved text keeps all of them. */
@@ -10,7 +10,7 @@
 
 	let { entries, dropped }: SupportReportErrorsProps = $props();
 
-	const total = $derived(entries.reduce((sum, entry) => sum + entry.count, 0));
+	const total = $derived(errorTotal(entries));
 
 	function shownStack(entry: LogEntry): string {
 		return entry.stack
@@ -44,7 +44,10 @@
 						{supportWindowWord('times', { count: entry.count })}
 					</span>
 					<span class="nimble-support-report__source">
-						{supportWord(`level.${entry.level}`)} - {sourceText(entry, supportWord)}
+						{supportWindowWord('sourceLine', {
+							level: supportWord(`level.${entry.level}`),
+							source: sourceText(entry, supportWord),
+						})}
 					</span>
 					{#if entry.stack.length > 0}
 						<pre class="nimble-support-report__stack">{shownStack(entry)}</pre>
@@ -75,23 +78,6 @@
 			i {
 				color: var(--nimble-roll-success-color);
 			}
-		}
-
-		&__section {
-			min-width: 0;
-			margin: 0;
-			padding: 0.25rem 0.625rem 0.375rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 4px;
-		}
-
-		&__legend {
-			padding: 0 0.25rem;
-			font-size: var(--nimble-xs-text);
-			font-weight: 900;
-			letter-spacing: 0.02em;
-			text-transform: uppercase;
 		}
 
 		&__errors {

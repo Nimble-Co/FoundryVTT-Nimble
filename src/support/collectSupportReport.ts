@@ -1,6 +1,6 @@
 import { SYSTEM_ID } from '#system';
+import localize from '#utils/localize.js';
 import type { MigrationReport } from '../migration/migrationReport.js';
-import localize from '../utils/localize.js';
 import { changedSettings, type SettingInfo } from './changedSettings.js';
 import { supportLog } from './installSupportLog.js';
 import { migrationSummary, type SupportReport } from './supportReport.js';
@@ -50,9 +50,12 @@ function settingInfos(): SettingInfo[] {
 		});
 }
 
-/** The actor of the first selected token. */
 function selectedActor(): Actor.Implementation | null {
 	return canvas?.tokens?.controlled?.[0]?.actor ?? null;
+}
+
+function foundryVersion(): string {
+	return game.release?.version ?? String(game.version);
 }
 
 async function collectSupportReport({ withActor }: { withActor: boolean }): Promise<SupportReport> {
@@ -64,7 +67,7 @@ async function collectSupportReport({ withActor }: { withActor: boolean }): Prom
 	return {
 		made: new Date().toISOString(),
 		user: { name: game.user?.name ?? '', isGM: game.user?.isGM ?? false },
-		foundry: game.release?.version ?? String(game.version),
+		foundry: foundryVersion(),
 		nimble: game.system.version,
 		schema: Number(game.settings.get(SYSTEM_ID as 'core', 'worldSchemaVersion' as 'rollMode')) || 0,
 		browser: await browserText(),
@@ -79,7 +82,7 @@ async function collectSupportReport({ withActor }: { withActor: boolean }): Prom
 			.map((module) => ({ id: module.id, version: String(module.version ?? '') }))
 			.sort((a, b) => a.id.localeCompare(b.id)),
 		settings: changedSettings(settingInfos(), supportWord),
-		errors: supportLog.entries,
+		errors: supportLog.entries.map((entry) => ({ ...entry, stack: [...entry.stack] })),
 		dropped: supportLog.dropped,
 		migration: migrationSummary(Array.isArray(reports) ? reports[0] : undefined),
 		actor: actor
@@ -88,4 +91,4 @@ async function collectSupportReport({ withActor }: { withActor: boolean }): Prom
 	};
 }
 
-export { collectSupportReport, selectedActor, supportWord };
+export { collectSupportReport, foundryVersion, selectedActor, supportWord };

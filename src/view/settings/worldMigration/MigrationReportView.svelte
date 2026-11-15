@@ -5,7 +5,8 @@
 	import MigrationReportChanges from './MigrationReportChanges.svelte';
 	import MigrationReportShown from './MigrationReportShown.svelte';
 	import MigrationPickList from './MigrationPickList.svelte';
-	import { formatDate, formatShortDate, reportWord, whereLabel } from './worldMigrationWords.js';
+	import { formatShortDate } from '#utils/formatShortDate.js';
+	import { formatDate, reportWord, whereLabel } from './worldMigrationWords.js';
 
 	let { migration, report }: MigrationReportViewProps = $props();
 </script>

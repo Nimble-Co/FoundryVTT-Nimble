@@ -1,9 +1,10 @@
+import { formatShortDate } from '#utils/formatShortDate.js';
 import {
 	collectSupportReport,
+	foundryVersion,
 	selectedActor,
 	supportWord,
 } from '../../support/collectSupportReport.js';
-import { supportLog } from '../../support/installSupportLog.js';
 import type { LogEntry } from '../../support/supportLog.js';
 import {
 	githubIssueUrl,
@@ -11,7 +12,6 @@ import {
 	supportReportText,
 } from '../../support/supportReport.js';
 import { supportWindowWord } from './supportReport/supportReportWords.js';
-import { formatShortDate } from './worldMigration/worldMigrationWords.js';
 
 const DISCORD_URL = 'https://discord.gg/SxVmHpu34R';
 
@@ -64,13 +64,7 @@ function fileStamp(date: Date): string {
 }
 
 export function createSupportReportDialogState() {
-	// The log as it was when the window opened; its entries keep counting after this.
-	const entries: LogEntry[] = supportLog.entries.map((entry) => ({ ...entry }));
-	const dropped = supportLog.dropped;
-	const githubUrl = githubIssueUrl(
-		game.release?.version ?? String(game.version),
-		game.system.version,
-	);
+	const githubUrl = githubIssueUrl(foundryVersion(), game.system.version);
 
 	let report = $state.raw<SupportReport | null>(null);
 	let withActor = $state(false);
@@ -117,10 +111,15 @@ export function createSupportReportDialogState() {
 	}
 
 	return {
-		entries,
-		dropped,
 		githubUrl,
 		discordUrl: DISCORD_URL,
+		/** The errors as the report text holds them. */
+		get entries(): LogEntry[] {
+			return report?.errors ?? [];
+		},
+		get dropped() {
+			return report?.dropped ?? 0;
+		},
 		get ready() {
 			return report !== null;
 		},

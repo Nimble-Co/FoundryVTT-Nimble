@@ -6459,6 +6459,7 @@
 				"errorsHeading": "Errors since load - {count}",
 				"noErrors": "No errors or warnings since the world loaded.",
 				"times": "{count}x",
+				"sourceLine": "{level} - {source}",
 				"alsoHeading": "Also in the report",
 				"alsoVersions": "Foundry {foundry}, Nimble {nimble} (schema {schema}), {browser}",
 				"alsoModules": "{count} active modules, with versions",

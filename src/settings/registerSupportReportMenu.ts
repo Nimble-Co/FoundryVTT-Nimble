@@ -1,8 +1,8 @@
 import type { Component } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
+import localize from '#utils/localize.js';
 import SupportReportDialog from '#view/settings/SupportReportDialog.svelte';
-import localize from '../utils/localize.js';
 
 const WINDOW_ID = 'nimble-support-report';
 const ICON = 'fa-solid fa-life-ring';
