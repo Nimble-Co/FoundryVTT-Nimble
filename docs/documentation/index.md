@@ -46,6 +46,8 @@ If you have not installed the system yet, [Installation & First Steps](installat
 - **Discord:** join the community at [discord.gg/SxVmHpu34R](https://discord.gg/SxVmHpu34R) for quick questions and discussion.
 - **Bug reports and feature requests:** open an issue on [GitHub](https://github.com/Nimble-Co/FoundryVTT-Nimble/issues).
 
+Attach a Support Report to each problem report. Any user can make one from **Game Settings → Configure Settings → Nimble → Open Support Report**. The window lists the errors and warnings since the world loaded, with links to GitHub and Discord. We prefer GitHub issues, because they are easier to track. The report also holds your versions, active modules and changed Nimble settings. To add a creature's data, select its token and tick **Add the selected token's actor**. **Save Report** downloads the report as a text file, and **Copy** puts the same text on your clipboard.
+
 ## Related pages
 
 - [Installation & First Steps](installation.md)
