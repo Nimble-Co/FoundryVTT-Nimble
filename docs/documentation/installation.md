@@ -47,29 +47,29 @@ Open the **Compendium Packs** tab in the sidebar and you'll find the full Nimble
 | **Nimble Tables** | Roll tables used by certain features and boons, such as the chaos table. |
 
 ::: tip Copy before you customize
-Compendium content is refreshed whenever the system updates. If you want to tweak something (a spell, a monster, a weapon), drag it into your world (or duplicate it there) and edit the copy. An update can change your world's copies too, but it asks you first, and you can keep a copy out (see below). See [Core Concepts](core-concepts.md) for more on this habit.
+Compendium content is refreshed whenever the system updates. If you want to tweak something (a spell, a monster, a weapon), drag it into your world (or duplicate it there) and edit the copy. If a later update wants to change one of those copies, it asks first, and you can keep your edits. See [Core Concepts](core-concepts.md) for more on this habit.
 :::
 
 ## How updates work
 
 Updating the system is done from the Foundry setup screen (**Game Systems** tab, **Update** button), the same as any other system.
 
-The first time a Gamemaster logs into a world after an update, the system checks if the world's data is from an older version. Only the GM can migrate a world, so a player who logs in first sees a note that the world waits for the GM.
+After an update, the first time a GM logs in, Nimble checks whether the world needs migrating. Only a GM can run a migration, so a player who gets in first sees a note asking them to wait.
 
-When an update changes none of the items and monsters you copied from a compendium, it runs by itself, and you see a short note when it finishes. When it changes some of them, such as a spell on a character or a monster on a scene, the **World Migration** window opens first and lists each Compendium Copy that changes:
+Most updates migrate on their own and show a short note when they finish. If an update would change something you copied into your world from a compendium, such as a spell on a character or a monster on a scene, the **World Migration** window opens first and shows every copy it would touch.
 
-- The left side lists the groups of copies. **By Item** and **By Actor** sort them two ways. Pick a group to see its copies at the right: where each copy is, and which changes it gets. A ban icon on a group shows that you keep some of its copies out.
-- Tick **Choose Copies** to keep a copy out. A copy you keep out keeps its old rules, effects and text. Changes with a lock icon fix the shape of the data. They always run, because the copy stops working without them.
-- **Start Migration** writes the changes, and a bar shows the progress. Each group shows a check when it is done. **Later** closes the window, and it opens again at your next login.
+- On the left, the copies are grouped **By Item** or **By Actor**. Click a group to see its copies on the right, where each one lives, and what changes. A ban icon marks a group where you kept some copies out.
+- To keep a copy as it is, tick **Choose Copies** and untick that copy. It keeps its old rules, effects and text. Changes with a lock icon still run, because they fix how the data is stored and the copy breaks without them.
+- **Start Migration** runs it. A progress bar fills, and each group gets a check when it's done. **Later** closes the window until your next login.
 
-When the migration finishes, the window shows the Migration Report: each migration that ran, with the Compendium Copies it changed and where they are, the copies you kept out, any errors, and the popups that showed during the run. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings and pick a report at the left, newest first.
+When it's done, the window shows the Migration Report. It lists each migration that ran and the copies it changed, the copies you kept out, any errors, and any popups that appeared along the way. **Copy Report** copies the text, which is handy for a bug report. Older reports are under **World Migration** in the system settings, newest first.
 
-::: warning Back up before you start
-A migration cannot be undone. Make a backup of your world from the Foundry setup screen before you click **Start Migration**.
+::: warning Back up first
+You can't undo a migration. Back up your world from the Foundry setup screen before you click **Start Migration**.
 :::
 
 ::: details If the migration stops
-If Foundry closes during a migration, or an error stops it, the window opens again at the next GM login with **Continue Migration**. After an error, reload the world to continue. It keeps the copies you kept out, and you cannot change them. The report says that the run continued an earlier one.
+If Foundry closes partway through, or an error stops the run, the window comes back at the next GM login with a **Continue Migration** button. After an error, reload the world to carry on. The copies you kept out stay out, and that choice is locked by then. The report notes that the run picked up where an earlier one stopped.
 :::
 
 ## Before your first session
