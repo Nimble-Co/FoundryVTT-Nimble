@@ -5,56 +5,24 @@ import {
 } from '../../models/activeEffect/nimbleEffectChoices.js';
 import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
-interface DeltaEffectSource {
-	_id: string;
-	_tombstone?: boolean;
+interface EffectSource {
 	type?: string;
 	flags?: Record<string, unknown>;
 	system?: { changes?: unknown[] };
 }
 
-interface DeltaItemSource {
-	_id: string;
-	_tombstone?: boolean;
-	effects?: DeltaEffectSource[];
-}
-
-interface EffectParent {
-	updateEmbeddedDocuments(
-		embeddedName: 'ActiveEffect',
-		updates: object[],
-		operation: { noHook: boolean },
-	): Promise<unknown>;
-}
-
-function needsNimbleType(source: DeltaEffectSource): boolean {
+function needsNimbleType(source: EffectSource): boolean {
 	return source.type === LEGACY_CONDITION_EFFECT_TYPE || isUnclaimedBaseEffect(source);
 }
 
 /** Core accepts a type change only when `system` is a forced replacement. */
-function nimbleTypeChange(source: DeltaEffectSource) {
+function nimbleTypeChange(source: EffectSource) {
 	return {
 		type: NIMBLE_EFFECT_TYPE,
 		system: foundry.data.operators.ForcedReplacement.create({
 			changes: source.system?.changes ?? [],
 		}),
 	};
-}
-
-async function convertEffects(
-	parent: EffectParent,
-	effects: DeltaEffectSource[] | undefined,
-): Promise<void> {
-	const updates = (effects ?? [])
-		.filter((effect) => !effect._tombstone && needsNimbleType(effect))
-		.map((effect) => ({ _id: effect._id, ...nimbleTypeChange(effect) }));
-	if (updates.length === 0) return;
-
-	try {
-		await parent.updateEmbeddedDocuments('ActiveEffect', updates, { noHook: true });
-	} catch (error) {
-		console.warn(error);
-	}
 }
 
 /**
@@ -79,27 +47,6 @@ class Migration085NimbleEffectType extends MigrationBase {
 	override async updateEffect(source: any): Promise<void> {
 		if (!source || !needsNimbleType(source)) return;
 		Object.assign(source, nimbleTypeChange(source));
-	}
-
-	/** Effects that only the delta of an unlinked token holds. */
-	override async migrate(): Promise<void> {
-		for (const scene of game.scenes ?? []) {
-			for (const token of scene.tokens) {
-				if (token.actorLink) continue;
-				const actor = token.actor;
-				const delta = token.delta?._source as
-					| { effects?: DeltaEffectSource[]; items?: DeltaItemSource[] }
-					| undefined;
-				if (!actor || !delta) continue;
-
-				await convertEffects(actor, delta.effects);
-				for (const itemSource of delta.items ?? []) {
-					if (itemSource._tombstone) continue;
-					const item = actor.items.get(itemSource._id);
-					if (item) await convertEffects(item, itemSource.effects);
-				}
-			}
-		}
 	}
 }
 

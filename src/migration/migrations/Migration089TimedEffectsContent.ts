@@ -24,34 +24,10 @@ interface SelfNodes extends PackItem {
 	nodeIds: string[];
 }
 
-interface LiveEffect {
-	id: string | null;
-	statuses?: Iterable<string>;
+interface EffectSource {
+	_id?: string;
+	statuses?: unknown;
 	system?: { rules?: unknown };
-}
-
-interface LiveItem {
-	id: string | null;
-	name?: string;
-	type?: string;
-	_stats?: unknown;
-	flags?: unknown;
-	effects?: Iterable<{ id: string | null; transfer?: boolean }>;
-	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[], options: object): Promise<unknown>;
-}
-
-interface EffectHolder {
-	uuid?: string | null;
-	name?: string;
-	_stats?: unknown;
-	flags?: unknown;
-	items?: Iterable<LiveItem>;
-	effects?: Iterable<LiveEffect>;
-	updateEmbeddedDocuments(
-		type: 'ActiveEffect',
-		updates: object[],
-		options: object,
-	): Promise<unknown>;
 }
 
 /** The Apply Effect nodes that go to the user, not to the targets. */
@@ -556,34 +532,21 @@ function refreshedEffects(packEffects: unknown, copyEffects: unknown): Json[] {
 	return [...kept, ...fromPack.map((effect) => foundry.utils.deepClone(effect))];
 }
 
-function hasStatus(effect: LiveEffect, status: string): boolean {
-	for (const entry of effect.statuses ?? []) if (entry === status) return true;
-	return false;
+function hasStatus(effect: EffectSource, status: string): boolean {
+	return Array.isArray(effect.statuses) && effect.statuses.includes(status);
 }
 
 /** Adds the status rules of `concentration` and `swallowed` that an effect does not have. */
-async function addStatusRules(holder: EffectHolder): Promise<void> {
-	const updates: object[] = [];
-	for (const effect of holder.effects ?? []) {
-		const rules = effect.system?.rules;
-		if (!effect.id || !Array.isArray(rules)) continue;
-		const ids = new Set(rules.map((rule) => (isRecord(rule) ? rule.id : undefined)));
-		const missing = Object.entries(STATUS_RULES)
-			.filter(([status]) => hasStatus(effect, status))
-			.flatMap(([, statusRules]) => statusRules)
-			.filter((rule) => !ids.has(rule.id));
-		if (missing.length === 0) continue;
-		updates.push({
-			_id: effect.id,
-			'system.rules': [...rules, ...missing.map((rule) => foundry.utils.deepClone(rule))],
-		});
-	}
-	if (updates.length === 0) return;
-	try {
-		await holder.updateEmbeddedDocuments('ActiveEffect', updates, { noHook: true });
-	} catch (error) {
-		console.error(`Nimble Migration | 089 failed for ${holder.uuid ?? 'an actor'}:`, error);
-	}
+function addStatusRules(effect: EffectSource): void {
+	const rules = effect.system?.rules;
+	if (!effect._id || !effect.system || !Array.isArray(rules)) return;
+	const ids = new Set(rules.map((rule) => (isRecord(rule) ? rule.id : undefined)));
+	const missing = Object.entries(STATUS_RULES)
+		.filter(([status]) => hasStatus(effect, status))
+		.flatMap(([, statusRules]) => statusRules)
+		.filter((rule) => !ids.has(rule.id));
+	if (missing.length === 0) return;
+	effect.system.rules = [...rules, ...missing.map((rule) => foundry.utils.deepClone(rule))];
 }
 
 /**
@@ -609,61 +572,21 @@ class Migration089TimedEffectsContent extends MigrationBase {
 
 	#packSources = new Map<string, Promise<Json | null>>();
 
-	override async updateItem(source: any, parent?: any): Promise<void> {
+	override async alwaysUpdateItem(source: any): Promise<void> {
 		if (!isRecord(source) || !isRecord(source.system)) return;
 		moveDurationNumber(source);
-		this.#setSelfRecipients(source);
-		await this.#refresh(source, parent);
 		foldSaveTypes(source);
 	}
 
-	override async migrate(): Promise<void> {
-		const holders: EffectHolder[] = [...(game.actors ?? [])] as unknown as EffectHolder[];
-		for (const scene of game.scenes ?? []) {
-			for (const token of scene.tokens) {
-				if (token.actorLink || !token.actor) continue;
-				holders.push(token.actor as unknown as EffectHolder);
-			}
-		}
-		for (const holder of holders) {
-			await addStatusRules(holder);
-			await this.#deleteOrphanEffects(holder);
-		}
+	override async updateItem(source: any, parent?: any): Promise<void> {
+		if (!isRecord(source) || !isRecord(source.system)) return;
+		this.#setSelfRecipients(source);
+		await this.#refresh(source, parent);
 	}
 
-	/**
-	 * The runner writes an actor's items with their effects, but deletes no effect of them. A
-	 * `transfer: false` effect that the pack item does not have goes here.
-	 */
-	async #deleteOrphanEffects(actor: EffectHolder): Promise<void> {
-		const parent = { name: actor.name, _stats: actor._stats, flags: actor.flags };
-		for (const item of actor.items ?? []) {
-			const source = {
-				_id: item.id,
-				name: item.name,
-				type: item.type,
-				_stats: item._stats,
-				flags: item.flags,
-			};
-			const uuid = this.#packUuid(source, parent);
-			if (!uuid) continue;
-			const pack = await this.#packSource(uuid);
-			if (!pack || pack.type !== item.type) continue;
-			const packIds = new Set(
-				(Array.isArray(pack.effects) ? pack.effects : []).map((effect) =>
-					isRecord(effect) ? effect._id : undefined,
-				),
-			);
-			const orphans = [...(item.effects ?? [])]
-				.filter((effect) => effect.transfer === false && !!effect.id && !packIds.has(effect.id))
-				.map((effect) => effect.id as string);
-			if (orphans.length === 0) continue;
-			try {
-				await item.deleteEmbeddedDocuments('ActiveEffect', orphans, { noHook: true });
-			} catch (error) {
-				console.error(`Nimble Migration | 089 failed for ${actor.uuid ?? 'an actor'}:`, error);
-			}
-		}
+	/** The live Concentrating and Swallowed effects on an actor. */
+	override async alwaysUpdateEffect(source: any, parent?: any): Promise<void> {
+		if (isRecord(source) && Array.isArray(parent?.items)) addStatusRules(source);
 	}
 
 	#setSelfRecipients(source: Json): void {

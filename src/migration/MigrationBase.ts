@@ -33,9 +33,6 @@ abstract class MigrationBase {
 	/** The structure part of a content migration, for an effect on an actor or an item. */
 	alwaysUpdateEffect?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	/** Writes outside the documents the runner migrates. The plan cannot see them. */
-	migrate?(): Promise<void>;
-
 	protected getSourceId(source: any): string | undefined {
 		return source._stats?.compendiumSource ?? source.flags?.core?.sourceId;
 	}

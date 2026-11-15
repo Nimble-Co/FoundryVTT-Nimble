@@ -100,22 +100,9 @@ class Migration086ApplyEffectNodes extends MigrationBase {
 		source.effects = [...(source.effects ?? []), ...created.map(effectSource)];
 	}
 
-	override async migrate(): Promise<void> {
-		for (const message of game.messages ?? []) {
-			const tree = (message.system as { activation?: { effects?: unknown[] } } | undefined)
-				?.activation?.effects;
-			if (!hasNode(tree, isConditionNode)) continue;
-			const copy = foundry.utils.deepClone(tree) as unknown[];
-			toCardShorthand(copy);
-			try {
-				await message.update(
-					{ 'system.activation.effects': copy } as never,
-					{ noHook: true } as never,
-				);
-			} catch (error) {
-				console.warn(error);
-			}
-		}
+	override async updateMessage(source: any): Promise<void> {
+		const tree = source?.system?.activation?.effects;
+		if (hasNode(tree, isConditionNode)) toCardShorthand(tree);
 	}
 }
 

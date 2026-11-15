@@ -25,16 +25,6 @@ interface HeldEffect {
 	system?: { rules?: unknown[] };
 }
 
-interface EffectHolder {
-	effects?: Iterable<HeldEffect>;
-	updateEmbeddedDocuments(
-		type: 'ActiveEffect',
-		updates: object[],
-		options: object,
-	): Promise<unknown>;
-	deleteEmbeddedDocuments(type: 'ActiveEffect', ids: string[], options: object): Promise<unknown>;
-}
-
 interface CombatLike {
 	started?: boolean;
 	round?: number | null;
@@ -43,7 +33,7 @@ interface CombatLike {
 
 const OLD_FLAG = 'heldChange';
 
-function oldHeldChangeOf(effect: HeldEffect): OldHeldChange | null {
+function oldHeldChangeOf(effect: Pick<HeldEffect, 'flags'>): OldHeldChange | null {
 	const flag = effect.flags?.[SYSTEM_ID]?.[OLD_FLAG];
 	return flag && typeof flag === 'object' ? (flag as OldHeldChange) : null;
 }
@@ -87,25 +77,11 @@ export function heldChangeUpdate(
 	};
 }
 
-async function migrateHolder(holder: EffectHolder): Promise<void> {
-	const updates: object[] = [];
-	const ended: string[] = [];
-	for (const effect of holder.effects ?? []) {
-		const change = oldHeldChangeOf(effect);
-		if (!change || !effect.id) continue;
-		if (oldHeldChangeEnded(change, (id) => game.combats?.get(id) as CombatLike | undefined)) {
-			ended.push(effect.id);
-		} else {
-			updates.push(heldChangeUpdate(effect, change));
-		}
-	}
-	try {
-		if (ended.length) await holder.deleteEmbeddedDocuments('ActiveEffect', ended, { noHook: true });
-		if (updates.length) {
-			await holder.updateEmbeddedDocuments('ActiveEffect', updates, { noHook: true });
-		}
-	} catch (error) {
-		console.warn(error);
+/** Writes the update of `heldChangeUpdate` into the effect's source. */
+function applyHeldChange(source: Omit<HeldEffect, 'id'>, change: OldHeldChange): void {
+	const update = heldChangeUpdate({ ...source, id: null }, change);
+	for (const [path, value] of Object.entries(update)) {
+		if (path !== '_id') foundry.utils.setProperty(source, path, value);
 	}
 }
 
@@ -123,14 +99,17 @@ class Migration087HeldChangeEffects extends MigrationBase {
 
 	override readonly kind: MigrationKind = 'structure';
 
-	override async migrate(): Promise<void> {
-		for (const actor of game.actors ?? []) await migrateHolder(actor as unknown as EffectHolder);
-		for (const scene of game.scenes ?? []) {
-			for (const token of scene.tokens) {
-				if (token.actorLink || !token.actor) continue;
-				await migrateHolder(token.actor as unknown as EffectHolder);
+	override async updateActor(source: any): Promise<void> {
+		if (!Array.isArray(source?.effects)) return;
+		source.effects = source.effects.filter((effect: Omit<HeldEffect, 'id'>) => {
+			const change = oldHeldChangeOf(effect);
+			if (!change) return true;
+			if (oldHeldChangeEnded(change, (id) => game.combats?.get(id) as CombatLike | undefined)) {
+				return false;
 			}
-		}
+			applyHeldChange(effect, change);
+			return true;
+		});
 	}
 }
 

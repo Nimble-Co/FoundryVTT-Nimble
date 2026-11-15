@@ -1,6 +1,5 @@
 import { SYSTEM_ID } from '#system';
 import localize from '../utils/localize.js';
-import type { MigrationBase } from './MigrationBase.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 import {
 	type MigrationPlan,
@@ -185,7 +184,7 @@ class MigrationRunner extends MigrationRunnerBase {
 		return planMigration(roots, this.migrations, { excluded });
 	}
 
-	/** Writes a plan. The migrations' own `migrate` steps run after it. */
+	/** Writes a plan, then stamps the world with the last migration's version. */
 	async apply(
 		plan: MigrationPlan,
 		onProgress: (progress: RunProgress) => void = () => {},
@@ -220,15 +219,6 @@ class MigrationRunner extends MigrationRunnerBase {
 				}
 			} finally {
 				if (pack && wasLocked) await pack.configure({ locked: true });
-			}
-		}
-
-		for (const migration of this.migrations) {
-			if (!migration.migrate) continue;
-			try {
-				await migration.migrate();
-			} catch (error) {
-				this.#writeError(null, error, migration);
 			}
 		}
 
@@ -377,12 +367,12 @@ class MigrationRunner extends MigrationRunnerBase {
 		}
 	}
 
-	#writeError(root: PlanRoot | null, error: unknown, migration?: MigrationBase): void {
+	#writeError(root: PlanRoot, error: unknown): void {
 		console.error(error);
 		this.#errors.push({
-			uuid: root?.uuid ?? '',
-			name: root?.source?.name ?? migration?.title ?? '',
-			version: migration?.version ?? null,
+			uuid: root.uuid,
+			name: root.source?.name ?? '',
+			version: null,
 			message: error instanceof Error ? error.message : String(error),
 		});
 	}

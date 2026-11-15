@@ -734,13 +734,18 @@ class Migration074CheckOutcomes extends MigrationBase {
 
 	override readonly kind: MigrationKind = 'content';
 
-	override async updateItem(source: any, parent?: any): Promise<void> {
+	override async alwaysUpdateItem(source: any): Promise<void> {
 		const system = source?.system;
 		if (!system || typeof system !== 'object') return;
 
 		if (this.#renameOncePerAttack(system)) {
 			console.log(`Nimble Migration | ${source.name}: renamed oncePerAttack to oncePerRoll`);
 		}
+	}
+
+	override async updateItem(source: any, parent?: any): Promise<void> {
+		const system = source?.system;
+		if (!system || typeof system !== 'object') return;
 
 		if (source.type === 'monsterFeature') {
 			if (!this.#isDravok(parent) || !this.#changeSave(system, DEATH_RAY_SAVE)) return;
