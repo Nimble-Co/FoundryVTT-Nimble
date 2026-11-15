@@ -1,5 +1,4 @@
 import { SYSTEM_ID } from '#system';
-import localize from '../utils/localize.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 import {
 	type MigrationPlan,
@@ -251,20 +250,33 @@ class MigrationRunner extends MigrationRunnerBase {
 			return;
 		}
 
-		const updates: Json[] = [];
+		const prepared: Array<[PlannedRoot, Json]> = [];
 		for (const entry of batch) {
 			const update = await this.#prepareDocument(entry);
-			if (update) updates.push(update);
+			if (update) prepared.push([entry, update]);
 		}
+		if (prepared.length === 0) return;
 		const documentClass = first.document.constructor;
-		const pack = first.pack?.metadata.id ?? null;
+		const operation = { noHook: true, pack: first.pack?.metadata.id ?? null };
+		let written = prepared;
 		try {
-			if (updates.length > 0) await documentClass.updateDocuments(updates, { noHook: true, pack });
-		} catch (error) {
-			for (const entry of batch) this.#writeError(entry.root, error);
-			return;
+			await documentClass.updateDocuments(
+				prepared.map(([, update]) => update),
+				operation,
+			);
+		} catch {
+			// One bad document fails the whole call, so each one is written alone.
+			written = [];
+			for (const [entry, update] of prepared) {
+				try {
+					await documentClass.updateDocuments([update], operation);
+					written.push([entry, update]);
+				} catch (error) {
+					this.#writeError(entry.root, error);
+				}
+			}
 		}
-		for (const entry of batch) await this.#deleteItemEffects(entry);
+		for (const [entry] of written) await this.#deleteItemEffects(entry);
 	}
 
 	/** Deletes the embedded documents the migrations removed, and returns the update of the rest. */
@@ -374,32 +386,13 @@ class MigrationRunner extends MigrationRunnerBase {
 	}
 
 	#writeError(root: PlanRoot, error: unknown): void {
-		console.error(error);
+		console.error(`Nimble Migration | writing ${root.uuid} failed:`, error);
 		this.#errors.push({
 			uuid: root.uuid,
 			name: root.source?.name ?? '',
 			version: null,
 			message: error instanceof Error ? error.message : String(error),
 		});
-	}
-
-	/** Plans and writes every pending migration, with no GM choice. */
-	async runMigration(): Promise<RunResult> {
-		ui.notifications.info(
-			localize('NIMBLE.migration.world.starting', { version: game.system.version }),
-		);
-		const result = await this.apply(await this.plan());
-		if (result.errors.length > 0) {
-			console.warn('Nimble | Migration errors:', result.errors);
-			ui.notifications.warn(
-				localize('NIMBLE.migration.world.completedWithErrors', {
-					count: result.errors.length.toString(),
-				}),
-			);
-		} else {
-			ui.notifications.info(localize('NIMBLE.migration.world.completed'));
-		}
-		return result;
 	}
 }
 
