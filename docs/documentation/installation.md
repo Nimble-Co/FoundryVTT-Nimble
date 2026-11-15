@@ -56,10 +56,10 @@ Updating the system is done from the Foundry setup screen (**Game Systems** tab,
 
 The first time a Gamemaster logs into a world after an update, the system checks if the world's data is from an older version. Only the GM can migrate a world, so a player who logs in first sees a note that the world waits for the GM.
 
-Some migrations only fix the shape of the data. These run by themselves, and you see a short note when they finish. Other migrations change the rules, effects or text of the items and monsters you copied from a compendium, such as a spell on a character or a monster on a scene. When an update has changes of this kind, the **World Migration** window opens first and lists each Compendium Copy that changes:
+When an update changes none of the items and monsters you copied from a compendium, it runs by itself, and you see a short note when it finishes. When it changes some of them, such as a spell on a character or a monster on a scene, the **World Migration** window opens first and lists each Compendium Copy that changes:
 
 - **By Item** and **By Actor** sort the same list two ways. Open a group to see where each copy is and which changes it gets.
-- Tick **Choose Copies** to keep a copy out. A copy you keep out keeps its old rules, effects and text. Changes with a lock icon always run, because the copy stops working without them.
+- Tick **Choose Copies** to keep a copy out. A copy you keep out keeps its old rules, effects and text. Changes with a lock icon fix the shape of the data. They always run, because the copy stops working without them.
 - **Start Migration** writes the changes, and a bar shows the progress. **Later** closes the window, and it opens again at your next login.
 
 When the migration finishes, the window shows the Migration Report: what changed, the copies you kept out, and any errors. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings.
