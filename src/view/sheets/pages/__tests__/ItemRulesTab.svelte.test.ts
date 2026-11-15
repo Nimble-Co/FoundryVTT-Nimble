@@ -1,8 +1,8 @@
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
-import RulesBuilderWindow from '#view/rulesBuilder/RulesBuilderWindow.svelte';
 import { COPY_TYPE } from '../ItemRulesTab.svelte.js';
 import ItemRulesTab from './ItemRulesTab.testHarness.svelte';
+import RulesBuilderWindow from './RulesBuilderWindow.testHarness.svelte';
 
 const MIME = `application/x-nimble-reorderable+${COPY_TYPE.toLowerCase()}`;
 
@@ -48,7 +48,7 @@ describe('a rule dropped on a list with no rules', () => {
 
 	it('is copied onto the item from the Rules Builder', async () => {
 		const item = emptyItem();
-		const { container } = render(RulesBuilderWindow, { props: { document: item as never } });
+		const { container } = render(RulesBuilderWindow, { props: { document: item } });
 
 		await dropCopiedRule(container.querySelector('.nimble-rules-builder-window__empty')!);
 
