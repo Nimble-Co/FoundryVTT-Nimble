@@ -36,7 +36,7 @@
 		pointer-events: all !important;
 	}
 
-	*:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat) {
+	*:not(.fa-brands, .fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fab, .fal, .far, .fas, .fat) {
 		font-family: var(--nimble-primary-font);
 	}
 
