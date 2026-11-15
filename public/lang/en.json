@@ -6334,7 +6334,8 @@
 				"checking": "Checking world data for Nimble v{version}.",
 				"starting": "Migrating world data to Nimble v{version}.",
 				"completed": "World migration complete.",
-				"completedWithErrors": "World migration completed with {count} error(s). The World Migration window in the system settings shows them."
+				"completedWithErrors": "World migration completed with {count} error(s). The World Migration window in the system settings shows them.",
+				"stopped": "The world migration stopped. Reload the world to continue it. The console shows the error."
 			},
 			"playerWaiting": "The GM has not migrated this world to Nimble v{version} yet.",
 			"menu": {
@@ -6393,6 +6394,7 @@
 				"title": "Migration Report",
 				"heading": "Migration Report: Nimble {version}",
 				"pick": "Report",
+				"option": "{date} - Nimble {version}",
 				"none": "None",
 				"version": "Version",
 				"versionValue": "Nimble {version} (schema {from} to {to})",

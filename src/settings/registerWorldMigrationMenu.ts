@@ -3,11 +3,13 @@ import type { Component } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
 import WorldMigrationDialog from '#view/settings/WorldMigrationDialog.svelte';
+import { prepareWorldMigration } from '../migration/beginWorldMigration.js';
 import {
-	prepareWorldMigration,
-	registerMigrationSettings,
+	REPORTS_SETTING,
+	RUN_SETTING,
 	type WorldMigration,
 } from '../migration/worldMigration.svelte.js';
+import localize from '../utils/localize.js';
 
 const WINDOW_ID = 'nimble-world-migration';
 const ICON = 'fa-solid fa-boxes-packing';
@@ -16,7 +18,7 @@ const ICON = 'fa-solid fa-boxes-packing';
 class WorldMigrationWindow extends GenericDialog {
 	constructor(readonly migration: WorldMigration) {
 		super(
-			game.i18n.localize('NIMBLE.migration.window.title'),
+			localize('NIMBLE.migration.window.title'),
 			WorldMigrationDialog as unknown as Component<Record<string, never>>,
 			{ migration },
 			{ uniqueId: WINDOW_ID, icon: ICON, width: 480, resizable: true },
@@ -50,6 +52,21 @@ class WorldMigrationMenu extends foundry.applications.api.ApplicationV2 {
 		if (open?.rendered) open.bringToFront();
 		else openWorldMigrationWindow(await prepareWorldMigration());
 		return this;
+	}
+}
+
+function registerMigrationSettings(): void {
+	for (const [key, type, initial] of [
+		[REPORTS_SETTING, Array, []],
+		[RUN_SETTING, Object, {}],
+	] as const) {
+		game.settings.register(
+			SYSTEM_ID as 'core',
+			key as 'rollMode',
+			{ scope: 'world', config: false, type, default: initial } as unknown as Parameters<
+				typeof game.settings.register
+			>[2],
+		);
 	}
 }
 

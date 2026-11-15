@@ -1,9 +1,9 @@
 import { mount, unmount } from 'svelte';
-import { runDevFlagRebrandPersist } from '../migration/devFlagRebrand.js';
 import {
 	beginWorldMigration,
 	warnPlayerOfPendingMigration,
-} from '../migration/worldMigration.svelte.js';
+} from '../migration/beginWorldMigration.js';
+import { runDevFlagRebrandPersist } from '../migration/devFlagRebrand.js';
 import {
 	getAdjacencySyncEnabled,
 	migrateLegacyDiagonalSetting,

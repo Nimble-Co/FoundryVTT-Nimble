@@ -8,7 +8,7 @@ import {
 	toggleCopies,
 } from './copyList.js';
 import { MigrationList } from './MigrationList.js';
-import { MigrationRunner, type RunProgress } from './MigrationRunner.js';
+import type { MigrationRunner, RunProgress } from './MigrationRunner.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 import { buildReport, type MigrationReport } from './migrationReport.js';
 import type { MigrationPlan } from './planMigration.js';
@@ -23,7 +23,7 @@ interface SavedRun {
 	startedAt: string;
 }
 
-type Phase = 'review' | 'running' | 'report';
+type Phase = 'review' | 'running' | 'stopped' | 'report';
 
 type RowState = 'done' | 'now' | 'waiting' | 'off';
 
@@ -54,29 +54,6 @@ function readRun(): SavedRun | null {
 	};
 }
 
-function registerMigrationSettings(): void {
-	game.settings.register(
-		SYSTEM_ID as 'core',
-		REPORTS_SETTING as 'rollMode',
-		{
-			scope: 'world',
-			config: false,
-			type: Array,
-			default: [],
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
-	game.settings.register(
-		SYSTEM_ID as 'core',
-		RUN_SETTING as 'rollMode',
-		{
-			scope: 'world',
-			config: false,
-			type: Object,
-			default: {},
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
-}
-
 /** What the World Migration window shows and does. */
 class WorldMigration {
 	readonly runner: MigrationRunner | null;
@@ -91,7 +68,7 @@ class WorldMigration {
 
 	sort = $state<CopySort>('item');
 
-	choose = $state(false);
+	#chooseCopies = $state(false);
 
 	excluded = $state.raw<Set<string>>(new Set());
 
@@ -116,21 +93,27 @@ class WorldMigration {
 		this.plan ? copyGroups(this.plan.copies, this.sort, this.titles) : [],
 	);
 
-	constructor(
-		runner: MigrationRunner | null,
-		plan: MigrationPlan | null,
-		fromSchema: number,
-		stoppedRun: SavedRun | null,
-	) {
+	constructor(runner: MigrationRunner | null, plan: MigrationPlan | null, fromSchema: number) {
 		this.runner = runner;
 		this.plan = plan;
 		this.fromSchema = fromSchema;
-		this.stoppedRun = stoppedRun;
-		if (stoppedRun) {
-			this.excluded = new Set(stoppedRun.excluded);
-			this.choose = stoppedRun.excluded.length > 0;
+		this.stoppedRun = runner ? readRun() : null;
+		if (this.stoppedRun) {
+			this.excluded = new Set(this.stoppedRun.excluded);
+			this.#chooseCopies = this.stoppedRun.excluded.length > 0;
 		}
 		if (!runner) this.phase = 'report';
+	}
+
+	/** Choose Copies. Turning it off puts every copy back. */
+	get chooseCopies(): boolean {
+		return this.#chooseCopies;
+	}
+
+	set chooseCopies(value: boolean) {
+		if (this.locked) return;
+		this.#chooseCopies = value;
+		if (!value) this.excluded = new Set();
 	}
 
 	/** The GM's choices of a run that stopped stay as they were. */
@@ -142,8 +125,10 @@ class WorldMigration {
 		return new Set(
 			(this.plan?.copies ?? [])
 				.filter((copy) => copy.holder.kind === 'actor' || copy.holder.kind === 'token')
-				.map(
-					(copy) => copy.holder.actorUuid ?? `${copy.holder.sceneName}|${copy.holder.actorName}`,
+				.map((copy) =>
+					copy.holder.kind === 'token'
+						? `${copy.holder.sceneName}|${copy.holder.actorName}`
+						: copy.holder.actorUuid,
 				),
 		).size;
 	}
@@ -171,17 +156,31 @@ class WorldMigration {
 		return 'waiting';
 	}
 
-	/** Plans again with the copies kept out, writes the plan, and saves the report. */
+	/**
+	 * Plans again with the copies kept out, writes the plan, and saves the report. A run that throws
+	 * stops, and the saved run continues it at the next load.
+	 */
 	async start(): Promise<MigrationReport | null> {
 		if (!this.runner || this.phase !== 'review') return null;
 		this.phase = 'running';
 		const excluded = new Set(this.excluded);
+		try {
+			return await this.#run(this.runner, excluded);
+		} catch (error) {
+			console.error('Nimble Migration | the run stopped:', error);
+			ui.notifications.error(localize('NIMBLE.migration.world.stopped'));
+			this.phase = 'stopped';
+			return null;
+		}
+	}
+
+	async #run(runner: MigrationRunner, excluded: Set<string>): Promise<MigrationReport> {
 		const startedAt = this.stoppedRun?.startedAt || new Date().toISOString();
 		const toSchema = MigrationRunnerBase.LATEST_SCHEMA_VERSION;
 		await setSetting(RUN_SETTING, { toSchema, excluded: [...excluded], startedAt });
 
-		const plan = await this.runner.plan(excluded);
-		const result = await this.runner.apply(plan, (progress) => {
+		const plan = await runner.plan(excluded);
+		const result = await runner.apply(plan, (progress) => {
 			this.progress = progress;
 			this.#writing = new Set(progress.writing);
 			if (progress.written.length > 0) {
@@ -210,59 +209,5 @@ class WorldMigration {
 	}
 }
 
-/** Plans the pending migrations, or none when the world is up to date. */
-async function prepareWorldMigration(): Promise<WorldMigration> {
-	const fromSchema = worldSchemaVersion();
-	if (fromSchema >= MigrationRunnerBase.LATEST_SCHEMA_VERSION) {
-		return new WorldMigration(null, null, fromSchema, null);
-	}
-	ui.notifications.info(
-		localize('NIMBLE.migration.world.checking', { version: game.system.version }),
-	);
-	const runner = new MigrationRunner(MigrationList.constructFromVersion(fromSchema));
-	const plan = await runner.plan();
-	return new WorldMigration(runner, plan, fromSchema, readRun());
-}
-
-/**
- * On a GM's ready: a migration that changes no Compendium Copy runs at once. Otherwise it waits
- * for the GM in the World Migration window.
- */
-async function beginWorldMigration(openWindow: (migration: WorldMigration) => void): Promise<void> {
-	if (worldSchemaVersion() >= MigrationRunnerBase.LATEST_SCHEMA_VERSION) return;
-	const migration = await prepareWorldMigration();
-	if (migration.copyCount > 0 || migration.stoppedRun) {
-		openWindow(migration);
-		return;
-	}
-	ui.notifications.info(
-		localize('NIMBLE.migration.world.starting', { version: game.system.version }),
-	);
-	const report = await migration.start();
-	if (report && report.errors.length > 0) {
-		ui.notifications.warn(
-			localize('NIMBLE.migration.world.completedWithErrors', {
-				count: String(report.errors.length),
-			}),
-		);
-	} else {
-		ui.notifications.info(localize('NIMBLE.migration.world.completed'));
-	}
-}
-
-/** A player is told the world waits for the GM's migration. Nothing is blocked. */
-function warnPlayerOfPendingMigration(): void {
-	if (worldSchemaVersion() >= MigrationRunnerBase.LATEST_SCHEMA_VERSION) return;
-	ui.notifications.info(
-		localize('NIMBLE.migration.playerWaiting', { version: game.system.version }),
-	);
-}
-
-export {
-	beginWorldMigration,
-	prepareWorldMigration,
-	registerMigrationSettings,
-	WorldMigration,
-	warnPlayerOfPendingMigration,
-};
+export { REPORTS_SETTING, RUN_SETTING, WorldMigration, worldSchemaVersion };
 export type { Phase, RowState, SavedRun };

@@ -48,7 +48,12 @@ interface Target {
 	delta?: { itemIds: Set<string>; effectIds: Set<string>; source: Json };
 }
 
-const BATCH = 50;
+const BATCH_SIZE = 50;
+
+/** Migration writes skip the system's document hooks. */
+function writeOptions(pack?: { metadata: { id: string } } | null) {
+	return { noHook: true, pack: pack?.metadata.id ?? null };
+}
 
 function rawSource(collection: Json[] | undefined, document: any): Json {
 	const raw = collection?.find((entry) => entry._id === document.id);
@@ -68,15 +73,6 @@ class MigrationRunner extends MigrationRunnerBase {
 	#targets = new Map<string, Target>();
 
 	#errors: PlanError[] = [];
-
-	override needsMigration(): boolean {
-		return super.needsMigration(
-			game.settings.get(
-				SYSTEM_ID as 'core',
-				'worldSchemaVersion' as 'rollMode',
-			) as unknown as number,
-		);
-	}
 
 	/** Every document the migrations can change, as raw sources, with where each one is written. */
 	async collectRoots(): Promise<PlanRoot[]> {
@@ -198,6 +194,7 @@ class MigrationRunner extends MigrationRunnerBase {
 		);
 		const total = changed.length;
 		let done = 0;
+		let written = 0;
 
 		const groups = new Map<string, PlannedRoot[]>();
 		for (const entry of changed) {
@@ -214,11 +211,11 @@ class MigrationRunner extends MigrationRunnerBase {
 			const wasLocked = pack?.locked ?? false;
 			if (pack && wasLocked) await pack.configure({ locked: false });
 			try {
-				for (let start = 0; start < group.length; start += BATCH) {
-					const batch = group.slice(start, start + BATCH);
+				for (let start = 0; start < group.length; start += BATCH_SIZE) {
+					const batch = group.slice(start, start + BATCH_SIZE);
 					const uuids = batch.map((entry) => entry.root.uuid);
 					onProgress({ done, total, part: target.part, writing: uuids, written: [] });
-					await this.#writeBatch(batch);
+					written += await this.#writeBatch(batch);
 					done += batch.length;
 					onProgress({ done, total, part: target.part, writing: [], written: uuids });
 				}
@@ -236,18 +233,21 @@ class MigrationRunner extends MigrationRunnerBase {
 			);
 		}
 
-		return { plan, errors: this.#errors, written: done };
+		return { plan, errors: this.#errors, written };
 	}
 
-	async #writeBatch(batch: PlannedRoot[]): Promise<void> {
+	/** Returns how many documents it wrote. */
+	async #writeBatch(batch: PlannedRoot[]): Promise<number> {
 		const first = this.#targets.get(batch[0].root.uuid)!;
-		if (first.delta) {
-			for (const entry of batch) await this.#writeToken(entry);
-			return;
-		}
-		if (batch[0].root.kind === 'message') {
-			for (const entry of batch) await this.#writeMessage(entry);
-			return;
+		const writeOne = first.delta
+			? this.#writeToken
+			: batch[0].root.kind === 'message'
+				? this.#writeMessage
+				: null;
+		if (writeOne) {
+			let count = 0;
+			for (const entry of batch) if (await writeOne.call(this, entry)) count += 1;
+			return count;
 		}
 
 		const prepared: Array<[PlannedRoot, Json]> = [];
@@ -255,9 +255,9 @@ class MigrationRunner extends MigrationRunnerBase {
 			const update = await this.#prepareDocument(entry);
 			if (update) prepared.push([entry, update]);
 		}
-		if (prepared.length === 0) return;
+		if (prepared.length === 0) return 0;
 		const documentClass = first.document.constructor;
-		const operation = { noHook: true, pack: first.pack?.metadata.id ?? null };
+		const operation = writeOptions(first.pack);
 		let written = prepared;
 		try {
 			await documentClass.updateDocuments(
@@ -277,6 +277,7 @@ class MigrationRunner extends MigrationRunnerBase {
 			}
 		}
 		for (const [entry] of written) await this.#deleteItemEffects(entry);
+		return written.length;
 	}
 
 	/** Deletes the embedded documents the migrations removed, and returns the update of the rest. */
@@ -284,7 +285,7 @@ class MigrationRunner extends MigrationRunnerBase {
 		const { document, pack } = this.#targets.get(entry.root.uuid)!;
 		const before = entry.root.source;
 		const after = foundry.utils.deepClone(entry.after);
-		const operation = { noHook: true, pack: pack?.metadata.id ?? null };
+		const operation = writeOptions(pack);
 		try {
 			if (entry.root.kind === 'actor') {
 				const items = this.diffCollection(before.items ?? [], after.items ?? []);
@@ -323,10 +324,7 @@ class MigrationRunner extends MigrationRunnerBase {
 			);
 			if (gone.length === 0) continue;
 			try {
-				await live.deleteEmbeddedDocuments('ActiveEffect', gone, {
-					noHook: true,
-					pack: pack?.metadata.id ?? null,
-				});
+				await live.deleteEmbeddedDocuments('ActiveEffect', gone, writeOptions(pack));
 			} catch (error) {
 				this.#writeError(entry.root, error);
 			}
@@ -334,9 +332,9 @@ class MigrationRunner extends MigrationRunnerBase {
 	}
 
 	/** Writes only what the token's delta holds. The rest belongs to its base actor. */
-	async #writeToken(entry: PlannedRoot): Promise<void> {
+	async #writeToken(entry: PlannedRoot): Promise<boolean> {
 		const { document: actor, delta } = this.#targets.get(entry.root.uuid)!;
-		if (!delta) return;
+		if (!delta) return false;
 		const before = entry.root.source;
 		const after = foundry.utils.deepClone(entry.after);
 		const operation = { noHook: true };
@@ -363,7 +361,7 @@ class MigrationRunner extends MigrationRunnerBase {
 			if (Object.keys(held).length > 0) await actor.update(held, operation);
 		} catch (error) {
 			this.#writeError(entry.root, error);
-			return;
+			return false;
 		}
 		await this.#deleteItemEffects({
 			...entry,
@@ -372,16 +370,19 @@ class MigrationRunner extends MigrationRunnerBase {
 				items: (after.items ?? []).filter((item: Json) => delta.itemIds.has(item._id)),
 			},
 		});
+		return true;
 	}
 
-	async #writeMessage(entry: PlannedRoot): Promise<void> {
+	async #writeMessage(entry: PlannedRoot): Promise<boolean> {
 		const { document } = this.#targets.get(entry.root.uuid)!;
 		const changes = foundry.utils.diffObject(entry.root.source, entry.after);
-		if (Object.keys(changes).length === 0) return;
+		if (Object.keys(changes).length === 0) return false;
 		try {
 			await document.update(changes, { noHook: true });
+			return true;
 		} catch (error) {
 			this.#writeError(entry.root, error);
+			return false;
 		}
 	}
 
