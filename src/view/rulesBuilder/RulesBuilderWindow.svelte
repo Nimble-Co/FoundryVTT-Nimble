@@ -71,12 +71,6 @@
 	<div class="nimble-rules-builder-window__body">
 		{#if state.pickerOpen}
 			<RuleTypePicker onPick={state.pickRule} forEffect={isEffectParent(ruleParent)} />
-		{:else if state.rules.length === 0}
-			<p class="nimble-rules-builder-window__empty">
-				{localize('NIMBLE.rulesBuilder.emptyHint', {
-					addRule: localize('NIMBLE.rulesBuilder.addRule'),
-				})}
-			</p>
 		{:else}
 			<ul
 				class="nimble-rules-builder-window__list"
@@ -97,6 +91,12 @@
 							onDelete={() => ruleParent.rules.deleteRule(rule.id)}
 							document={ruleParent}
 						/>
+					</li>
+				{:else}
+					<li class="nimble-rules-builder-window__empty">
+						{localize('NIMBLE.rulesBuilder.emptyHint', {
+							addRule: localize('NIMBLE.rulesBuilder.addRule'),
+						})}
 					</li>
 				{/each}
 			</ul>
@@ -164,6 +164,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
+		min-height: 100%;
 		margin: 0;
 		padding: 0;
 		list-style: none;
