@@ -6331,13 +6331,88 @@
 		},
 		"migration": {
 			"world": {
+				"checking": "Checking world data for Nimble v{version}.",
 				"starting": "Migrating world data to Nimble v{version}.",
 				"completed": "World migration complete.",
-				"completedWithErrors": "World migration completed with {count} error(s). Check the browser console (F12) for details."
+				"completedWithErrors": "World migration completed with {count} error(s). The World Migration window in the system settings shows them."
 			},
-			"compendium": {
-				"starting": "Migrating compendium: {packName}...",
-				"finished": "Finished migrating compendium: {packName}."
+			"playerWaiting": "The GM has not migrated this world to Nimble v{version} yet.",
+			"menu": {
+				"name": "World Migration",
+				"label": "Open World Migration",
+				"hint": "Review a migration that waits, or read the reports of earlier migrations."
+			},
+			"window": {
+				"title": "World Migration",
+				"lead": "Nimble {version} changes {copies} Compendium Copies on {actors} actors.",
+				"leadNoActors": "Nimble {version} changes {copies} Compendium Copies.",
+				"continueLead": "A migration to Nimble {version} stopped before it finished. It continues with the copies you kept out.",
+				"sort": "Sort",
+				"byItem": "By Item",
+				"byActor": "By Actor",
+				"chooseCopies": "Choose Copies",
+				"chooseHint": "Keep a copy out to keep its old rules, effects and text. Changes to the data structure always run.",
+				"migrateCopy": "Migrate {name}",
+				"copies": "{count} copies",
+				"oneCopy": "1 copy",
+				"items": "{count} items",
+				"oneItem": "1 item",
+				"rowToken": "{count} {name} tokens in {scene}",
+				"rowTokenOne": "{name} token in {scene}",
+				"groupToken": "{name} ({count} tokens)",
+				"groupTokenOne": "{name} (1 token)",
+				"inScene": "in {scene}",
+				"itemsSidebar": "Items sidebar",
+				"actorsSidebar": "Actors sidebar",
+				"matchedByName": "Matched by name",
+				"matchedByNameHint": "This copy has no compendium id. It matches by its name.",
+				"monster": "Monster",
+				"alwaysRuns": "Always runs",
+				"backup": "A migration cannot be undone. Make a world backup from the Setup screen first.",
+				"later": "Later",
+				"start": "Start Migration",
+				"continue": "Continue Migration",
+				"state": {
+					"done": "Done",
+					"now": "Now",
+					"waiting": "Waiting",
+					"off": "Kept out"
+				}
+			},
+			"progress": {
+				"count": "{done} of {total} documents",
+				"checking": "Checking the world again with your choices.",
+				"keepOpen": "Do not close Foundry or this window.",
+				"actors": "Actors and their items",
+				"items": "Items in the sidebar",
+				"tokens": "Tokens on scenes",
+				"messages": "Chat messages",
+				"compendiums": "World compendiums"
+			},
+			"report": {
+				"title": "Migration Report",
+				"heading": "Migration Report: Nimble {version}",
+				"pick": "Report",
+				"none": "None",
+				"version": "Version",
+				"versionValue": "Nimble {version} (schema {from} to {to})",
+				"date": "Date",
+				"changed": "Changed",
+				"documents": "{count} documents",
+				"copies": "{count} Compendium Copies",
+				"keptOut": "Kept out",
+				"errors": "Errors",
+				"keptOutHeading": "Kept out",
+				"errorsHeading": "Errors",
+				"structureStillRan": "Changes to the data structure still ran on these copies.",
+				"stoppedRun": "This run finished a migration that stopped on {date}.",
+				"whereActor": "on {name}",
+				"whereToken": "on a {name} token in {scene}",
+				"whereCompendium": "in {pack}",
+				"whereSidebar": "in the sidebar",
+				"copy": "Copy Report",
+				"copied": "Report copied.",
+				"close": "Close"
 			}
 		},
 		"devRebrand": {
