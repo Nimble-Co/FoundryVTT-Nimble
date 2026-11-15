@@ -1,4 +1,9 @@
-import type { CopyGroup, CopyRow } from '../../../migration/copyList.js';
+import {
+	type CopyGroup,
+	type CopyRow,
+	type CopySort,
+	checkState,
+} from '../../../migration/copyList.js';
 import type { Holder } from '../../../migration/planMigration.js';
 import type { RowState } from '../../../migration/worldMigration.svelte.js';
 import type { MigrationCopyListProps } from './MigrationCopyList.types.ts';
@@ -32,6 +37,25 @@ function groupName(group: CopyGroup): string {
 	return group.name;
 }
 
+/** The line under the group heading: where the group's copies are. */
+function groupWhere(group: CopyGroup): string {
+	switch (group.kind) {
+		case 'item':
+			return windowWord(group.count === 1 ? 'whereItemOne' : 'whereItem', { count: group.count });
+		case 'token':
+			return windowWord(group.tokens === 1 ? 'whereTokensOne' : 'whereTokens', {
+				count: group.tokens ?? 0,
+				scene: group.sceneName ?? '',
+			});
+		case 'actor':
+			return windowWord('whereActor');
+		case 'compendium':
+			return windowWord('whereCompendium');
+		default:
+			return windowWord('whereSidebar');
+	}
+}
+
 function groupIcon(group: CopyGroup): string | null {
 	if (group.kind === 'sidebar') return 'fa-solid fa-suitcase';
 	if (group.kind === 'compendium') return 'fa-solid fa-book';
@@ -51,17 +75,24 @@ export function createMigrationCopyListState(getProps: () => MigrationCopyListPr
 	const showBoxes = $derived(reviewing && migration.chooseCopies);
 	const showRunState = $derived(migration.phase === 'running' || stopped);
 
-	let openGroups = $state.raw<Set<string>>(new Set());
+	let selectedKey = $state<string | null>(null);
+	const selectedIndex = $derived(
+		Math.max(
+			0,
+			migration.groups.findIndex((group) => group.key === selectedKey),
+		),
+	);
+	const selectedGroup: CopyGroup | undefined = $derived(migration.groups[selectedIndex]);
 
-	function isOpen(key: string): boolean {
-		return openGroups.has(key);
+	function selectGroup(index: number): void {
+		selectedKey = migration.groups[index]?.key ?? null;
 	}
 
-	function toggleOpen(key: string): void {
-		const next = new Set(openGroups);
-		if (next.has(key)) next.delete(key);
-		else next.add(key);
-		openGroups = next;
+	/** A new sort starts at its first group. */
+	function setSort(sort: CopySort): void {
+		if (migration.sort === sort) return;
+		migration.sort = sort;
+		selectedKey = null;
 	}
 
 	function rowLabel(row: CopyRow): string {
@@ -73,6 +104,16 @@ export function createMigrationCopyListState(getProps: () => MigrationCopyListPr
 		if (migration.sort === 'item')
 			return windowWord(group.count === 1 ? 'oneCopy' : 'copies', { count: group.count });
 		return windowWord(group.count === 1 ? 'oneItem' : 'items', { count: group.count });
+	}
+
+	function hasKeptOut(group: CopyGroup): boolean {
+		const state = checkState(group, migration.excluded);
+		return state === 'off' || state === 'mixed';
+	}
+
+	/** A group of one row needs no box of its own: the row's box covers it. */
+	function hasGroupBox(group: CopyGroup): boolean {
+		return showBoxes && group.rows.filter((row) => row.excludable).length > 1;
 	}
 
 	/** A run that stopped writes nothing now, so a row it was writing waits. */
@@ -88,6 +129,15 @@ export function createMigrationCopyListState(getProps: () => MigrationCopyListPr
 		return settled(migration.groupState(group));
 	}
 
+	/** What a screen reader says for a pick: name, count, and its run state or a kept-out copy. */
+	function groupLabel(group: CopyGroup): string {
+		const parts = [groupName(group), groupCount(group)];
+		const runState = showRunState ? groupState(group) : null;
+		if (runState === 'done' || runState === 'now') parts.push(windowWord(`state.${runState}`));
+		else if (!showRunState && hasKeptOut(group)) parts.push(windowWord('state.off'));
+		return parts.join(', ');
+	}
+
 	return {
 		get reviewing() {
 			return reviewing;
@@ -98,14 +148,26 @@ export function createMigrationCopyListState(getProps: () => MigrationCopyListPr
 		get showRunState() {
 			return showRunState;
 		},
-		isOpen,
-		toggleOpen,
+		get selectedIndex() {
+			return selectedIndex;
+		},
+		get selectedGroup() {
+			return selectedGroup;
+		},
+		selectGroup,
+		setSort,
 		rowLabel,
 		groupName,
+		groupWhere,
 		groupCount,
+		groupLabel,
 		groupIcon,
 		groupImage,
+		hasKeptOut,
+		hasGroupBox,
 		rowState,
 		groupState,
 	};
 }
+
+export type MigrationCopyListState = ReturnType<typeof createMigrationCopyListState>;

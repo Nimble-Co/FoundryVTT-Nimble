@@ -11,7 +11,7 @@
 	const view = createWorldMigrationDialogState(() => ({ dialog, migration }));
 	const { close, start, copyReport } = view;
 	const report = $derived(view.report);
-	const leadText = $derived(view.leadText);
+	const lead = $derived(view.lead);
 	const startLabel = $derived(view.startLabel);
 	const phase = $derived(migration.phase);
 </script>
@@ -25,12 +25,15 @@
 		{:else if phase === 'running'}
 			<p class="nimble-world-migration__meta">{progressWord('checking')}</p>
 		{:else}
-			<p class="nimble-world-migration__lead">{leadText}</p>
+			<p class="nimble-world-migration__lead">
+				{#each lead as part, index (index)}{#if part.strong}<strong>{part.text}</strong
+						>{:else}{part.text}{/if}{/each}
+			</p>
 		{/if}
 
 		<MigrationCopyList {migration} />
 
-		{#if phase === 'review'}
+		{#if phase === 'review' || phase === 'stopped'}
 			<p class="nimble-world-migration__warn">
 				<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
 				{windowWord('backup')}
@@ -74,9 +77,14 @@
 <style lang="scss">
 	.nimble-world-migration {
 		--nimble-sheet-body-padding-block-start: 0.5rem;
+		// The panes stack when the window is narrow.
+		container: nimble-world-migration / inline-size;
 		display: flex;
+		flex: 1;
 		flex-direction: column;
 		gap: 0.625rem;
+		min-height: 0;
+		overflow-y: auto;
 		font-size: var(--nimble-sm-text);
 		line-height: 1.3;
 		color: var(--nimble-dark-text-color);
@@ -86,17 +94,24 @@
 		}
 
 		&__lead {
+			flex: none;
 			font-size: var(--nimble-md-text);
 			line-height: 1.35;
+
+			strong {
+				font-weight: 900;
+			}
 		}
 
 		&__meta {
+			flex: none;
 			font-size: var(--nimble-xs-text);
 			color: var(--nimble-medium-text-color);
 		}
 
 		&__warn {
 			display: flex;
+			flex: none;
 			align-items: flex-start;
 			gap: 0.5rem;
 			padding: 0.4rem 0.5rem;
@@ -115,6 +130,7 @@
 
 	.nimble-world-migration__footer {
 		display: flex;
+		flex: none;
 		gap: 0.5rem;
 		--nimble-button-padding: 0.5rem 1rem;
 

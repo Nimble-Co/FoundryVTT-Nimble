@@ -3,6 +3,12 @@ import type { Holder } from '../../../migration/planMigration.js';
 
 type WordData = Record<string, string | number>;
 
+/** One piece of a localized sentence; `strong` pieces show in bold. */
+interface PhrasePart {
+	text: string;
+	strong: boolean;
+}
+
 function stringValues(data: WordData): Record<string, string> {
 	return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]));
 }
@@ -17,6 +23,19 @@ function reportWord(key: string, data: WordData = {}): string {
 
 function progressWord(key: string, data: WordData = {}): string {
 	return localize(`NIMBLE.migration.progress.${key}`, stringValues(data));
+}
+
+/** A window sentence split at its placeholders, so the template can bold some values. */
+function windowPhrase(key: string, data: WordData, strongKeys: string[]): PhrasePart[] {
+	const template = localize(`NIMBLE.migration.window.${key}`);
+	return template
+		.split(/\{(\w+)\}/)
+		.map((piece, index) =>
+			index % 2 === 0
+				? { text: piece, strong: false }
+				: { text: String(data[piece] ?? ''), strong: strongKeys.includes(piece) },
+		)
+		.filter((part) => part.text !== '');
 }
 
 /** Where a copy is, for the report: "on Goblin", "in the sidebar". */
@@ -41,4 +60,25 @@ function formatDate(iso: string): string {
 	return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
 }
 
-export { formatDate, progressWord, reportWord, whereLabel, windowWord };
+/** "Nov 15", with the year when it is not this year. */
+function formatShortDate(iso: string): string {
+	const date = new Date(iso);
+	if (Number.isNaN(date.getTime())) return iso;
+	const thisYear = date.getFullYear() === new Date().getFullYear();
+	return date.toLocaleDateString(game.i18n.lang, {
+		month: 'short',
+		day: 'numeric',
+		...(thisYear ? {} : { year: 'numeric' }),
+	});
+}
+
+export {
+	formatDate,
+	formatShortDate,
+	progressWord,
+	reportWord,
+	whereLabel,
+	windowPhrase,
+	windowWord,
+};
+export type { PhrasePart };

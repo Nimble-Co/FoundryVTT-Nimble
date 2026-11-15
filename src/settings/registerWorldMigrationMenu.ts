@@ -21,7 +21,7 @@ class WorldMigrationWindow extends GenericDialog {
 			localize('NIMBLE.migration.window.title'),
 			WorldMigrationDialog as unknown as Component<Record<string, never>>,
 			{ migration },
-			{ uniqueId: WINDOW_ID, icon: ICON, width: 480, resizable: true },
+			{ uniqueId: WINDOW_ID, icon: ICON, width: 760, height: 640, resizable: true },
 		);
 	}
 
