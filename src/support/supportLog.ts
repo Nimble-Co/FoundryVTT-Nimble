@@ -1,6 +1,6 @@
 type LogLevel = 'error' | 'warning';
 
-/** popup: a red or yellow notification. nimble: a Nimble console line. uncaught: any package. */
+/** A popup is a red or yellow notification, a Nimble entry is a Nimble console line, and uncaught comes from any package. */
 type LogSource = 'popup' | 'nimble' | 'uncaught';
 
 interface LogInput {

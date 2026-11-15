@@ -21,7 +21,7 @@ interface SupportReport {
 	made: string;
 	user: { name: string; isGM: boolean };
 	foundry: string;
-	nimble: string;
+	systemVersion: string;
 	schema: number;
 	browser: string;
 	world: { title: string; actors: number; items: number; scenes: number };
@@ -118,7 +118,7 @@ function supportReportText(report: SupportReport, words: Words): string {
 		],
 		section(words('section.versions'), [
 			`${words('foundry')}: ${report.foundry}`,
-			`${words('nimble')}: ${words('schema', { version: report.nimble, schema: String(report.schema) })}`,
+			`${words('nimble')}: ${words('schema', { version: report.systemVersion, schema: String(report.schema) })}`,
 			`${words('browser')}: ${report.browser}`,
 			`${words('world')}: ${words('worldValue', {
 				title: report.world.title,
@@ -154,11 +154,11 @@ function supportReportText(report: SupportReport, words: Words): string {
 }
 
 /** The bug form, with the versions filled in. */
-function githubIssueUrl(foundry: string, nimble: string): string {
+function githubIssueUrl(foundry: string, systemVersion: string): string {
 	const query = new URLSearchParams({
 		template: 'bug.yml',
 		'foundry-version': foundry,
-		'nimble-version': nimble,
+		'nimble-version': systemVersion,
 	});
 	return `${ISSUES_URL}?${query}`;
 }

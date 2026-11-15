@@ -68,7 +68,7 @@ async function collectSupportReport({ withActor }: { withActor: boolean }): Prom
 		made: new Date().toISOString(),
 		user: { name: game.user?.name ?? '', isGM: game.user?.isGM ?? false },
 		foundry: foundryVersion(),
-		nimble: game.system.version,
+		systemVersion: game.system.version,
 		schema: Number(game.settings.get(SYSTEM_ID as 'core', 'worldSchemaVersion' as 'rollMode')) || 0,
 		browser: await browserText(),
 		world: {

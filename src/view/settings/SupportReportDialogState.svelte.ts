@@ -28,7 +28,7 @@ function alsoRows(report: SupportReport): AlsoRow[] {
 			icon: 'fa-solid fa-circle-info',
 			text: supportWindowWord('alsoVersions', {
 				foundry: report.foundry,
-				nimble: report.nimble,
+				system: report.systemVersion,
 				schema: report.schema,
 				browser: report.browser,
 			}),

@@ -6461,7 +6461,7 @@
 				"times": "{count}x",
 				"sourceLine": "{level} - {source}",
 				"alsoHeading": "Also in the report",
-				"alsoVersions": "Foundry {foundry}, Nimble {nimble} (schema {schema}), {browser}",
+				"alsoVersions": "Foundry {foundry}, Nimble {system} (schema {schema}), {browser}",
 				"alsoModules": "{count} active modules, with versions",
 				"alsoModulesOne": "1 active module, with its version",
 				"alsoSettings": "{count} settings that are not at their defaults",

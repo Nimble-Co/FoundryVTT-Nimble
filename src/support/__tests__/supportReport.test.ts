@@ -8,7 +8,7 @@ const report: SupportReport = {
 	made: '2026-11-15T11:52:00.000Z',
 	user: { name: 'Gamemaster', isGM: true },
 	foundry: '14.350',
-	nimble: '0.10.0',
+	systemVersion: '0.10.0',
 	schema: 90,
 	browser: 'Chrome 142 - Windows 11',
 	world: { title: 'Sunken Temple', actors: 84, items: 312, scenes: 18 },
