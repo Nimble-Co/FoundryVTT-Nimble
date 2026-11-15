@@ -47,17 +47,29 @@ Open the **Compendium Packs** tab in the sidebar and you'll find the full Nimble
 | **Nimble Tables** | Roll tables used by certain features and boons, such as the chaos table. |
 
 ::: tip Copy before you customize
-Compendium content is refreshed whenever the system updates. If you want to tweak something (a spell, a monster, a weapon), drag it into your world (or duplicate it there) and edit the copy. Edits made to your world's copies are never touched by updates. See [Core Concepts](core-concepts.md) for more on this habit.
+Compendium content is refreshed whenever the system updates. If you want to tweak something (a spell, a monster, a weapon), drag it into your world (or duplicate it there) and edit the copy. An update can change your world's copies too, but it asks you first, and you can keep a copy out (see below). See [Core Concepts](core-concepts.md) for more on this habit.
 :::
 
 ## How updates work
 
 Updating the system is done from the Foundry setup screen (**Game Systems** tab, **Update** button), the same as any other system.
 
-The first time a Gamemaster logs into a world after an update, the system checks whether your world's data is from an older version and, if so, migrates it automatically. You don't need to run anything yourself. Just log in as the GM and let it finish.
+The first time a Gamemaster logs into a world after an update, the system checks if the world's data is from an older version. Only the GM can migrate a world, so a player who logs in first sees a note that the world waits for the GM.
 
-::: warning Back up before major updates
-Automatic migration is designed to be safe, but a backup of your world folder before updating is cheap insurance. The GM must be the first to log in after an update, since only the GM has permission to run the migration.
+Some migrations only fix the shape of the data. These run by themselves, and you see a short note when they finish. Other migrations change the rules, effects or text of the items and monsters you copied from a compendium, such as a spell on a character or a monster on a scene. When an update has changes of this kind, the **World Migration** window opens first and lists each Compendium Copy that changes:
+
+- **By Item** and **By Actor** sort the same list two ways. Open a group to see where each copy is and which changes it gets.
+- Tick **Choose Copies** to keep a copy out. A copy you keep out keeps its old rules, effects and text. Changes with a lock icon always run, because the copy stops working without them.
+- **Start Migration** writes the changes, and a bar shows the progress. **Later** closes the window, and it opens again at your next login.
+
+When the migration finishes, the window shows the Migration Report: what changed, the copies you kept out, and any errors. **Copy Report** copies it as text, for a bug report. To read old reports, open **World Migration** in the system settings.
+
+::: warning Back up before you start
+A migration cannot be undone. Make a backup of your world from the Foundry setup screen before you click **Start Migration**.
+:::
+
+::: details If the migration stops
+If Foundry closes during a migration, the window opens again at the next GM login with **Continue Migration**. It keeps the copies you kept out, and you cannot change them. The report says that the run continued an earlier one.
 :::
 
 ## Before your first session
