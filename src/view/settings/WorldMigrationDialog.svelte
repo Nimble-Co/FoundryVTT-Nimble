@@ -112,20 +112,27 @@
 		&__warn {
 			display: flex;
 			flex: none;
-			align-items: flex-start;
+			align-items: baseline;
 			gap: 0.5rem;
-			padding: 0.4rem 0.5rem;
-			font-size: var(--nimble-xs-text);
-			line-height: 1.35;
+			padding: 0.5rem 0.625rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			line-height: 1.4;
 			background: var(--nimble-warning-background-color);
 			border: 1px solid var(--nimble-warning-border-color);
 			border-radius: 4px;
 
 			i {
-				margin-top: 0.1rem;
 				color: var(--nimble-warning-icon-color);
 			}
 		}
+	}
+
+	// The shared dark warning fill is too light for light text, and its icon colour is dark.
+	:global(.theme-dark) .nimble-world-migration__warn {
+		--nimble-warning-background-color: hsl(40, 60%, 22%);
+		--nimble-warning-border-color: hsl(40, 55%, 40%);
+		--nimble-warning-icon-color: hsl(45, 100%, 65%);
 	}
 
 	.nimble-world-migration__footer {
