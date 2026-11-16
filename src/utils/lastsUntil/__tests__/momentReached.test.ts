@@ -55,6 +55,7 @@ function subject(start: Partial<EffectStart> = {}, fields: Partial<MomentSubject
 		startSeat: fullStart.combatant ? (seats[fullStart.combatant] ?? null) : null,
 		holder,
 		source: caster,
+		linked: null,
 		origin: 'Actor.tessa.Item.sand',
 		holderInCombat: true,
 		isClockTurn: (clock, turn) => {
@@ -431,6 +432,24 @@ describe('event moments', () => {
 
 		expect(momentReached(youDrop, subject(), event({ event: 'zeroHp', actor: caster }))).toBe(true);
 		expect(momentReached(youDrop, subject(), event({ event: 'zeroHp', actor: holder }))).toBe(
+			false,
+		);
+	});
+
+	it('"until the creature they hold dies" ends when the linked creature dies', () => {
+		const linked = { name: 'Brave Adventurer' };
+		const linkedDies = moment({ kind: 'event', who: 'linked', event: 'die' });
+		const latched = subject({}, { linked });
+
+		expect(momentReached(linkedDies, latched, event({ event: 'die', actor: linked }))).toBe(true);
+		expect(momentReached(linkedDies, latched, event({ event: 'die', actor: holder }))).toBe(false);
+		expect(momentReached(linkedDies, latched, event({ event: 'die', actor: caster }))).toBe(false);
+	});
+
+	it('a linked moment ends nothing when the effect names no linked creature', () => {
+		const linkedDies = moment({ kind: 'event', who: 'linked', event: 'die' });
+
+		expect(momentReached(linkedDies, subject(), event({ event: 'die', actor: holder }))).toBe(
 			false,
 		);
 	});

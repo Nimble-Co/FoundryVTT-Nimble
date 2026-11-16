@@ -72,6 +72,13 @@ describe('conditionLastsUntil', () => {
 		]);
 	});
 
+	it('Latched On lasts until the stirge dies or the creature it latched onto dies', () => {
+		expect(registerConditionsConfig().conditionLastsUntil.latched).toEqual([
+			event('die', 'holder'),
+			event('die', 'linked'),
+		]);
+	});
+
 	it('Confused has no default Lasts Until', () => {
 		expect(registerConditionsConfig().conditionLastsUntil.confused).toBeUndefined();
 	});

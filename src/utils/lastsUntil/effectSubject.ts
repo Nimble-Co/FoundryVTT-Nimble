@@ -35,6 +35,17 @@ export function sourceOf(effect: ActiveEffect): Actor | null {
 	return null;
 }
 
+/** The creature an effect is tied to, stamped on it when the effect was applied. */
+export function linkedOf(effect: ActiveEffect): Actor | null {
+	const flags = effect.flags as
+		| Record<string, { linkedActorUuid?: unknown } | undefined>
+		| undefined;
+	const uuid = flags?.[SYSTEM_ID]?.linkedActorUuid;
+	if (typeof uuid !== 'string' || !uuid) return null;
+	const linked = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false });
+	return linked instanceof Actor ? linked : null;
+}
+
 function sameActor(a: Actor | null | undefined, b: Actor | null | undefined): boolean {
 	if (!a || !b) return false;
 	return a === b || (!!a.uuid && a.uuid === b.uuid);
@@ -69,6 +80,7 @@ export function effectSubject(
 ): MomentSubject {
 	const holder = holderOf(effect);
 	const source = sourceOf(effect);
+	const linked = linkedOf(effect);
 	const start = (effect.start ?? { time: 0 }) as Partial<Omit<EffectStart, 'combat'>> & {
 		combat?: string | { id?: string | null } | null;
 	};
@@ -91,6 +103,7 @@ export function effectSubject(
 		startSeat: startCombatant ? seatOf(startCombatant) : null,
 		holder,
 		source,
+		linked,
 		origin: effect.origin ?? null,
 		effectId: effect.id ?? null,
 		holderInCombat: !!(holder as { inCombat?: boolean } | null)?.inCombat,

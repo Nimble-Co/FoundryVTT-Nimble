@@ -19,7 +19,8 @@ export const NEXT_TURN_COUNTS = [2, 3, 4, 5] as const;
 
 export const TIME_UNITS = ['rounds', 'minutes', 'hours', 'days'] as const;
 
-export const EVENT_SUBJECTS = ['holder', 'source'] as const;
+/** `linked`: the creature the effect is tied to, named by its `linkedActorUuid` flag. */
+export const EVENT_SUBJECTS = ['holder', 'source', 'linked'] as const;
 
 export const LASTS_UNTIL_EVENTS = [
 	'attack',

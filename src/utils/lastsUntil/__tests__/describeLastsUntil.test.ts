@@ -55,6 +55,15 @@ describe('describeLastsUntil', () => {
 		expect(read([gain], CARD_TARGETS_READER)).toBe('Until you gain FLAWED');
 	});
 
+	it('names the linked creature on the holder sheet, and falls back to a plain word', () => {
+		const linkedDies = event('linked', 'die');
+
+		expect(read([linkedDies], holderReader(null, 'Brave Adventurer'))).toBe(
+			'Until Brave Adventurer dies',
+		);
+		expect(read([linkedDies], CARD_TARGETS_READER)).toBe('Until the creature they hold dies');
+	});
+
 	it('reads "apply" with the name of the effect', () => {
 		const apply = {
 			...blank,
