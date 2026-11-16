@@ -245,12 +245,7 @@
 			"label": "Nimble Core Rules",
 			"path": "packs/rules.db",
 			"type": "JournalEntry",
-			"system": "nimble",
-			"flags": {
-				"nimble": {
-					"sorting": "m"
-				}
-			}
+			"system": "nimble"
 		}
 	],
 	"relationships": {

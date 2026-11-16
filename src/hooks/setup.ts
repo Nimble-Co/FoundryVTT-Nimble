@@ -2,7 +2,6 @@ import registerKeybindings from '../registerKeyBindings.js';
 import registerSystemSettings from '../settings/index.js';
 import { preparePackIndexes } from '../utils/documents/preparePackIndexes.js';
 import registerCompendiumSpellsFilter from './compendiumSpellsFilter.js';
-import applyPackSortingModes from './packSortingModes.js';
 
 /**
  * Helper function to make an ApplicationV2 class resizable.
@@ -46,7 +45,6 @@ export default function setup() {
 	registerKeybindings();
 	registerSystemSettings();
 	registerCompendiumSpellsFilter();
-	applyPackSortingModes();
 
 	game.nimble.conditions.initialize();
 
