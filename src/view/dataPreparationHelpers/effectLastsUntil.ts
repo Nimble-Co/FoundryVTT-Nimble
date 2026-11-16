@@ -1,4 +1,4 @@
-import { SYSTEM_ID } from '#system';
+import { linkedActorUuidOf } from '#utils/actor/linkedActor.js';
 import {
 	type CoreDurationUnits,
 	describeLastsUntil,
@@ -34,8 +34,8 @@ export function sourceCreature(effect: LastsUntilEffect): Creature | null {
 
 /** The creature the effect is tied to, stamped on it when it was applied. */
 export function linkedCreature(effect: LastsUntilEffect): Creature | null {
-	const uuid = effect.flags?.[SYSTEM_ID]?.linkedActorUuid;
-	if (typeof uuid !== 'string' || !uuid) return null;
+	const uuid = linkedActorUuidOf(effect);
+	if (!uuid) return null;
 	const document = fromUuidSync(uuid as never, { strict: false }) as
 		| (Creature & { documentName?: string })
 		| null;

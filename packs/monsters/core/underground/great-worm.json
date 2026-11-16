@@ -390,50 +390,8 @@
 			"type": "monsterFeature",
 			"system": {
 				"macro": "",
-				"identifier": "swallowed",
-				"rules": [
-					{
-						"disabled": false,
-						"label": "Swallowed: 20 damage at the start of your turn",
-						"predicate": {
-							"$and": [
-								"self:condition:swallowed"
-							]
-						},
-						"priority": 1,
-						"type": "recurringDamage",
-						"id": "Tb5mXsQaVe8YnCwJ",
-						"formula": "20",
-						"trigger": "turnStart"
-					},
-					{
-						"disabled": false,
-						"label": "Swallowed",
-						"predicate": {
-							"$and": [
-								"self:condition:swallowed"
-							]
-						},
-						"priority": 1,
-						"type": "attackOutcome",
-						"id": "Wg3jUpLd6RzHfBxM",
-						"identifier": "",
-						"side": "yourAttacks",
-						"cannotMiss": true,
-						"critRange": 0,
-						"forceCrit": "none",
-						"ignoreArmor": true,
-						"anyDieCrits": false,
-						"critD20": false,
-						"viciousCrits": false,
-						"attackDelivery": "any",
-						"thisItemOnly": false,
-						"attackSource": "any",
-						"exceptItemIdentifier": "",
-						"otherCreature": {},
-						"chargePoolIdentifier": ""
-					}
-				],
+				"identifier": "",
+				"rules": [],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

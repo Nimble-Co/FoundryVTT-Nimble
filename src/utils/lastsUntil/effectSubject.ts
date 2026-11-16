@@ -7,6 +7,7 @@ import {
 	type TurnSeat,
 } from '#utils/lastsUntil/momentReached.js';
 import { secondsOf } from '#utils/lastsUntil/secondsOf.js';
+import { linkedActorUuidOf } from '#utils/actor/linkedActor.js';
 import { getMinionGroupId } from '#utils/minions/minionGrouping.js';
 
 type CombatantLike = Combatant.Implementation;
@@ -37,11 +38,8 @@ export function sourceOf(effect: ActiveEffect): Actor | null {
 
 /** The creature an effect is tied to, stamped on it when the effect was applied. */
 export function linkedOf(effect: ActiveEffect): Actor | null {
-	const flags = effect.flags as
-		| Record<string, { linkedActorUuid?: unknown } | undefined>
-		| undefined;
-	const uuid = flags?.[SYSTEM_ID]?.linkedActorUuid;
-	if (typeof uuid !== 'string' || !uuid) return null;
+	const uuid = linkedActorUuidOf(effect);
+	if (!uuid) return null;
 	const linked = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false });
 	return linked instanceof Actor ? linked : null;
 }

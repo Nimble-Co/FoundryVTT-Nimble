@@ -75,7 +75,7 @@ export interface MomentSubject {
 	startSeat: TurnSeat | null;
 	holder: object | null;
 	source: object | null;
-	/** The creature the effect is tied to: a Latched On stirge's prey. */
+	/** The creature the effect is tied to, when the rule that applied it named one. */
 	linked: object | null;
 	origin: string | null;
 	/** The id of the effect itself. */
