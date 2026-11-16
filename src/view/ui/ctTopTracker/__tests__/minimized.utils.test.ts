@@ -5,14 +5,16 @@ import {
 } from '../../../../../tests/fixtures/combat.js';
 import { resolveMinimizedTrackerSummary } from '../minimized.utils.js';
 
-function createCharacterCombatant(options: { name?: string } = {}) {
-	return createCombatantFixture({
-		id: options.name ?? 'grak',
+function createCharacterCombatant(options: { visible?: boolean } = {}) {
+	const combatant = createCombatantFixture({
+		id: 'grak',
 		type: 'character',
 		actor: createCombatActorFixture({ type: 'character' }),
 		actionsCurrent: 2,
 		actionsMax: 3,
 	});
+	(combatant as unknown as { visible: boolean }).visible = options.visible ?? true;
+	return combatant;
 }
 
 describe('resolveMinimizedTrackerSummary', () => {
@@ -24,8 +26,8 @@ describe('resolveMinimizedTrackerSummary', () => {
 		});
 
 		expect(summary).toMatchObject({
+			combatStarted: true,
 			roundLabel: 3,
-			hasActiveCombatant: true,
 			actions: { current: 2, max: 3 },
 		});
 		expect(summary.portraitSrc).toBeTruthy();
@@ -40,8 +42,8 @@ describe('resolveMinimizedTrackerSummary', () => {
 		});
 
 		expect(summary).toMatchObject({
+			combatStarted: false,
 			roundLabel: 1,
-			hasActiveCombatant: false,
 			combatantName: null,
 			portraitSrc: null,
 			actions: null,
@@ -56,7 +58,22 @@ describe('resolveMinimizedTrackerSummary', () => {
 		});
 
 		expect(summary).toMatchObject({
-			hasActiveCombatant: false,
+			combatantName: null,
+			portraitSrc: null,
+			actions: null,
+		});
+	});
+
+	it('reports no active combatant when the active one is hidden from this user', () => {
+		const summary = resolveMinimizedTrackerSummary({
+			combatStarted: true,
+			roundLabel: 2,
+			activeCombatant: createCharacterCombatant({ visible: false }),
+		});
+
+		expect(summary).toMatchObject({
+			combatStarted: true,
+			roundLabel: 2,
 			combatantName: null,
 			portraitSrc: null,
 			actions: null,
@@ -70,6 +87,7 @@ describe('resolveMinimizedTrackerSummary', () => {
 			actionsCurrent: 1.7,
 			actionsMax: 3.2,
 		});
+		(combatant as unknown as { visible: boolean }).visible = true;
 
 		const summary = resolveMinimizedTrackerSummary({
 			combatStarted: true,

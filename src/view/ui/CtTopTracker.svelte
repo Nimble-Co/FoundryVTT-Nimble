@@ -267,15 +267,17 @@
 					><i class="fa-solid fa-chevron-left"></i></button
 				>
 			{/if}
-			<span
-				class="nimble-ct__minimized-round"
-				data-tooltip={localize('NIMBLE.combatControls.currentRound')}
-				data-tooltip-direction="DOWN"
-				>{localize('NIMBLE.combatControls.roundBadge', {
-					round: String(minimizedSummary.roundLabel),
-				})}</span
-			>
-			{#if minimizedSummary.hasActiveCombatant}
+			{#if minimizedSummary.combatStarted}
+				<span
+					class="nimble-ct__minimized-round"
+					data-tooltip={localize('NIMBLE.combatControls.currentRound')}
+					data-tooltip-direction="DOWN"
+					>{localize('NIMBLE.combatControls.roundBadge', {
+						round: String(minimizedSummary.roundLabel),
+					})}</span
+				>
+			{/if}
+			{#if minimizedSummary.combatantName}
 				<img
 					class="nimble-ct__minimized-portrait"
 					src={minimizedSummary.portraitSrc}
@@ -302,7 +304,11 @@
 				{/if}
 			{:else}
 				<span class="nimble-ct__minimized-name nimble-ct__minimized-name--idle"
-					>{localize('NIMBLE.combatControls.combatNotStarted')}</span
+					>{localize(
+						minimizedSummary.combatStarted
+							? 'NIMBLE.combatControls.noActiveCombatant'
+							: 'NIMBLE.combatControls.combatNotStarted',
+					)}</span
 				>
 			{/if}
 			{#if game.user?.isGM}
@@ -1065,6 +1071,9 @@
 	}
 
 	.nimble-ct-shell {
+		--nimble-ct-chrome-bg: color-mix(in srgb, hsl(226 17% 16%) 92%, transparent);
+		--nimble-ct-chrome-border: color-mix(in srgb, hsl(38 24% 58%) 62%, transparent);
+		--nimble-ct-chrome-color: hsl(0 0% 93%);
 		--nimble-ct-action-color: var(--nimble-ct-action-die-color, #ffffff);
 		--nimble-ct-action-color-resolved: var(--nimble-ct-action-color);
 		--nimble-ct-reaction-color-resolved: var(--nimble-ct-reaction-color, #4fc3f7);
@@ -1097,11 +1106,6 @@
 		pointer-events: none;
 		overflow: visible;
 	}
-	.nimble-ct-shell--minimized {
-		--nimble-ct-track-max-width: 100vw;
-		--nimble-ct-shell-extra-width: 0rem;
-		--nimble-ct-card-scale: 1;
-	}
 	.nimble-ct__minimized {
 		pointer-events: auto;
 		display: flex;
@@ -1109,10 +1113,10 @@
 		gap: 0.4rem;
 		max-width: min(32rem, 90vw);
 		padding: 0.22rem 0.5rem;
-		border: 1px solid color-mix(in srgb, hsl(38 24% 58%) 62%, transparent);
+		border: 1px solid var(--nimble-ct-chrome-border);
 		border-top: 0;
 		border-radius: 0 0 0.35rem 0.35rem;
-		background: color-mix(in srgb, hsl(226 17% 16%) 92%, transparent);
+		background: var(--nimble-ct-chrome-bg);
 		opacity: var(--ui-fade-opacity, 1);
 		transition: opacity var(--ui-fade-delay, 0s) var(--ui-fade-duration, 100ms);
 	}
@@ -1133,7 +1137,7 @@
 		flex: none;
 		width: 1.55rem;
 		height: 1.55rem;
-		border: 1px solid color-mix(in srgb, hsl(38 24% 58%) 62%, transparent);
+		border: 1px solid var(--nimble-ct-chrome-border);
 		border-radius: 50%;
 		object-fit: cover;
 	}
@@ -1144,12 +1148,12 @@
 		width: 11rem;
 		overflow: hidden;
 		font-size: 0.8rem;
-		color: hsl(0 0% 93%);
+		color: var(--nimble-ct-chrome-color);
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 	.nimble-ct__minimized-name--idle {
-		color: color-mix(in srgb, hsl(0 0% 93%) 62%, transparent);
+		color: color-mix(in srgb, var(--nimble-ct-chrome-color) 62%, transparent);
 		font-style: italic;
 	}
 	.nimble-ct__minimized-actions {
@@ -1349,9 +1353,9 @@
 		margin: 0;
 		padding: 0;
 		font-size: 0.78rem;
-		color: hsl(0 0% 93%);
-		background: color-mix(in srgb, hsl(226 17% 16%) 92%, transparent);
-		border: 1px solid color-mix(in srgb, hsl(38 24% 58%) 62%, transparent);
+		color: var(--nimble-ct-chrome-color);
+		background: var(--nimble-ct-chrome-bg);
+		border: 1px solid var(--nimble-ct-chrome-border);
 		border-radius: 0.2rem;
 		cursor: pointer;
 	}

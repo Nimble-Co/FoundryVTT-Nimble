@@ -5,8 +5,8 @@ import {
 } from './resources.utils.js';
 
 export interface MinimizedTrackerSummary {
+	combatStarted: boolean;
 	roundLabel: number;
-	hasActiveCombatant: boolean;
 	combatantName: string | null;
 	portraitSrc: string | null;
 	actions: { current: number; max: number } | null;
@@ -19,10 +19,10 @@ export function resolveMinimizedTrackerSummary(params: {
 }): MinimizedTrackerSummary {
 	const { combatStarted, roundLabel, activeCombatant } = params;
 
-	if (!combatStarted || !activeCombatant) {
+	if (!combatStarted || !activeCombatant || !activeCombatant.visible) {
 		return {
+			combatStarted,
 			roundLabel,
-			hasActiveCombatant: false,
 			combatantName: null,
 			portraitSrc: null,
 			actions: null,
@@ -32,8 +32,8 @@ export function resolveMinimizedTrackerSummary(params: {
 	const actionState = getActionState(activeCombatant);
 
 	return {
+		combatStarted,
 		roundLabel,
-		hasActiveCombatant: true,
 		combatantName: getCombatantDisplayName(activeCombatant),
 		portraitSrc: getCombatantImageForDisplay(activeCombatant),
 		actions: {
