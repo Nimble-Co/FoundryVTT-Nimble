@@ -5704,6 +5704,7 @@
 			"currentRound": "Current Round",
 			"roundBadge": "R{round}",
 			"combatNotStarted": "Combat Not Started",
+			"noActiveCombatant": "No Active Combatant",
 			"availableActions": "Available actions: {current} / {max}"
 		},
 		"formulaWarnings": {
@@ -6071,6 +6072,10 @@
 			"combatTrackerEnabled": {
 				"name": "Enable Combat Tracker",
 				"hint": "Show the Combat Tracker at the top of the screen"
+			},
+			"combatTrackerMinimized": {
+				"name": "Minimize Combat Tracker",
+				"hint": "Collapse the Combat Tracker to a slim bar showing the round, whose turn it is, and their remaining actions. Set from the tracker's own controls and remembered on this device."
 			},
 			"combatTrackerWidthLevel": {
 				"name": "Combat Tracker Width Level",
