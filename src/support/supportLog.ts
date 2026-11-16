@@ -23,19 +23,26 @@ interface LogEntry {
 const MAX_ENTRIES = 200;
 const STACK_LINES = 6;
 
-/** "at f (http://host:30000/modules/x/a.js?v=3:1:2)" becomes "f (modules/x/a.js:1:2)". */
-function stackLines(stack: string | null | undefined): string[] {
+const V8_FRAME = /^at /;
+const FIREFOX_FRAME = /^([^@\s]*)@(\S+:\d+:\d+)$/;
+
+/** The frame lines of a stack, in the V8 form "at f (url)" or the Firefox form "f@url". */
+function stackFrames(stack: string | null | undefined): string[] {
 	return (stack ?? '')
 		.split('\n')
 		.map((line) => line.trim())
-		.filter((line) => line.startsWith('at '))
-		.slice(0, STACK_LINES)
-		.map((line) =>
-			line
-				.slice(3)
-				.replace(/[a-z]+:\/\/[^/\s]+\//gi, '')
-				.replace(/\?[^:)\s]*/g, ''),
-		);
+		.filter((line) => V8_FRAME.test(line) || FIREFOX_FRAME.test(line));
+}
+
+/** "at f (http://host:30000/modules/x/a.js?v=3:1:2)" and "f@http://host:30000/modules/x/a.js?v=3:1:2" become "f (modules/x/a.js:1:2)". */
+function frameText(frame: string): string {
+	const firefox = frame.match(FIREFOX_FRAME);
+	const text = firefox
+		? firefox[1]
+			? `${firefox[1]} (${firefox[2]})`
+			: firefox[2]
+		: frame.slice(3);
+	return text.replace(/[a-z]+:\/\/[^/\s]+\//gi, '').replace(/\?[^:)\s]*/g, '');
 }
 
 /** "Nimble | ...", "Nimble: ..." and "[Nimble][CT] ...". */
@@ -67,11 +74,9 @@ class SupportLog {
 	}
 
 	record(input: LogInput): void {
-		// Foundry writes each popup to the console too.
-		if (input.source !== 'popup' && this.#entries.has(this.#key({ ...input, source: 'popup' }))) {
-			return;
-		}
-		const key = this.#key(input);
+		const stack = stackFrames(input.stack).slice(0, STACK_LINES).map(frameText);
+		const packageId = packageOf(stack);
+		const key = `${input.level}|${input.source}|${packageId ?? ''}|${input.message}`;
 		const entry = this.#entries.get(key);
 		if (entry) {
 			entry.count += 1;
@@ -81,21 +86,16 @@ class SupportLog {
 			this.#dropped += 1;
 			return;
 		}
-		const stack = stackLines(input.stack);
 		this.#entries.set(key, {
 			level: input.level,
 			source: input.source,
-			packageId: packageOf(stack),
+			packageId,
 			message: input.message,
 			stack,
 			count: 1,
 		});
 	}
-
-	#key(input: Pick<LogInput, 'level' | 'source' | 'message'>): string {
-		return `${input.level}|${input.source}|${input.message}`;
-	}
 }
 
-export { isNimbleLine, SupportLog };
+export { isNimbleLine, SupportLog, stackFrames };
 export type { LogEntry, LogInput, LogLevel, LogSource };

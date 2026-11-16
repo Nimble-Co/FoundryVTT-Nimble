@@ -39,12 +39,49 @@ describe('SupportLog', () => {
 		expect(entry.stack[0]).toBe('MonksTokenBar.getStat (modules/monks-tokenbar/tokenbar.js:412:9)');
 	});
 
-	it('skips a console line that repeats a popup it holds', () => {
+	it('reads Firefox stack lines too', () => {
 		const log = new SupportLog();
-		log.record({ level: 'warning', source: 'popup', message: 'Nimble | Pool has no dice.' });
-		log.record({ level: 'warning', source: 'nimble', message: 'Nimble | Pool has no dice.' });
+		log.record({
+			level: 'error',
+			source: 'uncaught',
+			message: 'TypeError: boom',
+			stack: [
+				'getStat@http://localhost:30000/modules/monks-tokenbar/tokenbar.js?v=3:412:9',
+				'@http://localhost:30000/scripts/foundry.mjs:26718:17',
+			].join('\n'),
+		});
 
-		expect(log.entries.map((entry) => [entry.source, entry.count])).toEqual([['popup', 1]]);
+		const [entry] = log.entries;
+		expect(entry.packageId).toBe('monks-tokenbar');
+		expect(entry.stack).toEqual([
+			'getStat (modules/monks-tokenbar/tokenbar.js:412:9)',
+			'scripts/foundry.mjs:26718:17',
+		]);
+	});
+
+	it('keeps the same error from two packages apart', () => {
+		const log = new SupportLog();
+		const from = (id: string) =>
+			`Error: boom\n    at f (http://localhost:30000/modules/${id}/main.js:1:1)`;
+		log.record({ level: 'error', source: 'uncaught', message: 'Error: boom', stack: from('a') });
+		log.record({ level: 'error', source: 'uncaught', message: 'Error: boom', stack: from('b') });
+		log.record({ level: 'error', source: 'uncaught', message: 'Error: boom', stack: from('b') });
+
+		expect(log.entries.map((entry) => [entry.packageId, entry.count])).toEqual([
+			['a', 1],
+			['b', 2],
+		]);
+	});
+
+	it('records an uncaught error that has the message of a popup', () => {
+		const log = new SupportLog();
+		log.record({ level: 'error', source: 'popup', message: 'Connection lost' });
+		log.record({ level: 'error', source: 'uncaught', message: 'Connection lost' });
+
+		expect(log.entries.map((entry) => [entry.source, entry.count])).toEqual([
+			['popup', 1],
+			['uncaught', 1],
+		]);
 	});
 
 	it('keeps at most 200 different entries and counts the rest', () => {
