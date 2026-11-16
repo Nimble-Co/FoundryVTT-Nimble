@@ -267,30 +267,46 @@
 					><i class="fa-solid fa-chevron-left"></i></button
 				>
 			{/if}
-			{#if minimizedSummary.combatStarted}
-				<span
-					class="nimble-ct__minimized-round"
-					data-tooltip={localize('NIMBLE.combatControls.currentRound')}
-					data-tooltip-direction="DOWN"
-					>{localize('NIMBLE.combatControls.roundBadge', {
-						round: String(minimizedSummary.roundLabel),
-					})}</span
-				>
-			{/if}
+			<span
+				class="nimble-ct__minimized-round"
+				data-tooltip={minimizedSummary.combatStarted
+					? localize('NIMBLE.combatControls.currentRound')
+					: undefined}
+				data-tooltip-direction="DOWN"
+				>{minimizedSummary.combatStarted
+					? localize('NIMBLE.combatControls.roundBadge', {
+							round: String(minimizedSummary.roundLabel),
+						})
+					: ''}</span
+			>
+			<span class="nimble-ct__minimized-portrait-slot">
+				{#if minimizedSummary.portraitSrc}
+					<img
+						class="nimble-ct__minimized-portrait"
+						src={minimizedSummary.portraitSrc}
+						alt=""
+						draggable="false"
+						data-portrait-fallback={getPortraitFallbackForCombatant()}
+						onerror={handleCombatantPortraitImageError}
+					/>
+				{/if}
+			</span>
 			{#if minimizedSummary.combatantName}
-				<img
-					class="nimble-ct__minimized-portrait"
-					src={minimizedSummary.portraitSrc}
-					alt=""
-					draggable="false"
-					data-portrait-fallback={getPortraitFallbackForCombatant()}
-					onerror={handleCombatantPortraitImageError}
-				/>
 				<span
 					class="nimble-ct__minimized-name"
 					data-tooltip={minimizedSummary.combatantName}
 					data-tooltip-direction="DOWN">{minimizedSummary.combatantName}</span
 				>
+			{:else}
+				<span class="nimble-ct__minimized-name nimble-ct__minimized-name--idle"
+					>{localize(
+						minimizedSummary.combatStarted
+							? 'NIMBLE.combatControls.noActiveCombatant'
+							: 'NIMBLE.combatControls.combatNotStarted',
+					)}</span
+				>
+			{/if}
+			<span class="nimble-ct__minimized-actions-slot">
 				{#if minimizedSummary.actions}
 					<span
 						class="nimble-ct__minimized-actions"
@@ -302,15 +318,28 @@
 						>{minimizedSummary.actions.current}/{minimizedSummary.actions.max}</span
 					>
 				{/if}
-			{:else}
-				<span class="nimble-ct__minimized-name nimble-ct__minimized-name--idle"
-					>{localize(
-						minimizedSummary.combatStarted
-							? 'NIMBLE.combatControls.noActiveCombatant'
-							: 'NIMBLE.combatControls.combatNotStarted',
-					)}</span
-				>
-			{/if}
+			</span>
+			<span class="nimble-ct__minimized-turn-slot">
+				{#if !minimizedSummary.combatStarted && game.user?.isGM}
+					<button
+						class="nimble-ct__icon-button"
+						aria-label={localize('NIMBLE.combatControls.startCombat')}
+						data-tooltip={localize('NIMBLE.combatControls.startCombat')}
+						data-tooltip-direction="DOWN"
+						onclick={(event) => handleControlAction(event, 'start-combat')}
+						><i class="fa-solid fa-play"></i></button
+					>
+				{:else if minimizedSummary.combatantName && canCurrentUserEndTurn}
+					<button
+						class="nimble-ct__icon-button nimble-ct__minimized-end-turn"
+						class:nimble-ct__minimized-end-turn--ready={activeAllActionsUsed}
+						aria-label={localize('NIMBLE.combatControls.endTurn')}
+						data-tooltip={localize('NIMBLE.combatControls.endTurn')}
+						data-tooltip-direction="DOWN"
+						onclick={handleEndTurnFromCard}><i class="fa-solid fa-hourglass-end"></i></button
+					>
+				{/if}
+			</span>
 			{#if game.user?.isGM}
 				<button
 					class="nimble-ct__icon-button"
@@ -1132,6 +1161,29 @@
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
 		color: hsl(36 92% 86%);
+	}
+	.nimble-ct__minimized-portrait-slot,
+	.nimble-ct__minimized-actions-slot,
+	.nimble-ct__minimized-turn-slot {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.nimble-ct__minimized-portrait-slot {
+		width: 1.55rem;
+	}
+	.nimble-ct__minimized-actions-slot,
+	.nimble-ct__minimized-turn-slot {
+		width: 2.75rem;
+	}
+	.nimble-ct__minimized-actions-slot .nimble-ct__minimized-actions {
+		width: 100%;
+	}
+	.nimble-ct__minimized-end-turn--ready {
+		color: hsl(124 56% 78%);
+		border-color: color-mix(in srgb, hsl(124 56% 66%) 78%, white 12%);
+		background: color-mix(in srgb, hsl(138 48% 28%) 92%, black 14%);
 	}
 	.nimble-ct__minimized-portrait {
 		flex: none;
