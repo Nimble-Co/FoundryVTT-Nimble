@@ -74,9 +74,13 @@ export function createSupportReportDialogState() {
 	const text = $derived(report ? supportReportText(report, supportWord) : '');
 	const also = $derived(report ? alsoRows(report) : []);
 
-	/** Collects again; a later collect wins over an earlier one that ends after it. */
+	/**
+	 * Collects again; a later collect wins over an earlier one that ends after it.
+	 * The old actor goes at once, so Save Report and Copy cannot send it while the collect runs.
+	 */
 	async function collect(): Promise<void> {
 		const ticket = ++request;
+		if (report?.actor) report = { ...report, actor: null };
 		const next = await collectSupportReport({ withActor: withActor && actorName !== null });
 		if (ticket === request) report = next;
 	}
