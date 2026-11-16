@@ -5,6 +5,7 @@ import { rulesOfType } from '../actor/actorRules.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
 } from '../actor/applyConditionToActor.js';
+import { linkedActorFlags } from '../actor/linkedActor.js';
 
 const HELD_CREATURE_FLAG = 'heldCreature';
 
@@ -53,7 +54,7 @@ export async function applyHitConditions(input: {
 			if (automatic) {
 				await applyConditionToActor(attacker, rule.condition, {
 					...context,
-					systemFlags: held?.uuid ? { linkedActorUuid: held.uuid } : null,
+					systemFlags: linkedActorFlags(held?.uuid) ?? null,
 				});
 			}
 			continue;

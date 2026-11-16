@@ -62,7 +62,6 @@ function lastAppliedEffect(): MockActiveEffect | undefined {
 
 interface ApplyConditionSource {
 	condition: string;
-	recipient?: 'target' | 'self';
 	trigger: ApplyConditionTrigger;
 	effectId?: string;
 	wounds?: number;
@@ -78,7 +77,6 @@ interface ApplyConditionSource {
 
 interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	condition: string;
-	recipient: 'target' | 'self';
 	trigger: ApplyConditionTrigger;
 	effectId: string;
 	wounds: number;
@@ -149,7 +147,6 @@ function createApplyConditionRule(
 ): ApplyConditionRuleTestInstance {
 	const sourceData = {
 		condition: config.condition,
-		recipient: config.recipient ?? 'target',
 		trigger: config.trigger,
 		effectId: config.effectId ?? '',
 		wounds: config.wounds ?? 0,
@@ -171,7 +168,6 @@ function createApplyConditionRule(
 	) as ApplyConditionRuleTestInstance;
 
 	rule.condition = config.condition;
-	rule.recipient = config.recipient ?? 'target';
 	rule.trigger = config.trigger;
 	rule.effectId = sourceData.effectId;
 	rule.wounds = sourceData.wounds;
@@ -343,40 +339,11 @@ describe('ApplyConditionRule', () => {
 			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 
-		it('applies the condition to the attacker when target is self', async () => {
-			const attackerActor = createMockActor();
-			const targetActor = createMockActor();
-			const rule = createApplyConditionRule(
-				{ condition: 'latched', recipient: 'self', trigger: 'onHit' },
-				attackerActor,
-			);
-
-			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
-
-			expect(conditionsAppliedTo(attackerActor)).toEqual(['latched']);
-			expect(conditionsAppliedTo(targetActor)).toEqual([]);
-		});
-
-		it('records the creature attacked as the link on a self-applied condition', async () => {
-			const attackerActor = createMockActor();
-			const targetActor = createMockActor();
-			const rule = createApplyConditionRule(
-				{ condition: 'latched', recipient: 'self', trigger: 'onHit' },
-				attackerActor,
-			);
-
-			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
-
-			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
-				linkedActorUuid: targetActor.uuid,
-			});
-		});
-
 		it('records the attacker as the link on a condition applied to the target', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();
 			const rule = createApplyConditionRule(
-				{ condition: 'swallowed', recipient: 'target', trigger: 'onCrit' },
+				{ condition: 'swallowed', trigger: 'onCrit' },
 				attackerActor,
 			);
 
@@ -385,19 +352,6 @@ describe('ApplyConditionRule', () => {
 			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
 				linkedActorUuid: attackerActor.uuid,
 			});
-		});
-
-		it('still applies a self-targeted condition when there is no target to link to', async () => {
-			const attackerActor = createMockActor();
-			const rule = createApplyConditionRule(
-				{ condition: 'latched', recipient: 'self', trigger: 'onHit' },
-				attackerActor,
-			);
-
-			await rule.onItemUsed(buildItemUsedContext(attackerActor, null));
-
-			expect(conditionsAppliedTo(attackerActor)).toEqual(['latched']);
-			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toBeUndefined();
 		});
 
 		it('no-ops gracefully when targetActor is null', async () => {

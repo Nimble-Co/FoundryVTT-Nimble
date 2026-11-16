@@ -72,7 +72,6 @@ import { PoolEmptyEffectRule } from '../models/rules/poolEmptyEffect.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
 import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
-import { RecurringDamageRule } from '../models/rules/recurringDamage.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
@@ -170,7 +169,6 @@ export const RULE_CLASSES = {
 	poolMaxBonus: PoolMaxBonusRule,
 	primaryDieBonus: PrimaryDieBonusRule,
 	reroll: RerollRule,
-	recurringDamage: RecurringDamageRule,
 	savingThrowBonus: SavingThrowBonusRule,
 	savingThrowRollMode: SavingThrowRollModeRule,
 	situationalRollMode: SituationalRollModeRule,

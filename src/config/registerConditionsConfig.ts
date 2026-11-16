@@ -49,20 +49,6 @@ export const STATUS_EFFECT_IDS = {
 
 export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFECT_IDS];
 
-/**
- * Conditions a monster feature inflicts rather than ones a GM hands out. They are registered
- * alongside the general conditions so they can be applied, described and carry rules, but they
- * are kept out of the token HUD picker and the sheet's inactive-condition list: a GM toggling
- * "Swallowed" onto an arbitrary creature has no defined meaning, since the condition's mechanics
- * come from the feature that inflicted it.
- */
-export const MONSTER_CONDITION_IDS = {
-	latched: 'latched',
-	swallowed: 'swallowed',
-} as const;
-
-export type MonsterConditionId = (typeof MONSTER_CONDITION_IDS)[keyof typeof MONSTER_CONDITION_IDS];
-
 export type ConditionScope = 'general' | 'monster';
 
 /** Points core's blindness (vision, detection, the blindness vision mode) at the Blinded condition. */
@@ -200,7 +186,7 @@ export default function registerConditionsConfig() {
 		slowed: `${SYSTEM_PATH}/assets/icons/slowed.svg`,
 		smoldering: 'icons/svg/fire.svg',
 		stunned: `${SYSTEM_PATH}/assets/icons/stunned.svg`,
-		swallowed: 'icons/svg/cave.svg',
+		swallowed: `${SYSTEM_PATH}/assets/icons/swallowed.svg`,
 		taunted: `${SYSTEM_PATH}/assets/icons/taunted.svg`,
 		unconscious: 'icons/svg/unconscious.svg',
 		wounded: `${SYSTEM_PATH}/assets/icons/wound.svg`,
@@ -270,8 +256,7 @@ export default function registerConditionsConfig() {
 			eventMoment('die', 'source'),
 			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
 		],
-		// "You move where your target moves until either dies": the stirge holds Latched On, and
-		// the creature it latched onto is the link stamped on the effect.
+		// The holder keeps it until they die, or until the creature it ties them to does.
 		latched: [eventMoment('die', 'holder'), eventMoment('die', 'linked')],
 		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
@@ -301,6 +286,21 @@ export default function registerConditionsConfig() {
 				formula: '20',
 				damageType: '',
 				wounds: 0,
+			},
+			{
+				id: 'swallowedAttacks',
+				type: 'attackOutcome',
+				side: 'yourAttacks',
+				cannotMiss: true,
+				ignoreArmor: true,
+			},
+		],
+		latched: [
+			{
+				id: 'latchedAttacks',
+				type: 'attackOutcome',
+				side: 'yourAttacks',
+				cannotMiss: true,
 			},
 		],
 	};
