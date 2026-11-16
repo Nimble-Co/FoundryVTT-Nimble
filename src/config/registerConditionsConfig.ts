@@ -65,13 +65,6 @@ export type MonsterConditionId = (typeof MONSTER_CONDITION_IDS)[keyof typeof MON
 
 export type ConditionScope = 'general' | 'monster';
 
-/**
- * How a condition ends when no duration governs it. `linkedDeath` clears the condition as soon as
- * either the creature carrying it or the creature it is linked to dies, which is Latched On's
- * "until either dies". The link itself is recorded on the effect by `applyCondition`.
- */
-export type ConditionExpiryTrigger = 'linkedDeath';
-
 /** Points core's blindness (vision, detection, the blindness vision mode) at the Blinded condition. */
 export function registerSpecialStatusEffects() {
 	CONFIG.specialStatusEffects.BLIND = STATUS_EFFECT_IDS.blinded;
@@ -233,10 +226,6 @@ export default function registerConditionsConfig() {
 		swallowed: 'monster',
 	};
 
-	const conditionExpiryTriggers: Record<string, ConditionExpiryTrigger> = {
-		latched: 'linkedDeath',
-	};
-
 	const conditionStackableConditions = new Set(['wounded']);
 
 	const conditionOverlayConditions = new Set(['dead', 'unconscious']);
@@ -281,6 +270,9 @@ export default function registerConditionsConfig() {
 			eventMoment('die', 'source'),
 			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
 		],
+		// "You move where your target moves until either dies": the stirge holds Latched On, and
+		// the creature it latched onto is the link stamped on the effect.
+		latched: [eventMoment('die', 'holder'), eventMoment('die', 'linked')],
 		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
 			eventMoment('zeroHp', 'holder'),
@@ -329,7 +321,6 @@ export default function registerConditionsConfig() {
 		conditionRules,
 		conditionDescriptions,
 		conditionDefaultImages,
-		conditionExpiryTriggers,
 		conditionLinkedConditions,
 		conditionScopes,
 		conditionStackableConditions,

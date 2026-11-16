@@ -37,6 +37,9 @@ export const SOURCE_FORM_EVENTS = [
 	'applyEffect',
 ] as const satisfies readonly LastsUntilEvent[];
 
+/** What the creature the effect is tied to does: "or until the creature they hold dies". */
+export const LINKED_FORM_EVENTS = ['zeroHp', 'die'] as const satisfies readonly LastsUntilEvent[];
+
 /** The events that name a condition or an effect: "until they gain Prone". */
 export function namesAnEffect(event: LastsUntilEvent | null): boolean {
 	return event === 'gain' || event === 'applyEffect';
@@ -89,7 +92,9 @@ export function isRoundSpan(span: TurnSpan | null): boolean {
 }
 
 export function formEventsOf(who: EventSubject | null): readonly LastsUntilEvent[] {
-	return who === 'source' ? SOURCE_FORM_EVENTS : HOLDER_FORM_EVENTS;
+	if (who === 'source') return SOURCE_FORM_EVENTS;
+	if (who === 'linked') return LINKED_FORM_EVENTS;
+	return HOLDER_FORM_EVENTS;
 }
 
 export function eventRowSubject(moment: Moment): EventRowSubject {
