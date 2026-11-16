@@ -13,6 +13,14 @@ const LODGING_BOON_TYPE = 'lodging';
 
 const CONFIGURED_BOON_TYPES = [MINOR_BOON_TYPE, MAJOR_BOON_TYPE, EPIC_BOON_TYPE, LODGING_BOON_TYPE];
 
+function toTitleCase(value) {
+	return value
+		.split(/[-_]+/g)
+		.filter(Boolean)
+		.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+		.join(' ');
+}
+
 export default class Pack {
 	static #PACK_DEST = path.resolve(process.cwd(), 'public/packs');
 
@@ -24,6 +32,8 @@ export default class Pack {
 	]);
 
 	static #GROUP_FOLDER_DISPLAY_NAME = new Map([['commanders-orders', "Commander's Orders"]]);
+
+	static #RULES_FOLDER_DISPLAY_NAME = new Map([['core', 'Core Rules']]);
 
 	constructor(dirName, data) {
 		const metadata = Pack.#packsMetadata.find(
@@ -75,6 +85,10 @@ export default class Pack {
 			{
 				matches: this.dirName === 'boons' && this.documentType === 'Item',
 				prepare: () => this.#prepareBoonFolderAssignments(),
+			},
+			{
+				matches: this.dirName === 'rules' && this.documentType === 'JournalEntry',
+				prepare: () => this.#prepareRulesFolderAssignments(),
 			},
 			{
 				matches: this.dirName === 'subclasses',
@@ -181,6 +195,75 @@ export default class Pack {
 			if (folder) acc.set(actorId, folder._id);
 			return acc;
 		}, new Map());
+	}
+
+	#prepareRulesFolderAssignments() {
+		const rulesEntries = [...this.data.entries()].filter(
+			([, source]) => typeof source?._id === 'string',
+		);
+		if (rulesEntries.length === 0) return new Map();
+
+		const folderKeyByEntryId = new Map();
+
+		for (const [file, source] of rulesEntries) {
+			const folderKey = this.#getRulesFolderKey(file);
+			if (folderKey) folderKeyByEntryId.set(source._id, folderKey);
+		}
+
+		if (folderKeyByEntryId.size === 0) return new Map();
+
+		const statsTemplate = this.#getFolderStatsTemplate(rulesEntries.map(([, source]) => source));
+		const foldersByKey = [...new Set(folderKeyByEntryId.values())]
+			.sort((a, b) =>
+				this.#toDisplayRulesFolderName(a).localeCompare(this.#toDisplayRulesFolderName(b)),
+			)
+			.reduce((acc, folderKey, index) => {
+				const folder = {
+					_id: this.#getRulesFolderId(folderKey),
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: null,
+					name: this.#toDisplayRulesFolderName(folderKey),
+					sort: index * 10,
+					// The entries carry the book's chapter order in `sort`, so the folder must not
+					// fall back to alphabetical.
+					sorting: 'm',
+					type: this.documentType,
+				};
+
+				acc.set(folderKey, folder);
+				return acc;
+			}, new Map());
+
+		this.folderDocuments = [...foldersByKey.values()];
+
+		return [...folderKeyByEntryId.entries()].reduce((acc, [entryId, folderKey]) => {
+			const folder = foldersByKey.get(folderKey);
+			if (folder) acc.set(entryId, folder._id);
+			return acc;
+		}, new Map());
+	}
+
+	#getRulesFolderKey(filePath) {
+		const relativePath = path.relative(this.dirPath, filePath);
+		const directory = path.dirname(relativePath);
+		if (!directory || directory === '.') return null;
+
+		return directory.split(path.sep).filter(Boolean)[0] ?? null;
+	}
+
+	#toDisplayRulesFolderName(folderKey) {
+		return Pack.#RULES_FOLDER_DISPLAY_NAME.get(folderKey) ?? toTitleCase(folderKey);
+	}
+
+	#getRulesFolderId(folderKey) {
+		return crypto
+			.createHash('sha1')
+			.update(`${this.packId}-rules-folder:${folderKey}`)
+			.digest('hex')
+			.slice(0, 16);
 	}
 
 	#prepareBoonFolderAssignments() {
