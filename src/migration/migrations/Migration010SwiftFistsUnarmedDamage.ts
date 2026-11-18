@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const SWIFT_FISTS_SOURCE_ID = 'Compendium.nimble.class-features.Item.kHJVcWe64VhHsOFu';
 
@@ -22,6 +22,10 @@ class Migration010SwiftFistsUnarmedDamage extends MigrationBase {
 	static override readonly version = 10;
 
 	override readonly version = Migration010SwiftFistsUnarmedDamage.version;
+
+	override readonly title = 'Swift Fists unarmed damage';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process feature items

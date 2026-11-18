@@ -138,6 +138,8 @@ class Migration061ShadowStormChecklist extends ChecklistMigrationBase {
 
 	override readonly version = Migration061ShadowStormChecklist.version;
 
+	override readonly title = 'Shadowmancer and Stormshifter features';
+
 	protected override readonly classIdentifier = 'shadowmancer';
 
 	protected override readonly passName = 'the Shadowmancer and Stormshifter pass';

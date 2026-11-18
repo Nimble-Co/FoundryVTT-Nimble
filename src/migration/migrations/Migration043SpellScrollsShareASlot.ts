@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Document ids of the `Spell Scroll, Tier N` blanks as the magic items pack
@@ -51,6 +51,10 @@ class Migration043SpellScrollsShareASlot extends MigrationBase {
 	static override readonly version = 43;
 
 	override readonly version = Migration043SpellScrollsShareASlot.version;
+
+	override readonly title = 'Spell scrolls share a slot';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: ObjectSource): Promise<void> {
 		if (source.type !== 'object') return;

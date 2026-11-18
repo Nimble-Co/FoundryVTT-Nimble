@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const OLD_MAX = '@strength + @combatDiceBonus';
 
@@ -12,6 +12,10 @@ class Migration084CombatDiceMaxReference extends MigrationBase {
 	static override readonly version = 84;
 
 	override readonly version = Migration084CombatDiceMaxReference.version;
+
+	override readonly title = 'Combat Dice max formula';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		const rules = source?.system?.rules;

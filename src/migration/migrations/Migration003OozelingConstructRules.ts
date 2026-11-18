@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const OOZELING_CONSTRUCT_SOURCE_ID = 'Compendium.nimble.ancestries.Item.jYafwBbK4DVALpBf';
 
@@ -28,6 +28,10 @@ class Migration003OozelingConstructRules extends MigrationBase {
 	static override readonly version = 3;
 
 	override readonly version = Migration003OozelingConstructRules.version;
+
+	override readonly title = 'Odd Constitution Hit Dice';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process ancestry items

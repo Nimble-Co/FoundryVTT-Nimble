@@ -1,5 +1,5 @@
 import { isCompendiumId, SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown; type?: unknown };
 type RecoverySource = Record<string, unknown>;
@@ -135,6 +135,10 @@ class Migration081OncePerTurnUses extends MigrationBase {
 	static override readonly version = 81;
 
 	override readonly version = Migration081OncePerTurnUses.version;
+
+	override readonly title = 'Once per turn uses';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature') return;

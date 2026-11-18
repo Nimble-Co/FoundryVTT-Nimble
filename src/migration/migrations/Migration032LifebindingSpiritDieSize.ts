@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const LIFEBINDING_SPIRIT_SOURCE_IDS = new Set([
 	'Compendium.nimble.spells.Item.KICmDNpyNoMuZ20E',
@@ -47,6 +47,10 @@ class Migration032LifebindingSpiritDieSize extends MigrationBase {
 	static override readonly version = 32;
 
 	override readonly version = Migration032LifebindingSpiritDieSize.version;
+
+	override readonly title = 'Lifebinding Spirit upcast';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;

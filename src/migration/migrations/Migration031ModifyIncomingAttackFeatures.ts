@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; modifier?: unknown };
 
@@ -105,6 +105,10 @@ class Migration031ModifyIncomingAttackFeatures extends MigrationBase {
 	static override readonly version = 31;
 
 	override readonly version = Migration031ModifyIncomingAttackFeatures.version;
+
+	override readonly title = 'Features that change incoming attacks';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

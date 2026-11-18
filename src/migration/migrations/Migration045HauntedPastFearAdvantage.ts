@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const HAUNTED_PAST_SOURCE_ID = 'Compendium.nimble.nimble-backgrounds.Item.TfYvarCWkHj2qVfa';
 
@@ -45,6 +45,10 @@ class Migration045HauntedPastFearAdvantage extends MigrationBase {
 	static override readonly version = 45;
 
 	override readonly version = Migration045HauntedPastFearAdvantage.version;
+
+	override readonly title = 'Haunted Past fear advantage';
+
+	override readonly kind: MigrationKind = 'content';
 
 	/**
 	 * A compendium id identifies the item outright, so a background from some

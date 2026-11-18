@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type Node = Record<string, unknown> & { id?: unknown; type?: unknown };
 
@@ -91,6 +91,10 @@ class Migration055CommanderChecklist extends MigrationBase {
 	static override readonly version = 55;
 
 	override readonly version = Migration055CommanderChecklist.version;
+
+	override readonly title = 'Commander checklist features';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature') return;

@@ -1,29 +1,37 @@
+/**
+ * `structure` changes the shape of the data and always runs. `content` changes only what a
+ * document says or does, so the GM can keep a Compendium Copy out of it.
+ */
+type MigrationKind = 'structure' | 'content';
+
+/** The document a hook runs inside: the actor, item or message the runner migrates as a whole. */
+interface MigrationContext {
+	uuid: string | null;
+}
+
 abstract class MigrationBase {
 	static readonly version: number;
 
 	readonly version: number = MigrationBase.version;
 
-	requiresFlush = false;
+	/** Shown to the GM in the World Migration window. Not translated. */
+	abstract readonly title: string;
 
-	updateActor?(source: any): Promise<void>;
+	abstract readonly kind: MigrationKind;
 
-	updateItem?(source: any, parent?: any): Promise<void>;
+	updateActor?(source: any, context?: MigrationContext): Promise<void>;
 
-	updateEffect?(source: any, parent?: any): Promise<void>;
+	updateItem?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateJournalEntry?(source: any): Promise<void>;
+	updateEffect?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateMacro?(source: any): Promise<void>;
+	updateMessage?(source: any, context?: MigrationContext): Promise<void>;
 
-	updateTable?(source: any): Promise<void>;
+	/** The structure part of a content migration: it runs on a copy the GM keeps out, too. */
+	alwaysUpdateItem?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
-	updateToken?(source: any, actor: any, scene: any): Promise<void>;
-
-	updateScene?(source: any): Promise<void>;
-
-	updateUser?(source: any): Promise<void>;
-
-	migrate?(): Promise<void>;
+	/** The structure part of a content migration, for an effect on an actor or an item. */
+	alwaysUpdateEffect?(source: any, parent?: any, context?: MigrationContext): Promise<void>;
 
 	protected getSourceId(source: any): string | undefined {
 		return source._stats?.compendiumSource ?? source.flags?.core?.sourceId;
@@ -31,3 +39,4 @@ abstract class MigrationBase {
 }
 
 export { MigrationBase };
+export type { MigrationContext, MigrationKind };

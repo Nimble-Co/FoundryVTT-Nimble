@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 // The max-combat-die item was temporarily granted via grantItem during development of feat/708.
 // It has been replaced by the poolMaxBonus mechanism, so any embedded copies are orphaned.
@@ -23,6 +23,10 @@ class Migration028CombatDiceMaxFormula extends MigrationBase {
 	static override readonly version = 28;
 
 	override readonly version = Migration028CombatDiceMaxFormula.version;
+
+	override readonly title = 'Combat Dice max bonus';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	/** True if this item is Fit for Any Battlefield (matched by its unique chargePool rule id). */
 	#isFitForAnyBattlefield(source: Record<string, unknown>): boolean {

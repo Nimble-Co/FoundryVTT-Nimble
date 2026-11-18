@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
@@ -214,6 +214,10 @@ class Migration054MageShepherdPilot extends MigrationBase {
 	static override readonly version = 54;
 
 	override readonly version = Migration054MageShepherdPilot.version;
+
+	override readonly title = 'Mage and Shepherd features';
+
+	override readonly kind: MigrationKind = 'content';
 
 	/** Called for a world item and, with the actor as parent, for an embedded one. */
 	override async updateItem(source: any): Promise<void> {

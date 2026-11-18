@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const HEALING_SALVE_SOURCE_ID = 'Compendium.nimble.class-features.Item.RLfAF3ftarBZBFF2';
 const LAY_ON_HANDS_SOURCE_ID = 'Compendium.nimble.class-features.Item.Ddm1A7P01CcmPrim';
@@ -54,6 +54,10 @@ class Migration009HealingEffects extends MigrationBase {
 	static override readonly version = 9;
 
 	override readonly version = Migration009HealingEffects.version;
+
+	override readonly title = 'Healing on class features';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process feature items

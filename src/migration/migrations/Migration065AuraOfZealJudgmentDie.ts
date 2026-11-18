@@ -30,6 +30,8 @@ class Migration065AuraOfZealJudgmentDie extends ChecklistMigrationBase {
 
 	override readonly version = Migration065AuraOfZealJudgmentDie.version;
 
+	override readonly title = 'Aura of Zeal Judgment Die';
+
 	protected override readonly classIdentifier = 'oathsworn';
 
 	protected override readonly passName = 'the Aura of Zeal pass';

@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const SEARING_LIGHT_SOURCE_ID = 'Compendium.nimble.class-features.Item.KQiBYDr1BBTE0iJq';
 const SEARING_LIGHT_CLASS = 'shepherd';
@@ -15,6 +15,10 @@ class Migration019SearingLightDisposition extends MigrationBase {
 	static override readonly version = 19;
 
 	override readonly version = Migration019SearingLightDisposition.version;
+
+	override readonly title = 'Searing Light targets';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

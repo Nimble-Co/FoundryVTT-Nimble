@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const CLASS_RESTRICTED_SPELL_SOURCE_IDS = new Map<string, string[]>([
 	['Compendium.nimble.spells.Item.KICmDNpyNoMuZ20E', ['shepherd']], // Lifebinding Spirit
@@ -37,6 +37,10 @@ class Migration023SpellClasses extends MigrationBase {
 	static override readonly version = 23;
 
 	override readonly version = Migration023SpellClasses.version;
+
+	override readonly title = 'Class-only spells';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;

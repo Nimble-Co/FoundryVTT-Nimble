@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
 const CLASS_IDENTIFIER = 'oathsworn';
@@ -205,6 +205,10 @@ class Migration056OathswornChecklist extends MigrationBase {
 	static override readonly version = 56;
 
 	override readonly version = Migration056OathswornChecklist.version;
+
+	override readonly title = 'Oathsworn checklist features';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type === 'subclass') {
