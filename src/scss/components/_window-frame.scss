@@ -8,9 +8,12 @@
 	border: 1px solid var(--nimble-ui-ring);
 	box-shadow: 0 10px 32px rgb(0 0 0 / 60%);
 
+	// No core blur in the dark theme: it makes a stacking context, and the floating header then
+	// covers the head, so a click on the image or the name does nothing.
 	> .window-content {
 		padding: 0;
 		background: none;
+		backdrop-filter: none;
 	}
 }
 
