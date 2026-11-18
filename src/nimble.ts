@@ -1,3 +1,4 @@
+import './support/installSupportLog.js';
 import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';

@@ -6442,6 +6442,79 @@
 				"close": "Close"
 			}
 		},
+		"support": {
+			"menu": {
+				"name": "Support Report",
+				"label": "Open Support Report",
+				"hint": "Gather the versions, modules, changed settings and errors to send with a problem report."
+			},
+			"window": {
+				"title": "Support Report",
+				"lead": "Report a problem as a GitHub issue or on Discord. Save this report and attach the file.",
+				"github": "Open a GitHub Issue",
+				"preferred": "Preferred",
+				"githubHint": "Easier for us to track. The versions are filled in.",
+				"discord": "Ask on Discord",
+				"discordHint": "Nimble FoundryVTT server, for questions and quick help.",
+				"errorsHeading": "Errors since load - {count}",
+				"noErrors": "No errors or warnings since the world loaded.",
+				"times": "{count}x",
+				"sourceLine": "{level} - {source}",
+				"alsoHeading": "Also in the report",
+				"alsoVersions": "Foundry {foundry}, Nimble {system} (schema {schema}), {browser}",
+				"alsoModules": "{count} active modules, with versions",
+				"alsoModulesOne": "1 active module, with its version",
+				"alsoSettings": "{count} settings that are not at their defaults",
+				"alsoSettingsOne": "1 setting that is not at its default",
+				"alsoMigration": "The last Migration Report: {date}, {errors} errors",
+				"alsoNoMigration": "No Migration Report yet",
+				"actor": "Add the selected token's actor",
+				"actorHint": "{name}. Its data goes in the report as text.",
+				"actorNone": "Select a token first to add its actor.",
+				"showText": "Show the report text",
+				"save": "Save Report",
+				"copy": "Copy",
+				"copied": "Support Report copied."
+			},
+			"report": {
+				"title": "Nimble Support Report",
+				"made": "Made {date} by {name} ({role})",
+				"gm": "GM",
+				"player": "Player",
+				"foundry": "Foundry",
+				"nimble": "Nimble",
+				"schema": "{version} (schema {schema})",
+				"browser": "Browser",
+				"world": "World",
+				"worldValue": "{title} - {actors} actors, {items} items, {scenes} scenes",
+				"section": {
+					"versions": "Versions",
+					"modules": "Active modules ({count})",
+					"settings": "Changed settings ({count})",
+					"errors": "Errors since load ({different} different, {total} in all)",
+					"migration": "Last migration",
+					"actor": "Actor: {name} ({type})"
+				},
+				"entry": "{level} x{count} ({source})",
+				"level": {
+					"error": "Error",
+					"warning": "Warning"
+				},
+				"source": {
+					"popup": "Popup",
+					"nimble": "Nimble",
+					"uncaught": "Uncaught"
+				},
+				"uncaughtFrom": "Uncaught - {package}",
+				"dropped": "{count} more different errors came after the log was full.",
+				"migrationLine": "{date} - Nimble {version} (schema {from} to {to}): {documents} documents, {copies} Compendium Copies, {keptOut} kept out, {errors} errors, {shown} popups",
+				"none": "None",
+				"on": "On",
+				"off": "Off",
+				"entries": "{count} entries",
+				"entriesOne": "1 entry"
+			}
+		},
 		"devRebrand": {
 			"dialog": {
 				"title": "Nimble (Dev) — One-time Migration",
