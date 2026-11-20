@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const RAGE_SOURCE_ID = 'Compendium.nimble.class-features.Item.GjPt8evcIoVuQ6zg';
 
@@ -49,6 +49,10 @@ class Migration021RagePoolActivation extends MigrationBase {
 	static override readonly version = 21;
 
 	override readonly version = Migration021RagePoolActivation.version;
+
+	override readonly title = 'Rage rolls Fury Dice';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

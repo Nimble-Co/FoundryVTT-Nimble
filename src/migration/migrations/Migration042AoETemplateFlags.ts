@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 // AoE behavior (chat-card placement, auto-place, and the shared-roll
 // crit/miss rule) now gates on `activation.acquireTargetsFromTemplate`
@@ -40,6 +40,10 @@ class Migration042AoETemplateFlags extends MigrationBase {
 	static override readonly version = 42;
 
 	override readonly version = Migration042AoETemplateFlags.version;
+
+	override readonly title = 'Pyroclasm and Boisterous Winds areas';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;

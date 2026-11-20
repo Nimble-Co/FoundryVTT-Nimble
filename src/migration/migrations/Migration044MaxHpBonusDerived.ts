@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * `maxHpBonus` rules used to bank their contribution into the character's
@@ -20,6 +20,10 @@ class Migration044MaxHpBonusDerived extends MigrationBase {
 	static override readonly version = 44;
 
 	override readonly version = Migration044MaxHpBonusDerived.version;
+
+	override readonly title = 'Max HP bonus from rules';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateActor(source: any): Promise<void> {
 		if (source.type !== 'character') return;

@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const RAGE_SOURCE_ID = 'Compendium.nimble.class-features.Item.GjPt8evcIoVuQ6zg';
 const INTENSIFYING_FURY_SOURCE_ID = 'Compendium.nimble.class-features.Item.eedQA69WSnBTEC2y';
@@ -257,6 +257,10 @@ class Migration020DicePoolBackfill extends MigrationBase {
 	static override readonly version = 20;
 
 	override readonly version = Migration020DicePoolBackfill.version;
+
+	override readonly title = 'Fury, Judgment and Combat Dice pools';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

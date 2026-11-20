@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const FIELD_MEDIC_SOURCE_ID = 'Compendium.nimble.class-features.Item.KyQivlTfzYYudgsT';
 
@@ -21,6 +21,10 @@ class Migration008FieldMedicHealingPotionBonus extends MigrationBase {
 	static override readonly version = 8;
 
 	override readonly version = Migration008FieldMedicHealingPotionBonus.version;
+
+	override readonly title = 'Field Medic potion bonus';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process feature items

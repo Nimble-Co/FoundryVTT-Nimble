@@ -1,7 +1,7 @@
 import { SYSTEM_ID } from '#system';
 
 import { SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Each core ancestry's default bonus trait, keyed by the ancestry's compendium source id.
@@ -275,6 +275,10 @@ class Migration035AncestryBonusSplit extends MigrationBase {
 	static override readonly version = 35;
 
 	override readonly version = Migration035AncestryBonusSplit.version;
+
+	override readonly title = 'Ancestry trait becomes a bonus item';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateActor(source: any): Promise<void> {
 		if (source.type !== 'character') return;

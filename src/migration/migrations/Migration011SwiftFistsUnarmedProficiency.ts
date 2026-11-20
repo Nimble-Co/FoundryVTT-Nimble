@@ -1,5 +1,5 @@
 import { UNARMED_STRIKE_PROFICIENCY } from '../../utils/damage/attackUtils.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const SWIFT_FISTS_SOURCE_ID = 'Compendium.nimble.class-features.Item.kHJVcWe64VhHsOFu';
 const ZEPHYR_CLASS_SOURCE_ID = 'Compendium.nimble.classes.Item.OgeGMnmIkuDVb36X';
@@ -26,6 +26,10 @@ class Migration011SwiftFistsUnarmedProficiency extends MigrationBase {
 	static override readonly version = 11;
 
 	override readonly version = Migration011SwiftFistsUnarmedProficiency.version;
+
+	override readonly title = 'Zephyr unarmed strikes';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Handle feature items

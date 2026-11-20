@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Extract price from item description HTML.
@@ -35,6 +35,10 @@ class Migration002ItemPrices extends MigrationBase {
 	static override readonly version = 2;
 
 	override readonly version = Migration002ItemPrices.version;
+
+	override readonly title = 'Object prices';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process object type items

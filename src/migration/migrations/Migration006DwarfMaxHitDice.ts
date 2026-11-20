@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const DWARF_SOURCE_ID = 'Compendium.nimble.ancestries.Item.hyVaEOLNSagYECwm';
 
@@ -21,6 +21,10 @@ class Migration006DwarfMaxHitDice extends MigrationBase {
 	static override readonly version = 6;
 
 	override readonly version = Migration006DwarfMaxHitDice.version;
+
+	override readonly title = 'Dwarf Stout max Hit Dice';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process ancestry items

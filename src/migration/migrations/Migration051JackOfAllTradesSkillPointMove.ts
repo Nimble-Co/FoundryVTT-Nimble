@@ -1,5 +1,5 @@
 import { toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const JACK_OF_ALL_TRADES_SOURCE_ID =
 	'Compendium.nimble.nimble-class-features.Item.H6rFmCzodKZYW3ye';
@@ -34,6 +34,10 @@ class Migration051JackOfAllTradesSkillPointMove extends MigrationBase {
 	static override readonly version = 51;
 
 	override readonly version = Migration051JackOfAllTradesSkillPointMove.version;
+
+	override readonly title = 'Jack of All Trades skill points';
+
+	override readonly kind: MigrationKind = 'content';
 
 	#isJackOfAllTrades(source: any): boolean {
 		if (source?.type !== 'feature') return false;

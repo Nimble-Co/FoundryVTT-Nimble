@@ -1,5 +1,5 @@
 import { toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 
@@ -108,6 +108,10 @@ class Migration041CommanderInitiativeRegain extends MigrationBase {
 	static override readonly version = 41;
 
 	override readonly version = Migration041CommanderInitiativeRegain.version;
+
+	override readonly title = 'Coordinated Strike use on Initiative';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

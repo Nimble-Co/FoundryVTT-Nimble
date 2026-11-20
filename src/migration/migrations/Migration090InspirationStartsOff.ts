@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Up to 0.10.0 a character's Inspiration started on and nothing read it. The new sheet shows it,
@@ -8,6 +8,10 @@ class Migration090InspirationStartsOff extends MigrationBase {
 	static override readonly version = 90;
 
 	override readonly version = Migration090InspirationStartsOff.version;
+
+	override readonly title = 'Inspiration starts off';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateActor(source: any): Promise<void> {
 		if (source?.type !== 'character') return;

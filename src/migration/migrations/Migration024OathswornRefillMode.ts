@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const RADIANT_JUDGEMENT_SOURCE_ID = 'Compendium.nimble.class-features.Item.qiQeJrIxla9y6XY0';
 const UNENDING_JUDGMENT_SOURCE_ID = 'Compendium.nimble.class-features.Item.XgudS8RAy0dVKBat';
@@ -51,6 +51,10 @@ class Migration024OathswornRefillMode extends MigrationBase {
 	static override readonly version = 24;
 
 	override readonly version = Migration024OathswornRefillMode.version;
+
+	override readonly title = 'Judgment Dice refills';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

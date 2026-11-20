@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Migration to set `attackType` on all weapon items.
@@ -15,6 +15,10 @@ class Migration017WeaponAttackType extends MigrationBase {
 	static override readonly version = 17;
 
 	override readonly version = Migration017WeaponAttackType.version;
+
+	override readonly title = 'Weapon attack type';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'object') return;

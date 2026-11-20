@@ -1,509 +1,401 @@
 import { SYSTEM_ID } from '#system';
-import localize from '../utils/localize.js';
-import type { MigrationBase } from './MigrationBase.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
+import {
+	type MigrationPlan,
+	type PlanError,
+	type PlannedRoot,
+	type PlanRoot,
+	planMigration,
+} from './planMigration.js';
+
+type Json = Record<string, any>;
+
+/** The part of the world the runner is writing, for the line under the bar. */
+type RunPart = 'actors' | 'items' | 'tokens' | 'messages' | 'compendiums';
+
+interface RunProgress {
+	done: number;
+	total: number;
+	part: RunPart;
+	/** The documents being written now. */
+	writing: string[];
+	/** The documents written since the last report. */
+	written: string[];
+}
+
+interface RunResult {
+	plan: MigrationPlan;
+	errors: PlanError[];
+	written: number;
+}
 
 /** Extended CompendiumCollection interface with runtime properties */
 interface CompendiumPack {
 	documentName: string;
+	documentClass: any;
 	locked: boolean;
 	metadata: { id: string; label: string; packageType: string };
-	index: { size: number };
 	getDocuments(): Promise<foundry.abstract.Document.Any[]>;
 	configure(options: { locked: boolean }): Promise<void>;
-	contents: foundry.abstract.Document.Any[];
+}
+
+/** Where a planned root is written: its live document and the collection it is batched with. */
+interface Target {
+	document: any;
+	part: RunPart;
+	pack: CompendiumPack | null;
+	/** An unlinked token's actor, with the delta it writes into. */
+	delta?: { itemIds: Set<string>; effectIds: Set<string>; source: Json };
+}
+
+const BATCH_SIZE = 50;
+
+/** Migration writes skip the system's document hooks. */
+function writeOptions(pack?: { metadata: { id: string } } | null) {
+	return { noHook: true, pack: pack?.metadata.id ?? null };
+}
+
+function rawSource(collection: Json[] | undefined, document: any): Json {
+	const raw = collection?.find((entry) => entry._id === document.id);
+	return foundry.utils.deepClone(raw ?? document.toObject());
+}
+
+function ownFields(source: Json): Json {
+	const { items: _items, effects: _effects, ...own } = source;
+	return own;
+}
+
+function liveIds(source: Json[] | undefined): string[] {
+	return (source ?? []).filter((entry) => !entry._tombstone).map((entry) => entry._id);
 }
 
 class MigrationRunner extends MigrationRunnerBase {
-	#migrationErrors: string[] = [];
-
-	override needsMigration(): boolean {
-		return super.needsMigration(
-			game.settings.get(
-				SYSTEM_ID as 'core',
-				'worldSchemaVersion' as 'rollMode',
-			) as unknown as number,
-		);
-	}
-
-	static async ensureSchemaVersion(document: any, migrations: MigrationBase[]): Promise<void> {
-		if (migrations.length === 0) return;
-		const currentVersion = MigrationRunner.LATEST_SCHEMA_VERSION;
-
-		if ((Number(document.migrationVersion) || 0) < currentVersion) {
-			const runner = new MigrationRunner(migrations);
-			const source = document._source;
-
-			const updated = await (async () => {
-				try {
-					return 'items' in source
-						? await runner.getUpdatedActor(source, runner.migrations)
-						: await runner.getUpdatedItem(source, runner.migrations);
-				} catch {
-					return null;
-				}
-			})();
-
-			if (updated) {
-				// Ensure new items have IDs and deleted items are removed
-				if ('items' in updated && 'items' in document._source) {
-					for (const updatedItem of updated.items) {
-						updatedItem._id ??= foundry.utils.randomID();
-					}
-
-					const itemSources = document._source.items;
-					for (const itemSource of [...itemSources]) {
-						if (!updated.items.some((i) => i._id === itemSource._id)) {
-							itemSources.splice(itemSources.indexOf(itemSource), 1);
-						}
-					}
-				}
-
-				document.updateSource(updated);
-			}
-		}
-
-		document.updateSource({ 'system._migration.version': currentVersion });
-
-		if ('items' in document && 'prototypeToken' in document) {
-			for (const item of document.items) {
-				if (!item.migrationVersion) {
-					item.updateSource({ 'system._migration.version': currentVersion });
-				}
-			}
-		}
-	}
-
-	async #migrateDocuments(collection: any, migrations: MigrationBase[]): Promise<void> {
-		const { documentClass } = collection;
-		const pack = 'metadata' in collection ? collection.metadata.id : null;
-		const updateGroup: any[] = [];
-
-		for (const document of collection.contents) {
-			if (updateGroup.length === 50) {
-				try {
-					await documentClass.updateDocuments(updateGroup, { noHook: true, pack });
-				} catch (e) {
-					console.error(e);
-					this.#migrationErrors.push(`Batch update failed for ${pack ?? 'world'}: ${e}`);
-				} finally {
-					// TODO: Update progress bar
-					updateGroup.length = 0;
-				}
-			}
-
-			const updated =
-				'prototypeToken' in document
-					? await this.#migrateActor(migrations, document, { pack })
-					: await this.#migrateItem(migrations, document, { pack });
-
-			if (updated) updateGroup.push(updated);
-		}
-
-		if (updateGroup.length > 0) {
-			try {
-				await documentClass.updateDocuments(updateGroup, { noHook: true, pack });
-			} catch (e) {
-				console.warn(e);
-				this.#migrationErrors.push(`Batch update failed for ${pack ?? 'world'}: ${e}`);
-			}
-		}
-	}
-
-	async #migrateAdventureDocuments(collection: any, migrations: MigrationBase[]): Promise<void> {
-		const pack = 'metadata' in collection ? collection.metadata.id : null;
-		const isAdventure = true;
-
-		for (const adventureDoc of collection.contents) {
-			const updateGroup: any[] = [];
-			const actors = [...adventureDoc.actors];
-			const items = [...adventureDoc.items];
-
-			// Migrate Adventure Actors
-			for (const actor of actors) {
-				const updated = await this.#migrateActor(migrations, actor, { pack, isAdventure });
-				if (updated) updateGroup.push(updated);
-			}
-
-			try {
-				await adventureDoc.update({ actors: updateGroup }, { noHook: true, pack });
-			} catch (e) {
-				console.warn(e);
-			}
-
-			updateGroup.length = 0;
-
-			// Migrate Adventure Items
-			for (const item of items) {
-				const updated = await this.#migrateItem(migrations, item, { pack, isAdventure });
-				if (updated) updateGroup.push(updated);
-			}
-
-			try {
-				await adventureDoc.update({ items: updateGroup }, { noHook: true, pack });
-			} catch (e) {
-				console.warn(e);
-			}
-		}
-	}
-
-	async #migrateActor(
-		migrations: MigrationBase[],
-		actor: any,
-		options?: { isAdventure?: boolean; pack?: string },
-	): Promise<any | null> {
-		const { pack, isAdventure = false } = options ?? {};
-		const baseActor = actor.isToken
-			? actor.toObject()
-			: (game.data.actors?.find((a) => actor._id === a._id) ?? actor.toObject());
-
-		const updatedActor = await (async () => {
-			try {
-				return await this.getUpdatedActor(baseActor, migrations);
-			} catch (error) {
-				// Output the error, since this means a migration threw it
-				if (error instanceof Error) {
-					const message = `Error thrown while migrating ${actor.uuid}: ${error.message}`;
-					console.error(message);
-					this.#migrationErrors.push(message);
-				}
-				return null;
-			}
-		})();
-
-		if (!updatedActor) return null;
-
-		// Update items
-		const baseItems = [...baseActor.items];
-		const updatedItems = [...updatedActor.items];
-
-		// We pull out the items here so that the embedded document operations get called
-		const itemDiff = this.diffCollection(baseItems, updatedItems);
-
-		const itemsDeleted = itemDiff.deleted.filter((id) => actor.items.has(id));
-		if (itemsDeleted.length > 0 && !isAdventure) {
-			try {
-				await actor.deleteEmbeddedDocuments('Item', itemsDeleted, { noHook: true, pack });
-			} catch (error) {
-				// Output as a warning, since this merely means data preparation following the update
-				// (hopefully intermittently) threw an error
-				console.warn(error);
-			}
-		}
-
-		const itemsUpdated = itemDiff.updated.filter((i) => actor.items.has(i._id!));
-		updatedActor.items = [...itemDiff.inserted, ...itemsUpdated];
-
-		// Update effects
-		const baseEffects = [...baseActor.effects];
-		const updatedEffects = [...updatedActor.effects];
-
-		// We pull out the effects here so that the embedded document operations get called
-		const effectDiff = this.diffCollection(baseEffects, updatedEffects);
-		const effectsDeleted = effectDiff.deleted.filter((id) => actor.effects.has(id));
-
-		if (effectsDeleted.length > 0 && !isAdventure) {
-			try {
-				await actor.deleteEmbeddedDocuments('ActiveEffect', effectsDeleted, { noHook: true, pack });
-			} catch (error) {
-				// Output as a warning, since this merely means data preparation following the update
-				// (hopefully intermittently) threw an error
-				console.warn(error);
-			}
-		}
-
-		const effectsUpdated = effectDiff.updated.filter((i) => actor.effects.has(i._id!));
-		updatedActor.effects = [...effectDiff.inserted, ...effectsUpdated];
-
-		return updatedActor;
-	}
-
-	async #migrateItem(
-		migrations: MigrationBase[],
-		item: any,
-		options?: { isAdventure?: boolean; pack?: string },
-	): Promise<any | null> {
-		const { pack, isAdventure = false } = options ?? {};
-		const baseItem = game.data.items?.find((i) => i._id === item._id) ?? item.toObject();
-
-		const updatedItem = await (() => {
-			try {
-				return this.getUpdatedItem(baseItem, migrations);
-			} catch (e) {
-				if (e instanceof Error) {
-					const message = `Error thrown while migrating ${item.uuid}: ${e.message}`;
-					console.error(message);
-					this.#migrationErrors.push(message);
-				}
-				return null;
-			}
-		})();
-
-		if (!updatedItem) return null;
-
-		// Update effects
-		const baseEffects = [...baseItem.effects];
-		const updatedEffects = [...updatedItem.effects];
-
-		// We pull out the effects here so that the embedded document operations get called
-		const effectDiff = this.diffCollection(baseEffects, updatedEffects);
-		const effectsDeleted = effectDiff.deleted.filter((id) => item.effects.has(id));
-
-		if (effectsDeleted.length > 0 && !isAdventure) {
-			try {
-				await item.deleteEmbeddedDocuments('ActiveEffect', effectsDeleted, { noHook: true, pack });
-			} catch (error) {
-				// Output as a warning, since this merely means data preparation following the update
-				// (hopefully intermittently) threw an error
-				console.warn(error);
-			}
-		}
-
-		const effectsUpdated = effectDiff.updated.filter((i) => item.effects.has(i._id!));
-		updatedItem.effects = [...effectDiff.inserted, ...effectsUpdated];
-
-		return updatedItem;
-	}
-
-	async #migrateJournalEntry(
-		journalEntry: JournalEntry,
-		migrations: MigrationBase[],
-	): Promise<void> {
-		if (!migrations.some((m) => !!m.updateJournalEntry)) return;
-
-		try {
-			const updated = await this.getUpdatedJournalEntry(journalEntry.toObject(), migrations);
-			const changes = foundry.utils.diffObject(journalEntry.toObject(), updated);
-
-			if (Object.keys(changes).length > 0) {
-				await journalEntry.update(changes, { noHook: true });
-			}
-		} catch (e) {
-			console.warn(e);
-		}
-	}
-
-	async #migrateMacro(macro: Macro, migrations: MigrationBase[]): Promise<void> {
-		if (!migrations.some((m) => !!m.updateMacro)) return;
-
-		try {
-			const updated = await this.getUpdatedMacro(macro.toObject(), migrations);
-			const changes = foundry.utils.diffObject(macro.toObject(), updated);
-
-			if (Object.keys(changes).length > 0) {
-				await macro.update(changes, { noHook: true });
-			}
-		} catch (e) {
-			console.warn(e);
-		}
-	}
-
-	async #migrateTable(table: RollTable, migrations: MigrationBase[]): Promise<void> {
-		if (!migrations.some((m) => !!m.updateTable)) return;
-
-		try {
-			const updatedMacro = await this.getUpdatedTable(table.toObject(), migrations);
-			const changes = foundry.utils.diffObject(table.toObject(), updatedMacro);
-
-			if (Object.keys(changes).length > 0) {
-				await table.update(changes, { noHook: true });
-			}
-		} catch (error) {
-			console.warn(error);
-		}
-	}
-
-	async #migrateSceneToken(token: any, migrations: MigrationBase[]): Promise<any | null> {
-		if (!migrations.some((migration) => !!migration.updateToken)) return token.toObject();
-
-		try {
-			const updatedToken = await this.getUpdatedToken(token, migrations);
-			const changes = foundry.utils.diffObject(token.toObject(), updatedToken);
-
-			if (Object.keys(changes).length > 0) {
-				try {
-					await token.update(changes, { noHook: true });
-				} catch (error) {
-					console.warn(error);
-				}
-			}
-
-			return updatedToken;
-		} catch (error) {
-			console.error(error);
-			return null;
-		}
-	}
-
-	async #migrateUser(user: User, migrations: MigrationBase[]): Promise<void> {
-		if (!migrations.some((migration) => !!migration.updateUser)) return;
-
-		try {
-			const baseUser = user.toObject();
-			const updatedUser = await this.getUpdatedUser(baseUser, migrations);
-			const changes = foundry.utils.diffObject(user.toObject(), updatedUser);
-			if (Object.keys(changes).length > 0) {
-				await user.update(changes, { noHook: true });
-			}
-		} catch (error) {
-			console.error(error);
-		}
-	}
-
-	async runCompendiumMigration(migrations: MigrationBase[], pack: CompendiumPack): Promise<void> {
-		if (!['Adventure', 'Actor', 'Item'].includes(pack.documentName)) return;
-
-		// TODO: Progress Marker
-
-		// Load Documents
-		await pack.getDocuments();
-
-		const wasLocked = pack.locked;
-		if (wasLocked) await pack.configure({ locked: false });
-
-		if (pack.documentName === 'Adventure') {
-			await this.#migrateAdventureDocuments(pack, migrations);
-		} else {
-			await this.#migrateDocuments(pack, migrations);
-		}
-
-		if (wasLocked) await pack.configure({ locked: true });
-	}
-
-	async runMigrations(migrations: MigrationBase[]): Promise<void> {
-		if (migrations.length === 0) return;
-
-		// TODO: Progress marker
-
-		// Migrate Actors
-		await this.#migrateDocuments(game.actors, migrations);
-
-		// Migrate Items
-		await this.#migrateDocuments(game.items, migrations);
-
-		// Update tiny docs
-		const promises: Promise<unknown>[] = [];
-
-		game.journal.forEach((e) => {
-			promises.push(this.#migrateJournalEntry(e, migrations));
-		});
-		game.macros.forEach((m) => {
-			promises.push(this.#migrateMacro(m, migrations));
-		});
-		game.tables.forEach((t) => {
-			promises.push(this.#migrateTable(t, migrations));
-		});
-		game.users.forEach((u) => {
-			promises.push(this.#migrateUser(u, migrations));
-		});
-
-		// General Free Form Updates
-		migrations.forEach((m) => {
-			if (m.migrate) promises.push(m.migrate());
-		});
-
-		await Promise.allSettled(promises);
-
-		// Migrate Tokens
-		for (const scene of game.scenes) {
-			for (const token of scene.tokens) {
-				const { actor } = token;
-				if (!actor) continue;
-
-				const wasSuccess = !!(await this.#migrateSceneToken(token, migrations));
-				if (!wasSuccess) continue;
-
-				const deltaSource = token.delta?._source;
-				const hasMigratableData =
-					(!!deltaSource && !!deltaSource.flags?.nimble) ||
-					(deltaSource?.items ?? []).length > 0 ||
-					Object.keys(deltaSource?.system ?? {}).length > 0;
-
-				if (actor.isToken) {
-					if (hasMigratableData) {
-						const updated = await this.#migrateActor(migrations, actor);
-						if (updated) {
-							try {
-								const { items, ...rest } = updated;
-								if (items.length > 0) {
-									await actor.updateEmbeddedDocuments('Item', items, { noHook: true });
-								}
-								await actor.update(rest, { noHook: true });
-							} catch (error) {
-								console.warn(error);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// Migrate compendiums
-		for (const pack of game.packs) {
-			if (pack.metadata.packageType !== 'world') continue;
-			if (!['Actor', 'Item'].includes(pack.documentName)) continue;
-
-			ui.notifications.info(
-				localize('NIMBLE.migration.compendium.starting', { packName: pack.metadata.label }),
-			);
-
-			console.info(`Nimble | Migrating ${pack.index.size} documents in ${pack.metadata.id}.`);
-			await this.runCompendiumMigration(migrations, pack as unknown as CompendiumPack);
-			ui.notifications.info(
-				localize('NIMBLE.migration.compendium.finished', { packName: pack.metadata.label }),
-			);
-		}
-	}
-
-	async runMigration(force = false): Promise<void> {
-		const migrationVersion = {
-			latest: MigrationRunner.LATEST_SCHEMA_VERSION,
-			current: game.settings.get(
-				SYSTEM_ID as 'core',
-				'worldSchemaVersion' as 'rollMode',
-			) as unknown as number,
+	#targets = new Map<string, Target>();
+
+	#errors: PlanError[] = [];
+
+	/** Every document the migrations can change, as raw sources, with where each one is written. */
+	async collectRoots(): Promise<PlanRoot[]> {
+		this.#targets.clear();
+		const roots: PlanRoot[] = [];
+		const add = (root: PlanRoot, target: Target) => {
+			roots.push(root);
+			this.#targets.set(root.uuid, target);
 		};
 
-		const systemVersion = game.system.version;
-
-		ui.notifications.info(localize('NIMBLE.migration.world.starting', { version: systemVersion }));
-
-		const migrationsToRun = force
-			? this.migrations
-			: this.migrations.filter((m) => migrationVersion.current < m.version);
-
-		const migrationPhases: MigrationBase[][] = [[]];
-
-		for (const migration of migrationsToRun) {
-			migrationPhases[migrationPhases.length - 1].push(migration);
-			if (migration.requiresFlush) {
-				migrationPhases.push([]);
-			}
+		for (const actor of game.actors ?? []) {
+			add(
+				{
+					kind: 'actor',
+					uuid: actor.uuid,
+					source: rawSource(game.data.actors as Json[], actor),
+					holder: { kind: 'actor', actorName: actor.name ?? '', actorUuid: actor.uuid },
+				},
+				{ document: actor, part: 'actors', pack: null },
+			);
 		}
 
-		for (const phase of migrationPhases) {
-			if (phase.length > 0) {
-				await this.runMigrations(phase);
-				const lastVersion = phase[phase.length - 1].version;
-				await game.settings.set(
-					SYSTEM_ID as 'core',
-					'worldSchemaVersion' as 'rollMode',
-					lastVersion as unknown as foundry.CONST.DICE_ROLL_MODES,
+		for (const item of game.items ?? []) {
+			add(
+				{
+					kind: 'item',
+					uuid: item.uuid,
+					source: rawSource(game.data.items as Json[], item),
+					holder: { kind: 'sidebar' },
+				},
+				{ document: item, part: 'items', pack: null },
+			);
+		}
+
+		for (const scene of game.scenes ?? []) {
+			for (const token of scene.tokens) {
+				const actor = token.actor;
+				const delta = (token.delta as any)?._source as Json | undefined;
+				const uuid = actor?.uuid;
+				if (token.actorLink || !actor || !uuid || !delta) continue;
+				const itemIds = liveIds(delta.items);
+				const effectIds = liveIds(delta.effects);
+				const ownKeys = Object.keys(ownFields(delta)).filter((key) => key !== '_id');
+				if (itemIds.length === 0 && effectIds.length === 0 && ownKeys.length === 0) continue;
+				add(
+					{
+						kind: 'actor',
+						uuid,
+						source: actor.toObject(),
+						holder: {
+							kind: 'token',
+							actorName: actor.name ?? '',
+							actorUuid: uuid,
+							sceneName: scene.name ?? '',
+						},
+						delta: { itemIds, effectIds },
+					},
+					{
+						document: actor,
+						part: 'tokens',
+						pack: null,
+						delta: { itemIds: new Set(itemIds), effectIds: new Set(effectIds), source: delta },
+					},
 				);
 			}
 		}
 
-		if (this.#migrationErrors.length > 0) {
-			console.warn('Nimble | Migration errors:', this.#migrationErrors);
-			ui.notifications.warn(
-				localize('NIMBLE.migration.world.completedWithErrors', {
-					count: this.#migrationErrors.length.toString(),
-				}),
+		for (const message of game.messages ?? []) {
+			add(
+				{
+					kind: 'message',
+					uuid: message.uuid,
+					source: rawSource(game.data.messages as Json[], message),
+				},
+				{ document: message, part: 'messages', pack: null },
 			);
-		} else {
-			ui.notifications.info(localize('NIMBLE.migration.world.completed'));
 		}
+
+		for (const pack of game.packs ?? []) {
+			if (pack.metadata.packageType !== 'world') continue;
+			if (!['Actor', 'Item'].includes(pack.documentName)) continue;
+			const documents = await pack.getDocuments();
+			for (const document of documents as any[]) {
+				add(
+					{
+						kind: pack.documentName === 'Actor' ? 'actor' : 'item',
+						uuid: document.uuid,
+						source: document.toObject(),
+						holder: {
+							kind: 'compendium',
+							packLabel: pack.metadata.label,
+							...(pack.documentName === 'Actor'
+								? { actorName: document.name ?? '', actorUuid: document.uuid }
+								: {}),
+						},
+					},
+					{ document, part: 'compendiums', pack: pack as unknown as CompendiumPack },
+				);
+			}
+		}
+
+		return roots;
+	}
+
+	/** The dry run: what the pending migrations change, with the GM's copies kept out. */
+	async plan(excluded: ReadonlySet<string> = new Set()): Promise<MigrationPlan> {
+		const roots = await this.collectRoots();
+		return planMigration(roots, this.migrations, { excluded });
+	}
+
+	/** Writes a plan, then stamps the world with the last migration's version. */
+	async apply(
+		plan: MigrationPlan,
+		onProgress: (progress: RunProgress) => void = () => {},
+	): Promise<RunResult> {
+		this.#errors = [...plan.errors];
+		const changed = plan.roots.filter(
+			(entry) => entry.changed && this.#targets.has(entry.root.uuid),
+		);
+		const total = changed.length;
+		let done = 0;
+		let written = 0;
+
+		const groups = new Map<string, PlannedRoot[]>();
+		for (const entry of changed) {
+			const target = this.#targets.get(entry.root.uuid)!;
+			const key = `${target.part}|${target.pack?.metadata.id ?? ''}|${entry.root.kind}`;
+			const group = groups.get(key) ?? [];
+			group.push(entry);
+			groups.set(key, group);
+		}
+
+		for (const group of groups.values()) {
+			const target = this.#targets.get(group[0].root.uuid)!;
+			const pack = target.pack;
+			const wasLocked = pack?.locked ?? false;
+			if (pack && wasLocked) await pack.configure({ locked: false });
+			try {
+				for (let start = 0; start < group.length; start += BATCH_SIZE) {
+					const batch = group.slice(start, start + BATCH_SIZE);
+					const uuids = batch.map((entry) => entry.root.uuid);
+					onProgress({ done, total, part: target.part, writing: uuids, written: [] });
+					written += await this.#writeBatch(batch);
+					done += batch.length;
+					onProgress({ done, total, part: target.part, writing: [], written: uuids });
+				}
+			} finally {
+				if (pack && wasLocked) await pack.configure({ locked: true });
+			}
+		}
+
+		const last = this.migrations.at(-1);
+		if (last) {
+			await game.settings.set(
+				SYSTEM_ID as 'core',
+				'worldSchemaVersion' as 'rollMode',
+				last.version as unknown as foundry.CONST.DICE_ROLL_MODES,
+			);
+		}
+
+		return { plan, errors: this.#errors, written };
+	}
+
+	/** Returns how many documents it wrote. */
+	async #writeBatch(batch: PlannedRoot[]): Promise<number> {
+		const first = this.#targets.get(batch[0].root.uuid)!;
+		const writeOne = first.delta
+			? this.#writeToken
+			: batch[0].root.kind === 'message'
+				? this.#writeMessage
+				: null;
+		if (writeOne) {
+			let count = 0;
+			for (const entry of batch) if (await writeOne.call(this, entry)) count += 1;
+			return count;
+		}
+
+		const prepared: Array<[PlannedRoot, Json]> = [];
+		for (const entry of batch) {
+			const update = await this.#prepareDocument(entry);
+			if (update) prepared.push([entry, update]);
+		}
+		if (prepared.length === 0) return 0;
+		const documentClass = first.document.constructor;
+		const operation = writeOptions(first.pack);
+		let written = prepared;
+		try {
+			await documentClass.updateDocuments(
+				prepared.map(([, update]) => update),
+				operation,
+			);
+		} catch {
+			// One bad document fails the whole call, so each one is written alone.
+			written = [];
+			for (const [entry, update] of prepared) {
+				try {
+					await documentClass.updateDocuments([update], operation);
+					written.push([entry, update]);
+				} catch (error) {
+					this.#writeError(entry.root, error);
+				}
+			}
+		}
+		for (const [entry] of written) await this.#deleteItemEffects(entry);
+		return written.length;
+	}
+
+	/** Deletes the embedded documents the migrations removed, and returns the update of the rest. */
+	async #prepareDocument(entry: PlannedRoot): Promise<Json | null> {
+		const { document, pack } = this.#targets.get(entry.root.uuid)!;
+		const before = entry.root.source;
+		const after = foundry.utils.deepClone(entry.after);
+		const operation = writeOptions(pack);
+		try {
+			if (entry.root.kind === 'actor') {
+				const items = this.diffCollection(before.items ?? [], after.items ?? []);
+				const gone = items.deleted.filter((id) => document.items.has(id));
+				if (gone.length > 0) await document.deleteEmbeddedDocuments('Item', gone, operation);
+				after.items = [...items.inserted, ...items.updated];
+			}
+			const effects = this.diffCollection(before.effects ?? [], after.effects ?? []);
+			const goneEffects = effects.deleted.filter((id) => document.effects.has(id));
+			if (goneEffects.length > 0) {
+				await document.deleteEmbeddedDocuments('ActiveEffect', goneEffects, operation);
+			}
+			after.effects = [...effects.inserted, ...effects.updated];
+		} catch (error) {
+			this.#writeError(entry.root, error);
+			return null;
+		}
+		return after;
+	}
+
+	/** An update of an embedded item writes its effects, but deletes none of them. */
+	async #deleteItemEffects(entry: PlannedRoot): Promise<void> {
+		const { document, pack } = this.#targets.get(entry.root.uuid)!;
+		const pairs: Array<[any, Json, Json]> =
+			entry.root.kind === 'item'
+				? []
+				: (entry.after.items ?? []).map((item: Json) => [
+						document.items.get(item._id),
+						(entry.root.source.items ?? []).find((old: Json) => old._id === item._id),
+						item,
+					]);
+		for (const [live, before, after] of pairs) {
+			if (!live || !before) continue;
+			const gone = this.diffCollection(before.effects ?? [], after.effects ?? []).deleted.filter(
+				(id) => live.effects.has(id),
+			);
+			if (gone.length === 0) continue;
+			try {
+				await live.deleteEmbeddedDocuments('ActiveEffect', gone, writeOptions(pack));
+			} catch (error) {
+				this.#writeError(entry.root, error);
+			}
+		}
+	}
+
+	/** Writes only what the token's delta holds. The rest belongs to its base actor. */
+	async #writeToken(entry: PlannedRoot): Promise<boolean> {
+		const { document: actor, delta } = this.#targets.get(entry.root.uuid)!;
+		if (!delta) return false;
+		const before = entry.root.source;
+		const after = foundry.utils.deepClone(entry.after);
+		const operation = { noHook: true };
+		try {
+			for (const [name, key, ids] of [
+				['Item', 'items', delta.itemIds],
+				['ActiveEffect', 'effects', delta.effectIds],
+			] as const) {
+				const diff = this.diffCollection(before[key] ?? [], after[key] ?? []);
+				const gone = diff.deleted.filter((id) => ids.has(id));
+				if (gone.length > 0) await actor.deleteEmbeddedDocuments(name, gone, operation);
+				if (diff.inserted.length > 0) {
+					await actor.createEmbeddedDocuments(name, diff.inserted, { ...operation, keepId: true });
+				}
+				const updated = diff.updated.filter((source) => ids.has(source._id));
+				if (updated.length > 0) await actor.updateEmbeddedDocuments(name, updated, operation);
+			}
+			const own = foundry.utils.diffObject(ownFields(before), ownFields(after));
+			const held = Object.fromEntries(
+				Object.entries(foundry.utils.flattenObject(own)).filter(([path]) =>
+					foundry.utils.hasProperty(delta.source, path),
+				),
+			);
+			if (Object.keys(held).length > 0) await actor.update(held, operation);
+		} catch (error) {
+			this.#writeError(entry.root, error);
+			return false;
+		}
+		await this.#deleteItemEffects({
+			...entry,
+			after: {
+				...after,
+				items: (after.items ?? []).filter((item: Json) => delta.itemIds.has(item._id)),
+			},
+		});
+		return true;
+	}
+
+	async #writeMessage(entry: PlannedRoot): Promise<boolean> {
+		const { document } = this.#targets.get(entry.root.uuid)!;
+		const changes = foundry.utils.diffObject(entry.root.source, entry.after);
+		if (Object.keys(changes).length === 0) return false;
+		try {
+			await document.update(changes, { noHook: true });
+			return true;
+		} catch (error) {
+			this.#writeError(entry.root, error);
+			return false;
+		}
+	}
+
+	#writeError(root: PlanRoot, error: unknown): void {
+		console.error(`Nimble Migration | writing ${root.uuid} failed:`, error);
+		this.#errors.push({
+			uuid: root.uuid,
+			name: root.source?.name ?? '',
+			version: null,
+			message: error instanceof Error ? error.message : String(error),
+		});
 	}
 }
 
 export { MigrationRunner };
+export type { RunPart, RunProgress, RunResult };

@@ -28,6 +28,8 @@ class Migration063MasterOfStormTracks extends ChecklistMigrationBase {
 
 	override readonly version = Migration063MasterOfStormTracks.version;
 
+	override readonly title = 'Master of Storm two concentrations';
+
 	protected override readonly classIdentifier = 'stormshifter';
 
 	protected override readonly passName = 'the Master of Storm pass';

@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const WILD_ONE_SOURCE_ID = 'Compendium.nimble.backgrounds.Item.LWkH3GfYt0uU8qDj';
 
@@ -20,6 +20,10 @@ class Migration007WildOneHitDiceAdvantage extends MigrationBase {
 	static override readonly version = 7;
 
 	override readonly version = Migration007WildOneHitDiceAdvantage.version;
+
+	override readonly title = 'Wild One Hit Dice advantage';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		// Only process background items

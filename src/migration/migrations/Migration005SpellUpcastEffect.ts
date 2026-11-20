@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Migration to separate upcast descriptions from higher level effect descriptions.
@@ -13,6 +13,10 @@ class Migration005SpellUpcastEffect extends MigrationBase {
 	static override readonly version = 5;
 
 	override readonly version = Migration005SpellUpcastEffect.version;
+
+	override readonly title = 'Spell upcast text field';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;
