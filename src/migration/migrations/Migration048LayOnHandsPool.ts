@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const LAY_ON_HANDS_SOURCE_ID = 'Compendium.nimble.nimble-class-features.Item.Ddm1A7P01CcmPrim';
 const LAY_ON_HANDS_NAME = 'Lay on Hands';
@@ -64,6 +64,10 @@ class Migration048LayOnHandsPool extends MigrationBase {
 	static override readonly version = 48;
 
 	override readonly version = Migration048LayOnHandsPool.version;
+
+	override readonly title = 'Lay on Hands healing pool';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

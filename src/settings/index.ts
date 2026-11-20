@@ -14,6 +14,8 @@ import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerDiceSoNiceSettings } from './registerDiceSoNiceSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
+import { registerSupportReportMenu } from './registerSupportReportMenu.js';
+import { registerWorldMigrationMenu } from './registerWorldMigrationMenu.js';
 import { registerSpellScrollSettings } from './spellScrollSettings.js';
 
 export const DEBUG_MODE_SETTING_KEY = 'debugMode';
@@ -92,6 +94,8 @@ export default function registerSystemSettings() {
 	registerAdjacencySettings();
 
 	registerAutomationSettings();
+	registerWorldMigrationMenu();
+	registerSupportReportMenu();
 
 	registerCombatTrackerSettings();
 	registerDiceSoNiceSettings();

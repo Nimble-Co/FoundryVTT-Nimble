@@ -1,9 +1,9 @@
 import { mount, unmount } from 'svelte';
-import { SYSTEM_ID } from '#system';
+import {
+	beginWorldMigration,
+	warnPlayerOfPendingMigration,
+} from '../migration/beginWorldMigration.js';
 import { runDevFlagRebrandPersist } from '../migration/devFlagRebrand.js';
-import { MigrationList } from '../migration/MigrationList.js';
-import { MigrationRunner } from '../migration/MigrationRunner.js';
-import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import {
 	getAdjacencySyncEnabled,
 	migrateLegacyDiagonalSetting,
@@ -13,6 +13,7 @@ import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
+import { openWorldMigrationWindow } from '../settings/registerWorldMigrationMenu.js';
 import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffects.js';
 import { registerCardSocketListener } from '../utils/chat/cardOperations.js';
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
@@ -43,24 +44,9 @@ export default async function ready() {
 		// non-GM clients, and on already-clean dev worlds.
 		await runDevFlagRebrandPersist();
 
-		const worldSchemaVersion = game.settings.get(
-			SYSTEM_ID as 'core',
-			'worldSchemaVersion' as 'rollMode',
-		) as unknown as number;
-		const latestSchemaVersion = MigrationRunnerBase.LATEST_SCHEMA_VERSION;
-
-		if (worldSchemaVersion < latestSchemaVersion) {
-			console.log(
-				`Nimble | Migration needed: world schema version ${worldSchemaVersion} < latest schema version ${latestSchemaVersion}`,
-			);
-			const migrations = MigrationList.constructFromVersion(worldSchemaVersion);
-			const runner = new MigrationRunner(migrations);
-			await runner.runMigration();
-		} else {
-			console.log(
-				`Nimble | No migration needed: world schema version ${worldSchemaVersion} is up to date`,
-			);
-		}
+		await beginWorldMigration(openWorldMigrationWindow);
+	} else {
+		warnPlayerOfPendingMigration();
 	}
 
 	game.nimble.conditions.configureStatusEffects();

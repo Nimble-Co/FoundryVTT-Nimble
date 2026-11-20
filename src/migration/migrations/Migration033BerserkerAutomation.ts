@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { type?: unknown; id?: unknown };
 type NodeSource = Record<string, unknown> & { id?: unknown };
@@ -560,6 +560,10 @@ class Migration033BerserkerAutomation extends MigrationBase {
 	static override readonly version = 33;
 
 	override readonly version = Migration033BerserkerAutomation.version;
+
+	override readonly title = 'Berserker automation';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

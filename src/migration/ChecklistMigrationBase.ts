@@ -1,5 +1,5 @@
 import { isCompendiumId, toPackSourceId } from './compendiumSourceId.js';
-import { MigrationBase } from './MigrationBase.js';
+import { MigrationBase, type MigrationKind } from './MigrationBase.js';
 
 /** Where every class feature the checklist passes touch lives. */
 const FEATURE_PREFIX = 'Compendium.nimble.nimble-class-features.Item.';
@@ -124,6 +124,8 @@ function coversSameClause(existing: RuleSource, wanted: RuleSource): boolean {
  * survives, and a second run changes nothing.
  */
 abstract class ChecklistMigrationBase extends MigrationBase {
+	override readonly kind: MigrationKind = 'content';
+
 	/** The `system.class` identifier a world copy keeps. */
 	protected abstract readonly classIdentifier: string;
 

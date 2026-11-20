@@ -1,5 +1,5 @@
 import { SNAPSHOT_PREFIX, toInstalledId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /** The "+1 Max Combat Die" class feature. */
 const MAX_COMBAT_DIE_ITEM_ID = 'WnKpJ8RvCb4mX2Qt';
@@ -32,6 +32,10 @@ class Migration049PoolMaxBonusItems extends MigrationBase {
 	static override readonly version = 49;
 
 	override readonly version = Migration049PoolMaxBonusItems.version;
+
+	override readonly title = 'Combat Dice bonuses become items';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	/** Builds one granted item carrying the bonus. */
 	static #buildBonusItem(poolIdentifier: string, grantUuid: string): Record<string, unknown> {

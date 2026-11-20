@@ -2,7 +2,7 @@ import {
 	conditionsToItemEffects,
 	type ItemEffectSource,
 } from '#utils/treeManipulation/conditionsToItemEffects.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 interface TreeNode {
 	type?: string;
@@ -89,6 +89,10 @@ class Migration086ApplyEffectNodes extends MigrationBase {
 
 	override readonly version = Migration086ApplyEffectNodes.version;
 
+	override readonly title = 'Condition steps become Apply Effect steps';
+
+	override readonly kind: MigrationKind = 'structure';
+
 	override async updateItem(source: any): Promise<void> {
 		const tree = source?.system?.activation?.effects;
 		if (!hasNode(tree, needsItemEffect)) return;
@@ -96,22 +100,9 @@ class Migration086ApplyEffectNodes extends MigrationBase {
 		source.effects = [...(source.effects ?? []), ...created.map(effectSource)];
 	}
 
-	override async migrate(): Promise<void> {
-		for (const message of game.messages ?? []) {
-			const tree = (message.system as { activation?: { effects?: unknown[] } } | undefined)
-				?.activation?.effects;
-			if (!hasNode(tree, isConditionNode)) continue;
-			const copy = foundry.utils.deepClone(tree) as unknown[];
-			toCardShorthand(copy);
-			try {
-				await message.update(
-					{ 'system.activation.effects': copy } as never,
-					{ noHook: true } as never,
-				);
-			} catch (error) {
-				console.warn(error);
-			}
-		}
+	override async updateMessage(source: any): Promise<void> {
+		const tree = source?.system?.activation?.effects;
+		if (hasNode(tree, isConditionNode)) toCardShorthand(tree);
 	}
 }
 

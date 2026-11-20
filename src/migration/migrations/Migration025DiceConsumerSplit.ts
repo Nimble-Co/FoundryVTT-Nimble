@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type LegacyDicePoolRule = {
 	type?: string;
@@ -66,6 +66,10 @@ class Migration025DiceConsumerSplit extends MigrationBase {
 	static override readonly version = 25;
 
 	override readonly version = Migration025DiceConsumerSplit.version;
+
+	override readonly title = 'Dice spending becomes its own rule';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		const rules = source?.system?.rules;

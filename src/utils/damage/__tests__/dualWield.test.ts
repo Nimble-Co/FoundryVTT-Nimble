@@ -53,6 +53,22 @@ describe('the Dual wield tick', () => {
 		expect(dualWieldOfferFor(hero([sword, weapon('axe', '1d6', false)]), sword)).toBeNull();
 	});
 
+	it('is advantage with one equipped weapon of quantity 2', () => {
+		const daggers = {
+			...weapon('dagger', '1d4'),
+			system: { ...weapon('dagger', '1d4').system, quantity: 2 },
+		};
+		expect(dualWieldOfferFor(hero([daggers]), daggers)).toEqual({ other: null, used: false });
+	});
+
+	it('does not show with one equipped weapon of quantity 1', () => {
+		const dagger = {
+			...weapon('dagger', '1d4'),
+			system: { ...weapon('dagger', '1d4').system, quantity: 1 },
+		};
+		expect(dualWieldOfferFor(hero([dagger]), dagger)).toBeNull();
+	});
+
 	it('does not show for a weapon that is not equipped', () => {
 		const sword = weapon('sword', '1d8', false);
 		expect(dualWieldOfferFor(hero([sword, weapon('axe', '1d6')]), sword)).toBeNull();

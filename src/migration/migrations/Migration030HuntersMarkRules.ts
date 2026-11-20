@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const HUNTERS_MARK_SOURCE_ID = 'Compendium.nimble.class-features.Item.iDYdYYMzgculnANa';
 const NEMESIS_SOURCE_ID = 'Compendium.nimble.class-features.Item.Wyiz02wruaCYqHiN';
@@ -90,6 +90,10 @@ class Migration030HuntersMarkRules extends MigrationBase {
 	static override readonly version = 30;
 
 	override readonly version = Migration030HuntersMarkRules.version;
+
+	override readonly title = "Hunter's Mark rules";
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

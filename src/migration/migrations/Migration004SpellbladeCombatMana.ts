@@ -1,11 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import {
-	getCombatManaGrantForCombat,
-	getCombatManaGrantMap,
-	getCombatManaGrantTotalForInitiative,
-	primeActorCombatManaSourceRules,
-} from '../../utils/actor/combatManaRules.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationContext, type MigrationKind } from '../MigrationBase.js';
 
 const SPELLBLADE_RULE_ID = 'spellblade-combat-mana';
 const SPELLBLADE_SOURCE_SUFFIX = '.item.lbvh28xjvxihffst';
@@ -121,6 +115,10 @@ class Migration004SpellbladeCombatMana extends MigrationBase {
 
 	override readonly version = Migration004SpellbladeCombatMana.version;
 
+	override readonly title = 'Spellblade Combat Mana';
+
+	override readonly kind: MigrationKind = 'content';
+
 	override async updateItem(source: any): Promise<void> {
 		if (!isSpellbladeSubclass(source)) return;
 
@@ -131,55 +129,42 @@ class Migration004SpellbladeCombatMana extends MigrationBase {
 		}
 	}
 
-	override async migrate(): Promise<void> {
-		await this.backfillActiveCombatMana();
-	}
+	/** Gives the mana now to a Spellblade who already rolled Initiative in a started combat. */
+	override async updateActor(source: any, context?: MigrationContext): Promise<void> {
+		if (source?.type !== 'character' || !source._id) return;
+		const items: SpellbladeItemLike[] = Array.isArray(source.items) ? source.items : [];
+		if (!items.some(isSpellbladeSubclass)) return;
 
-	private async backfillActiveCombatMana(): Promise<void> {
-		for (const actor of game.actors.contents) {
-			if (actor.type !== 'character') continue;
-			if (!this.actorHasSpellbladeSubclass(actor)) continue;
-			if (!actor.id) continue;
+		const activeCombatIds = (game.combats?.contents ?? []).reduce<string[]>((acc, combat) => {
+			if (!combat?.started || !combat.id) return acc;
+			const combatant = combat.combatants.find((entry) => entry.actorId === source._id);
+			if (!combatant || combatant.initiative === null) return acc;
+			acc.push(combat.id);
+			return acc;
+		}, []);
+		if (activeCombatIds.length === 0) return;
 
-			const activeCombatIds = (game.combats?.contents ?? []).reduce<string[]>((acc, combat) => {
-				if (!combat?.started || !combat.id) return acc;
+		// The rule's formula is max(@intelligence, 0), read from the live actor's roll data.
+		const actor = context?.uuid ? (fromUuidSync(context.uuid) as Actor | null) : null;
+		const combatMana = Math.max(0, Number(actor?.getRollData?.()?.intelligence ?? 0));
+		if (combatMana <= 0) return;
 
-				const combatant = combat.combatants.find((entry) => entry.actorId === actor.id);
-				if (!combatant || combatant.initiative === null) return acc;
-
-				acc.push(combat.id);
-				return acc;
-			}, []);
-
-			if (activeCombatIds.length === 0) continue;
-
-			await primeActorCombatManaSourceRules(actor);
-
-			const combatMana = getCombatManaGrantTotalForInitiative(actor);
-			if (combatMana <= 0) continue;
-
-			const grants = getCombatManaGrantMap(actor);
-			let changed = false;
-
-			for (const combatId of activeCombatIds) {
-				if (getCombatManaGrantForCombat(actor, combatId) > 0) continue;
-				grants[combatId] = { mana: combatMana };
-				changed = true;
-			}
-
-			if (!changed) continue;
-
-			await actor.update({
-				'system.resources.mana.baseMax': combatMana,
-				'system.resources.mana.current': combatMana,
-				[`flags.${SYSTEM_ID}.combatManaGrants`]: grants,
-			} as Record<string, unknown>);
+		const stored = source.flags?.[SYSTEM_ID]?.combatManaGrants;
+		const grants: Record<string, { mana: number }> =
+			stored && typeof stored === 'object' && !Array.isArray(stored)
+				? foundry.utils.deepClone(stored)
+				: {};
+		let changed = false;
+		for (const combatId of activeCombatIds) {
+			if (Number(grants[combatId]?.mana ?? 0) > 0) continue;
+			grants[combatId] = { mana: combatMana };
+			changed = true;
 		}
-	}
+		if (!changed) return;
 
-	private actorHasSpellbladeSubclass(actor: Actor): boolean {
-		if (actor.type !== 'character') return false;
-		return actor.items.some((item) => isSpellbladeSubclass(item as unknown as SpellbladeItemLike));
+		foundry.utils.setProperty(source, 'system.resources.mana.baseMax', combatMana);
+		foundry.utils.setProperty(source, 'system.resources.mana.current', combatMana);
+		foundry.utils.setProperty(source, `flags.${SYSTEM_ID}.combatManaGrants`, grants);
 	}
 }
 

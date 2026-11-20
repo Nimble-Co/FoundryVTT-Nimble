@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const TAYG_SOURCE_ID = 'Compendium.nimble.nimble-class-features.Item.4oQQtqOhqe9KO5g9';
 
@@ -30,6 +30,10 @@ class Migration029ThatAllYouGotDamageReduction extends MigrationBase {
 	static override readonly version = 29;
 
 	override readonly version = Migration029ThatAllYouGotDamageReduction.version;
+
+	override readonly title = 'That all you got?! damage reduction';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

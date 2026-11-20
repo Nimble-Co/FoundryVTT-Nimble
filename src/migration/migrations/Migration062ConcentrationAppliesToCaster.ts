@@ -1,5 +1,5 @@
 import { toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const CONCENTRATION = 'concentration';
 
@@ -114,6 +114,10 @@ class Migration062ConcentrationAppliesToCaster extends MigrationBase {
 	static override readonly version = 62;
 
 	override readonly version = Migration062ConcentrationAppliesToCaster.version;
+
+	override readonly title = 'Concentration comes from the property';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell' && source.type !== 'object') return;

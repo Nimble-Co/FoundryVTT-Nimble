@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Backfills `grantedFeatureIds` on existing `levelUpHistory` entries.
@@ -15,6 +15,10 @@ class Migration014GrantedFeatureIds extends MigrationBase {
 	static override readonly version = 14;
 
 	override readonly version = Migration014GrantedFeatureIds.version;
+
+	override readonly title = 'Granted features in level history';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateActor(source: any): Promise<void> {
 		if (source.type !== 'character') return;

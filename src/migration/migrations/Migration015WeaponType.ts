@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 /**
  * Migration to add a `weaponType` string field to all object items.
@@ -21,6 +21,10 @@ class Migration015WeaponType extends MigrationBase {
 	static override readonly version = 15;
 
 	override readonly version = Migration015WeaponType.version;
+
+	override readonly title = 'Weapon type field';
+
+	override readonly kind: MigrationKind = 'structure';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'object') return;

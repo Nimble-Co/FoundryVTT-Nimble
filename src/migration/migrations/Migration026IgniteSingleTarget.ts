@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 // Ignite is a single-target spell ("Damage: 4d10 to a Smoldering target") that
 // shipped with an AoE circle template. `ItemActivationManager` treats any
@@ -29,6 +29,10 @@ class Migration026IgniteSingleTarget extends MigrationBase {
 	static override readonly version = 26;
 
 	override readonly version = Migration026IgniteSingleTarget.version;
+
+	override readonly title = 'Ignite single target';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;

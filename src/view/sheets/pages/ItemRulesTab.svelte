@@ -38,98 +38,96 @@
 		</button>
 	</header>
 
-	{#if state.rules.length === 0}
-		<p class="nimble-rules-tab__empty">{localize('NIMBLE.rulesBuilder.noRulesDefined')}</p>
-	{:else}
-		<ul
-			class="nimble-rules-tab__list"
-			use:reorderable={{
-				enabled: true,
-				getDragPayload: state.getDragPayload,
-				onCopy: state.copyRuleFromPayload,
-				copyAcceptType: COPY_TYPE,
-			}}
-		>
-			{#each state.rules as rule (rule.id)}
-				{@const jsonOpen = state.jsonOpenIds.has(rule.id)}
-				<li
-					class="nimble-rules-tab__row"
-					class:nimble-rules-tab__row--disabled={rule.disabled}
-					data-reorder-id={rule.id}
-					draggable={!jsonOpen}
-					data-tooltip={jsonOpen ? undefined : localize('NIMBLE.rulesBuilder.dragToCopy')}
-				>
-					<div class="nimble-rules-tab__row-main">
+	<ul
+		class="nimble-rules-tab__list"
+		use:reorderable={{
+			enabled: true,
+			getDragPayload: state.getDragPayload,
+			onCopy: state.copyRuleFromPayload,
+			copyAcceptType: COPY_TYPE,
+		}}
+	>
+		{#each state.rules as rule (rule.id)}
+			{@const jsonOpen = state.jsonOpenIds.has(rule.id)}
+			<li
+				class="nimble-rules-tab__row"
+				class:nimble-rules-tab__row--disabled={rule.disabled}
+				data-reorder-id={rule.id}
+				draggable={!jsonOpen}
+				data-tooltip={jsonOpen ? undefined : localize('NIMBLE.rulesBuilder.dragToCopy')}
+			>
+				<div class="nimble-rules-tab__row-main">
+					<span
+						class="nimble-rules-tab__priority"
+						data-tooltip={localize('NIMBLE.rulesBuilder.priorityApplicationOrder')}
+					>
+						{(rule.priority as number) ?? 1}
+					</span>
+					<span class="nimble-rules-tab__label">
+						{rule.label || ruleTypes[rule.type] || rule.type}
+					</span>
+					<span class="nimble-rules-tab__type">
+						{ruleTypes[rule.type] ?? rule.type}
+					</span>
+					{#if rule.disabled}
 						<span
-							class="nimble-rules-tab__priority"
-							data-tooltip={localize('NIMBLE.rulesBuilder.priorityApplicationOrder')}
+							class="nimble-rules-tab__badge"
+							data-tooltip={localize('NIMBLE.rulesBuilder.ruleDisabled')}
 						>
-							{(rule.priority as number) ?? 1}
+							<i class="fa-solid fa-toggle-off"></i>
+							{localize('NIMBLE.rulesBuilder.disabled')}
 						</span>
-						<span class="nimble-rules-tab__label">
-							{rule.label || ruleTypes[rule.type] || rule.type}
-						</span>
-						<span class="nimble-rules-tab__type">
-							{ruleTypes[rule.type] ?? rule.type}
-						</span>
-						{#if rule.disabled}
-							<span
-								class="nimble-rules-tab__badge"
-								data-tooltip={localize('NIMBLE.rulesBuilder.ruleDisabled')}
-							>
-								<i class="fa-solid fa-toggle-off"></i>
-								{localize('NIMBLE.rulesBuilder.disabled')}
-							</span>
-						{/if}
-						<button
-							type="button"
-							class="nimble-button nimble-rules-tab__json-toggle"
-							data-button-variant="icon"
-							data-tooltip={jsonOpen
-								? localize('NIMBLE.rulesBuilder.closeJsonEditor')
-								: localize('NIMBLE.rulesBuilder.editRawJson')}
-							aria-label={jsonOpen
-								? localize('NIMBLE.rulesBuilder.closeJsonEditor')
-								: localize('NIMBLE.rulesBuilder.editRawJson')}
-							aria-expanded={jsonOpen}
-							onclick={() => state.toggleJson(rule)}
-						>
-							<i class="fa-solid {jsonOpen ? 'fa-xmark' : 'fa-code'}"></i>
-						</button>
-					</div>
-
-					{#if jsonOpen}
-						<div class="nimble-rules-tab__json">
-							<textarea
-								class="nimble-rules-tab__json-textarea"
-								bind:value={state.jsonDrafts[rule.id]}
-								rows="11"
-								autocapitalize="off"
-								autocomplete="off"
-								spellcheck="false"
-								wrap="soft"
-								onkeydown={overrideTextAreaBehavior}
-							></textarea>
-							<div class="nimble-rules-tab__json-controls">
-								<button
-									type="button"
-									class="nimble-button"
-									data-button-variant="basic"
-									onclick={() => state.commitJson(rule.id)}
-								>
-									<i class="fa-solid fa-save"></i>
-									{localize('NIMBLE.rulesBuilder.saveJson')}
-								</button>
-								{#if state.jsonErrors[rule.id]}
-									<span class="nimble-rules-tab__json-error">{state.jsonErrors[rule.id]}</span>
-								{/if}
-							</div>
-						</div>
 					{/if}
-				</li>
-			{/each}
-		</ul>
-	{/if}
+					<button
+						type="button"
+						class="nimble-button nimble-rules-tab__json-toggle"
+						data-button-variant="icon"
+						data-tooltip={jsonOpen
+							? localize('NIMBLE.rulesBuilder.closeJsonEditor')
+							: localize('NIMBLE.rulesBuilder.editRawJson')}
+						aria-label={jsonOpen
+							? localize('NIMBLE.rulesBuilder.closeJsonEditor')
+							: localize('NIMBLE.rulesBuilder.editRawJson')}
+						aria-expanded={jsonOpen}
+						onclick={() => state.toggleJson(rule)}
+					>
+						<i class="fa-solid {jsonOpen ? 'fa-xmark' : 'fa-code'}"></i>
+					</button>
+				</div>
+
+				{#if jsonOpen}
+					<div class="nimble-rules-tab__json">
+						<textarea
+							class="nimble-rules-tab__json-textarea"
+							bind:value={state.jsonDrafts[rule.id]}
+							rows="11"
+							autocapitalize="off"
+							autocomplete="off"
+							spellcheck="false"
+							wrap="soft"
+							onkeydown={overrideTextAreaBehavior}
+						></textarea>
+						<div class="nimble-rules-tab__json-controls">
+							<button
+								type="button"
+								class="nimble-button"
+								data-button-variant="basic"
+								onclick={() => state.commitJson(rule.id)}
+							>
+								<i class="fa-solid fa-save"></i>
+								{localize('NIMBLE.rulesBuilder.saveJson')}
+							</button>
+							{#if state.jsonErrors[rule.id]}
+								<span class="nimble-rules-tab__json-error">{state.jsonErrors[rule.id]}</span>
+							{/if}
+						</div>
+					</div>
+				{/if}
+			</li>
+		{:else}
+			<li class="nimble-rules-tab__empty">{localize('NIMBLE.rulesBuilder.noRulesDefined')}</li>
+		{/each}
+	</ul>
 </section>
 
 <style lang="scss">
@@ -164,6 +162,7 @@
 
 	.nimble-rules-tab__list {
 		display: flex;
+		flex: 1;
 		flex-direction: column;
 		gap: 0;
 		margin: 0;

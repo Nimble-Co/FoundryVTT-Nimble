@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 interface BanditSpec {
 	actorSourceId: string;
@@ -54,6 +54,10 @@ class Migration066BanditParry extends MigrationBase {
 	static override readonly version = 66;
 
 	override readonly version = Migration066BanditParry.version;
+
+	override readonly title = 'Bandit Parry';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any, parent?: any): Promise<void> {
 		if (!parent || source?.type !== 'feature' || source.name !== 'Parry.') return;

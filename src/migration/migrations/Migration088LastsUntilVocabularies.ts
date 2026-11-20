@@ -8,7 +8,7 @@ import {
 	type LastsUntilEvent,
 	NIMBLE_EFFECT_TYPE,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationContext, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown>;
 type NodeSource = Record<string, unknown>;
@@ -503,17 +503,45 @@ interface LiveActor {
 	flags?: Record<string, Record<string, unknown> | undefined> | null;
 	items?: (Iterable<LiveItem> & { get(id: string): LiveItem | undefined | null }) | null;
 	effects?: Iterable<LiveEffect> | null;
-	update(data: object, operation: object): Promise<unknown>;
-	updateEmbeddedDocuments(
-		type: 'ActiveEffect',
-		updates: object[],
-		operation: object,
-	): Promise<unknown>;
-	createEmbeddedDocuments(
-		type: 'ActiveEffect',
-		data: object[],
-		operation: object,
-	): Promise<unknown>;
+}
+
+function effectView(source: any): LiveEffect {
+	return { ...source, id: source?._id ?? null };
+}
+
+function itemView(source: any, actorUuid: string | null): LiveItem & { id: string } {
+	const effects = (Array.isArray(source?.effects) ? source.effects : []).map(effectView);
+	return {
+		id: source?._id,
+		uuid: actorUuid ? `${actorUuid}.Item.${source?._id}` : null,
+		name: source?.name ?? null,
+		system: source?.system ?? null,
+		effects: {
+			get: (id: string) => effects.find((effect: LiveEffect) => effect.id === id) ?? null,
+		},
+	};
+}
+
+/** An actor's source, read like the live actor the end-moment functions were written for. */
+function actorView(source: any, uuid: string | null): LiveActor {
+	const items = (Array.isArray(source?.items) ? source.items : []).map((item: any) =>
+		itemView(item, uuid),
+	);
+	return {
+		uuid,
+		flags: source?.flags ?? null,
+		items: Object.assign(items, {
+			get: (id: string) => items.find((item: { id: string }) => item.id === id) ?? null,
+		}),
+		effects: (Array.isArray(source?.effects) ? source.effects : []).map(effectView),
+	};
+}
+
+/** Writes an update with dotted paths into a source. */
+function applyUpdate(source: any, update: Record<string, unknown>): void {
+	for (const [path, value] of Object.entries(update)) {
+		if (path !== '_id') foundry.utils.setProperty(source, path, value);
+	}
 }
 
 function rulesOf(item: LiveItem | null | undefined): RuleSource[] {
@@ -740,68 +768,25 @@ function hasRoundDefendEffect(actor: LiveActor, recordId: string): boolean {
 }
 
 /** The old flag of a Defend that still holds becomes the Timed Effect; the flag goes. */
-async function migrateWholeRoundDefend(actor: LiveActor): Promise<void> {
-	const systemFlags = actor.flags?.[SYSTEM_ID];
+function migrateWholeRoundDefend(source: any, uuid: string | null): void {
+	const systemFlags = source?.flags?.[SYSTEM_ID];
 	if (!systemFlags || !(WHOLE_ROUND_DEFEND_FLAG in systemFlags)) return;
 	const whole = systemFlags[WHOLE_ROUND_DEFEND_FLAG] as WholeRoundDefend | null;
 	const combat = whole?.combatId ? (game.combats?.get(whole.combatId) ?? null) : null;
+	const actor = actorView(source, uuid);
 	if (
 		whole &&
 		combat &&
-		actor.uuid &&
-		wholeRoundHolds(whole, combat, actor.uuid) &&
+		uuid &&
+		wholeRoundHolds(whole, combat, uuid) &&
 		!hasRoundDefendEffect(actor, whole.recordId)
 	) {
-		await actor.createEmbeddedDocuments('ActiveEffect', [roundDefendEffect(actor, whole)], {
-			noHook: true,
-		});
+		source.effects = [
+			...(Array.isArray(source.effects) ? source.effects : []),
+			{ _id: foundry.utils.randomID(), ...roundDefendEffect(actor, whole) },
+		];
 	}
-	await actor.update(
-		{
-			[`flags.${SYSTEM_ID}.${WHOLE_ROUND_DEFEND_FLAG}`]:
-				new foundry.data.operators.ForcedDeletion(),
-		},
-		{ noHook: true },
-	);
-}
-
-function reportError(uuid: string | null | undefined, error: unknown): void {
-	console.error(`Nimble Migration | 088 failed for ${uuid ?? 'a document'}:`, error);
-}
-
-async function migrateActor(actor: LiveActor): Promise<void> {
-	try {
-		const updates = [...(actor.effects ?? [])]
-			.map((effect) => actorEffectUpdate(actor, effect))
-			.filter((update): update is Record<string, unknown> => update !== null);
-		if (updates.length > 0) {
-			await actor.updateEmbeddedDocuments('ActiveEffect', updates, { noHook: true });
-		}
-		await migrateWholeRoundDefend(actor);
-	} catch (error) {
-		reportError(actor.uuid, error);
-	}
-}
-
-interface LiveMessage {
-	uuid?: string | null;
-	system?: unknown;
-	update(data: object, operation: object): Promise<unknown>;
-}
-
-/** A chat card keeps the condition on its Apply Effect node, so the duration becomes the node's Lasts Until. */
-async function migrateMessage(message: LiveMessage): Promise<void> {
-	const tree = (message.system as { activation?: { effects?: unknown } } | undefined)?.activation
-		?.effects;
-	if (!Array.isArray(tree)) return;
-	const copy = foundry.utils.deepClone(tree);
-	eachDurationNode(copy, migrateCardNode);
-	if (JSON.stringify(copy) === JSON.stringify(tree)) return;
-	try {
-		await message.update({ 'system.activation.effects': copy }, { noHook: true });
-	} catch (error) {
-		reportError(message.uuid, error);
-	}
+	systemFlags[WHOLE_ROUND_DEFEND_FLAG] = new foundry.data.operators.ForcedDeletion();
 }
 
 function toggleIndexOf(items: unknown): ToggleIndex {
@@ -826,6 +811,10 @@ class Migration088LastsUntilVocabularies extends MigrationBase {
 
 	override readonly version = Migration088LastsUntilVocabularies.version;
 
+	override readonly title = 'Lasts Until choices';
+
+	override readonly kind: MigrationKind = 'structure';
+
 	#worldToggles: ToggleIndex | null = null;
 
 	/** Read once, before the item pass changes the world items. */
@@ -840,8 +829,10 @@ class Migration088LastsUntilVocabularies extends MigrationBase {
 	}
 
 	/** All items of the actor at once, while each one still has its toggle rules. */
-	override async updateActor(source: any): Promise<void> {
-		if (!source || typeof source !== 'object' || !Array.isArray(source.items)) return;
+	override async updateActor(source: any, context?: MigrationContext): Promise<void> {
+		if (!source || typeof source !== 'object') return;
+		migrateWholeRoundDefend(source, context?.uuid ?? null);
+		if (!Array.isArray(source.items)) return;
 		const index = toggleIndexOf(source.items);
 		for (const item of source.items as ItemSource[]) {
 			if (item && typeof item === 'object') migrateModifyToggles(item, index);
@@ -858,15 +849,21 @@ class Migration088LastsUntilVocabularies extends MigrationBase {
 		migrateItemSource(source, index);
 	}
 
-	override async migrate(): Promise<void> {
-		for (const actor of game.actors ?? []) await migrateActor(actor);
-		for (const scene of game.scenes ?? []) {
-			for (const token of scene.tokens) {
-				if (token.actorLink || !token.actor) continue;
-				await migrateActor(token.actor);
-			}
-		}
-		for (const message of game.messages ?? []) await migrateMessage(message);
+	/** An effect on an actor, after the item pass: it reads the actor's migrated items. */
+	override async updateEffect(
+		source: any,
+		parent?: any,
+		context?: MigrationContext,
+	): Promise<void> {
+		if (!source || !Array.isArray(parent?.items)) return;
+		const update = actorEffectUpdate(actorView(parent, context?.uuid ?? null), effectView(source));
+		if (update) applyUpdate(source, update);
+	}
+
+	/** A chat card keeps the condition on its Apply Effect node, so the duration becomes the node's Lasts Until. */
+	override async updateMessage(source: any): Promise<void> {
+		const tree = source?.system?.activation?.effects;
+		if (Array.isArray(tree)) eachDurationNode(tree, migrateCardNode);
 	}
 }
 

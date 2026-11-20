@@ -1,5 +1,5 @@
 import { isCompendiumId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 const SURVIVALIST_SOURCE_ID = 'Compendium.nimble.nimble-backgrounds.Item.qKknqLqzT7BReZul';
 
@@ -48,6 +48,10 @@ class Migration047SurvivalistPoisonSave extends MigrationBase {
 	static override readonly version = 47;
 
 	override readonly version = Migration047SurvivalistPoisonSave.version;
+
+	override readonly title = 'Survivalist poison save advantage';
+
+	override readonly kind: MigrationKind = 'content';
 
 	/**
 	 * A compendium id identifies the item outright, so a background from some other

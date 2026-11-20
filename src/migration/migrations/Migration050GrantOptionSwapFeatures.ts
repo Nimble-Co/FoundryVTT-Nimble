@@ -1,5 +1,5 @@
 import { toInstalledId, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 interface SwapFeature {
 	uuid: string;
@@ -149,6 +149,10 @@ class Migration050GrantOptionSwapFeatures extends MigrationBase {
 	static override readonly version = 50;
 
 	override readonly version = Migration050GrantOptionSwapFeatures.version;
+
+	override readonly title = 'Class option swap features';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateActor(source: Record<string, unknown>): Promise<void> {
 		if (source.type !== 'character') return;

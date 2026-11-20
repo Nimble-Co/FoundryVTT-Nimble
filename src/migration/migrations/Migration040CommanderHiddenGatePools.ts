@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown };
 
@@ -95,6 +95,10 @@ class Migration040CommanderHiddenGatePools extends MigrationBase {
 	static override readonly version = 40;
 
 	override readonly version = Migration040CommanderHiddenGatePools.version;
+
+	override readonly title = 'Hidden Coordinated Strike gates';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;

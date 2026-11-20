@@ -136,6 +136,8 @@ class Migration060ZephyrChecklist extends ChecklistMigrationBase {
 
 	override readonly version = Migration060ZephyrChecklist.version;
 
+	override readonly title = 'Zephyr checklist features';
+
 	protected override readonly classIdentifier = 'zephyr';
 
 	protected override readonly passName = 'the Zephyr pass';

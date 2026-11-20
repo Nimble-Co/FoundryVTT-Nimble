@@ -1,5 +1,5 @@
 import { isCompendiumId, SNAPSHOT_PREFIX, toSnapshotId } from '../compendiumSourceId.js';
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 type RuleSource = Record<string, unknown> & { id?: unknown };
 type RefillEntry = Record<string, unknown>;
@@ -133,6 +133,10 @@ class Migration080InitiativeRefills extends MigrationBase {
 	static override readonly version = 80;
 
 	override readonly version = Migration080InitiativeRefills.version;
+
+	override readonly title = 'Refills when you roll Initiative';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source?.type !== 'feature') return;

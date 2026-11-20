@@ -1,4 +1,4 @@
-import { MigrationBase } from '../MigrationBase.js';
+import { MigrationBase, type MigrationKind } from '../MigrationBase.js';
 
 // Shadow Trap shipped with no damage at all: its 3d12 lands on the next
 // creature to move adjacent, which the activation cannot know about, so there
@@ -38,6 +38,10 @@ class Migration046ShadowTrapDeferredDamage extends MigrationBase {
 	static override readonly version = 46;
 
 	override readonly version = Migration046ShadowTrapDeferredDamage.version;
+
+	override readonly title = 'Shadow Trap damage';
+
+	override readonly kind: MigrationKind = 'content';
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'spell') return;

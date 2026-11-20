@@ -18,6 +18,7 @@ interface WeaponItem {
 	system?: {
 		objectType?: string;
 		equipped?: boolean;
+		quantity?: number;
 		activation?: { effects?: Array<{ type?: string; formula?: string; damageType?: string }> };
 	};
 }
@@ -66,6 +67,7 @@ export function dualWieldOfferFor(
 	const others = Array.from(actor.items ?? []).filter(
 		(each) => each.id !== item.id && isEquippedWeapon(each) && !!firstDamage(each),
 	);
+	if ((item.system?.quantity ?? 1) >= 2) others.push(item);
 	const [other] = others;
 	if (!other) return null;
 	return sameFormula(item, other)
