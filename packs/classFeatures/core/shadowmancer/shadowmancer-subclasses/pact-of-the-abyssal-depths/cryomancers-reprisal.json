@@ -106,21 +106,11 @@
 						"damageType": "cold",
 						"ignoreArmor": true,
 						"woundDoubles": false,
-						"attackerEffectId": ""
+						"attackerEffectId": "",
+						"endsEffect": true
 					}
 				],
 				"lastsUntil": [
-					{
-						"kind": "event",
-						"boundary": null,
-						"clock": null,
-						"span": null,
-						"value": null,
-						"units": null,
-						"who": "holder",
-						"event": "takeDamage",
-						"effectName": ""
-					},
 					{
 						"kind": "event",
 						"boundary": null,

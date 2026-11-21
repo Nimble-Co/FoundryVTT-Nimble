@@ -128,6 +128,13 @@ function schema() {
 				widget: 'itemEffectPicker',
 			}),
 		),
+		endsEffect: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: key('endsEffect', 'label'),
+			hint: key('endsEffect', 'hint'),
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'damageBack' }),
 	};
 }
@@ -161,7 +168,7 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 			label: key('damageGroup', 'label'),
 			fields: ['amount', 'formula', 'damageType', 'ignoreArmor', 'woundDoubles'],
 		},
-		{ label: key('effectGroup', 'label'), fields: ['attackerEffectId'] },
+		{ label: key('effectGroup', 'label'), fields: ['attackerEffectId', 'endsEffect'] },
 	];
 
 	declare trigger: DamageBackTrigger;
@@ -174,6 +181,7 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 	declare ignoreArmor: boolean;
 	declare woundDoubles: boolean;
 	declare attackerEffectId: string;
+	declare endsEffect: boolean;
 
 	static override defineSchema(): DamageBackRule.Schema {
 		return {
@@ -191,6 +199,7 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 				['amount', 'string'],
 				['formula', 'string'],
 				['attackerEffectId', 'string'],
+				['endsEffect', 'boolean'],
 			]),
 		);
 	}

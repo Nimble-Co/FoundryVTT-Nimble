@@ -58,6 +58,7 @@ describe('pack text', () => {
 		`${STORMSHIFTER}/stormshifter-subclasses/circle-of-sky-and-storm/master-of-storm.json`,
 		`${STORMSHIFTER}/stormshifter-subclasses/circle-of-fang-and-claw/storm-wake.json`,
 		`${STORMSHIFTER}/stormshifter-subclasses/circle-of-fang-and-claw/venomous-gaze.json`,
+		`${STORMSHIFTER}/stormshifter-subclasses/circle-of-fang-and-claw/swiftshift.json`,
 		`${STORMSHIFTER}/direbeast-form/beast-of-the-pack.json`,
 		`${SHADOWMANCER}/pact-of-the-abyssal-depths/shadowfrost.json`,
 		`${SHADOWMANCER}/pact-of-the-abyssal-depths/cryomancers-reprisal.json`,
@@ -194,6 +195,21 @@ describe('Stormshifter costs that wait on the Direbeast forms', () => {
 		});
 	});
 
+	it('Swiftshift is a reaction that spends 1 mana', () => {
+		const item = readItem(
+			`${STORMSHIFTER}/stormshifter-subclasses/circle-of-fang-and-claw/swiftshift.json`,
+		);
+
+		expect(item.system.activation.cost).toMatchObject({ type: 'action', isReaction: true });
+		expect(costOf(item)).toMatchObject({
+			kind: 'mana',
+			spendMode: 'fixed',
+			amount: '1',
+			beyond: 'notAllowed',
+			disabled: false,
+		});
+	});
+
 	it('Supercharge in Beast of the Pack lets the player spend 0 to WIL mana', () => {
 		const item = readItem(`${STORMSHIFTER}/direbeast-form/beast-of-the-pack.json`);
 
@@ -282,15 +298,15 @@ describe('Shadowmancer costs', () => {
 			formula: 'floor(@cost.hp / 2)',
 			damageType: 'cold',
 			attackerEffectId: '',
+			endsEffect: true,
 		});
 	});
 
-	it("Cryomancer's Reprisal aura ends when its holder takes damage, or when combat ends", () => {
+	it("Cryomancer's Reprisal aura ends after it answers a melee hit, or when combat ends", () => {
 		const item = readItem(`${SHADOWMANCER}/pact-of-the-abyssal-depths/cryomancers-reprisal.json`);
 		const aura = (item.effects as Json[]).find((effect) => effect._id === optionOf(item).effectId);
 
 		expect(aura?.system.lastsUntil).toEqual([
-			expect.objectContaining({ kind: 'event', event: 'takeDamage', who: 'holder' }),
 			expect.objectContaining({ kind: 'event', event: 'combatEnd' }),
 		]);
 	});

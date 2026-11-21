@@ -720,7 +720,9 @@
 				"deal": "Deal {amount} damage",
 				"apply": "Apply {effect}",
 				"dealAndApply": "Deal {amount} damage and apply {effect}",
-				"double": "Suffer 1 Wound: {amount} more damage"
+				"double": "Suffer 1 Wound: {amount} more damage",
+				"endedHeading": "{name} answered the attack",
+				"ended": "Ended after it answered the attack"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
 			"escapeDamage": {
@@ -3429,6 +3431,10 @@
 				"attackerEffectId": {
 					"label": "Effect on the attacker",
 					"hint": "An effect of this item (Apply to the actor off). A copy goes on the attacker. Set its Lasts Until in the effect window."
+				},
+				"endsEffect": {
+					"label": "Ends after it answers",
+					"hint": "On an effect: the effect ends when this rule answers an attack. Other rules that answer the same attack do not end their effects."
 				},
 				"woundDoubles": {
 					"label": "A Wound doubles it",

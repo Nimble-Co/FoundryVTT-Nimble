@@ -485,6 +485,7 @@ describe('RuleCard with a form layout (damageBack)', () => {
 			'ignoreArmor',
 			'woundDoubles',
 			'attackerEffectId',
+			'endsEffect',
 		]);
 	});
 
