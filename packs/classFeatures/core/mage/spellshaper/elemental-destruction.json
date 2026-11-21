@@ -39,7 +39,7 @@
 				"attackSource": "spell",
 				"thisItemOnly": false,
 				"otherCreature": {},
-				"chargePoolIdentifier": "",
+				"chargePoolIdentifier": "spellshaper",
 				"chargeCost": 1,
 				"manaCost": 1,
 				"woundCost": 0,

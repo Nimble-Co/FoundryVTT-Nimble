@@ -6,7 +6,41 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useOption",
+				"disabled": false,
+				"id": "methodical-spellweaver-option",
+				"identifier": "",
+				"label": "Methodical Spellweaver",
+				"predicate": {},
+				"priority": 1,
+				"target": "spell",
+				"tieredOnly": true,
+				"singleTargetOnly": false,
+				"schools": [],
+				"spells": [],
+				"kind": "mana",
+				"spendMode": "fixed",
+				"amount": "0",
+				"min": "1",
+				"max": "1",
+				"beyond": "notAllowed",
+				"chargePoolIdentifier": "spellshaper",
+				"actionDelta": 1,
+				"actionMinimum": 0,
+				"rangePerMana": 0,
+				"cardNote": "",
+				"damageTypes": [],
+				"manaDelta": -2,
+				"manaMinimum": 1,
+				"freeCopy": false,
+				"replacesSpellCost": false,
+				"manaSet": null,
+				"effectId": "",
+				"picks": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

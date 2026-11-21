@@ -59,7 +59,12 @@
 		},
 		"Archmage": {
 			"description": "<p>+1 to any 2 of your stats. The first tiered spell you cast each encounter costs 1 action less and 5 fewer mana.</p>",
-			"name": "Archmage"
+			"name": "Archmage",
+			"rules": {
+				"archmage-initiative": {
+					"label": "Archmage"
+				}
+			}
 		},
 		"Armor Master": {
 			"description": "<p>You are proficient with plate armor.</p>",
@@ -147,7 +152,12 @@
 		},
 		"Beast of the Pack": {
 			"description": "<p><strong>(Medium)</strong>. Transform into a Medium beast. Gain +DEX speed, Supercharge, and the Thunderfang attack. Whenever you crit or kill one or more enemies, Thunderfang gains a cumulative +1d4 lightning damage until combat ends. </p><p><strong>Thunderfang</strong>. Action: 1d4+LVL piercing damage.</p><p><strong>Supercharge</strong>. Spend up to WIL mana, and your next Thunderfang attack deals an additional 1d8 lightning damage per mana spent (you take this damage on a miss).</p>",
-			"name": "Beast of the Pack"
+			"name": "Beast of the Pack",
+			"rules": {
+				"supercharge-cost": {
+					"label": "Supercharge"
+				}
+			}
 		},
 		"Beast of the Sea": {
 			"description": "<p>Can move, breathe, and fight underwater without penalty.</p>",
@@ -451,7 +461,12 @@
 		},
 		"Cryomancer's Reprisal": {
 			"description": "<p>Pay half your max HP to cast ANY Ice spell. After casting an Ice spell in this way, you gain an invisible aura: the next creature that hits you with a melee attack this encounter takes cold damage equal to half the HP you spent on this casting.</p>",
-			"name": "Cryomancer's Reprisal"
+			"name": "Cryomancer's Reprisal",
+			"rules": {
+				"cryomancers-reprisal-option": {
+					"label": "Cryomancer's Reprisal"
+				}
+			}
 		},
 		"Crystalline Armor": {
 			"costDetails": "when an ally drops to 0 HP",
@@ -557,7 +572,12 @@
 		},
 		"Dimensional Compression": {
 			"description": "<p>(1 or more mana) +4 range to a spell for each additional mana spent.</p>",
-			"name": "Dimensional Compression"
+			"name": "Dimensional Compression",
+			"rules": {
+				"dimensional-compression-option": {
+					"label": "Dimensional Compression"
+				}
+			}
 		},
 		"Dire Shadows": {
 			"description": "<p>Attacks against your shadow minions are made with disadvantage. They take no damage from successful saves.</p>",
@@ -599,7 +619,12 @@
 		},
 		"Echo Casting": {
 			"description": "<p>(2×mana, min. 1 mana) When you cast a tiered, single-target spell, you may cast a copy of that spell on a 2nd target for free.</p>",
-			"name": "Echo Casting"
+			"name": "Echo Casting",
+			"rules": {
+				"echo-casting-option": {
+					"label": "Echo Casting"
+				}
+			}
 		},
 		"Echoed Agony": {
 			"description": "<p>Your Swiftstrike can also target a 3rd creature within Reach 4.</p>",
@@ -647,7 +672,12 @@
 		},
 		"Elemental Transmutation": {
 			"description": "<p>(1 mana) Change the damage type of a spell to: Fire, Ice, Lightning, Necrotic, or Radiant.</p>",
-			"name": "Elemental Transmutation"
+			"name": "Elemental Transmutation",
+			"rules": {
+				"elemental-transmutation-option": {
+					"label": "Elemental Transmutation"
+				}
+			}
 		},
 		"Empowered Companion": {
 			"description": "<p>Whenever you spend mana to call forth your Lifebinding Spirit, you cast it as if you spent 1 additional mana (ignoring the typical spell tier restrictions). The maximum die size is now a d20.</p>",
@@ -680,6 +710,9 @@
 			"description": "<p>Gain [[/r 1d4]] Wounds to cast Dragonform.</p>",
 			"name": "Enveloped by the Master",
 			"rules": {
+				"enveloped-by-the-master-cost": {
+					"label": "Enveloped by the Master"
+				},
 				"NRuKjNvofPWzKu5v": {
 					"label": "Enveloped by the Master"
 				}
@@ -770,7 +803,12 @@
 		},
 		"Extra-Dimensional Vision": {
 			"description": "<p>(2 mana) You may ignore the line of sight requirement of a spell. Your spell will phase through barriers and obstacles to reach a target you know of within range.</p>",
-			"name": "Extra-Dimensional Vision"
+			"name": "Extra-Dimensional Vision",
+			"rules": {
+				"extra-dimensional-vision-option": {
+					"label": "Extra-Dimensional Vision"
+				}
+			}
 		},
 		"Face Me, Foul Creature!": {
 			"description": "<p>When you Interpose, the attacking enemy is also Taunted by you until the end of their next turn.</p>",
@@ -856,7 +894,12 @@
 		},
 		"Firebrand": {
 			"description": "<p>When you roll Initiative you may cast Enchant Weapon for free (can be upcast as normal by spending additional mana).</p>",
-			"name": "Firebrand"
+			"name": "Firebrand",
+			"rules": {
+				"firebrand-initiative": {
+					"label": "Firebrand"
+				}
+			}
 		},
 		"Fit for Any Battlefield": {
 			"description": "<p>Choose a Combat Tactic. When you roll Initiative, gain STR Combat Dice, each a d6. <em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels 6, 8, 10, 12, 16:</p><p>Choose another Combat Ability or gain +1 max Combat Dice</p>",
@@ -1501,6 +1544,12 @@
 			"rules": {
 				"master-of-storm-concentration-tracks": {
 					"label": "Master of Storm: lightning and wind concentrate separately"
+				},
+				"master-of-storm-option": {
+					"label": "Master of Storm"
+				},
+				"master-of-storm-pool": {
+					"label": "Master of Storm (1/Safe Rest)"
 				}
 			}
 		},
@@ -1564,7 +1613,12 @@
 		},
 		"Methodical Spellweaver": {
 			"description": "<p>(–2 mana) Spend 1 additional action to reduce the mana cost of a spell by 2 (min 1).</p>",
-			"name": "Methodical Spellweaver"
+			"name": "Methodical Spellweaver",
+			"rules": {
+				"methodical-spellweaver-option": {
+					"label": "Methodical Spellweaver"
+				}
+			}
 		},
 		"Mighty Endurance": {
 			"description": "<p>You can now survive an additional 4 Wounds before death.</p>",
@@ -1797,7 +1851,12 @@
 		},
 		"Precise Casting": {
 			"description": "<p>(1+ mana) Choose 1 creature per mana spent to be unaffected by a spell you cast.</p>",
-			"name": "Precise Casting"
+			"name": "Precise Casting",
+			"rules": {
+				"precise-casting-option": {
+					"label": "Precise Casting"
+				}
+			}
 		},
 		"Prehensile Tail": {
 			"description": "<p>Creatures you hit in melee that are your size or smaller are Grappled. If you hit a larger creature, you may move with it when it moves.</p>",
@@ -2050,7 +2109,12 @@
 		},
 		"Shadowfrost": {
 			"description": "<p>Your Shadow Blast also Slows. You can cast Cryosleep or Rimeblades without Pilfering Power by expending 10 temp HP. Choose 1 Ice Utility Spell.</p>",
-			"name": "Shadowfrost"
+			"name": "Shadowfrost",
+			"rules": {
+				"shadowfrost-option": {
+					"label": "Shadowfrost"
+				}
+			}
 		},
 		"Shadowmastery": {
 			"description": "<p>Choose 1 Necrotic Utility Spell.</p><hr><p>Level 8: Choose 1 more Necrotic Utility Spell</p><p>Level 14: You know all Necrotic Utility Spells.</p>",
@@ -2214,7 +2278,12 @@
 		},
 		"Spell Shaper": {
 			"description": "<p>You gain the ability to enhance your spells with powerful effects by spending additional mana. Choose 2 Spellshaper abilities. You may use 1/turn.</p><hr><p>Level 9: Choose 1 additional Spellshaper ability.</p><p>Level 13: Choose 1 additional Spellshaper ability.</p>",
-			"name": "Spell Shaper"
+			"name": "Spell Shaper",
+			"rules": {
+				"spellshaper-pool": {
+					"label": "Spellshaper (1/turn)"
+				}
+			}
 		},
 		"Stand Fast, Friends!": {
 			"description": "<p>When you roll Initiative, grant allies temp HP equal to your STR+WIL. You and allies within your aura have advantage against fear and effects that would move or knock Prone.</p>",
@@ -2259,7 +2328,12 @@
 		},
 		"Storm Wake": {
 			"description": "<p>(1/encounter) Action: Spend 3 mana to shift into a Beast of the Pack, then teleport in a straight line up to 12 spaces away, unerringly dealing WIL d8 lightning damage to any creatures you choose adjacent to your path.</p>",
-			"name": "Storm Wake"
+			"name": "Storm Wake",
+			"rules": {
+				"storm-wake-cost": {
+					"label": "Storm Wake"
+				}
+			}
 		},
 		"Stormborn (1)": {
 			"description": "<p>Gain resistance to lightning damage. (1/day) You may gain advantage on a Naturecraft check or Concentration check.</p>",
@@ -2302,7 +2376,12 @@
 		},
 		"Stretch Time": {
 			"description": "<p>(2 mana) Reduce the action cost of a spell by 1 (min 1).</p>",
-			"name": "Stretch Time"
+			"name": "Stretch Time",
+			"rules": {
+				"stretch-time-option": {
+					"label": "Stretch Time"
+				}
+			}
 		},
 		"Study!": {
 			"description": "<p>Whenever you study arcane books or are tutored by a higher level Mage during a Safe Rest, you may choose different Mage options available to you.</p>",
@@ -2677,7 +2756,12 @@
 		},
 		"Venomous Gaze": {
 			"description": "<p>(1/encounter) Action: Spend 2 mana to shift into a Beast of Nightmares. Then entice a creature within 12 spaces to move 2×WIL spaces closer to you on a failed WIL save (they roll with disadvantage and must repeat until they save or can move no further). If they end up in the same space as you, you may Sting them for free.</p>",
-			"name": "Venomous Gaze"
+			"name": "Venomous Gaze",
+			"rules": {
+				"venomous-gaze-cost": {
+					"label": "Venomous Gaze"
+				}
+			}
 		},
 		"Versatile Bowmaster": {
 			"description": "<p>Whenever you attack with a Longbow, you may roll 2d4 instead of 1d8; or with a Crossbow, 2d8 instead of 4d4.</p>",
@@ -2849,7 +2933,12 @@
 		},
 		"Zealot": {
 			"description": "<p>Whenever you attack with a melee weapon, you may spend mana (up to your highest unlocked spell tier) to choose one for each mana spent:</p><p>• <strong>Condemning Strike.</strong> Deal +5 radiant damage.</p><p>• <strong>Blessed Aim.</strong> Decrease your target's armor by 1 step for this attack.</p>",
-			"name": "Zealot"
+			"name": "Zealot",
+			"rules": {
+				"zealot-option": {
+					"label": "Zealot"
+				}
+			}
 		}
 	},
 	"folders": {

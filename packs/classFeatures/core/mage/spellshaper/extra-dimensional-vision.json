@@ -6,7 +6,41 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useOption",
+				"disabled": false,
+				"id": "extra-dimensional-vision-option",
+				"identifier": "",
+				"label": "Extra-Dimensional Vision",
+				"predicate": {},
+				"priority": 1,
+				"target": "spell",
+				"tieredOnly": false,
+				"singleTargetOnly": false,
+				"schools": [],
+				"spells": [],
+				"kind": "mana",
+				"spendMode": "fixed",
+				"amount": "2",
+				"min": "1",
+				"max": "1",
+				"beyond": "notAllowed",
+				"chargePoolIdentifier": "spellshaper",
+				"actionDelta": 0,
+				"actionMinimum": 0,
+				"rangePerMana": 0,
+				"cardNote": "The spell ignores line of sight.",
+				"damageTypes": [],
+				"manaDelta": 0,
+				"manaMinimum": 0,
+				"freeCopy": false,
+				"replacesSpellCost": false,
+				"manaSet": null,
+				"effectId": "",
+				"picks": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

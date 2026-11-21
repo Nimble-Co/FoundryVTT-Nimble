@@ -6,7 +6,27 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useItemFree",
+				"disabled": false,
+				"id": "archmage-initiative",
+				"identifier": "",
+				"label": "Archmage",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "archmage",
+				"triggers": [
+					"onInitiative"
+				],
+				"manaAtLeast": 0,
+				"freeOf": [
+					"uses",
+					"mana"
+				],
+				"upcast": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +40,17 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "archmage-apply",
+					"type": "applyEffect",
+					"effectId": "z4As6J2yxqglFC1L",
+					"recipient": "self",
+					"tempHealingNodeId": null,
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -43,7 +73,88 @@
 			20
 		]
 	},
-	"effects": [],
+	"effects": [
+		{
+			"_id": "z4As6J2yxqglFC1L",
+			"name": "Archmage",
+			"img": "icons/equipment/head/hat-pointed-leather-black-glowing.webp",
+			"type": "nimble",
+			"system": {
+				"changes": [],
+				"rules": [
+					{
+						"type": "spellManaCost",
+						"disabled": false,
+						"id": "archmage-mana",
+						"identifier": "",
+						"label": "Archmage",
+						"predicate": {},
+						"priority": 1,
+						"value": "-5",
+						"itemIdentifier": ""
+					},
+					{
+						"type": "actionCost",
+						"disabled": false,
+						"id": "archmage-action",
+						"identifier": "",
+						"label": "Archmage",
+						"predicate": {},
+						"priority": 1,
+						"applies": "item",
+						"mode": "delta",
+						"value": "-1",
+						"itemTypes": [
+							"spell"
+						],
+						"itemIdentifier": "",
+						"tieredOnly": true,
+						"reactions": []
+					}
+				],
+				"lastsUntil": [
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": "holder",
+						"event": "nextSpell",
+						"effectName": ""
+					},
+					{
+						"kind": "event",
+						"boundary": null,
+						"clock": null,
+						"span": null,
+						"value": null,
+						"units": null,
+						"who": null,
+						"event": "combatEnd",
+						"effectName": ""
+					}
+				],
+				"escape": {
+					"dc": "",
+					"saves": [
+						"strength",
+						"dexterity"
+					]
+				},
+				"tempHp": null,
+				"minor": false
+			},
+			"description": "",
+			"disabled": false,
+			"origin": null,
+			"transfer": false,
+			"statuses": [],
+			"flags": {},
+			"folder": null
+		}
+	],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

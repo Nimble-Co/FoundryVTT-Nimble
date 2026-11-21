@@ -62,8 +62,22 @@ describe('Elemental Destruction', () => {
 	});
 
 	it('is for a spell, not a weapon', () => {
-		expect(rule().offersUseOn(attackWith('weapon'))).toBe(false);
-		expect(rule().offersUseOn(attackWith('spell'))).toBe(true);
+		// The shared Spellshaper pool is not on this bare actor, so its limit is turned off here.
+		const settings = game.settings;
+		Object.assign(game, {
+			settings: {
+				get: (scope: string, key: string) =>
+					key === 'automation.resourceSpending'
+						? false
+						: settings.get(scope as never, key as never),
+			},
+		});
+		try {
+			expect(rule().offersUseOn(attackWith('weapon'))).toBe(false);
+			expect(rule().offersUseOn(attackWith('spell'))).toBe(true);
+		} finally {
+			Object.assign(game, { settings });
+		}
 	});
 });
 
