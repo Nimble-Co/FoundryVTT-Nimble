@@ -6,7 +6,54 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useOption",
+				"disabled": false,
+				"id": "zealot-option",
+				"identifier": "",
+				"label": "Zealot",
+				"predicate": {},
+				"priority": 1,
+				"target": "meleeWeapon",
+				"tieredOnly": false,
+				"singleTargetOnly": false,
+				"schools": [],
+				"spells": [],
+				"kind": "mana",
+				"spendMode": "variable",
+				"amount": "1",
+				"min": "0",
+				"max": "@resources.highestUnlockedSpellTier",
+				"beyond": "notAllowed",
+				"chargePoolIdentifier": "",
+				"actionDelta": 0,
+				"actionMinimum": 0,
+				"rangePerMana": 0,
+				"cardNote": "",
+				"damageTypes": [],
+				"manaDelta": 0,
+				"manaMinimum": 0,
+				"freeCopy": false,
+				"replacesSpellCost": false,
+				"manaSet": null,
+				"effectId": "",
+				"picks": [
+					{
+						"name": "Condemning Strike",
+						"damage": "5",
+						"damageType": "radiant",
+						"lowerArmorSteps": 0
+					},
+					{
+						"name": "Blessed Aim",
+						"damage": "",
+						"damageType": "",
+						"lowerArmorSteps": 1
+					}
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

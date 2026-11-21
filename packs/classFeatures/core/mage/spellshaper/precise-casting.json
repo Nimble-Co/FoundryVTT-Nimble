@@ -6,7 +6,41 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useOption",
+				"disabled": false,
+				"id": "precise-casting-option",
+				"identifier": "",
+				"label": "Precise Casting",
+				"predicate": {},
+				"priority": 1,
+				"target": "spell",
+				"tieredOnly": false,
+				"singleTargetOnly": false,
+				"schools": [],
+				"spells": [],
+				"kind": "mana",
+				"spendMode": "variable",
+				"amount": "1",
+				"min": "1",
+				"max": "@resources.mana.max",
+				"beyond": "notAllowed",
+				"chargePoolIdentifier": "spellshaper",
+				"actionDelta": 0,
+				"actionMinimum": 0,
+				"rangePerMana": 0,
+				"cardNote": "{amount} creatures unaffected",
+				"damageTypes": [],
+				"manaDelta": 0,
+				"manaMinimum": 0,
+				"freeCopy": false,
+				"replacesSpellCost": false,
+				"manaSet": null,
+				"effectId": "",
+				"picks": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

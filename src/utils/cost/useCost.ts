@@ -134,7 +134,6 @@ function costForDice(cost: UseCost, count: number): UseCost {
 	return {
 		...cost,
 		manaCost: cost.manaCost * count,
-		chargeCost: cost.chargeCost * count,
 		woundCost: cost.woundCost * count,
 	};
 }

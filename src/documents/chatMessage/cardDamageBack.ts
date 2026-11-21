@@ -8,6 +8,7 @@ import { payCost } from '#utils/cost/costLedger.js';
 import type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 import type { CardAttacker as SharedCardAttacker } from '#utils/damage/cardAttackers.js';
 import { applyAttackerEffects } from '#utils/defend/defendRequests.js';
+import { endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
 import { areAllies } from '#utils/movement/alliesWithin.js';
 import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
@@ -46,6 +47,8 @@ interface DamageBackRuleLike {
 		uuid?: string | null;
 		name?: string | null;
 		system?: unknown;
+		documentName?: string;
+		parent?: { documentName?: string; name?: string | null } | null;
 	} | null;
 	woundDoubles?: boolean;
 	amount?: string;
@@ -57,6 +60,8 @@ interface DamageBackRuleLike {
 	notOnAllies?: boolean;
 	answeredAttack?: boolean;
 	attackerEffectId?: string;
+	/** The effect that holds the rule ends once the rule makes its record. */
+	endsEffect?: boolean;
 	item?: {
 		uuid?: string | null;
 		name?: string;
@@ -150,6 +155,21 @@ function attackerEffectOf(rule: DamageBackRuleLike): AttackerEffect | null {
 	const effect = effectId ? itemEffectOf(item, effectId) : null;
 	if (!effect || !item?.uuid || !effectId) return null;
 	return { itemUuid: item.uuid, effectId, name: effect.name ?? '' };
+}
+
+/** A record to add, with the rule that made it. */
+interface NewRecord {
+	record: DamageBackRecord;
+	attacker: AttackerLike;
+	rule?: DamageBackRuleLike;
+}
+
+/** The effect on a creature that holds a rule which ends after it answers. */
+function endingEffectOf(rule: DamageBackRuleLike | undefined): ActiveEffect | null {
+	const effect = rule?.endsEffect ? rule.parentDocument : null;
+	if (effect?.documentName !== 'ActiveEffect' || effect.parent?.documentName !== 'Actor')
+		return null;
+	return effect as unknown as ActiveEffect;
 }
 
 interface RecordContext {
@@ -265,8 +285,11 @@ export class CardDamageBack {
 		}
 	}
 
-	/** Deal each new record now with Feature Effects on, and add them all to the card. */
-	async #add(records: Array<{ record: DamageBackRecord; attacker: AttackerLike }>) {
+	/**
+	 * Deal each new record now with Feature Effects on, and add them all to the card. Gives the
+	 * effects that end because their rule made a record.
+	 */
+	async #add(records: readonly NewRecord[]): Promise<ActiveEffect[]> {
 		const known = new Set(
 			this.#host
 				.records()
@@ -274,15 +297,34 @@ export class CardDamageBack {
 				.filter(Boolean),
 		);
 		const added: DamageBackRecord[] = [];
+		const ending = new Map<string, ActiveEffect>();
 		const automatic = isRuleAutomationEnabled();
-		for (const { record, attacker } of records) {
+		for (const { record, attacker, rule } of records) {
 			if (record.key && known.has(record.key)) continue;
 			if (record.key) known.add(record.key);
 			if (automatic) await this.#deliver(record, attacker);
 			added.push({ ...record, dealt: automatic });
+			const effect = endingEffectOf(rule);
+			if (effect?.uuid) ending.set(effect.uuid, effect);
 		}
 		if (added.length > 0) {
 			await this.#host.update({ 'system.damageBack': [...this.#host.records(), ...added] });
+		}
+		return [...ending.values()];
+	}
+
+	/** End each effect on this card. With Feature Effects off, each waits for End. */
+	async #endAnswered(effects: readonly ActiveEffect[]): Promise<void> {
+		const hostId = this.#host.id();
+		for (const effect of effects) {
+			await endOrWaitEffects([effect], {
+				heading: {
+					key: 'NIMBLE.chat.damageBack.endedHeading',
+					data: { name: (effect.parent as { name?: string | null } | null)?.name ?? '' },
+				},
+				...(hostId ? { hostId } : {}),
+				reason: { key: 'NIMBLE.chat.damageBack.ended' },
+			});
 		}
 	}
 
@@ -296,8 +338,8 @@ export class CardDamageBack {
 	): Promise<void> {
 		const attackers = this.#attackers();
 		if (attackers.length < 1 || holders.length < 1) return;
-		await queueReactionWrite(this.#host.id() ?? '', async () => {
-			const records: Array<{ record: DamageBackRecord; attacker: AttackerLike }> = [];
+		const ending = await queueReactionWrite(this.#host.id() ?? '', async () => {
+			const records: NewRecord[] = [];
 			for (const holder of holders) {
 				for (const rule of rulesOf(holder.actor)) {
 					if (rule?.type !== 'damageBack' || rule.disabled) continue;
@@ -316,12 +358,13 @@ export class CardDamageBack {
 							taken: 0,
 							critDiceTotal: 0,
 						});
-						if (record) records.push({ record, attacker: attacker.actor });
+						if (record) records.push({ record, attacker: attacker.actor, rule });
 					}
 				}
 			}
-			await this.#add(records);
+			return this.#add(records);
 		});
+		await this.#endAnswered(ending);
 	}
 
 	/**
@@ -371,7 +414,7 @@ export class CardDamageBack {
 			token: first?.actor === attacker ? (first.token ?? null) : null,
 			delivery: this.#host.delivery?.() ?? null,
 		};
-		const records: Array<{ record: DamageBackRecord; attacker: AttackerLike }> = [];
+		const records: NewRecord[] = [];
 
 		for (const { actor, taken, token, tempHp } of hurt) {
 			if (tempHp && tempOf(actor) < tempHp.temp) {
@@ -382,8 +425,13 @@ export class CardDamageBack {
 						answer.attacker,
 						{ trigger: 'tempHpReduced', taken, critDiceTotal: attack.critDiceTotal ?? 0 },
 					);
-					if (record)
-						records.push({ record: { ...record, key: '' }, attacker: answer.attacker.actor });
+					if (record) {
+						records.push({
+							record: { ...record, key: '' },
+							attacker: answer.attacker.actor,
+							rule: answer.rule,
+						});
+					}
 				}
 			}
 			if (taken <= 0 || !actor.uuid || actor.uuid === attacker.uuid) continue;
@@ -400,7 +448,7 @@ export class CardDamageBack {
 					taken,
 					critDiceTotal: attack.critDiceTotal ?? 0,
 				});
-				if (record) records.push({ record: { ...record, key: '' }, attacker });
+				if (record) records.push({ record: { ...record, key: '' }, attacker, rule });
 			}
 		}
 		const dealt = hurt.reduce(
@@ -426,7 +474,8 @@ export class CardDamageBack {
 			});
 		}
 		if (records.length > 0) {
-			await queueReactionWrite(this.#host.id() ?? '', () => this.#add(records));
+			const ending = await queueReactionWrite(this.#host.id() ?? '', () => this.#add(records));
+			await this.#endAnswered(ending);
 		}
 	}
 

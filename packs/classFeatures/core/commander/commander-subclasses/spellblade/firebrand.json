@@ -6,7 +6,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantSpells",
+				"disabled": false,
+				"id": "firebrand-enchant-weapon",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"uuids": [
+					"Compendium.nimble.nimble-spells.Item.ZPGz8EiVxGobHTA0"
+				],
+				"mode": "auto"
+			},
+			{
+				"type": "useItemFree",
+				"disabled": false,
+				"id": "firebrand-initiative",
+				"identifier": "",
+				"label": "Firebrand",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "enchant-weapon",
+				"triggers": [
+					"onInitiative"
+				],
+				"manaAtLeast": 0,
+				"freeOf": [
+					"uses",
+					"mana"
+				],
+				"upcast": true
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

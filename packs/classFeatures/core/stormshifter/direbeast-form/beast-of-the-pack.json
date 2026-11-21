@@ -6,7 +6,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "resourceCost",
+				"disabled": false,
+				"id": "supercharge-cost",
+				"identifier": "",
+				"label": "Supercharge",
+				"predicate": {},
+				"priority": 1,
+				"kind": "mana",
+				"spendMode": "variable",
+				"amount": "0",
+				"min": "0",
+				"max": "@will",
+				"beyond": "notAllowed"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
