@@ -288,7 +288,7 @@ async function giveBackPart(
 		cost,
 		paid: {
 			...paid,
-			charges: part(paid.charges),
+			charges: 0,
 			mana: part(paid.mana),
 			wounds: part(paid.wounds),
 			heroicReaction: null,
@@ -298,7 +298,6 @@ async function giveBackPart(
 	});
 	return {
 		...paid,
-		charges: paid.charges - part(paid.charges),
 		mana: paid.mana - part(paid.mana),
 		wounds: paid.wounds - part(paid.wounds),
 	};
