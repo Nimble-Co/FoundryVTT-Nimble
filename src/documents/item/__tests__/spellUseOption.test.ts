@@ -241,7 +241,7 @@ describe('the options a spell dialog offers', () => {
 		giveOption(actor, 'Stretch Time', { pool: 'spend' });
 		giveOption(actor, 'Shadowfrost', { pool: '', more: { replacesSpellCost: true } });
 
-		const groups = spellUseOptionGroups(actor as never, spell(actor));
+		const groups = useOptionGroupsOfItem(actor as never, spell(actor));
 
 		expect(groups.map((group) => [group.label, group.spend])).toEqual([
 			['Spend Pool', false],
@@ -523,6 +523,8 @@ describe('the changes of a Spell or Attack Option', () => {
 });
 
 describe('an option with a free copy', () => {
+	const clampOf = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
 	function echoCasting(actor: Hero, amount = '2 * @castManaSpent') {
 		return giveOption(actor, 'Echo Casting', {
 			amount,
@@ -558,6 +560,45 @@ describe('an option with a free copy', () => {
 		expect(notices()).toContain(
 			'The cost of Echo Casting cannot be worked out. Check its formula.',
 		);
+	});
+
+	it('spends what the dialog says, with less mana, a mana cut and a cost that reads the cast mana', async () => {
+		vi.stubGlobal('Math', Object.assign(Object.create(Math), { clamp: clampOf }));
+		const { createSpellUpcastDialogState } = await import(
+			'../../../view/dialogs/spellUpcastDialogState.svelte.ts'
+		);
+		const actor = hero({ mana: 9 });
+		const weave = giveOption(actor, 'Weave', {
+			amount: '@castManaSpent',
+			more: { manaDelta: -2, manaMinimum: 1 },
+		});
+		const item = upcastable(actor, 3);
+		let spendLine = '';
+		testDependencies.SpellUpcastDialog = function RealStateDialog(
+			_actor: unknown,
+			_item: unknown,
+			_title: string,
+			data: { spellCost?: never; useOptionGroups?: Array<{ key: string }> },
+		) {
+			const state = createSpellUpcastDialogState({
+				actor: () => actor as never,
+				spell: () => item.system as never,
+				item: () => item as never,
+				hideRollsDefault: false,
+				spellCost: data.spellCost,
+				useOptionGroups: data.useOptionGroups as never,
+			});
+			state.lessMana = true;
+			state.chooseOption(data.useOptionGroups?.[0]?.key ?? '', weave.key);
+			spendLine = state.spendLine;
+			return { render: async () => undefined, promise: Promise.resolve(state.castData) };
+		} as never;
+
+		await item.activate();
+
+		// Tier 3, 1 less is 2, cut by 2 to the minimum of 1; the option costs that 1 again.
+		expect(spendLine).toBe('When you roll, it spends 2 Mana.');
+		expect(actor.system.resources.mana.current).toBe(7);
 	});
 
 	it('costs twice the mana the cast spent, and posts a free copy at the same tier', async () => {
