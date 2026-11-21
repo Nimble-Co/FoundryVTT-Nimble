@@ -31,7 +31,7 @@ describe('the cost lines of a card', () => {
 		]);
 	});
 
-	it('show the roll of a rolled cost next to its source', () => {
+	it('show the rolled amount of a rolled cost, not the roll', () => {
 		render(CostLinesTestHarness, {
 			props: {
 				messageDocument: card([
@@ -40,9 +40,7 @@ describe('the cost lines of a card', () => {
 			},
 		});
 
-		expect(screen.getByText(/^Cost:/).textContent).toBe(
-			'Cost: 3 Wounds (1d4, Enveloped by the Master)',
-		);
+		expect(screen.getByText(/^Cost:/).textContent).toBe('Cost: 3 Wounds (Enveloped by the Master)');
 	});
 
 	it('show nothing on a card with no cost', () => {

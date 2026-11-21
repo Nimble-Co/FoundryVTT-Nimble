@@ -3,10 +3,10 @@ import type {
 	ResourceCostKind,
 	UsingBeyondWhatYouHave,
 } from '#types/resourceCost.d.ts';
+import { RESOURCE_COST_KINDS } from '../../utils/cost/resourceCost.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const RESOURCE_COST_KINDS = ['mana', 'hp', 'tempHp', 'wounds'] as const;
 const RESOURCE_COST_SPEND_MODES = ['fixed', 'variable'] as const;
 
 /** Not Allowed, Allowed, then the consequences a class spell pool offers. */

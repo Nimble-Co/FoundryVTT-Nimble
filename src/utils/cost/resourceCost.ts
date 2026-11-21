@@ -4,6 +4,14 @@ import { isResourceSpendingAutomationEnabled } from '../../settings/automationSe
 import { ACTOR_HP_PATHS, ACTOR_WOUNDS_PATHS } from '../actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 
+const RESOURCE_COST_KINDS = [
+	'mana',
+	'hp',
+	'tempHp',
+	'wounds',
+] as const satisfies readonly ResourceCostKind[];
+
+const ACTOR_MANA_PATH = 'system.resources.mana.current';
 const ACTOR_TEMP_HP_PATH = 'system.attributes.hp.temp';
 
 function fixedResourceCost(kind: ResourceCostKind, amount: number): ResourceCost {
@@ -39,6 +47,7 @@ function rollOf(actor: CostPayer, formula: string) {
 	return new Roll(formula, (actor?.getRollData?.() ?? {}) as Record<string, unknown>);
 }
 
+/** A whole amount of 0 or more; anything that is not a number is 0. */
 function wholeAmount(value: unknown): number {
 	const amount = Math.floor(Number(value));
 	return Number.isFinite(amount) ? Math.max(0, amount) : 0;
@@ -53,62 +62,120 @@ function lowestAmountOf(actor: CostPayer, cost: ResourceCost): number | null {
 	return fixedAmountOf(cost);
 }
 
-function manaOf(actor: CostPayer): number {
-	return Number(foundry.utils.getProperty(actor ?? {}, 'system.resources.mana.current') ?? 0);
+function numberAt(actor: CostPayer, path: string): number {
+	return Number(foundry.utils.getProperty(actor ?? {}, path) ?? 0);
 }
 
-async function writeMana(actor: CostPayer, value: number): Promise<void> {
-	await actor?.update({ 'system.resources.mana.current': value } as Record<string, unknown>);
+function manaOf(actor: CostPayer): number {
+	return numberAt(actor, ACTOR_MANA_PATH);
 }
 
 function woundsOf(actor: CostPayer) {
 	return getActorWoundsValueAndMax(actor as Actor.Implementation);
 }
 
+/** How many more Wounds the creature can gain before its max. */
+function woundRoomOf(actor: CostPayer): number {
+	const wounds = woundsOf(actor);
+	return wounds ? Math.max(0, wounds.max - wounds.value) : 0;
+}
+
 function hpOf(actor: CostPayer): number {
-	return Number(foundry.utils.getProperty(actor ?? {}, ACTOR_HP_PATHS.value) ?? 0);
+	return numberAt(actor, ACTOR_HP_PATHS.value);
 }
 
 function tempHpOf(actor: CostPayer): number {
-	return Number(foundry.utils.getProperty(actor ?? {}, ACTOR_TEMP_HP_PATH) ?? 0);
+	return numberAt(actor, ACTOR_TEMP_HP_PATH);
 }
 
-/** The most of a kind the creature can spend or sacrifice: HP keeps 1, Wounds stop at the max. */
-function availableOf(actor: CostPayer, kind: ResourceCostKind): number {
-	switch (kind) {
-		case 'mana':
-			return manaOf(actor);
-		case 'hp':
-			return Math.max(0, hpOf(actor) - 1);
-		case 'tempHp':
-			return tempHpOf(actor);
-		case 'wounds': {
-			const wounds = woundsOf(actor);
-			return wounds ? Math.max(0, wounds.max - wounds.value) : 0;
-		}
-	}
+interface ResourceKindFacts {
+	/** Where the actor keeps the amount. */
+	path: string;
+	/** What the actor has now at `path`. */
+	value: (actor: CostPayer) => number;
+	/** A spend adds to the amount (a Wound gained), not takes from it. */
+	grows: boolean;
+	/** What the creature has, as the notices state it. */
+	have: (actor: CostPayer) => number;
+	/** The most the creature can spend or sacrifice: HP keeps 1, Wounds stop at the max. */
+	available: (actor: CostPayer) => number;
+	/** The most a use beyond what the creature has takes: all of it; Wounds have no end. */
+	reach: (actor: CostPayer) => number;
+	/** The notice when the creature cannot cover the cost. */
+	notEnoughKey: string;
+}
+
+const RESOURCE_KINDS: Record<ResourceCostKind, ResourceKindFacts> = {
+	mana: {
+		path: ACTOR_MANA_PATH,
+		value: manaOf,
+		grows: false,
+		have: manaOf,
+		available: manaOf,
+		reach: (actor) => Math.max(0, manaOf(actor)),
+		notEnoughKey: 'NIMBLE.resourceCosts.notEnough',
+	},
+	hp: {
+		path: ACTOR_HP_PATHS.value,
+		value: hpOf,
+		grows: false,
+		have: hpOf,
+		available: (actor) => Math.max(0, hpOf(actor) - 1),
+		reach: (actor) => Math.max(0, hpOf(actor)),
+		notEnoughKey: 'NIMBLE.resourceCosts.notEnoughHp',
+	},
+	tempHp: {
+		path: ACTOR_TEMP_HP_PATH,
+		value: tempHpOf,
+		grows: false,
+		have: tempHpOf,
+		available: tempHpOf,
+		reach: (actor) => Math.max(0, tempHpOf(actor)),
+		notEnoughKey: 'NIMBLE.resourceCosts.notEnough',
+	},
+	wounds: {
+		path: ACTOR_WOUNDS_PATHS.value,
+		value: (actor) => woundsOf(actor)?.value ?? 0,
+		grows: true,
+		have: woundRoomOf,
+		available: woundRoomOf,
+		reach: () => Number.POSITIVE_INFINITY,
+		notEnoughKey: 'NIMBLE.resourceCosts.notEnoughWoundRoom',
+	},
+};
+
+function resourceKind(kind: ResourceCostKind): ResourceKindFacts {
+	return RESOURCE_KINDS[kind];
+}
+
+/** Add `amount` of a kind to the creature, or take it away with a negative amount. */
+async function changeResource(
+	actor: CostPayer,
+	kind: ResourceCostKind,
+	amount: number,
+): Promise<void> {
+	const facts = resourceKind(kind);
+	await actor?.update({
+		[facts.path]: Math.max(0, facts.value(actor) + amount),
+	} as Record<string, unknown>);
+}
+
+/** Take `amount` of a kind from the creature: spent mana and HP go down, Wounds go up. */
+function takeResource(actor: CostPayer, kind: ResourceCostKind, amount: number): Promise<void> {
+	return changeResource(actor, kind, resourceKind(kind).grows ? amount : -amount);
+}
+
+/** Give back `amount` of a kind that a use took. */
+function returnResource(actor: CostPayer, kind: ResourceCostKind, amount: number): Promise<void> {
+	return changeResource(actor, kind, resourceKind(kind).grows ? -amount : amount);
 }
 
 function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number): boolean {
-	return availableOf(actor, kind) >= amount;
+	return resourceKind(kind).available(actor) >= amount;
 }
 
 function allowsBeyond(cost: ResourceCost): boolean {
 	return cost.beyond !== 'notAllowed';
-}
-
-/** The most a use beyond what the creature has takes: all mana, temp HP and HP; Wounds have no end. */
-function reachOf(actor: CostPayer, kind: ResourceCostKind): number {
-	switch (kind) {
-		case 'mana':
-			return Math.max(0, manaOf(actor));
-		case 'hp':
-			return Math.max(0, hpOf(actor));
-		case 'tempHp':
-			return Math.max(0, tempHpOf(actor));
-		case 'wounds':
-			return Number.POSITIVE_INFINITY;
-	}
 }
 
 /**
@@ -157,7 +224,7 @@ function variableRangeOf(
 	const minimum = wholeAmount(cost.spend.min);
 	const max = wholeAmount(cost.spend.max);
 	const limit = isResourceSpendingAutomationEnabled()
-		? Math.min(max, availableOf(actor, cost.kind))
+		? Math.min(max, resourceKind(cost.kind).available(actor))
 		: max;
 	return { minimum, limit: Math.max(minimum, limit) };
 }
@@ -195,36 +262,17 @@ async function spendResource(actor: CostPayer, cost: ResourceCost): Promise<numb
 	if (needed === 0) return 0;
 	if (needed === null) return null;
 	if (!allowsBeyond(cost) && !hasEnough(actor, cost.kind, needed)) return null;
-	const amount = Math.min(needed, reachOf(actor, cost.kind));
-	if (amount === 0) return 0;
-	switch (cost.kind) {
-		case 'mana':
-			await writeMana(actor, manaOf(actor) - amount);
-			return amount;
-		case 'hp':
-			await actor?.update({ [ACTOR_HP_PATHS.value]: hpOf(actor) - amount } as Record<
-				string,
-				unknown
-			>);
-			return amount;
-		case 'tempHp':
-			await actor?.update({ [ACTOR_TEMP_HP_PATH]: tempHpOf(actor) - amount } as Record<
-				string,
-				unknown
-			>);
-			return amount;
-		case 'wounds':
-			await actor?.update({
-				[ACTOR_WOUNDS_PATHS.value]: (woundsOf(actor)?.value ?? 0) + amount,
-			} as Record<string, unknown>);
-			return amount;
-	}
+	const amount = Math.min(needed, resourceKind(cost.kind).reach(actor));
+	if (amount > 0) await takeResource(actor, cost.kind, amount);
+	return amount;
 }
 
 export {
+	RESOURCE_COST_KINDS,
 	applyBeyondConsequence,
 	beyondConsequenceDamage,
 	canSpendResource,
+	fixedAmountOf,
 	fixedResourceCost,
 	goesBeyond,
 	hpOf,
@@ -232,10 +280,13 @@ export {
 	lowestAmountOf,
 	manaOf,
 	resourceCostsOf,
+	resourceKind,
+	returnResource,
 	settleResourceCost,
 	spendResource,
 	tempHpOf,
 	variableRangeOf,
+	wholeAmount,
 	woundsOf,
-	writeMana,
+	woundRoomOf,
 };

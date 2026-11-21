@@ -7,12 +7,17 @@ function resourceCostText(kind: ResourceCostKind, amount: number | string): stri
 	return localize(`NIMBLE.resourceCosts.card.${key}`, { amount: String(amount) });
 }
 
-/** "Cost: 3 mana (Storm Wake)", or "Cost: 3 Wounds (1d4, Storm Wake)" for a rolled cost. */
+/** "Wound" for 1, else "Wounds". */
+function woundsWord(count: number): string {
+	return localize(`NIMBLE.resourceCosts.${count === 1 ? 'woundWord' : 'woundsWord'}`);
+}
+
+/** "Cost: 3 mana (<source>)". A rolled cost shows the amount it rolled. */
 function cardCostLine(cost: CardResourceCost): string {
-	const words = { cost: resourceCostText(cost.kind, cost.amount), source: cost.source };
-	return cost.roll
-		? localize('NIMBLE.resourceCosts.cardLineRolled', { ...words, roll: cost.roll })
-		: localize('NIMBLE.resourceCosts.cardLine', words);
+	return localize('NIMBLE.resourceCosts.cardLine', {
+		cost: resourceCostText(cost.kind, cost.amount),
+		source: cost.source,
+	});
 }
 
 /** A rolled amount before its roll reads as the roll, such as "1d4". */
@@ -51,4 +56,4 @@ function cardCostsOf(costs: readonly ResourceCost[]): CardResourceCost[] {
 	}));
 }
 
-export { cardCostLine, cardCostsOf, resourceCostText, rollWindowCostParts };
+export { cardCostLine, cardCostsOf, resourceCostText, rollWindowCostParts, woundsWord };

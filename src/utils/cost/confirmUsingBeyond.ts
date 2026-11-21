@@ -1,30 +1,20 @@
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { CostPayer } from '#types/useCost.d.ts';
 import localize from '../localize.js';
-import { beyondConsequenceDamage, hpOf, manaOf, tempHpOf, woundsOf } from './resourceCost.js';
+import { beyondConsequenceDamage, resourceKind } from './resourceCost.js';
+import { woundsWord } from './resourceCostWords.js';
 
 const KEY = 'NIMBLE.resourceCosts.beyond';
 
-/** "You have 1 mana. Stretch Time needs 2." */
+/** "You have 1 mana. <source> needs 2." */
 function shortLine(actor: CostPayer, cost: ResourceCost): string {
-	const words = { source: cost.source ?? '', amount: String(cost.amount) };
-	switch (cost.kind) {
-		case 'mana':
-			return localize(`${KEY}.mana`, { ...words, available: String(manaOf(actor)) });
-		case 'tempHp':
-			return localize(`${KEY}.tempHp`, { ...words, available: String(tempHpOf(actor)) });
-		case 'hp':
-			return localize(`${KEY}.hp`, { ...words, available: String(hpOf(actor)) });
-		case 'wounds': {
-			const wounds = woundsOf(actor);
-			const room = Math.max(0, (wounds?.max ?? 0) - (wounds?.value ?? 0));
-			return localize(`${KEY}.wounds`, {
-				...words,
-				available: String(room),
-				wounds: localize(`NIMBLE.resourceCosts.${room === 1 ? 'woundWord' : 'woundsWord'}`),
-			});
-		}
-	}
+	const available = resourceKind(cost.kind).have(actor);
+	return localize(`${KEY}.${cost.kind}`, {
+		source: cost.source ?? '',
+		amount: String(cost.amount),
+		available: String(available),
+		wounds: woundsWord(available),
+	});
 }
 
 /**

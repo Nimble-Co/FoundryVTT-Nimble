@@ -4013,7 +4013,6 @@
 		},
 		"resourceCosts": {
 			"cardLine": "Cost: {cost} ({source})",
-			"cardLineRolled": "Cost: {cost} ({roll}, {source})",
 			"card": {
 				"mana": "{amount} mana",
 				"hp": "{amount} HP",

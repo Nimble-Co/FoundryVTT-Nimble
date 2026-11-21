@@ -6,15 +6,13 @@ import {
 	canSpendResource,
 	isRolledCost,
 	lowestAmountOf,
-	manaOf,
+	resourceKind,
 	settleResourceCost,
-	tempHpOf,
-	woundsOf,
 } from './resourceCost.js';
-import { resourceCostText } from './resourceCostWords.js';
+import { resourceCostText, woundsWord } from './resourceCostWords.js';
 
 interface ItemWithRules {
-	rules?: Map<string, { type: string; disabled?: boolean }>;
+	rules?: ReadonlyMap<string, { type: string; disabled?: boolean }>;
 }
 
 function resourceCostRules(item: ItemWithRules): ResourceCostRule[] {
@@ -67,28 +65,15 @@ function resourceCostRollData(costs: readonly ResourceCost[]): ResourceCostRollD
 }
 
 function notEnoughNotice(actor: CostPayer, cost: ResourceCost): string {
-	const source = cost.source ?? '';
 	const amount = lowestAmountOf(actor, cost) ?? 0;
-	switch (cost.kind) {
-		case 'hp':
-			return localize('NIMBLE.resourceCosts.notEnoughHp', { source, amount: String(amount) });
-		case 'wounds': {
-			const wounds = woundsOf(actor);
-			return localize('NIMBLE.resourceCosts.notEnoughWoundRoom', {
-				source,
-				amount: String(amount),
-				wounds: localize(`NIMBLE.resourceCosts.${amount === 1 ? 'woundWord' : 'woundsWord'}`),
-				available: String(Math.max(0, (wounds?.max ?? 0) - (wounds?.value ?? 0))),
-			});
-		}
-		case 'mana':
-		case 'tempHp':
-			return localize('NIMBLE.resourceCosts.notEnough', {
-				source,
-				cost: resourceCostText(cost.kind, amount),
-				available: String(cost.kind === 'mana' ? manaOf(actor) : tempHpOf(actor)),
-			});
-	}
+	const facts = resourceKind(cost.kind);
+	return localize(facts.notEnoughKey, {
+		source: cost.source ?? '',
+		amount: String(amount),
+		cost: resourceCostText(cost.kind, amount),
+		wounds: woundsWord(amount),
+		available: String(facts.have(actor)),
+	});
 }
 
 /** The notice for the first cost the creature cannot cover, or null when it covers them all. */

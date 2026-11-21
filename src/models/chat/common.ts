@@ -1,3 +1,4 @@
+import { RESOURCE_COST_KINDS } from '../../utils/cost/resourceCost.js';
 import {
 	DIE_CHANGE_MODES,
 	DIE_OUTCOMES,
@@ -52,7 +53,7 @@ export const costs = () => ({
 				required: true,
 				nullable: false,
 				initial: 'mana',
-				choices: ['mana', 'hp', 'tempHp', 'wounds'],
+				choices: [...RESOURCE_COST_KINDS],
 			}),
 			amount: new fields.NumberField({ required: true, nullable: false, initial: 0, min: 0 }),
 			source: new fields.StringField({ required: true, nullable: false, initial: '' }),

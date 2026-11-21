@@ -429,7 +429,7 @@ class ItemActivationManager {
 			});
 		}
 
-		this.resourceCosts = resourceCostsOfUse(this.#item as never, {
+		this.resourceCosts = resourceCostsOfUse(this.#item, {
 			freeOfMana: this.free?.of.includes('mana'),
 		});
 		const refusal = resourceCostRefusal(this.actor, this.resourceCosts);
@@ -672,7 +672,7 @@ class ItemActivationManager {
 		const activationRollData = {
 			...(this.actor?.getRollData() ?? {}),
 			spent: this.#resolveSpentCharges(),
-			...(hasResourceCostRules(this.#item as never)
+			...(hasResourceCostRules(this.#item)
 				? { cost: resourceCostRollData(this.resourceCosts) }
 				: {}),
 		};

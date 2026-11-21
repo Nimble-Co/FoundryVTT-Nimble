@@ -4,26 +4,21 @@
 - **Spend mode** → `Fixed`
 - **Amount** → `3`
 
-The rule goes on the item whose use has the cost. An item can have more than one, such as 2 mana and 5 HP. The system checks every cost before the roll. When the creature does not have enough, the use stops with a message such as "Storm Wake needs 3 mana. You have 2.", and nothing is rolled or spent.
+Put the rule on the item whose use has the cost. An item can have more than one cost. The system checks every cost before the roll. When the creature does not have enough, the use stops with a message, and nothing is rolled or spent.
 
 What each resource needs:
 
-- **Mana**: at least the amount.
-- **Temp HP**: at least the amount. Only temp HP is spent, never HP.
-- **HP**: more than the amount, so the creature keeps at least 1 HP. A sacrifice of HP is not damage: armor, damage triggers and Concentration checks do not apply.
+- **Mana** and **Temp HP**: at least the amount.
+- **HP**: more than the amount, so the creature keeps 1 HP.
 - **Wounds**: room for every Wound below the maximum.
 
 **Using Beyond What You Have** sets what happens when a use needs more than the creature has:
 
-- **Not Allowed** (the default): the use stops with the "needs" message.
-- **Allowed**: the player is asked first, such as "You have 1 mana. Stretch Time needs 2. Use it anyway?" On **Use Anyway**, the creature spends or sacrifices what it has. Mana, temp HP and HP go down to 0, never below. Every Wound applies, even past the maximum, and the normal death rules follow. On **Cancel**, the use stops and nothing is spent.
-- **Half Max HP Damage**: as Allowed, and the creature also takes damage equal to half its max HP. The consequences are the same as for Casting Beyond the Pool on a class.
+- **Not Allowed** (the default): the use stops.
+- **Allowed**: the player confirms first. Then the creature spends or sacrifices what it has.
+- **Half Max HP Damage**: as Allowed, and the creature also takes damage equal to half its max HP.
 
-The card shows what the use took, so a creature with 1 mana shows **Cost: 1 mana (Stretch Time)**.
-
-The roll window says what the use costs, such as "When you roll, it spends 2 Mana and you sacrifice 5 HP."
-
-The **Amount** can be a number, a formula such as `@level`, or a roll such as `1d4`. A roll is rolled at each use, and the check uses its lowest result. The card shows the result and the roll: **Cost: 3 Wounds (1d4, Enveloped by the Master)**.
+The **Amount** can be a number, a formula such as `@level`, or a roll such as `1d4`. A roll is rolled at each use.
 
 **Example: Supercharge.** Spend 1 mana or more, up to your WIL.
 
@@ -32,14 +27,20 @@ The **Amount** can be a number, a formula such as `@level`, or a roll such as `1
 - **Minimum** → `1`
 - **Maximum** → `@will`
 
-The roll window asks for the amount. It starts at the minimum and stops at the maximum or at what the creature has, whichever is lower.
+The roll window asks for the amount. The amount starts at the minimum and stops at the maximum or at what the creature has, whichever is lower.
 
-The item's damage and healing formulas read what the use spends or sacrifices as `@cost.mana`, `@cost.hp`, `@cost.tempHp` and `@cost.wounds`. `(@cost.mana)d8` rolls 1d8 for each mana spent. `@spent` stays the charges of a Charge Consumer.
+The card shows what the use took, such as **Cost: 3 Wounds (Enveloped by the Master)**. The damage and healing formulas of the item read it as `@cost.mana`, `@cost.hp`, `@cost.tempHp` and `@cost.wounds`. For example, `(@cost.mana)d8` rolls 1d8 for each mana spent.
 
 ::: details Edge cases
-- With Not Allowed, a rolled amount that comes up higher than the creature can cover stops the use with the "needs" message, and nothing is spent. With any other choice, the player is asked after the roll, and the use takes what the creature has.
-- A variable amount still stops at what the creature has. Only a minimum above it asks to use beyond what the creature has.
-- The consequence applies after the item's own cost, such as a spell's mana. When that cost stops the use, there is no consequence.
-- A variable HP amount stops at current HP minus 1. The use stops before the roll window opens when the creature cannot cover the minimum.
+- A Temp HP cost spends only temp HP, never HP.
+- A sacrifice of HP is not damage: armor, damage triggers and Concentration checks do not apply.
+- With Allowed, mana, temp HP and HP go down to 0, never below. Every Wound applies, also past the maximum, and the usual death rules follow. On **Cancel**, the use stops and nothing is spent.
+- Half Max HP Damage has the same consequences as Casting Beyond the Pool on a class.
+- The check uses the lowest result of a rolled amount. With Not Allowed, a roll higher than the creature can cover stops the use, and nothing is spent. With a different choice, the player is asked after the roll.
+- A variable amount stops at what the creature has. Only a minimum above it asks to use beyond what the creature has.
+- A variable HP amount stops at current HP minus 1. When the creature cannot cover the minimum, the use stops before the roll window opens.
+- The consequence applies after the item's own cost, such as the mana of a spell. When that cost stops the use, there is no consequence.
+- The roll window says what the use costs, such as "When you roll, it spends 2 Mana and you sacrifice 5 HP."
+- `@spent` stays the charges of a Charge Consumer.
 - With the **Costs** automation setting off, nothing is checked or spent. A variable cost still asks for the amount, a roll is still rolled, the formulas still read the amount, and the card still shows the cost lines.
 :::

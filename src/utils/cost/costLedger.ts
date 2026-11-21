@@ -1,8 +1,7 @@
-import type { CostReceipt } from '#types/costReceipt.d.ts';
-import type { ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
+import type { CostReceipt, CostsSpent } from '#types/costReceipt.d.ts';
+import type { ConfirmBeyond, ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
 import type { CostPayer, PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { refundRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import { clearTurnUse, markTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import { queueCombatantMutationWithFreshDocument } from '../combat/queueCombatantMutationWithFreshDocument.js';
@@ -19,12 +18,10 @@ import {
 import {
 	fixedResourceCost,
 	goesBeyond,
-	hpOf,
-	manaOf,
+	RESOURCE_COST_KINDS,
 	resourceCostsOf,
+	returnResource,
 	spendResource,
-	tempHpOf,
-	writeMana,
 } from './resourceCost.js';
 import {
 	actionCostOf,
@@ -73,10 +70,7 @@ async function spendMana(actor: CostPayer, amount: number): Promise<boolean> {
 
 /** Record what a resource spend took on the paid record. */
 function recordTaken(paid: PaidUseCost, kind: ResourceCostKind, taken: number): void {
-	if (kind === 'mana') paid.mana += taken;
-	else if (kind === 'wounds') paid.wounds += taken;
-	else if (kind === 'hp') paid.hp = (paid.hp ?? 0) + taken;
-	else paid.tempHp = (paid.tempHp ?? 0) + taken;
+	paid[kind] = (paid[kind] ?? 0) + taken;
 }
 
 async function spendHeroicReaction(
@@ -158,20 +152,9 @@ async function refundHeroicReaction(paid: NonNullable<PaidUseCost['heroicReactio
 
 /** Give back what `payCost` charged. */
 async function giveBack(actor: CostPayer, { cost, paid }: CostReceipt): Promise<void> {
-	if (paid.wounds > 0) {
-		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
-		if (wounds) {
-			await actor?.update({
-				'system.attributes.wounds.value': Math.max(0, wounds.value - paid.wounds),
-			} as Record<string, unknown>);
-		}
-	}
-	if (paid.mana > 0) await writeMana(actor, manaOf(actor) + paid.mana);
-	if ((paid.hp ?? 0) > 0 || (paid.tempHp ?? 0) > 0) {
-		await actor?.update({
-			...(paid.hp ? { 'system.attributes.hp.value': hpOf(actor) + paid.hp } : {}),
-			...(paid.tempHp ? { 'system.attributes.hp.temp': tempHpOf(actor) + paid.tempHp } : {}),
-		} as Record<string, unknown>);
+	for (const kind of RESOURCE_COST_KINDS) {
+		const amount = paid[kind] ?? 0;
+		if (amount > 0) await returnResource(actor, kind, amount);
 	}
 	if (paid.charges > 0) await refundRuleCharge(actor, cost.chargePoolIdentifier, paid.charges);
 	if (paid.dice) {
@@ -253,12 +236,8 @@ async function payCost(
 	return paid;
 }
 
-interface ResourceCostsSpent {
+interface ResourceCostsSpent extends CostsSpent {
 	receipt: CostReceipt;
-	/** The costs as the use took them. With Resource Spending off, the amounts the use needed. */
-	taken: ResourceCost[];
-	/** The costs that went beyond what the creature had, whose consequences still apply. */
-	beyond: ResourceCost[];
 }
 
 /**
@@ -269,9 +248,7 @@ interface ResourceCostsSpent {
 async function spendResourceCosts(
 	actor: CostPayer,
 	costs: readonly ResourceCost[],
-	{
-		confirmBeyond = async () => false,
-	}: { confirmBeyond?: (costs: ResourceCost[]) => Promise<boolean> } = {},
+	{ confirmBeyond = async () => false }: { confirmBeyond?: ConfirmBeyond } = {},
 ): Promise<ResourceCostsSpent | null> {
 	const beyond = costs.filter((cost) => goesBeyond(actor, cost));
 	if (beyond.length > 0 && !(await confirmBeyond(beyond))) return null;

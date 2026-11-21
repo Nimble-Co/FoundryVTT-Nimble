@@ -29,6 +29,9 @@ export interface ResourceCost {
 	roll?: string;
 }
 
+/** Asks the player to confirm costs that need more than the creature has. True to go on. */
+export type ConfirmBeyond = (costs: ResourceCost[]) => Promise<boolean>;
+
 /** What one use spent or sacrificed of each kind, as the item's formulas read it in `@cost`. */
 export type ResourceCostRollData = Record<ResourceCostKind, number>;
 
