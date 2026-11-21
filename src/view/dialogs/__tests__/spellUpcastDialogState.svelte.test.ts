@@ -389,3 +389,145 @@ describe('the upcast dialog preview', () => {
 		expect(state.upcastPreview).toEqual(['+4 fire Damage']);
 	});
 });
+
+function manaCost(source: string, amount: number, variable?: { min: number; max: number }) {
+	return {
+		kind: 'mana' as const,
+		amount: variable ? variable.min : amount,
+		spend: variable
+			? { mode: 'variable' as const, min: String(variable.min), max: String(variable.max) }
+			: { mode: 'fixed' as const },
+		beyond: 'notAllowed' as const,
+		source,
+		id: source,
+	};
+}
+
+function option(name: string, amount: number, more: object = {}) {
+	return {
+		key: `Item.${name}:option`,
+		name,
+		cost: manaCost(name, amount),
+		poolIdentifier: 'spellshaper',
+		actionCostChange: null,
+		...more,
+	};
+}
+
+const stretchTime = option('Stretch Time', 2, { actionCostChange: { delta: -1, minimum: 1 } });
+const compression = option('Dimensional Compression', 1, {
+	cost: manaCost('Dimensional Compression', 1, { min: 1, max: 8 }),
+});
+
+function spellshaper(used = false, options = [stretchTime, compression]) {
+	return { key: 'spellshaper', label: 'Spellshaper (1/turn)', used, options };
+}
+
+describe('the upcast dialog Spell or Attack Options', () => {
+	it('show options that share a pool as one dropdown named after the pool, with None chosen', () => {
+		const state = open(caster(), fireBolt(), { useOptionGroups: [spellshaper()] });
+
+		expect(state.optionGroups).toEqual([
+			{
+				key: 'spellshaper',
+				label: 'Spellshaper (1/turn)',
+				disabled: false,
+				note: '',
+				chosen: '',
+				amount: null,
+				entries: [
+					{ key: '', label: 'None' },
+					{ key: stretchTime.key, label: 'Stretch Time (2 mana)' },
+					{ key: compression.key, label: 'Dimensional Compression (1+ mana)' },
+				],
+			},
+		]);
+		expect(state.castData.useOptions).toBeUndefined();
+	});
+
+	it('show a group whose pool has no use left as disabled, with "Used this turn"', () => {
+		const state = open(caster(), fireBolt(), { useOptionGroups: [spellshaper(true)] });
+
+		expect(state.optionGroups[0]).toMatchObject({ disabled: true, note: 'Used this turn' });
+	});
+
+	it('with Resource Spending off, never disable a group', () => {
+		settings(['automation.resourceSpending']);
+		const state = open(caster(), fireBolt(), { useOptionGroups: [spellshaper(true)] });
+
+		expect(state.optionGroups[0]).toMatchObject({ disabled: false, note: '' });
+	});
+
+	it('put the chosen option in the cast', () => {
+		const state = open(caster(), fireBolt(), { useOptionGroups: [spellshaper()] });
+
+		state.chooseOption('spellshaper', stretchTime.key);
+
+		expect(state.optionGroups[0].chosen).toBe(stretchTime.key);
+		expect(state.castData.useOptions).toEqual([{ key: stretchTime.key }]);
+
+		state.chooseOption('spellshaper', '');
+
+		expect(state.castData.useOptions).toBeUndefined();
+	});
+
+	it('add the option mana to the spell mana in the spend line, and its action change', () => {
+		const state = open(caster({ mana: 5 }), fireBolt(), {
+			useOptionGroups: [spellshaper()],
+			spendsActions: 2,
+		});
+
+		state.chooseOption('spellshaper', stretchTime.key);
+
+		expect(state.spendLine).toBe('When you roll, it spends 1 action and 3 Mana.');
+	});
+
+	it('mark the tiers that the option mana leaves short, and refuse such a tier', () => {
+		const state = open(caster({ mana: 3, unlocked: 3 }), fireBolt(), {
+			useOptionGroups: [spellshaper()],
+		});
+
+		state.chooseOption('spellshaper', stretchTime.key);
+
+		expect(state.tiers).toEqual([
+			{ tier: 1, short: false },
+			{ tier: 2, short: true },
+			{ tier: 3, short: true },
+		]);
+		state.manaToSpend = 2;
+		expect(state.castWarning).toBe('Not enough mana. You have 3, but need 4.');
+	});
+
+	it('ask for the amount of a variable option cost, up to its maximum and the mana left', () => {
+		const state = open(caster({ mana: 5, unlocked: 3 }), fireBolt(), {
+			useOptionGroups: [spellshaper()],
+		});
+
+		state.chooseOption('spellshaper', compression.key);
+
+		expect(state.optionGroups[0].amount).toEqual({ kind: 'mana', minimum: 1, limit: 4, amount: 1 });
+		state.setOptionAmount('spellshaper', 9);
+		expect(state.optionGroups[0].amount?.amount).toBe(4);
+		expect(state.castData.useOptions).toEqual([{ key: compression.key, amount: 4 }]);
+		expect(state.spendLine).toBe('When you roll, it spends 5 Mana.');
+	});
+});
+
+describe('the upcast dialog variable Spend or Sacrifice cost', () => {
+	it('asks for the amount and sends it with the cast', () => {
+		const cost = { ...manaCost('Frost Pact', 1, { min: 1, max: 3 }), kind: 'hp' as const };
+		const state = open(
+			{ ...caster(), system: { ...caster().system, attributes: { hp: { value: 20 } } } },
+			fireBolt(),
+			{ resourceCosts: [cost] },
+		);
+
+		expect(state.variableResourceCosts).toEqual([
+			{ id: 'Frost Pact', kind: 'hp', minimum: 1, limit: 3, amount: 1 },
+		]);
+		state.setResourceAmount('Frost Pact', 2);
+
+		expect(state.castData.resourceAmounts).toEqual({ 'Frost Pact': 2 });
+		expect(state.spendLine).toBe('When you roll, it spends 1 Mana and you sacrifice 2 HP.');
+	});
+});

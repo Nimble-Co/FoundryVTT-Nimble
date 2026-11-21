@@ -1,0 +1,222 @@
+import type { ActionCostChange } from '#types/useOption.d.ts';
+import { ruleKey } from '#utils/actor/actorRules.js';
+import { withWidget } from './_widgetOption.js';
+import { NimbleBaseRule } from './base.js';
+import { ResourceCostRule, resourceCostFields } from './resourceCost.js';
+
+const WORDS = 'NIMBLE.rules.useOption';
+
+/** What an option goes into the dialog of. */
+const USE_OPTION_TARGETS = ['spell'] as const;
+type UseOptionTarget = (typeof USE_OPTION_TARGETS)[number];
+
+const forSpells = (data: Record<string, unknown>) => (data.target ?? 'spell') === 'spell';
+
+function schema() {
+	const { fields } = foundry.data;
+
+	return {
+		target: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'spell',
+			label: `${WORDS}.target.label`,
+			hint: `${WORDS}.target.hint`,
+			choices: () =>
+				Object.fromEntries(
+					USE_OPTION_TARGETS.map((target) => [target, `${WORDS}.target.choices.${target}`]),
+				),
+		}),
+		tieredOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.tieredOnly.label`,
+				hint: `${WORDS}.tieredOnly.hint`,
+				showWhen: forSpells,
+			}),
+		),
+		singleTargetOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.singleTargetOnly.label`,
+				hint: `${WORDS}.singleTargetOnly.hint`,
+				showWhen: forSpells,
+			}),
+		),
+		schools: new fields.ArrayField(
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				choices: () => CONFIG.NIMBLE.spellSchools,
+			}),
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: [] as string[],
+				label: `${WORDS}.schools.label`,
+				hint: `${WORDS}.schools.hint`,
+				showWhen: forSpells,
+			}),
+		),
+		spells: new fields.ArrayField(
+			new fields.StringField({ required: true, nullable: false, initial: '' }),
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: [] as string[],
+				label: `${WORDS}.spells.label`,
+				hint: `${WORDS}.spells.hint`,
+				showWhen: forSpells,
+			}),
+		),
+		...resourceCostFields(),
+		chargePoolIdentifier: new fields.StringField(
+			withWidget({
+				// Not required, so the picker lists an empty choice for no pool.
+				required: false,
+				nullable: false,
+				initial: '',
+				label: `${WORDS}.chargePoolIdentifier.label`,
+				hint: `${WORDS}.chargePoolIdentifier.hint`,
+				widget: 'chargePoolPicker',
+			}),
+		),
+		actionDelta: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			label: `${WORDS}.actionDelta.label`,
+			hint: `${WORDS}.actionDelta.hint`,
+		}),
+		actionMinimum: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: 0,
+				integer: true,
+				label: `${WORDS}.actionMinimum.label`,
+				hint: `${WORDS}.actionMinimum.hint`,
+				showWhen: (data: Record<string, unknown>) => Number(data.actionDelta ?? 0) < 0,
+			}),
+		),
+		type: new fields.StringField({ required: true, nullable: false, initial: 'useOption' }),
+	};
+}
+
+declare namespace UseOptionRule {
+	type Schema = ResourceCostRule.Schema & ReturnType<typeof schema>;
+}
+
+/** The parts of a spell an option reads to decide whether it applies. */
+interface OptionSpell {
+	type?: string;
+	identifier?: string;
+	system?: {
+		identifier?: string;
+		tier?: number;
+		school?: string;
+		activation?: {
+			acquireTargetsFromTemplate?: boolean;
+			targets?: { count?: number };
+		};
+	};
+}
+
+/**
+ * An option the player can turn on in the dialog of another item, with its own cost and
+ * change. It lives on the item that owns the option. Options that name the same Charge Pool
+ * share its uses.
+ */
+class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
+	static override description = `${WORDS}.description`;
+	static override icon = 'fa-solid fa-list-check';
+
+	declare target: UseOptionTarget;
+
+	declare tieredOnly: boolean;
+
+	declare singleTargetOnly: boolean;
+
+	// `schools` is inferred from the schema's `choices`.
+
+	/** Identifiers of the spells the option applies to. Empty is every spell. */
+	declare spells: string[];
+
+	declare chargePoolIdentifier: string;
+
+	declare actionDelta: number;
+
+	declare actionMinimum: number;
+
+	static override defineSchema(): UseOptionRule.Schema {
+		return {
+			...NimbleBaseRule.defineSchema(),
+			...schema(),
+		} as UseOptionRule.Schema;
+	}
+
+	/** The key of the option on the actor. */
+	get key(): string {
+		return ruleKey(this);
+	}
+
+	/** The Charge Pool whose uses the option spends, or '' for none. */
+	get poolIdentifier(): string {
+		return String(this.chargePoolIdentifier ?? '').trim();
+	}
+
+	/** How the option changes the action cost, or null when it does not. */
+	get actionCostChange(): ActionCostChange | null {
+		const delta = Math.trunc(Number(this.actionDelta) || 0);
+		if (delta === 0) return null;
+		return { delta, minimum: Math.max(0, Math.trunc(Number(this.actionMinimum) || 0)) };
+	}
+
+	/** Whether the option goes into the cast dialog of this spell. */
+	appliesToSpell(spell: OptionSpell | null | undefined): boolean {
+		if (this.target !== 'spell' || spell?.type !== 'spell') return false;
+		const system = spell.system ?? {};
+		if (this.tieredOnly && (system.tier ?? 0) <= 0) return false;
+		if (this.singleTargetOnly && !isSingleTarget(system.activation)) return false;
+		const schools = this.schools as string[];
+		if (schools.length > 0 && !schools.includes(system.school ?? '')) return false;
+		const identifier = spell.identifier || system.identifier || '';
+		return this.spells.length === 0 || this.spells.includes(identifier);
+	}
+
+	override tooltipInfo(): string {
+		return NimbleBaseRule.prototype.tooltipInfo.call(
+			this,
+			new Map([
+				['target', '"spell"'],
+				['tieredOnly', 'boolean'],
+				['singleTargetOnly', 'boolean'],
+				['schools', 'string[]'],
+				['spells', 'string[]'],
+				['kind', '"mana" | "hp" | "tempHp" | "wounds"'],
+				['spendMode', '"fixed" | "variable"'],
+				['amount', 'string'],
+				['min', 'string'],
+				['max', 'string'],
+				['beyond', '"notAllowed" | "allowed" | "halfMaxHpDamage"'],
+				['chargePoolIdentifier', 'string'],
+				['actionDelta', 'number'],
+				['actionMinimum', 'number'],
+			]),
+		);
+	}
+}
+
+function isSingleTarget(
+	activation: { acquireTargetsFromTemplate?: boolean; targets?: { count?: number } } | undefined,
+): boolean {
+	return !activation?.acquireTargetsFromTemplate && (activation?.targets?.count ?? 1) === 1;
+}
+
+export { UseOptionRule };

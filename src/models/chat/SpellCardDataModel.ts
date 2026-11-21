@@ -37,6 +37,17 @@ const spellCardSchema = () => ({
 		nullable: false,
 	}),
 	upcast: new fields.ObjectField({ required: false, nullable: true, initial: null }),
+	/**
+	 * The mana the cast spent on the spell, after free casts and less mana. An option's mana
+	 * is not in it. With Resource Spending off, the mana the cast would have spent.
+	 */
+	castManaSpent: new fields.NumberField({
+		required: true,
+		nullable: false,
+		initial: 0,
+		min: 0,
+		integer: true,
+	}),
 });
 
 declare namespace NimbleSpellCardData {

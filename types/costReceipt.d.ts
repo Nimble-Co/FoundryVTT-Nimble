@@ -14,3 +14,8 @@ export interface CostsSpent {
 	/** The costs that went beyond what the creature had, whose consequences still apply. */
 	beyond: ResourceCost[];
 }
+
+/** What an item use spent: the receipts to give back, and the costs as taken, for the card. */
+export interface UseSpend extends CostsSpent {
+	receipts: CostReceipt[];
+}

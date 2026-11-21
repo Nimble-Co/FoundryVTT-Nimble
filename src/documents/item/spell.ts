@@ -1,17 +1,23 @@
 import { SYSTEM_ID } from '#system';
-import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { UseSpend } from '#types/costReceipt.d.ts';
 import type { ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
 import { CHAOS_INVOKED_FLAG, CHAOS_TICKED_FLAG, invokeChaos } from '#utils/chaos/invokeChaos.js';
 import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
-import { receiptOf } from '../../utils/cost/costLedger.js';
+import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
 import { paySpellCost } from '../../utils/spell/paySpellCost.js';
 import { previewOverdraftDamage } from '../../utils/spell/spellCost.js';
 import { NimbleBaseItem } from './base.svelte.js';
+
+/** The mana the cast spends on the spell, after Free of mana and less mana. A pool cost is 0. */
+function castManaOf(spell: NimbleSpellItem, manager: ItemActivationManager): number {
+	const cost = manager.spellCost;
+	return spell.system.tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
+}
 
 /** The Chaos Table rolls now: the cast invokes chaos and Feature Effects are on. */
 function chaosRollsNow(manager: ItemActivationManager): boolean {
@@ -36,31 +42,43 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		super._populateDerivedTags();
 	}
 
-	/** `manaSpent`: the mana the cast costs, after Free of mana and less mana. A pool cost is 0. */
+	/** `manaSpent`: the mana the cast spends on the spell. An option's mana is not in it. */
 	protected override _useContext(manager: ItemActivationManager): Record<string, unknown> {
-		const cost = manager.spellCost;
-		const manaSpent = this.system.tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
-		return { upcast: manager.upcastResult, manaSpent };
+		return { upcast: manager.upcastResult, manaSpent: castManaOf(this, manager) };
 	}
 
 	/**
 	 * The manager resolved what this cast costs (cantrips are free), against the
 	 * tier actually cast. The seam decides whether the cost is mana or a
 	 * class-declared pool, and honours the resource spending automation setting.
+	 * The Spend or Sacrifice costs and the options turned on are checked and spent
+	 * in the same step.
 	 */
-	protected override async _payForUse(manager: ItemActivationManager): Promise<CostReceipt | null> {
-		if (this.system.tier <= 0 || !this.actor) return receiptOf();
-		const spellCost: ResolvedSpellCost = manager.spellCost ?? { type: 'none' };
-		const payment = await paySpellCost(this.actor, spellCost, {
+	protected override async _spendForUse(manager: ItemActivationManager): Promise<UseSpend | null> {
+		if (!this.actor) return { receipts: [], taken: [], beyond: [] };
+		const actor = this.actor;
+		const spellCost: ResolvedSpellCost =
+			this.system.tier > 0 ? (manager.spellCost ?? { type: 'none' }) : { type: 'none' };
+		const payment = await paySpellCost(actor, spellCost, {
 			confirmOverdraft: (available) =>
 				confirmSpellOverdraft({
 					spellName: this.name,
 					cost: spellCost,
 					available,
-					damage: previewOverdraftDamage(this.actor!, spellCost),
+					damage: previewOverdraftDamage(actor, spellCost),
 				}),
+			costs: [...manager.resourceCosts, ...manager.chosenOptions.costs],
+			pools: manager.chosenOptions.pools,
+			confirmBeyond: (costs) => confirmUsingBeyond(actor, costs),
 		});
-		if (payment.paid) return payment.receipt ?? receiptOf();
+		if (payment.paid) {
+			return {
+				receipts: [...(payment.receipt ? [payment.receipt] : []), ...(payment.receipts ?? [])],
+				taken: payment.taken ?? [],
+				beyond: payment.beyond ?? [],
+			};
+		}
+		if (payment.notice) ui.notifications?.error(payment.notice);
 		if (payment.failure) {
 			const messageKeys: Record<SpellCostFailure['code'], string> = {
 				poolMissing: 'NIMBLE.charges.notifications.poolMissing',
@@ -129,6 +147,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				school: this.system.school,
 				spellName: this.name,
 				upcast: manager?.upcastResult,
+				castManaSpent: manager ? castManaOf(this, manager) : 0,
 			},
 			type: 'spell',
 		};

@@ -23,7 +23,8 @@ function beyondChoices(): Record<string, string> {
 
 const isVariable = (data: Record<string, unknown>) => data.spendMode === 'variable';
 
-function schema() {
+/** The fields of one cost: resource, spend mode, amount, minimum, maximum and beyond. */
+function resourceCostFields() {
 	const { fields } = foundry.data;
 
 	return {
@@ -96,6 +97,14 @@ function schema() {
 			hint: 'NIMBLE.rules.resourceCost.beyond.hint',
 			choices: beyondChoices,
 		}),
+	};
+}
+
+function schema() {
+	const { fields } = foundry.data;
+
+	return {
+		...resourceCostFields(),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -118,7 +127,9 @@ function shownName(item: { name?: string | null; type?: string; system?: unknown
 }
 
 /** What one use of its item costs in mana, HP, temp HP or Wounds. */
-class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
+class ResourceCostRule<
+	TSchema extends ResourceCostRule.Schema = ResourceCostRule.Schema,
+> extends NimbleBaseRule<TSchema> {
 	static override worksOnEffects = false;
 
 	static override group = 'resource';
@@ -193,4 +204,4 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 	}
 }
 
-export { ResourceCostRule };
+export { ResourceCostRule, resourceCostFields };

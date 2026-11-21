@@ -1,9 +1,13 @@
 import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
 import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
+import type { ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
 import type { ResolvedSpellCost } from '#types/spellCost.d.ts';
 import type { ScalingDelta, SpellScaling } from '#types/spellScaling.d.ts';
+import type { ChosenUseOption, UseOption, UseOptionGroup } from '#types/useOption.d.ts';
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
-import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
+import { withActionCostChange } from '#utils/combat/withActionCostChange.js';
+import { variableRangeOf } from '#utils/cost/resourceCost.js';
+import { optionEntryText, rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
@@ -26,6 +30,7 @@ import { isResourceSpendingAutomationEnabled } from '../../settings/automationSe
 import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
 import { rollSpendLine } from './components/rollSpendLine.ts';
 import { heldChangeChoice } from './heldChangeChoice.svelte.ts';
+import { resourceAmounts } from './resourceAmounts.svelte.ts';
 
 type EffectNode = { id?: string; type: string; formula?: string };
 
@@ -58,8 +63,31 @@ export interface CreateSpellUpcastDialogStateOptions {
 	spellCost?: ResolvedSpellCost | null;
 	/** The actions the cast spends. */
 	spendsActions?: number;
-	/** Spend or Sacrifice costs of the use, for the spend line. */
-	resourceCosts?: Parameters<typeof rollWindowCostParts>[0];
+	/** Spend or Sacrifice costs of the use, for the spend line and the amounts to choose. */
+	resourceCosts?: readonly ResourceCost[];
+	/** The Spell or Attack Options the caster can turn on for this spell. */
+	useOptionGroups?: readonly UseOptionGroup[];
+}
+
+/** The amount a player chooses for a variable option cost. */
+export interface OptionAmount {
+	kind: ResourceCostKind;
+	minimum: number;
+	limit: number;
+	amount: number;
+}
+
+/** One dropdown of options, as the dialog shows it. */
+export interface OptionGroupView {
+	key: string;
+	label: string;
+	disabled: boolean;
+	/** Why the group is disabled, or ''. */
+	note: string;
+	/** The key of the chosen option, or '' for None. */
+	chosen: string;
+	amount: OptionAmount | null;
+	entries: Array<{ key: string; label: string }>;
 }
 
 export interface UpcastTier {
@@ -82,6 +110,15 @@ export interface SpellCastData {
 	damageMultiplier?: boolean;
 	lessMana: boolean;
 	upcast: { manaToSpend: number; choiceIndex: number | undefined } | undefined;
+	resourceAmounts?: Record<string, number>;
+	useOptions?: ChosenUseOption[];
+}
+
+function sumOfMana(costs: readonly ResourceCost[]): number {
+	return costs.reduce((total, cost) => {
+		const amount = Number(cost.amount);
+		return cost.kind === 'mana' && Number.isFinite(amount) ? total + amount : total;
+	}, 0);
 }
 
 const damageOrHealingOps = new Set(['addFlatDamage', 'addDice', 'increaseDieSize']);
@@ -94,6 +131,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		spellCost = null,
 		spendsActions = 0,
 		resourceCosts = [],
+		useOptionGroups = [],
 	} = options;
 	const { spellUpcastDialog, effectTypes, spellProperties, itemConfig, objectTypes } =
 		CONFIG.NIMBLE;
@@ -167,10 +205,10 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		flatCost: isPoolCost,
 		pinnedCastTier,
 	});
-	const tiers: UpcastTier[] = Array.from({ length: maxMana - baseMana + 1 }, (_, index) => {
-		const tier = baseMana + index;
-		return { tier, short: tier > currentMana };
-	});
+	const tierNumbers = Array.from(
+		{ length: maxMana - baseMana + 1 },
+		(_, index) => baseMana + index,
+	);
 
 	const canUpcast =
 		spell.tier > 0 &&
@@ -192,10 +230,134 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 				)
 			: null,
 	);
-	const costParts = rollWindowCostParts(resourceCosts);
-	const spendLine = $derived(
-		rollSpendLine(spendsActions, [costLabel ?? '', ...costParts.spends], costParts.sacrifices),
+	const resources = resourceAmounts(actor, resourceCosts);
+
+	const enforcesOptionCosts = isResourceSpendingAutomationEnabled();
+	let optionChoices = $state<Record<string, string>>({});
+	let optionAmounts = $state<Record<string, number>>({});
+
+	function chosenOptionOf(group: UseOptionGroup): UseOption | null {
+		const key = optionChoices[group.key] ?? '';
+		return group.options.find((each) => each.key === key) ?? null;
+	}
+
+	/** The mana of the spell at the chosen tier, which every other mana spend comes after. */
+	const spellMana = $derived(baseMana > 0 && !isPoolCost ? manaToSpend : 0);
+
+	function optionAmountOf(option: UseOption): OptionAmount | null {
+		const range = variableRangeOf(actor as never, option.cost);
+		if (!range) return null;
+		const left = option.cost.kind === 'mana' ? currentMana - spellMana : range.limit;
+		const limit = enforcesOptionCosts
+			? Math.max(range.minimum, Math.min(range.limit, left))
+			: range.limit;
+		const chosen = optionAmounts[option.key] ?? range.minimum;
+		return {
+			kind: option.cost.kind,
+			minimum: range.minimum,
+			limit,
+			amount: Math.clamp(chosen, range.minimum, limit),
+		};
+	}
+
+	const chosenOptions = $derived(
+		useOptionGroups.flatMap((group) => {
+			const option = chosenOptionOf(group);
+			if (!option) return [];
+			const amount = optionAmountOf(option);
+			return [{ option, amount }];
+		}),
 	);
+
+	/** The option costs with the chosen amounts in place. */
+	const optionCosts = $derived(
+		chosenOptions.map(({ option, amount }) =>
+			amount ? { ...option.cost, amount: amount.amount } : option.cost,
+		),
+	);
+
+	const otherCosts = $derived([...resources.chosen(), ...optionCosts]);
+	const otherMana = $derived(sumOfMana(otherCosts));
+
+	const tiers = $derived<UpcastTier[]>(
+		tierNumbers.map((tier) => ({ tier, short: tier + otherMana > currentMana })),
+	);
+
+	const actionsSpent = $derived(
+		spendsActions > 0
+			? chosenOptions.reduce(
+					(actions, { option }) => withActionCostChange(actions, option.actionCostChange),
+					spendsActions,
+				)
+			: 0,
+	);
+
+	const spendLine = $derived.by(() => {
+		const notMana = otherCosts.filter(
+			(cost) => cost.kind !== 'mana' || !Number.isFinite(Number(cost.amount)),
+		);
+		const parts = rollWindowCostParts(notMana);
+		const mana =
+			spellCost?.type === 'mana'
+				? [formatSpellCostLabel({ type: 'mana', amount: manaToSpend + otherMana }) ?? '']
+				: [
+						costLabel ?? '',
+						...rollWindowCostParts(
+							otherMana > 0
+								? [
+										{
+											kind: 'mana',
+											amount: otherMana,
+											spend: { mode: 'fixed' },
+											beyond: 'notAllowed',
+										},
+									]
+								: [],
+						).spends,
+					];
+		return rollSpendLine(actionsSpent, [...mana, ...parts.spends], parts.sacrifices);
+	});
+
+	const optionGroups = $derived<OptionGroupView[]>(
+		useOptionGroups.map((group) => {
+			const disabled = enforcesOptionCosts && group.used;
+			const option = chosenOptionOf(group);
+			return {
+				key: group.key,
+				label: group.label,
+				disabled,
+				note: disabled ? localize('NIMBLE.useOptions.usedThisTurn') : '',
+				chosen: option?.key ?? '',
+				amount: option ? optionAmountOf(option) : null,
+				entries: [
+					{ key: '', label: localize('NIMBLE.useOptions.none') },
+					...group.options.map((each) => ({
+						key: each.key,
+						label: optionEntryText(each.name, each.cost),
+					})),
+				],
+			};
+		}),
+	);
+
+	function chooseOption(groupKey: string, optionKey: string) {
+		const group = useOptionGroups.find((each) => each.key === groupKey);
+		if (!group || (enforcesOptionCosts && group.used)) return;
+		const known = optionKey === '' || group.options.some((each) => each.key === optionKey);
+		if (known) optionChoices = { ...optionChoices, [groupKey]: optionKey };
+	}
+
+	function setOptionAmount(groupKey: string, value: number) {
+		const group = useOptionGroups.find((each) => each.key === groupKey);
+		const option = group ? chosenOptionOf(group) : null;
+		const range = option ? optionAmountOf(option) : null;
+		if (!option || !range) return;
+		const next = Number.isFinite(value) ? Math.floor(value) : range.minimum;
+		optionAmounts = {
+			...optionAmounts,
+			[option.key]: Math.clamp(next, range.minimum, range.limit),
+		};
+	}
 
 	const upcastPreview = $derived.by(() => {
 		if (!canUpcast || upcastSteps === 0) return [];
@@ -344,16 +506,14 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 
 		// Only a tiered spell that costs mana; a class pool cost is checked on
 		// the activation path.
-		if (baseMana > 0 && !isPoolCost) {
-			if (manaToSpend < baseMana) {
-				return format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) });
-			}
-			if (enforceManaCost && manaToSpend > currentMana) {
-				return format(spellUpcastDialog.warnings.insufficientMana, {
-					current: String(currentMana),
-					needed: String(manaToSpend),
-				});
-			}
+		if (baseMana > 0 && !isPoolCost && manaToSpend < baseMana) {
+			return format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) });
+		}
+		if (enforceManaCost && spellMana + otherMana > currentMana) {
+			return format(spellUpcastDialog.warnings.insufficientMana, {
+				current: String(currentMana),
+				needed: String(spellMana + otherMana),
+			});
 		}
 
 		if (manaToSpend > maxTier) {
@@ -377,6 +537,14 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		upcast: canUpcast
 			? { manaToSpend, choiceIndex: hasChoices ? choiceIndex : undefined }
 			: undefined,
+		...(resources.variableCosts.length > 0 ? { resourceAmounts: resources.amounts } : {}),
+		...(chosenOptions.length > 0
+			? {
+					useOptions: chosenOptions.map(({ option, amount }) =>
+						amount ? { key: option.key, amount: amount.amount } : { key: option.key },
+					),
+				}
+			: {}),
 	});
 
 	return {
@@ -471,7 +639,9 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		effectiveCastTier,
 		canUpcast,
 		baseMana,
-		tiers,
+		get tiers() {
+			return tiers;
+		},
 		get manaToSpend() {
 			return manaToSpend;
 		},
@@ -492,6 +662,21 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		get upcastPreview() {
 			return upcastPreview;
 		},
+
+		// Spend or Sacrifice amounts and Spell or Attack Options.
+		get variableResourceCosts() {
+			return resources.variableCosts;
+		},
+		get resourceAmounts() {
+			return resources.amounts;
+		},
+		setResourceAmount: resources.set,
+		adjustResourceAmount: resources.adjust,
+		get optionGroups() {
+			return optionGroups;
+		},
+		chooseOption,
+		setOptionAmount,
 
 		// The cast.
 		get castWarning() {

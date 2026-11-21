@@ -10,6 +10,7 @@ import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
+import type { ChosenUseOption, UseOptionGroup } from '#types/useOption.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
@@ -109,6 +110,11 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
+import {
+	type ChosenUseOptions,
+	settleChosenUseOptions,
+	spellUseOptionGroups,
+} from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
@@ -242,6 +248,12 @@ class ItemActivationManager {
 
 	/** What this use spends or sacrifices through Spend or Sacrifice rules, checked before the dialog. */
 	resourceCosts: ResourceCost[] = [];
+
+	/** The Spell or Attack Options the dialog offers for this use. */
+	useOptionGroups: UseOptionGroup[] = [];
+
+	/** What the options the player turned on cost and change. */
+	chosenOptions: ChosenUseOptions = { costs: [], pools: [], actionCostChanges: [] };
 
 	/** A use that a rule gives for free, and what it is free of. It is always free of actions. */
 	get free(): ItemActivationManager.FreeUse | null {
@@ -436,6 +448,10 @@ class ItemActivationManager {
 			return { activation: null, rolls: null };
 		}
 
+		if (this.#item.type === 'spell') {
+			this.useOptionGroups = spellUseOptionGroups(this.actor, this.#item as never);
+		}
+
 		const rollOptions = {
 			domain: this.#getItemDomain(),
 			executeMacro: options.executeMacro ?? false,
@@ -458,6 +474,11 @@ class ItemActivationManager {
 		if (refuseResourceCosts(this.actor, this.resourceCosts)) {
 			return { activation: null, rolls: null };
 		}
+		this.chosenOptions = await settleChosenUseOptions(
+			this.actor,
+			this.useOptionGroups,
+			dialogData.useOptions,
+		);
 
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
@@ -1667,6 +1688,7 @@ class ItemActivationManager {
 			pinnedCastTier: this.pinnedCastTier,
 			spellCost: this.spellCost,
 			resourceCosts: this.resourceCosts,
+			useOptionGroups: this.useOptionGroups,
 		});
 		await dialog.render(true);
 		const result = await dialog.promise;
@@ -1959,6 +1981,8 @@ namespace ItemActivationManager {
 		 * the cost's rule id. The formulas read them in `@cost`.
 		 */
 		resourceAmounts?: Record<string, number>;
+		/** The Spell or Attack Options the player turned on. */
+		useOptions?: ChosenUseOption[];
 		/**
 		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
 		 * grants a specific damage type). Each becomes its own damage effect so the

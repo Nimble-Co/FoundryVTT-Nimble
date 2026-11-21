@@ -14,6 +14,7 @@ import type {
 import type { ContainableObject } from '#types/inventoryContainers.js';
 import type { ResolvedOptionSwapOffer, ResolvedSwappableOptionPool } from '#types/optionSwap.d.ts';
 import type { SkillKeyType } from '#types/skillKey.js';
+import type { ActionCostChange } from '#types/useOption.d.ts';
 import { getChargePoolRollData } from '#utils/chargePool/helpers.js';
 import findMissingLevelSelections, {
 	type MissingLevelSelection,
@@ -50,6 +51,7 @@ import {
 	rollsWithRushedDisadvantage,
 } from '../../utils/combat/rushedAttacks.js';
 import showInsufficientActionsConfirmation from '../../utils/combat/showInsufficientActionsConfirmation.js';
+import { withActionCostChange } from '../../utils/combat/withActionCostChange.js';
 import { spendHeldIgnoreDisadvantage } from '../../utils/heldChange/heldChange.js';
 import {
 	type CheckCardRerollData,
@@ -2480,7 +2482,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (result && countsAsAttack(item)) await recordAttack(this);
 
 		if (result && item && paysActions) {
-			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
+			const changes = (foundry.utils.getProperty(result, `flags.${SYSTEM_ID}.actionCostChanges`) ??
+				[]) as ActionCostChange[];
+			const actionCost = changes.reduce(
+				withActionCostChange,
+				resolveCharacterItemActionCost(this, item as ActivatableItem),
+			);
 			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
 				const combatant =

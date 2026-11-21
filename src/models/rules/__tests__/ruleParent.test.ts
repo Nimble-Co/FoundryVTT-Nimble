@@ -248,6 +248,7 @@ describe('rule types that need an item', () => {
 				'savingThrowRollMode',
 				'skillPointMove',
 				'useItemFree',
+				'useOption',
 			].sort(),
 		);
 	});

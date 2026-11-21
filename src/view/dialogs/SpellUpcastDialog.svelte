@@ -3,6 +3,7 @@
 	import { SYSTEM_ID } from '#system';
 	import localize from '#utils/localize.js';
 	import { createSpellUpcastDialogState } from './spellUpcastDialogState.svelte.ts';
+	import AmountStepper from './components/AmountStepper.svelte';
 	import KeptAmountField from './components/KeptAmountField.svelte';
 	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
@@ -32,6 +33,7 @@
 		spellCost: untrack(() => data.spellCost),
 		spendsActions: untrack(() => data.spendsActions),
 		resourceCosts: untrack(() => data.resourceCosts ?? []),
+		useOptionGroups: untrack(() => data.useOptionGroups ?? []),
 	});
 
 	function onCast() {
@@ -152,6 +154,71 @@
 		{/if}
 	{/if}
 
+	{#each upcast.optionGroups as group (group.key)}
+		<div class="option-group">
+			<label class="fld">
+				<span>{group.label}</span>
+				<select
+					value={group.chosen}
+					disabled={group.disabled}
+					onchange={({ currentTarget }) => upcast.chooseOption(group.key, currentTarget.value)}
+				>
+					{#each group.entries as entry (entry.key)}
+						<option value={entry.key}>{entry.label}</option>
+					{/each}
+				</select>
+			</label>
+			{#if group.note}<p class="note">{group.note}</p>{/if}
+			{#if group.amount}
+				{@const label = localize(`NIMBLE.useOptions.amountLabel.${group.amount.kind}`)}
+				<AmountStepper
+					{label}
+					value={group.amount.amount}
+					minimum={group.amount.minimum}
+					limit={group.amount.limit}
+					words={{
+						decrement: localize('NIMBLE.useOptions.decrement', { label }),
+						increment: localize('NIMBLE.useOptions.increment', { label }),
+						amount: label,
+					}}
+					onadjust={(delta) =>
+						upcast.setOptionAmount(group.key, (group.amount?.amount ?? 0) + delta)}
+					onset={(value) => {
+						upcast.setOptionAmount(group.key, value);
+						return (
+							upcast.optionGroups.find((each) => each.key === group.key)?.amount?.amount ?? value
+						);
+					}}
+				/>
+			{/if}
+		</div>
+	{/each}
+
+	{#if upcast.variableResourceCosts.length > 0}
+		<div class="option-group">
+			<h5 class="lb">{localize('NIMBLE.activationDialog.resourceCost.heading')}</h5>
+			{#each upcast.variableResourceCosts as cost (cost.id)}
+				{@const label = localize(`NIMBLE.activationDialog.resourceCost.label.${cost.kind}`)}
+				<AmountStepper
+					{label}
+					value={cost.amount}
+					minimum={cost.minimum}
+					limit={cost.limit}
+					words={{
+						decrement: localize('NIMBLE.activationDialog.resourceCost.decrement', { label }),
+						increment: localize('NIMBLE.activationDialog.resourceCost.increment', { label }),
+						amount: label,
+					}}
+					onadjust={(delta) => upcast.adjustResourceAmount(cost.id, delta)}
+					onset={(value) => {
+						upcast.setResourceAmount(cost.id, value);
+						return upcast.resourceAmounts[cost.id] ?? cost.minimum;
+					}}
+				/>
+			{/each}
+		</div>
+	{/if}
+
 	{#if game.user?.isGM}
 		<label class="check">
 			<input type="checkbox" bind:checked={upcast.shouldRollBeHidden} />
@@ -167,6 +234,14 @@
 		font-size: 0.781rem;
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
+	}
+	.option-group {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.option-group .lb {
+		margin: 0;
 	}
 	.tiers {
 		display: flex;
