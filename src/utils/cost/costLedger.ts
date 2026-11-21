@@ -1,4 +1,5 @@
 import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { ResourceCostKind } from '#types/resourceCost.d.ts';
 import type { CostPayer, PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
@@ -15,6 +16,13 @@ import {
 	getHeroicReactionAvailabilityUpdate,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
+import {
+	fixedResourceCost,
+	manaOf,
+	resourceCostsOf,
+	spendResource,
+	writeMana,
+} from './resourceCost.js';
 import {
 	actionCostOf,
 	actionPayer,
@@ -55,21 +63,15 @@ function nothingPaid(): PaidUseCost {
 	return { charges: 0, mana: 0, wounds: 0, heroicReaction: null, action: null };
 }
 
-function manaOf(actor: CostPayer): number {
-	return Number(foundry.utils.getProperty(actor ?? {}, 'system.resources.mana.current') ?? 0);
-}
-
-async function writeMana(actor: CostPayer, value: number): Promise<void> {
-	await actor?.update({ 'system.resources.mana.current': value } as Record<string, unknown>);
-}
-
 /** Take `amount` Mana. Mana has no overdraft: with too little, nothing is taken and this is false. */
 async function spendMana(actor: CostPayer, amount: number): Promise<boolean> {
-	if (amount <= 0) return true;
-	const current = manaOf(actor);
-	if (current < amount) return false;
-	await writeMana(actor, current - amount);
-	return true;
+	return (await spendResource(actor, fixedResourceCost('mana', amount))) !== null;
+}
+
+/** Record what a resource spend took on the paid record. */
+function recordTaken(paid: PaidUseCost, kind: ResourceCostKind, taken: number): void {
+	if (kind === 'mana') paid.mana = taken;
+	else if (kind === 'wounds') paid.wounds = taken;
 }
 
 async function spendHeroicReaction(
@@ -231,18 +233,10 @@ async function payCost(
 		paid.dice = { poolId: pool.id, faces: [...pool.faces] };
 	}
 
-	if (cost.manaCost > 0) {
-		if (!(await spendMana(actor, cost.manaCost))) return fail();
-		paid.mana = cost.manaCost;
-	}
-
-	if (cost.woundCost > 0) {
-		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
-		if (!wounds || wounds.value + cost.woundCost > wounds.max) return fail();
-		await actor?.update({
-			'system.attributes.wounds.value': wounds.value + cost.woundCost,
-		} as Record<string, unknown>);
-		paid.wounds = cost.woundCost;
+	for (const part of resourceCostsOf(cost)) {
+		const taken = await spendResource(actor, part);
+		if (taken === null) return fail();
+		recordTaken(paid, part.kind, taken);
 	}
 
 	return paid;

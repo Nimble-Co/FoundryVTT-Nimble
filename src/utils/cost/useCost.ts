@@ -1,7 +1,5 @@
-import type { SpellCostActorLike } from '#types/spellCost.d.ts';
 import type { CostPayer, PaidUseCost, TurnStamp, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { hasRuleCharge, ruleChargesLeft } from '../chargePool/ruleChargeGate.js';
 import { getCombatantCurrentActions } from '../combat/combatTurnActions.js';
 import { isCombatStarted } from '../combat/isCombatStarted.js';
@@ -9,11 +7,7 @@ import { usedThisTurn } from '../combat/perTurnUse.js';
 import { getPools } from '../dicePool/dicePoolSync.js';
 import { normalizeIdentifier } from '../dicePool/helpers.js';
 import type { DicePoolState } from '../dicePool/types.js';
-import { validateSpellCost } from '../spell/validateSpellCost.js';
-
-function asSpellCostActor(actor: CostPayer): SpellCostActorLike {
-	return actor as unknown as SpellCostActorLike;
-}
+import { canSpendResource, resourceCostsOf } from './resourceCost.js';
 
 /** The actor's combatant in the started combat, or null outside combat. */
 function findActorCombatant(
@@ -33,12 +27,6 @@ function poolToExpend(actor: CostPayer, cost: UseCost): DicePoolState | null {
 	return (
 		getPools(actor).find((pool) => normalizeIdentifier(pool.identifier) === identifier) ?? null
 	);
-}
-
-/** Whether the actor can gain all of `amount` Wounds without going past the maximum. */
-function canGainWounds(actor: CostPayer, amount: number): boolean {
-	const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
-	return !!wounds && wounds.value + amount <= wounds.max;
 }
 
 function actionCostOf(cost: UseCost): number {
@@ -113,13 +101,7 @@ function canPayUseCost(actor: CostPayer, cost: UseCost): boolean {
 	) {
 		return false;
 	}
-	if (
-		cost.manaCost > 0 &&
-		!validateSpellCost(asSpellCostActor(actor), { type: 'mana', amount: cost.manaCost }).ok
-	) {
-		return false;
-	}
-	if (cost.woundCost > 0 && !canGainWounds(actor, cost.woundCost)) return false;
+	if (!resourceCostsOf(cost).every((part) => canSpendResource(actor, part))) return false;
 	if (cost.turnUseKey && usedThisTurn(actor, cost.turnUseKey)) return false;
 	if (cost.dicePoolIdentifier?.trim() && !poolToExpend(actor, cost)?.faces.length) return false;
 	return cost.actionReportOnly === true || canSpendActions(actor, actionCostOf(cost));
@@ -139,8 +121,7 @@ function useCostCharges(cost: UseCost): boolean {
 	if (!isResourceSpendingAutomationEnabled()) return false;
 	return (
 		cost.chargePoolIdentifier.trim() !== '' ||
-		cost.manaCost > 0 ||
-		cost.woundCost > 0 ||
+		resourceCostsOf(cost).length > 0 ||
 		actionCostOf(cost) > 0 ||
 		!!cost.turnUseKey ||
 		!!cost.dicePoolIdentifier?.trim()
