@@ -45,6 +45,15 @@ function optionOf(actor: Actor | null | undefined, rule: UseOptionRule): UseOpti
 /** The key of the group of the options that take the place of the spell's cost. */
 export const SPEND_GROUP = 'spend';
 
+/** Whether the pool gets its uses back at the start of a turn. */
+function poolRefillsEachTurn(actor: Actor | null | undefined, identifier: string): boolean {
+	if (!isCharacterActor(actor)) return false;
+	const entry = findChargePoolByIdentifier(buildEffectiveChargePoolMap(actor), identifier);
+	return (entry?.pool.recoveries ?? []).some(
+		(recovery) => recovery.trigger === 'onTurnStart' || recovery.trigger === 'onAnyTurnStart',
+	);
+}
+
 function poolLabel(actor: Actor | null | undefined, identifier: string): string {
 	if (!isCharacterActor(actor)) return identifier;
 	const entry = findChargePoolByIdentifier(buildEffectiveChargePoolMap(actor), identifier);
@@ -77,6 +86,7 @@ export function spellUseOptionGroups(
 					? poolLabel(actor, pool)
 					: option.name,
 			used: !spend && option.used,
+			refillsEachTurn: !spend && !!pool && poolRefillsEachTurn(actor, pool),
 			spend,
 			options: [],
 		};

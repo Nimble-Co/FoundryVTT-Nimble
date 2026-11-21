@@ -4089,6 +4089,7 @@
 		"useOptions": {
 			"none": "None",
 			"usedThisTurn": "Used this turn",
+			"noUsesLeft": "No uses left",
 			"entry": "{name} ({cost})",
 			"spend": "Spend",
 			"spendEntry": "{cost} ({name})",

@@ -52,6 +52,8 @@ export interface UseOptionGroup {
 	label: string;
 	/** The pool has no use left. */
 	used: boolean;
+	/** The pool gets its uses back at the start of a turn. */
+	refillsEachTurn?: boolean;
 	/** The options of the group take the place of the spell's cost: buttons under "Spend". */
 	spend: boolean;
 	options: UseOption[];

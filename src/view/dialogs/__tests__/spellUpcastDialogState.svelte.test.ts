@@ -430,7 +430,14 @@ const compression = option('Dimensional Compression', 1, {
 });
 
 function spellshaper(used = false, options = [stretchTime, compression]) {
-	return { key: 'spellshaper', label: 'Spellshaper (1/turn)', used, spend: false, options };
+	return {
+		key: 'spellshaper',
+		label: 'Spellshaper (1/turn)',
+		used,
+		refillsEachTurn: true,
+		spend: false,
+		options,
+	};
 }
 
 describe('the upcast dialog Spell or Attack Options', () => {
@@ -462,6 +469,17 @@ describe('the upcast dialog Spell or Attack Options', () => {
 		const state = open(caster(), fireBolt(), { useOptionGroups: [spellshaper(true)] });
 
 		expect(state.optionGroups[0]).toMatchObject({ disabled: true, note: 'Used this turn' });
+	});
+
+	it('say "No uses left" for a used pool that does not refill each turn', () => {
+		const group = {
+			...spellshaper(true),
+			label: 'Master of Storm (1/Safe Rest)',
+			refillsEachTurn: false,
+		};
+		const state = open(caster(), fireBolt(), { useOptionGroups: [group] });
+
+		expect(state.optionGroups[0]).toMatchObject({ disabled: true, note: 'No uses left' });
 	});
 
 	it('with Resource Spending off, never disable a group', () => {

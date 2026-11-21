@@ -419,7 +419,13 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 					key: group.key,
 					label: group.label,
 					disabled,
-					note: disabled ? localize('NIMBLE.useOptions.usedThisTurn') : '',
+					note: disabled
+						? localize(
+								group.refillsEachTurn
+									? 'NIMBLE.useOptions.usedThisTurn'
+									: 'NIMBLE.useOptions.noUsesLeft',
+							)
+						: '',
 					chosen: option?.key ?? '',
 					amount,
 					amountLabel: option ? amountLabelOf(option, amount) : '',
