@@ -33,7 +33,11 @@ import {
 	applyCasterConcentration,
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
-import { giveBack, receiptOf } from '../../utils/cost/costLedger.js';
+import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
+import { giveBack, receiptOf, spendResourceCosts } from '../../utils/cost/costLedger.js';
+import { refuseResourceCosts } from '../../utils/cost/itemResourceCosts.js';
+import { applyBeyondConsequence } from '../../utils/cost/resourceCost.js';
+import { cardCostsOf } from '../../utils/cost/resourceCostWords.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
 /** What the activation card needs to know of the use beyond its data. */
@@ -141,6 +145,19 @@ interface BaseItemSystemData {
  * Override and extend the basic Item implementation.
  * @extends {Item}
  */
+/** The use did not happen, so it costs nothing: give back what it took. */
+async function giveBackUse(
+	actor: Parameters<typeof giveBack>[0],
+	receipts: Array<CostReceipt | null>,
+): Promise<void> {
+	for (const paid of receipts) {
+		if (!paid) continue;
+		await giveBack(actor, paid).catch((refundError) =>
+			console.error('Nimble | Could not give back the cost of a failed use.', refundError),
+		);
+	}
+}
+
 class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends Item<ItemType> {
 	declare type: ItemType;
 
@@ -445,8 +462,28 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		});
 		if (!allowed) return null;
 
-		const receipt = await this._payForUse(manager);
-		if (!receipt) return null;
+		const costsSpent = await spendResourceCosts(this.actor, manager.resourceCosts, {
+			confirmBeyond: (costs) => confirmUsingBeyond(this.actor, costs),
+		});
+		if (!costsSpent) {
+			refuseResourceCosts(this.actor, manager.resourceCosts);
+			return null;
+		}
+		const costReceipt = costsSpent.receipt;
+		let receipt: CostReceipt | null = null;
+		try {
+			receipt = await this._payForUse(manager);
+			if (receipt) {
+				for (const cost of costsSpent.beyond) await applyBeyondConsequence(this.actor, cost);
+			}
+		} catch (error) {
+			await giveBackUse(this.actor, [receipt, costReceipt]);
+			throw error;
+		}
+		if (!receipt) {
+			await giveBack(this.actor, costReceipt);
+			return null;
+		}
 
 		const useEvents = openActivationEvents(this.actor);
 		let card: ChatMessage | null;
@@ -496,6 +533,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 						actorName: this.actor?.name ?? '',
 						actorType: this.actor?.type ?? '',
 						activation,
+						costs: cardCostsOf(costsSpent.taken),
 						image: this.img || 'icons/svg/item-bag.svg',
 						incomingReactions: [
 							...(incomingReactions ?? []),
@@ -539,10 +577,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			);
 		} catch (error) {
 			useEvents?.close();
-			// The use did not happen, so it costs nothing.
-			await giveBack(this.actor, receipt).catch((refundError) =>
-				console.error('Nimble | Could not give back the cost of a failed use.', refundError),
-			);
+			await giveBackUse(this.actor, [receipt, costReceipt]);
 			throw error;
 		}
 		await this._afterUse(card, manager);

@@ -14,3 +14,17 @@ describe('chat card concentration field', () => {
 		expect(withConcentration.sort()).toEqual(['object', 'spell']);
 	});
 });
+
+/**
+ * `NimbleBaseItem` writes `system.costs` onto every activation card, and Foundry drops it
+ * from a card type whose schema has no such field.
+ */
+describe('chat card costs field', () => {
+	it('is declared by the feature, spell and object cards', () => {
+		const withCosts = Object.entries(chatDataModels)
+			.filter(([, model]) => 'costs' in model.defineSchema())
+			.map(([type]) => type);
+
+		expect(withCosts.sort()).toEqual(['feature', 'object', 'spell']);
+	});
+});

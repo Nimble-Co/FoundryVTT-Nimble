@@ -1,7 +1,7 @@
-import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { CostReceipt, CostsSpent } from '#types/costReceipt.d.ts';
+import type { ConfirmBeyond, ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
 import type { CostPayer, PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
 import { refundRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import { clearTurnUse, markTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import { queueCombatantMutationWithFreshDocument } from '../combat/queueCombatantMutationWithFreshDocument.js';
@@ -15,6 +15,16 @@ import {
 	getHeroicReactionAvailabilityUpdate,
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
+import {
+	fixedAmountOf,
+	fixedResourceCost,
+	goesBeyond,
+	RESOURCE_COST_KINDS,
+	resourceCostsOf,
+	returnResource,
+	spendResource,
+	usedBefore,
+} from './resourceCost.js';
 import {
 	actionCostOf,
 	actionPayer,
@@ -55,21 +65,14 @@ function nothingPaid(): PaidUseCost {
 	return { charges: 0, mana: 0, wounds: 0, heroicReaction: null, action: null };
 }
 
-function manaOf(actor: CostPayer): number {
-	return Number(foundry.utils.getProperty(actor ?? {}, 'system.resources.mana.current') ?? 0);
-}
-
-async function writeMana(actor: CostPayer, value: number): Promise<void> {
-	await actor?.update({ 'system.resources.mana.current': value } as Record<string, unknown>);
-}
-
 /** Take `amount` Mana. Mana has no overdraft: with too little, nothing is taken and this is false. */
 async function spendMana(actor: CostPayer, amount: number): Promise<boolean> {
-	if (amount <= 0) return true;
-	const current = manaOf(actor);
-	if (current < amount) return false;
-	await writeMana(actor, current - amount);
-	return true;
+	return (await spendResource(actor, fixedResourceCost('mana', amount))) !== null;
+}
+
+/** Record what a resource spend took on the paid record. */
+function recordTaken(paid: PaidUseCost, kind: ResourceCostKind, taken: number): void {
+	paid[kind] = (paid[kind] ?? 0) + taken;
 }
 
 async function spendHeroicReaction(
@@ -151,15 +154,10 @@ async function refundHeroicReaction(paid: NonNullable<PaidUseCost['heroicReactio
 
 /** Give back what `payCost` charged. */
 async function giveBack(actor: CostPayer, { cost, paid }: CostReceipt): Promise<void> {
-	if (paid.wounds > 0) {
-		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
-		if (wounds) {
-			await actor?.update({
-				'system.attributes.wounds.value': Math.max(0, wounds.value - paid.wounds),
-			} as Record<string, unknown>);
-		}
+	for (const kind of RESOURCE_COST_KINDS) {
+		const amount = paid[kind] ?? 0;
+		if (amount > 0) await returnResource(actor, kind, amount);
 	}
-	if (paid.mana > 0) await writeMana(actor, manaOf(actor) + paid.mana);
 	if (paid.charges > 0) await refundRuleCharge(actor, cost.chargePoolIdentifier, paid.charges);
 	if (paid.dice) {
 		const current = getPools(actor).find((pool) => pool.id === paid.dice?.poolId)?.faces ?? [];
@@ -231,21 +229,48 @@ async function payCost(
 		paid.dice = { poolId: pool.id, faces: [...pool.faces] };
 	}
 
-	if (cost.manaCost > 0) {
-		if (!(await spendMana(actor, cost.manaCost))) return fail();
-		paid.mana = cost.manaCost;
-	}
-
-	if (cost.woundCost > 0) {
-		const wounds = getActorWoundsValueAndMax(actor as Actor.Implementation);
-		if (!wounds || wounds.value + cost.woundCost > wounds.max) return fail();
-		await actor?.update({
-			'system.attributes.wounds.value': wounds.value + cost.woundCost,
-		} as Record<string, unknown>);
-		paid.wounds = cost.woundCost;
+	for (const part of resourceCostsOf(cost)) {
+		const taken = await spendResource(actor, part);
+		if (taken === null) return fail();
+		recordTaken(paid, part.kind, taken);
 	}
 
 	return paid;
+}
+
+interface ResourceCostsSpent extends CostsSpent {
+	receipt: CostReceipt;
+}
+
+/**
+ * Spend each cost of an item's own use, in order. When a cost allowed beyond what the
+ * creature has needs more than it has, `confirmBeyond` asks first. When the player
+ * declines, or a cost cannot be covered, what was taken is given back and null is returned.
+ */
+async function spendResourceCosts(
+	actor: CostPayer,
+	costs: readonly ResourceCost[],
+	{ confirmBeyond = async () => false }: { confirmBeyond?: ConfirmBeyond } = {},
+): Promise<ResourceCostsSpent | null> {
+	const used = usedBefore(costs, (cost) => fixedAmountOf(cost) ?? 0);
+	const beyond = costs.filter((cost, index) => goesBeyond(actor, cost, used[index]));
+	if (beyond.length > 0 && !(await confirmBeyond(beyond))) return null;
+
+	const receipt = receiptOf();
+	const taken: ResourceCost[] = [];
+	for (const cost of costs) {
+		const amount = await spendResource(actor, cost).catch(async (error) => {
+			await giveBack(actor, receipt);
+			throw error;
+		});
+		if (amount === null) {
+			await giveBack(actor, receipt);
+			return null;
+		}
+		recordTaken(receipt.paid, cost.kind, amount);
+		taken.push(isResourceSpendingAutomationEnabled() ? { ...cost, amount } : cost);
+	}
+	return { receipt, taken, beyond };
 }
 
 /**
@@ -279,4 +304,4 @@ async function giveBackPart(
 	};
 }
 
-export { giveBack, giveBackPart, payCost, receiptOf, spendMana };
+export { giveBack, giveBackPart, payCost, receiptOf, spendMana, spendResourceCosts };

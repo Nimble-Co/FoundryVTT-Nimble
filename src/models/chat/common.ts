@@ -1,3 +1,4 @@
+import { RESOURCE_COST_KINDS } from '../../utils/cost/resourceCost.js';
 import {
 	DIE_CHANGE_MODES,
 	DIE_OUTCOMES,
@@ -42,6 +43,24 @@ export const targets = () => ({
 		nullable: false,
 		initial: [],
 	}),
+});
+
+/** What the use spent or sacrificed through Spend or Sacrifice rules: one line each on the card. */
+export const costs = () => ({
+	costs: new fields.ArrayField(
+		new fields.SchemaField({
+			kind: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'mana',
+				choices: [...RESOURCE_COST_KINDS],
+			}),
+			amount: new fields.NumberField({ required: true, nullable: false, initial: 0, min: 0 }),
+			source: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			roll: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
 });
 
 /** Schema for tracking applied healing/damage on activation cards */

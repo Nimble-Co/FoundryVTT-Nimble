@@ -10,6 +10,7 @@ import type {
 import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
 import type { DualWieldOffer } from '#types/dualWield.d.ts';
 import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
+import type { ResourceCost } from '#types/resourceCost.d.ts';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
@@ -17,6 +18,8 @@ import {
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
+import { variableRangeOf } from '#utils/cost/resourceCost.js';
+import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
@@ -33,6 +36,7 @@ import { MAX_ROLL_MODE, openRollModeTicks } from '#utils/rolls/rollModeTicks.js'
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
+import { rollSpendLine } from './components/rollSpendLine.ts';
 import { heldChangeChoice } from './heldChangeChoice.svelte.ts';
 import {
 	buildAutoBonusFormula,
@@ -53,6 +57,10 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	hideRollsDefault: boolean;
 	/** The roll ignores disadvantage already, so the change that ignores it has no line. */
 	ignoresDisadvantage?: boolean;
+	/** The actions that this use spends. */
+	spendsActions?: number;
+	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
+	resourceCosts?: readonly ResourceCost[];
 }
 
 export function createItemActivationConfigDialogState(
@@ -64,6 +72,43 @@ export function createItemActivationConfigDialogState(
 	// available when the player initiates the roll, not mid-dialog changes.
 	const actor = options.actor();
 	const item = options.item();
+
+	const resourceCosts = options.resourceCosts ?? [];
+	const resourceRanges = resourceCosts.flatMap((cost) => {
+		const range = cost.id ? variableRangeOf(actor, cost) : null;
+		return range ? [{ id: cost.id as string, kind: cost.kind, ...range }] : [];
+	});
+	let resourceAmounts = $state<Record<string, number>>(
+		Object.fromEntries(resourceRanges.map((range) => [range.id, range.minimum])),
+	);
+
+	function setResourceAmount(id: string, value: number) {
+		const range = resourceRanges.find((candidate) => candidate.id === id);
+		if (!range) return;
+		const next = Number.isFinite(value) ? Math.floor(value) : range.minimum;
+		resourceAmounts = { ...resourceAmounts, [id]: Math.clamp(next, range.minimum, range.limit) };
+	}
+
+	function adjustResourceAmount(id: string, delta: number) {
+		const range = resourceRanges.find((candidate) => candidate.id === id);
+		if (!range) return;
+		setResourceAmount(id, (resourceAmounts[id] ?? range.minimum) + delta);
+	}
+
+	const variableResourceCosts = $derived(
+		resourceRanges.map((range) => ({
+			...range,
+			amount: resourceAmounts[range.id] ?? range.minimum,
+		})),
+	);
+
+	const spendLine = $derived.by(() => {
+		const chosen = resourceCosts.map((cost) =>
+			cost.id && cost.id in resourceAmounts ? { ...cost, amount: resourceAmounts[cost.id] } : cost,
+		);
+		const costParts = rollWindowCostParts(chosen);
+		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
+	});
 
 	const attackDelivery: AttackDelivery = getAttackDeliveryFromActivation(item);
 
@@ -481,6 +526,17 @@ export function createItemActivationConfigDialogState(
 			usesKeptAmount = value;
 		},
 		maxDamageOffers: maxDamage,
+		get spendLine() {
+			return spendLine;
+		},
+		get variableResourceCosts() {
+			return variableResourceCosts;
+		},
+		get resourceAmounts() {
+			return resourceAmounts;
+		},
+		setResourceAmount,
+		adjustResourceAmount,
 		offersLessMana,
 		dualWieldOffer,
 		get dualWield() {

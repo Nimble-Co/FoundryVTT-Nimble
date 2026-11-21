@@ -6,6 +6,7 @@
 	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
+	import CostLines from './components/CostLines.svelte';
 	import FreeUseLine from './components/FreeUseLine.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
 	import ConcentrationNode from './components/ConcentrationNode.svelte';
@@ -56,6 +57,8 @@
 		heading={isIdentified ? name.public : name.unidentified}
 		{subheading}
 	/>
+
+	<CostLines />
 
 	<FreeUseLine />
 

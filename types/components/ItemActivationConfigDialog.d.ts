@@ -1,3 +1,4 @@
+import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
@@ -76,6 +77,8 @@ export interface ItemActivationConfigDialogSubmitData {
 	 * Optional: the upcast dialog submits the same shape without it.
 	 */
 	consumedVariableCharges?: ConsumedChargePool[];
+	/** The amounts chosen for the item's variable Spend or Sacrifice costs, keyed by rule id. */
+	resourceAmounts?: Record<string, number>;
 	/** The condition ticks that were on, apart from `rollMode`. */
 	conditionRollModes?: ConditionRollMode[];
 	/** With Feature Effects off, the keys of the Held Changes the player ticked. */
@@ -97,4 +100,6 @@ export interface ItemActivationConfigDialogProps {
 	spendsActions?: number;
 	/** The cast ignores disadvantage by itself, so it spends no Held Change that does. */
 	ignoreDisadvantage?: boolean;
+	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
+	resourceCosts?: ResourceCost[];
 }

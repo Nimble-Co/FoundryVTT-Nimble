@@ -34,6 +34,7 @@
 	} from '../../utils/rolls/appliedConditionRollModes.js';
 	import { openRollModeTicks } from '../../utils/rolls/rollModeTicks.js';
 	import { soleTarget } from '../../utils/tokens/soleTarget.js';
+	import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	let { actor, dialog, spell, ...data } = $props();
@@ -96,7 +97,6 @@
 		objectTypes,
 		skillCheckDialog,
 	} = CONFIG.NIMBLE;
-	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
 	// With resource spending automation off, costs stay visible but available
 	// mana neither bounds the slider nor blocks the cast.
@@ -157,7 +157,10 @@
 			: null,
 	);
 
-	const spendLine = $derived(rollSpendLine(data.spendsActions, costLabel ?? ''));
+	const costParts = untrack(() => rollWindowCostParts(data.resourceCosts ?? []));
+	const spendLine = $derived(
+		rollSpendLine(data.spendsActions, [costLabel ?? '', ...costParts.spends], costParts.sacrifices),
+	);
 
 	// Compute preview of upcast effects
 	const damageOrHealingOps = new Set(['addFlatDamage', 'addDice', 'increaseDieSize']);
@@ -230,13 +233,13 @@
 		}
 
 		if (delta.maxDieFaces) {
-			return format(spellUpcastDialog.increaseDieSizeCapped, {
+			return localize(spellUpcastDialog.increaseDieSizeCapped, {
 				steps: String(scaledSteps),
 				maxFaces: String(delta.maxDieFaces),
 			});
 		}
 
-		return format(spellUpcastDialog.increaseDieSize, { steps: String(scaledSteps) });
+		return localize(spellUpcastDialog.increaseDieSize, { steps: String(scaledSteps) });
 	}
 
 	function formatRaisePreview(delta: ScalingDelta, steps: number) {
@@ -248,7 +251,7 @@
 		const amount = delta.formula
 			? formulaRaiseAmount(delta.formula, steps)
 			: String((delta.value ?? 0) * steps);
-		return format(spellUpcastDialog.raiseEffectRule, {
+		return localize(spellUpcastDialog.raiseEffectRule, {
 			rule: rule?.label ?? target?.label ?? '',
 			amount,
 			field: field?.label ?? delta.ruleField ?? '',
@@ -276,8 +279,8 @@
 		const amount =
 			value === 1
 				? localize(`NIMBLE.lastsUntilText.units.${units}.one`)
-				: format(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
-		return format(spellUpcastDialog.lengthenLastsUntil, { effect: target?.label ?? '', amount });
+				: localize(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
+		return localize(spellUpcastDialog.lengthenLastsUntil, { effect: target?.label ?? '', amount });
 	}
 
 	function findDieSizeTargetEffect(targetEffectId: string | null) {
@@ -324,7 +327,7 @@
 		if (situationalModifiers !== '') {
 			const isValid = Roll.validate(situationalModifiers);
 			if (!isValid) {
-				ui.notifications?.warn(format('NIMBLE.hitDice.invalidAddToRoll'));
+				ui.notifications?.warn(localize('NIMBLE.hitDice.invalidAddToRoll'));
 				return;
 			}
 		}
@@ -334,13 +337,13 @@
 		if (baseMana > 0 && !isPoolCost) {
 			if (manaToSpend < baseMana) {
 				ui.notifications?.warn(
-					format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) }),
+					localize(spellUpcastDialog.warnings.minMana, { min: String(baseMana) }),
 				);
 				return;
 			}
 			if (enforceManaCost && manaToSpend > currentMana) {
 				ui.notifications?.warn(
-					format(spellUpcastDialog.warnings.insufficientMana, {
+					localize(spellUpcastDialog.warnings.insufficientMana, {
 						current: String(currentMana),
 						needed: String(manaToSpend),
 					}),
@@ -351,7 +354,7 @@
 
 		if (manaToSpend > maxTier) {
 			ui.notifications?.warn(
-				format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) }),
+				localize(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) }),
 			);
 			return;
 		}
@@ -383,7 +386,7 @@
 	title={spellName}
 	img={spell?.parent?.img ?? dialog?.item?.img}
 	rollIcon="fa-solid fa-wand-magic-sparkles"
-	rollLabel={format(spellUpcastDialog.castSpell)}
+	rollLabel={localize(spellUpcastDialog.castSpell)}
 	oncancel={() => dialog.close()}
 	onroll={onCast}
 >
@@ -393,7 +396,7 @@
 
 	{#if effectiveCastTier !== null}
 		<p class="note nimble-spell-pinned-tier">
-			{format(spellUpcastDialog.castsAtTier, { tier: String(effectiveCastTier) })}
+			{localize(spellUpcastDialog.castsAtTier, { tier: String(effectiveCastTier) })}
 		</p>
 	{/if}
 
@@ -462,7 +465,7 @@
 
 		{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
 			<fieldset class="choices">
-				<legend class="lb">{format(spellUpcastDialog.chooseEnhancement)}</legend>
+				<legend class="lb">{localize(spellUpcastDialog.chooseEnhancement)}</legend>
 				{#each spell.scaling.choices as choice, i}
 					<label class="check">
 						<input type="radio" name="upcast-choice" value={i} bind:group={choiceIndex} />
@@ -474,7 +477,7 @@
 
 		{#if upcastSteps > 0 && upcastPreview().length > 0}
 			<div class="effect">
-				<div class="lb">{format(spellUpcastDialog.appliedEffect)}</div>
+				<div class="lb">{localize(spellUpcastDialog.appliedEffect)}</div>
 				<ul>
 					{#each upcastPreview() as effect}
 						<li>{effect}</li>

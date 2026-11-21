@@ -244,6 +244,7 @@ describe('rule types that need an item', () => {
 				'modifyReroll',
 				'optionSwap',
 				'poolEmptyEffect',
+				'resourceCost',
 				'savingThrowRollMode',
 				'skillPointMove',
 				'useItemFree',

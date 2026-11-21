@@ -27,6 +27,10 @@ export interface PaidUseCost {
 	charges: number;
 	mana: number;
 	wounds: number;
+	/** HP sacrificed. Absent is none. */
+	hp?: number;
+	/** Temp HP spent. Absent is none. */
+	tempHp?: number;
 	heroicReaction: {
 		combatId: string;
 		combatantId: string;

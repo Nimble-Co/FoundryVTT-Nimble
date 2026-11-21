@@ -15,7 +15,6 @@
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
 	import SituationalRollModeList from './components/SituationalRollModeList.svelte';
-	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	const { skillCheckDialog, damageTypes } = CONFIG.NIMBLE;
 
@@ -27,8 +26,8 @@
 		rushedAttack,
 		spendsActions,
 		ignoreDisadvantage,
+		resourceCosts,
 	}: ItemActivationConfigDialogProps = $props();
-	const spendLine = $derived(rollSpendLine(spendsActions));
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -36,6 +35,8 @@
 		initialRollMode: untrack(() => rollMode),
 		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
 		ignoresDisadvantage: untrack(() => ignoreDisadvantage),
+		spendsActions: untrack(() => spendsActions),
+		resourceCosts: untrack(() => resourceCosts),
 	});
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
@@ -92,6 +93,7 @@
 			consumedPoolDice,
 			consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
+			resourceAmounts: state.resourceAmounts,
 			// Typed conditional-bonus damage rolls as its own damage effect so the
 			// chosen type applies; untyped choices are already folded into rollFormula.
 			conditionalDamages: state.conditionalTypedDamages,
@@ -107,7 +109,7 @@
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
-	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
+	{#if state.spendLine}<p class="spends">{state.spendLine}</p>{/if}
 	{#each state.chargeCosts as cost (cost.label)}
 		<p class="spends">
 			{localize('NIMBLE.rollWindow.spendsCharge', {
@@ -246,6 +248,87 @@
 		/>
 	{/if}
 
+	{#snippet stepper(
+		label: string,
+		selected: number,
+		minimum: number,
+		limit: number,
+		words: { decrement: string; increment: string; amount: string },
+		adjust: (delta: number) => void,
+		set: (value: number) => number,
+	)}
+		<div class="nimble-pool-spend__row">
+			<span class="nimble-pool-spend__label">{label}</span>
+			<div class="nimble-pool-spend__stepper">
+				<button
+					type="button"
+					class="nimble-pool-spend__stepper-btn"
+					aria-label={words.decrement}
+					disabled={selected <= minimum}
+					onclick={() => adjust(-1)}
+				>
+					−
+				</button>
+				<span class="nimble-pool-spend__stepper-value">
+					<input
+						class="nimble-pool-spend__stepper-input"
+						type="number"
+						min={minimum}
+						max={limit}
+						value={selected}
+						aria-label={words.amount}
+						onchange={({ currentTarget }) => {
+							// The clamp often lands on the value already stored — typing 99 at
+							// the limit, or clearing the field — which leaves Svelte nothing to
+							// push back, so the box would keep showing what was typed.
+							currentTarget.value = String(set(currentTarget.valueAsNumber));
+						}}
+					/>
+					<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
+						/ {limit}
+					</span>
+				</span>
+				<button
+					type="button"
+					class="nimble-pool-spend__stepper-btn"
+					aria-label={words.increment}
+					disabled={selected >= limit}
+					onclick={() => adjust(1)}
+				>
+					+
+				</button>
+			</div>
+		</div>
+	{/snippet}
+
+	{#if state.variableResourceCosts.length > 0}
+		<div>
+			<div class="nimble-pool-spend">
+				<h5 class="lb">{localize('NIMBLE.activationDialog.resourceCost.heading')}</h5>
+
+				{#each state.variableResourceCosts as cost (cost.id)}
+					{@const label = localize(`NIMBLE.activationDialog.resourceCost.label.${cost.kind}`)}
+					{@render stepper(
+						label,
+						cost.amount,
+						cost.minimum,
+						cost.limit,
+						{
+							decrement: localize('NIMBLE.activationDialog.resourceCost.decrement', { label }),
+							increment: localize('NIMBLE.activationDialog.resourceCost.increment', { label }),
+							amount: label,
+						},
+						(delta) => state.adjustResourceAmount(cost.id, delta),
+						(value) => {
+							state.setResourceAmount(cost.id, value);
+							return state.resourceAmounts[cost.id] ?? cost.minimum;
+						},
+					)}
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	{#if state.variableChargeSpends.length > 0}
 		<div>
 			<div class="nimble-pool-spend">
@@ -254,56 +337,28 @@
 				</h5>
 
 				{#each state.variableChargeSpends as spend (spend.poolId)}
-					{@const selected = state.variableSpendCounts[spend.poolId] ?? spend.minimum}
-					<div class="nimble-pool-spend__row">
-						<span class="nimble-pool-spend__label">{spend.label}</span>
-						<div class="nimble-pool-spend__stepper">
-							<button
-								type="button"
-								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.decrement', {
-									pool: spend.label,
-								})}
-								disabled={selected <= spend.minimum}
-								onclick={() => state.adjustVariableSpend(spend.poolId, -1)}
-							>
-								−
-							</button>
-							<span class="nimble-pool-spend__stepper-value">
-								<input
-									class="nimble-pool-spend__stepper-input"
-									type="number"
-									min={spend.minimum}
-									max={spend.limit}
-									value={selected}
-									aria-label={localize('NIMBLE.activationDialog.spendCharge.amount', {
-										pool: spend.label,
-									})}
-									onchange={({ currentTarget }) => {
-										state.setVariableSpend(spend.poolId, currentTarget.valueAsNumber);
-										// The clamp often lands on the value already stored — typing 99 at
-										// the limit, or clearing the field — which leaves Svelte nothing to
-										// push back, so the box would keep showing what was typed.
-										currentTarget.value = String(state.variableSpendCounts[spend.poolId]);
-									}}
-								/>
-								<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
-									/ {spend.limit}
-								</span>
-							</span>
-							<button
-								type="button"
-								class="nimble-pool-spend__stepper-btn"
-								aria-label={localize('NIMBLE.activationDialog.spendCharge.increment', {
-									pool: spend.label,
-								})}
-								disabled={selected >= spend.limit}
-								onclick={() => state.adjustVariableSpend(spend.poolId, 1)}
-							>
-								+
-							</button>
-						</div>
-					</div>
+					{@render stepper(
+						spend.label,
+						state.variableSpendCounts[spend.poolId] ?? spend.minimum,
+						spend.minimum,
+						spend.limit,
+						{
+							decrement: localize('NIMBLE.activationDialog.spendCharge.decrement', {
+								pool: spend.label,
+							}),
+							increment: localize('NIMBLE.activationDialog.spendCharge.increment', {
+								pool: spend.label,
+							}),
+							amount: localize('NIMBLE.activationDialog.spendCharge.amount', {
+								pool: spend.label,
+							}),
+						},
+						(delta) => state.adjustVariableSpend(spend.poolId, delta),
+						(value) => {
+							state.setVariableSpend(spend.poolId, value);
+							return state.variableSpendCounts[spend.poolId] ?? spend.minimum;
+						},
+					)}
 				{/each}
 			</div>
 		</div>

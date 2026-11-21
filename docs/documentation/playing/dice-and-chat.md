@@ -36,7 +36,7 @@ An item that rolls damage or healing opens the same window. The ticks also list 
 - **Set Primary Die Result:** the Primary Die shows this number and is not rolled. The max is a crit, 1 is a miss.
 - **Add to Primary Die Result:** this number is added to the face of the Primary Die, from 1 up to its max. The new face decides: a d6 at 5 with +1 crits.
 
-In combat, a line tells what the roll spends. Your second attack in a turn starts with the disadvantage of a Rushed Attack. Move the slider when a feature or the GM says otherwise.
+A line tells what the roll spends or sacrifices: the actions in combat, and the mana, HP, temp HP or Wounds of the use. When a use needs more than you have and its rule lets you go beyond, a window asks you to confirm first. It asks only while the **Costs** automation setting is on. Your second attack in a turn starts with the disadvantage of a Rushed Attack. Move the slider when a feature or the GM says otherwise.
 
 Some features add a tick to the window, for example **Max damage** or **Dual wield**. **Dual wield** shows when you have 2 equipped weapons, or 1 equipped weapon with a quantity of 2 or more. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it. With **Feature Effects** off, each line is a tick box that starts unticked, and only the changes you tick go on the roll. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
 
@@ -52,6 +52,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 ![An attack chat card with a damage total, the Apply Damage button, the targets and an Effects part with Slowed](/images/documentation/apply-effect-chat-card.png)
 
 - **Header:** the item, and **Critical Hit** or **Miss** when the Primary Die decided one.
+- **Cost:** what the Spend or Sacrifice costs and the options of the use took, such as **Cost: 2 mana (Stretch Time)**. The mana of a spell's own tier is not on this line.
 - **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice.
 - **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
 - **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
