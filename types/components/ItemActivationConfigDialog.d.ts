@@ -1,3 +1,4 @@
+import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
@@ -97,4 +98,6 @@ export interface ItemActivationConfigDialogProps {
 	spendsActions?: number;
 	/** The cast ignores disadvantage by itself, so it spends no Held Change that does. */
 	ignoreDisadvantage?: boolean;
+	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
+	resourceCosts?: ResourceCost[];
 }

@@ -551,3 +551,43 @@ describe('the activation dialog condition ticks', () => {
 		expect(state.ownRollMode).toBe(0);
 	});
 });
+
+describe('the activation dialog spend line', () => {
+	const cost = (kind: 'mana' | 'hp' | 'tempHp' | 'wounds', amount: number) => ({
+		kind,
+		amount,
+		spend: { mode: 'fixed' as const },
+		beyond: 'notAllowed' as const,
+		source: 'Blood Rite',
+	});
+
+	function open(options: { spendsActions?: number; resourceCosts?: ReturnType<typeof cost>[] }) {
+		user.targets = new Set();
+		return createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'feature', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+			...options,
+		});
+	}
+
+	it('says what the use sacrifices', () => {
+		expect(open({ resourceCosts: [cost('hp', 5)] }).spendLine).toBe(
+			'When you roll, you sacrifice 5 HP.',
+		);
+	});
+
+	it('joins what the use spends and what it sacrifices with "and"', () => {
+		expect(open({ resourceCosts: [cost('mana', 2), cost('hp', 14)] }).spendLine).toBe(
+			'When you roll, it spends 2 Mana and you sacrifice 14 HP.',
+		);
+		expect(
+			open({ spendsActions: 1, resourceCosts: [cost('tempHp', 10), cost('wounds', 1)] }).spendLine,
+		).toBe('When you roll, it spends 1 action and 10 temp HP and you sacrifice 1 Wound.');
+	});
+
+	it('keeps the actions line of a use with no cost', () => {
+		expect(open({ spendsActions: 2 }).spendLine).toBe('When you roll, it spends 2 actions.');
+		expect(open({}).spendLine).toBe('');
+	});
+});

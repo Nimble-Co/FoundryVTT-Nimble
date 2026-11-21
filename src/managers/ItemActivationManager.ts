@@ -7,6 +7,7 @@ import type { HeldChange } from '#types/heldChange.d.ts';
 import type { ActiveMaxDamage, MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
+import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { ruleLabel } from '#utils/actor/actorRules.js';
@@ -38,6 +39,7 @@ import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
+import { resourceCostRefusal, resourceCostsOfUse } from '../utils/cost/itemResourceCosts.js';
 import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
@@ -232,6 +234,9 @@ class ItemActivationManager {
 	/** The player ticked a use with no charge: a consumer that allows it spends nothing. */
 	freeUse = false;
 
+	/** What this use spends or sacrifices through Spend or Sacrifice rules, checked before the dialog. */
+	resourceCosts: ResourceCost[] = [];
+
 	/** A use that a rule gives for free, and what it is free of. It is always free of actions. */
 	get free(): ItemActivationManager.FreeUse | null {
 		const free = this.#options.free;
@@ -410,6 +415,15 @@ class ItemActivationManager {
 					resolveEffectiveCastTier(this.#item as unknown as SpellLike, this.pinnedCastTier) ??
 					undefined,
 			});
+		}
+
+		this.resourceCosts = resourceCostsOfUse(this.#item as never, {
+			freeOfMana: this.free?.of.includes('mana'),
+		});
+		const refusal = resourceCostRefusal(this.actor, this.resourceCosts);
+		if (refusal) {
+			ui.notifications?.error(refusal);
+			return { activation: null, rolls: null };
 		}
 
 		const rollOptions = {
@@ -1627,6 +1641,7 @@ class ItemActivationManager {
 			...rollOptions,
 			pinnedCastTier: this.pinnedCastTier,
 			spellCost: this.spellCost,
+			resourceCosts: this.resourceCosts,
 		});
 		await dialog.render(true);
 		const result = await dialog.promise;

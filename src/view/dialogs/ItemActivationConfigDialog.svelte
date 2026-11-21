@@ -15,7 +15,6 @@
 	import RollModifierFields from './components/RollModifierFields.svelte';
 	import RollWindow from './components/RollWindow.svelte';
 	import SituationalRollModeList from './components/SituationalRollModeList.svelte';
-	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	const { skillCheckDialog, damageTypes } = CONFIG.NIMBLE;
 
@@ -27,8 +26,8 @@
 		rushedAttack,
 		spendsActions,
 		ignoreDisadvantage,
+		resourceCosts,
 	}: ItemActivationConfigDialogProps = $props();
-	const spendLine = $derived(rollSpendLine(spendsActions));
 
 	const state = createItemActivationConfigDialogState({
 		actor: () => actor,
@@ -36,6 +35,8 @@
 		initialRollMode: untrack(() => rollMode),
 		hideRollsDefault: !!game.settings.get(SYSTEM_ID, 'hideRolls'),
 		ignoresDisadvantage: untrack(() => ignoreDisadvantage),
+		spendsActions: untrack(() => spendsActions),
+		resourceCosts: untrack(() => resourceCosts),
 	});
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
@@ -107,7 +108,7 @@
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
-	{#if spendLine}<p class="spends">{spendLine}</p>{/if}
+	{#if state.spendLine}<p class="spends">{state.spendLine}</p>{/if}
 	{#each state.chargeCosts as cost (cost.label)}
 		<p class="spends">
 			{localize('NIMBLE.rollWindow.spendsCharge', {

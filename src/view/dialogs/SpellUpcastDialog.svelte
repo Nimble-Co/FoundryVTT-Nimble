@@ -34,6 +34,7 @@
 	} from '../../utils/rolls/appliedConditionRollModes.js';
 	import { openRollModeTicks } from '../../utils/rolls/rollModeTicks.js';
 	import { soleTarget } from '../../utils/tokens/soleTarget.js';
+	import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 	import { rollSpendLine } from './components/rollSpendLine.ts';
 
 	let { actor, dialog, spell, ...data } = $props();
@@ -157,7 +158,10 @@
 			: null,
 	);
 
-	const spendLine = $derived(rollSpendLine(data.spendsActions, costLabel ?? ''));
+	const costParts = untrack(() => rollWindowCostParts(data.resourceCosts ?? []));
+	const spendLine = $derived(
+		rollSpendLine(data.spendsActions, [costLabel ?? '', ...costParts.spends], costParts.sacrifices),
+	);
 
 	// Compute preview of upcast effects
 	const damageOrHealingOps = new Set(['addFlatDamage', 'addDice', 'increaseDieSize']);

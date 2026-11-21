@@ -10,6 +10,7 @@ import type {
 import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
 import type { DualWieldOffer } from '#types/dualWield.d.ts';
 import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
+import type { ResourceCost } from '#types/resourceCost.d.ts';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
@@ -17,6 +18,7 @@ import {
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
+import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
@@ -33,6 +35,7 @@ import { MAX_ROLL_MODE, openRollModeTicks } from '#utils/rolls/rollModeTicks.js'
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { conditionRollModeOptions } from './components/conditionRollModeOptions.ts';
+import { rollSpendLine } from './components/rollSpendLine.ts';
 import { heldChangeChoice } from './heldChangeChoice.svelte.ts';
 import {
 	buildAutoBonusFormula,
@@ -53,12 +56,18 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	hideRollsDefault: boolean;
 	/** The roll ignores disadvantage already, so the change that ignores it has no line. */
 	ignoresDisadvantage?: boolean;
+	/** The actions that this use spends. */
+	spendsActions?: number;
+	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
+	resourceCosts?: readonly ResourceCost[];
 }
 
 export function createItemActivationConfigDialogState(
 	options: CreateItemActivationConfigDialogStateOptions,
 ) {
 	const { initialRollMode = 0, hideRollsDefault } = options;
+	const costParts = rollWindowCostParts(options.resourceCosts ?? []);
+	const spendLine = rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
 
 	// Snapshot actor and item at dialog-open time — pools reflect what is
 	// available when the player initiates the roll, not mid-dialog changes.
@@ -481,6 +490,7 @@ export function createItemActivationConfigDialogState(
 			usesKeptAmount = value;
 		},
 		maxDamageOffers: maxDamage,
+		spendLine,
 		offersLessMana,
 		dualWieldOffer,
 		get dualWield() {

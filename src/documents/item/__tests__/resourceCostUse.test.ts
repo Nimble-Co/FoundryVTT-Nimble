@@ -1,0 +1,307 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ResourceCostKind } from '#types/resourceCost.d.ts';
+import { ResourceCostRule } from '../../../models/rules/resourceCost.js';
+import { NimbleFeatureItem } from '../feature.js';
+import { NimbleSpellItem } from '../spell.js';
+
+type Globals = Record<string, any>;
+const globals = globalThis as Globals;
+
+interface HeroOptions {
+	mana?: number;
+	hp?: number;
+	temp?: number;
+	wounds?: number;
+	maxWounds?: number;
+}
+
+function hero(options: HeroOptions = {}) {
+	const actor = {
+		id: 'hero',
+		uuid: 'Actor.hero',
+		name: 'Hero',
+		type: 'character',
+		token: null,
+		flags: {},
+		rules: [],
+		statuses: new Set<string>(),
+		effects: [],
+		items: { contents: [] as unknown[], get: () => undefined },
+		system: {
+			resources: { mana: { current: options.mana ?? 0, max: 10 }, highestUnlockedSpellTier: 3 },
+			attributes: {
+				hp: { value: options.hp ?? 20, max: 20, temp: options.temp ?? 0 },
+				wounds: { value: options.wounds ?? 0, max: options.maxWounds ?? 6 },
+			},
+		},
+		getRollData: () => ({}),
+		getDomain: () => new Set<string>(),
+		getActiveTokens: () => [],
+		update: vi.fn(async (changes: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(changes)) {
+				foundry.utils.setProperty(actor, path, value);
+			}
+		}),
+	};
+	return actor;
+}
+
+type Hero = ReturnType<typeof hero>;
+
+function costRule(item: object, kind: ResourceCostKind, amount: string) {
+	const rule = new ResourceCostRule({ type: 'resourceCost' } as never, { strict: false });
+	Object.assign(rule, {
+		id: `cost-${kind}`,
+		type: 'resourceCost',
+		disabled: false,
+		kind,
+		amount,
+		spendMode: 'fixed',
+	});
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'predicate', {
+		get: () => ({ size: 0, test: () => true }),
+		configurable: true,
+	});
+	return rule;
+}
+
+type Cost = [ResourceCostKind, string];
+
+function itemOf(
+	prototype: object,
+	actor: Hero,
+	name: string,
+	costs: Cost[],
+	extra: Record<string, unknown> = {},
+) {
+	const item = Object.assign(Object.create(prototype), {
+		id: name,
+		uuid: `Item.${name}`,
+		name,
+		img: 'icon.webp',
+		permission: 3,
+		tags: new Set<string>(),
+		actor,
+		getDomain: () => new Set<string>(),
+		_createActivationCard: vi.fn(async () => null),
+		// The foundry mock merges shallowly, so the kind's card data would replace the base system.
+		prepareChatCardData: vi.fn(async () => ({})),
+		...extra,
+	});
+	item.rules = new Map(costs.map(([kind, amount]) => [kind, costRule(item, kind, amount)]));
+	return item;
+}
+
+function feature(actor: Hero, name: string, costs: Cost[]) {
+	return itemOf(NimbleFeatureItem.prototype, actor, name, costs, {
+		type: 'feature',
+		system: { activation: { effects: [] }, description: '', class: '' },
+	});
+}
+
+function spell(actor: Hero, name: string, costs: Cost[]) {
+	return itemOf(NimbleSpellItem.prototype, actor, name, costs, {
+		type: 'spell',
+		system: {
+			tier: 1,
+			school: 'ice',
+			activation: { effects: [] },
+			description: { baseEffect: '', higherLevelEffect: '', upcastEffect: '' },
+			scaling: null,
+		},
+	});
+}
+
+function cardOf(item: { _createActivationCard: ReturnType<typeof vi.fn> }) {
+	return item._createActivationCard.mock.calls[0]?.[0] as
+		| { system: Record<string, unknown> }
+		| undefined;
+}
+
+function setResourceSpending(on: boolean): void {
+	globals.game.settings = {
+		get: (_scope: string, key: string) => (key === 'automation.resourceSpending' ? on : false),
+	};
+}
+
+let saved: Record<string, unknown>;
+
+beforeEach(() => {
+	saved = { settings: globals.game.settings };
+	setResourceSpending(true);
+	(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(true);
+	globals.ChatMessage.getSpeaker = vi.fn(() => ({}));
+	globals.CONST.CHAT_MESSAGE_STYLES = { OTHER: 0 };
+	globals.CONFIG.sounds = { dice: 'dice' };
+	vi.mocked(ui.notifications!.error).mockClear();
+	vi.mocked(ui.notifications!.warn).mockClear();
+});
+
+afterEach(() => {
+	globals.game.settings = saved.settings;
+});
+
+function notices(): string[] {
+	return [
+		...vi.mocked(ui.notifications!.error).mock.calls,
+		...vi.mocked(ui.notifications!.warn).mock.calls,
+	].map(([message]) => String(message));
+}
+
+describe('using a feature with a Spend or Sacrifice cost', () => {
+	it('spends the mana and puts the cost on the card', async () => {
+		const actor = hero({ mana: 5 });
+		const item = feature(actor, 'Storm Wake', [['mana', '3']]);
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(2);
+		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'mana', amount: 3, source: 'Storm Wake' }]);
+	});
+
+	it('refuses the use with a notice when the creature has too little mana, and spends nothing', async () => {
+		const actor = hero({ mana: 2 });
+		const item = feature(actor, 'Storm Wake', [['mana', '3']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Storm Wake needs 3 mana. You have 2.']);
+	});
+
+	it('sacrifices HP as a change to HP, not as damage', async () => {
+		const actor = hero({ hp: 12, temp: 4 });
+		const item = feature(actor, 'Blood Price', [['hp', '5']]);
+
+		await item.activate();
+
+		expect(actor.system.attributes.hp).toEqual({ value: 7, max: 20, temp: 4 });
+		expect(actor.update).toHaveBeenCalledWith({ 'system.attributes.hp.value': 7 });
+		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'hp', amount: 5, source: 'Blood Price' }]);
+	});
+
+	it('refuses an HP cost that would leave the creature at 0 HP', async () => {
+		const actor = hero({ hp: 5 });
+		const item = feature(actor, 'Blood Price', [['hp', '5']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Blood Price needs more than 5 HP.']);
+	});
+
+	it('spends only temp HP for a temp HP cost', async () => {
+		const actor = hero({ hp: 20, temp: 10 });
+		const item = feature(actor, 'Shadowfrost', [['tempHp', '10']]);
+
+		await item.activate();
+
+		expect(actor.system.attributes.hp).toEqual({ value: 20, max: 20, temp: 0 });
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'tempHp', amount: 10, source: 'Shadowfrost' },
+		]);
+	});
+
+	it('refuses a temp HP cost with too little temp HP, whatever the HP', async () => {
+		const actor = hero({ hp: 20, temp: 6 });
+		const item = feature(actor, 'Shadowfrost', [['tempHp', '10']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Shadowfrost needs 10 temp HP. You have 6.']);
+	});
+
+	it('gives the Wounds of a Wound cost', async () => {
+		const actor = hero({ wounds: 2, maxWounds: 6 });
+		const item = feature(actor, 'Dark Bargain', [['wounds', '1']]);
+
+		await item.activate();
+
+		expect(actor.system.attributes.wounds.value).toBe(3);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'wounds', amount: 1, source: 'Dark Bargain' },
+		]);
+	});
+
+	it('refuses a Wound cost that would go past the maximum Wounds', async () => {
+		const actor = hero({ wounds: 5, maxWounds: 6 });
+		const item = feature(actor, 'Dark Bargain', [['wounds', '2']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Dark Bargain needs room for 2 more Wounds. You have room for 1.']);
+	});
+
+	it('spends every cost of the use, and refuses the whole use when one is short', async () => {
+		const rich = hero({ mana: 4, hp: 12 });
+		const paid = feature(rich, 'Storm Pact', [
+			['mana', '2'],
+			['hp', '3'],
+		]);
+		await paid.activate();
+		expect(rich.system.resources.mana.current).toBe(2);
+		expect(rich.system.attributes.hp.value).toBe(9);
+
+		const poor = hero({ mana: 4, hp: 3 });
+		const refused = feature(poor, 'Storm Pact', [
+			['mana', '2'],
+			['hp', '3'],
+		]);
+		await refused.activate();
+		expect(poor.update).not.toHaveBeenCalled();
+	});
+
+	it('gives the costs back when the card fails to post', async () => {
+		const actor = hero({ mana: 5, hp: 12 });
+		const item = feature(actor, 'Storm Pact', [
+			['mana', '2'],
+			['hp', '3'],
+		]);
+		const failure = new Error('card failed');
+		item._createActivationCard.mockRejectedValue(failure);
+
+		await expect(item.activate()).rejects.toBe(failure);
+
+		expect(actor.system.resources.mana.current).toBe(5);
+		expect(actor.system.attributes.hp.value).toBe(12);
+	});
+
+	it('with Resource Spending off, checks and spends nothing but still shows the cost', async () => {
+		setResourceSpending(false);
+		const actor = hero({ mana: 0 });
+		const item = feature(actor, 'Storm Wake', [['mana', '3']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual([]);
+		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'mana', amount: 3, source: 'Storm Wake' }]);
+	});
+});
+
+describe('casting a spell with a Spend or Sacrifice cost', () => {
+	it('spends the spell mana and the cost, and the card shows only the cost', async () => {
+		const actor = hero({ mana: 5, hp: 20 });
+		const item = spell(actor, 'Frost Pact', [['hp', '4']]);
+
+		await item.activate({ fastForward: true });
+
+		expect(actor.system.resources.mana.current).toBe(4);
+		expect(actor.system.attributes.hp.value).toBe(16);
+		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'hp', amount: 4, source: 'Frost Pact' }]);
+	});
+
+	it('gives the cost back when the spell mana is short', async () => {
+		const actor = hero({ mana: 0, hp: 20 });
+		const item = spell(actor, 'Frost Pact', [['hp', '4']]);
+
+		await item.activate({ fastForward: true });
+
+		expect(actor.system.attributes.hp.value).toBe(20);
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+	});
+});
