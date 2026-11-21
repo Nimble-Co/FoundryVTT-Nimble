@@ -110,7 +110,7 @@ describe('Spellshaper abilities', () => {
 		(slug) => {
 			const option = optionOf(slug);
 			expect(option.target).toBe('spell');
-			expect(option.poolIdentifier).toBe(POOL);
+			expect(option.chargePoolIdentifier).toBe(POOL);
 			expect(option.kind).toBe('mana');
 			expect(option.beyond).toBe('notAllowed');
 			expect(option.replacesSpellCost).toBe(false);
@@ -164,7 +164,7 @@ describe('Spellshaper abilities', () => {
 		const option = optionOf('stretch-time');
 		expect(option.resourceCost).toMatchObject({ amount: 2, spend: { mode: 'fixed' } });
 		expect(option.actionCostChange).toEqual({ delta: -1, minimum: 1 });
-		expect(option.manaCostChange).toBeNull();
+		expect(option.manaChange).toBeNull();
 		expect(option.appliesToSpell(CANTRIP)).toBe(true);
 	});
 
@@ -172,7 +172,7 @@ describe('Spellshaper abilities', () => {
 		const option = optionOf('methodical-spellweaver');
 		expect(option.resourceCost).toMatchObject({ amount: 0, spend: { mode: 'fixed' } });
 		expect(option.actionCostChange).toEqual({ delta: 1, minimum: 0 });
-		expect(option.manaCostChange).toEqual({ delta: -2, minimum: 1 });
+		expect(option.manaChange).toEqual({ delta: -2, minimum: 1 });
 		expect(option.appliesToSpell(TIERED)).toBe(true);
 		expect(option.appliesToSpell(CANTRIP)).toBe(false);
 	});
