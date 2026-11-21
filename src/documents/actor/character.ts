@@ -63,6 +63,7 @@ import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
+import { offersActionCostChange } from '../../utils/spell/spellUseOptions.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelCorrectionDialog from '../../view/dialogs/CharacterLevelCorrectionDialog.svelte';
@@ -2444,30 +2445,18 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	): Promise<ChatMessage | null> {
 		const item = this.items.get(id);
 		const paysActions = !options.skipActionDeduction && !options.free;
+		const force = options.force === true;
 
 		// Soft-block gate: when the activation costs more actions than the
 		// combatant has remaining, confirm before any activation side effects
 		// (dialogs, rolls, card creation) so a cancelled overspend leaves no
 		// trace. `force` bypasses the prompt; paths that manage the cost
-		// themselves pass `skipActionDeduction` and are never prompted.
-		if (item && paysActions) {
-			const actionCost = resolveCharacterItemActionCost(this, item as ActivatableItem);
-			if (actionCost > 0) {
-				const combat = game.combat as Combat | null;
-				const combatant =
-					combat?.combatants?.find(
-						(entry: Combatant.Implementation) => entry.actorId === this.id,
-					) ?? null;
-				if (combat?.started && combatant) {
-					const confirmed = await showInsufficientActionsConfirmation({
-						activityName: item.name ?? '',
-						requiredActions: actionCost,
-						currentActions: getCombatantCurrentActions(combatant),
-						force: options.force === true,
-					});
-					if (!confirmed) return null;
-				}
-			}
+		// themselves pass `skipActionDeduction` and are never prompted. When an
+		// option in the dialog can change the actions, the gate waits for the
+		// dialog and checks the final cost.
+		const checksAfterDialog = !!item && paysActions && offersActionCostChange(this, item);
+		if (item && paysActions && !checksAfterDialog) {
+			if (!(await this.#confirmActions(item, [], force))) return null;
 		}
 
 		const rushed = rollsWithRushedDisadvantage(item) ? attacksMadeThisTurn(this) : 0;
@@ -2477,6 +2466,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				? { rollMode: -rushed, rushedAttack: rushed + 1 }
 				: {}),
 			spendsActions: paysActions ? this.#actionsSpentBy(item) : 0,
+			...(checksAfterDialog
+				? {
+						confirmActions: (changes: readonly ActionCostChange[]) =>
+							this.#confirmActions(item, changes, force),
+					}
+				: {}),
 		});
 
 		if (result && countsAsAttack(item)) await recordAttack(this);
@@ -2484,10 +2479,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (result && item && paysActions) {
 			const changes = (foundry.utils.getProperty(result, `flags.${SYSTEM_ID}.actionCostChanges`) ??
 				[]) as ActionCostChange[];
-			const actionCost = changes.reduce(
-				withActionCostChange,
-				resolveCharacterItemActionCost(this, item as ActivatableItem),
-			);
+			const actionCost = this.#actionCostWith(item, changes);
 			if (actionCost > 0) {
 				const combat = game.combat as Combat | null;
 				const combatant =
@@ -2508,6 +2500,35 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 
 		return result;
+	}
+
+	/** The actions a use costs after the action cost changes of the options chosen for it. */
+	#actionCostWith(item: unknown, changes: readonly ActionCostChange[]): number {
+		return changes.reduce(
+			withActionCostChange,
+			resolveCharacterItemActionCost(this, item as ActivatableItem),
+		);
+	}
+
+	/** Whether the use may go ahead with the actions the combatant has left, asking if not. */
+	async #confirmActions(
+		item: { name?: string | null },
+		changes: readonly ActionCostChange[],
+		force: boolean,
+	): Promise<boolean> {
+		const actionCost = this.#actionCostWith(item, changes);
+		if (actionCost <= 0) return true;
+		const combat = game.combat as Combat | null;
+		const combatant =
+			combat?.combatants?.find((entry: Combatant.Implementation) => entry.actorId === this.id) ??
+			null;
+		if (!combat?.started || !combatant) return true;
+		return showInsufficientActionsConfirmation({
+			activityName: item.name ?? '',
+			requiredActions: actionCost,
+			currentActions: getCombatantCurrentActions(combatant),
+			force,
+		});
 	}
 
 	/** The actions that a use spends: only in a started combat. */

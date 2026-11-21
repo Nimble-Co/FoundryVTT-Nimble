@@ -433,6 +433,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		if (activation === null || rolls === null) {
 			return null;
 		}
+		if (
+			options.confirmActions &&
+			!(await options.confirmActions(manager.chosenOptions.actionCostChanges))
+		) {
+			return null;
+		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 		const useContext = {
 			freeUse: manager.freeUse,

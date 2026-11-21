@@ -415,6 +415,10 @@ function option(name: string, amount: number, more: object = {}) {
 		damageTypes: [] as string[],
 		manaCostChange: null,
 		freeCopy: false,
+		replacesSpellCost: false,
+		manaSet: null,
+		effect: null,
+		used: false,
 		...more,
 	};
 }
@@ -426,7 +430,7 @@ const compression = option('Dimensional Compression', 1, {
 });
 
 function spellshaper(used = false, options = [stretchTime, compression]) {
-	return { key: 'spellshaper', label: 'Spellshaper (1/turn)', used, options };
+	return { key: 'spellshaper', label: 'Spellshaper (1/turn)', used, spend: false, options };
 }
 
 describe('the upcast dialog Spell or Attack Options', () => {
@@ -618,5 +622,130 @@ describe('the upcast dialog variable Spend or Sacrifice cost', () => {
 
 		expect(state.castData.resourceAmounts).toEqual({ 'Frost Pact': 2 });
 		expect(state.spendLine).toBe('When you roll, it spends 1 Mana and you sacrifice 2 HP.');
+	});
+});
+
+function spendGroup(...options: ReturnType<typeof option>[]) {
+	return { key: 'spend', label: 'Spend', used: false, spend: true, options };
+}
+
+const pilferedPower = {
+	type: 'pool' as const,
+	poolIdentifier: 'pilfered-power',
+	poolLabel: 'Pilfered Power',
+	amount: 1,
+	overdraftConsequence: '' as const,
+	overdraftResolvedAtTable: false,
+};
+
+const shadowfrost = option('Shadowfrost', 10, {
+	cost: { ...manaCost('Shadowfrost', 10), kind: 'tempHp' as const },
+	poolIdentifier: '',
+	replacesSpellCost: true,
+});
+
+const reprisal = option("Cryomancer's Reprisal", 14, {
+	cost: { ...manaCost("Cryomancer's Reprisal", 14), kind: 'hp' as const },
+	poolIdentifier: '',
+	replacesSpellCost: true,
+});
+
+describe('the upcast dialog Spend buttons', () => {
+	it("show the spell's own cost first, then each different spend, with the spell's cost chosen", () => {
+		const state = open(caster(), fireBolt(), {
+			spellCost: pilferedPower,
+			useOptionGroups: [spendGroup(shadowfrost)],
+		});
+
+		expect(state.spendChoice).toEqual({
+			key: 'spend',
+			label: 'Spend',
+			chosen: '',
+			buttons: [
+				{ key: '', label: '1 Pilfered Power', disabled: false },
+				{ key: shadowfrost.key, label: '10 temp HP (Shadowfrost)', disabled: false },
+			],
+		});
+		expect(state.optionGroups).toEqual([]);
+		expect(state.spendLine).toBe('When you roll, it spends 1 Pilfered Power.');
+	});
+
+	it('change the spend line to the chosen spend and put it in the cast', () => {
+		const state = open(caster(), fireBolt(), {
+			spellCost: pilferedPower,
+			useOptionGroups: [spendGroup(shadowfrost)],
+		});
+
+		state.chooseOption('spend', shadowfrost.key);
+
+		expect(state.spendChoice?.chosen).toBe(shadowfrost.key);
+		expect(state.spendLine).toBe('When you roll, it spends 10 temp HP.');
+		expect(state.castData.useOptions).toEqual([{ key: shadowfrost.key }]);
+
+		state.chooseOption('spend', '');
+
+		expect(state.spendLine).toBe('When you roll, it spends 1 Pilfered Power.');
+		expect(state.castData.useOptions).toBeUndefined();
+	});
+
+	it('name the mana of the chosen tier, and with an HP sacrifice cast at the spell tier', () => {
+		const state = open(caster({ mana: 5, unlocked: 3 }), fireBolt({ tier: 2 }), {
+			spendsActions: 1,
+			useOptionGroups: [spendGroup(reprisal)],
+		});
+
+		state.manaToSpend = 3;
+
+		expect(state.spendChoice?.buttons.map((button) => button.label)).toEqual([
+			'3 mana',
+			"14 HP (Cryomancer's Reprisal)",
+		]);
+
+		state.chooseOption('spend', reprisal.key);
+
+		expect(state.spendLine).toBe('When you roll, it spends 1 action and you sacrifice 14 HP.');
+		expect(state.canUpcast).toBe(false);
+		expect(state.castData.upcast).toBeUndefined();
+		expect(state.castWarning).toBe('');
+	});
+
+	it('mark a spend whose use is spent as off', () => {
+		const state = open(caster(), fireBolt(), {
+			spellCost: pilferedPower,
+			useOptionGroups: [spendGroup({ ...shadowfrost, used: true })],
+		});
+
+		expect(state.spendChoice?.buttons[1].disabled).toBe(true);
+
+		state.chooseOption('spend', shadowfrost.key);
+
+		expect(state.castData.useOptions).toBeUndefined();
+	});
+});
+
+describe('the upcast dialog option that sets the mana of the spell', () => {
+	const storm = option('Master of Storm', 0, { poolIdentifier: 'storm', manaSet: 0 });
+
+	it('casts at the spell tier for that mana, with no tier buttons', () => {
+		const state = open(caster({ mana: 9, unlocked: 5 }), fireBolt({ tier: 3 }), {
+			spendsActions: 1,
+			useOptionGroups: [
+				{
+					key: 'storm',
+					label: 'Master of Storm (1/Safe Rest)',
+					used: false,
+					spend: false,
+					options: [storm],
+				},
+			],
+		});
+		state.manaToSpend = 4;
+
+		state.chooseOption('storm', storm.key);
+
+		expect(state.canUpcast).toBe(false);
+		expect(state.castData.upcast).toBeUndefined();
+		expect(state.spendLine).toBe('When you roll, it spends 1 action.');
+		expect(state.castWarning).toBe('');
 	});
 });

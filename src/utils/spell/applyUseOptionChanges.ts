@@ -1,3 +1,5 @@
+import type { ApplyEffectNode } from '#types/effectTree.js';
+import type { UseOptionEffect } from '#types/useOption.d.ts';
 import type { ChosenUseOptions } from './spellUseOptions.js';
 
 interface OptionActivation {
@@ -39,4 +41,20 @@ export function applyUseOptionChanges(
 			if (node.type === 'damage') node.damageType = chosen.damageType;
 		});
 	}
+	if (chosen.effects.length > 0) {
+		activation.effects = [...(activation.effects ?? []), ...chosen.effects.map(selfStepOf)];
+	}
+}
+
+/** A step of the card that gives the caster an effect of the option's item. */
+function selfStepOf({ itemUuid, effectId }: UseOptionEffect): ApplyEffectNode {
+	return {
+		id: `useOption${effectId}`,
+		type: 'applyEffect',
+		effectId,
+		effectItemUuid: itemUuid,
+		recipient: 'self',
+		parentContext: null,
+		parentNode: null,
+	};
 }

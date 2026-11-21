@@ -2271,6 +2271,18 @@
 				"freeCopy": {
 					"label": "Free copy",
 					"hint": "After the cast, a second card of the same spell posts at the same tier, free of mana, for another target. An amount can read @castManaSpent, the mana the cast spends on the spell, such as max(1, 2 * @castManaSpent)."
+				},
+				"replacesSpellCost": {
+					"label": "Spend in place of the spell's cost",
+					"hint": "The option's cost takes the place of what the spell costs, mana or a class pool. The option is a button under Spend in the cast window, next to the spell's own cost. The spell casts at its own tier."
+				},
+				"manaSet": {
+					"label": "Set the mana cost to",
+					"hint": "The spell costs this much mana, at its own tier, with no upcast. Empty is no change."
+				},
+				"effectId": {
+					"label": "Effect after the cast",
+					"hint": "An effect of this item that the caster gains after a cast with the option. Its rule formulas can read @cost, what the cast spent and sacrificed, such as floor(@cost.hp / 2). Empty is no effect."
 				}
 			},
 			"diceConsumer": {
@@ -4078,6 +4090,8 @@
 			"none": "None",
 			"usedThisTurn": "Used this turn",
 			"entry": "{name} ({cost})",
+			"spend": "Spend",
+			"spendEntry": "{cost} ({name})",
 			"atLeast": "{amount}+",
 			"amountLabel": {
 				"mana": "Mana",

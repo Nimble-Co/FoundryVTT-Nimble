@@ -29,6 +29,20 @@ export interface UseOption {
 	manaCostChange: CostChange | null;
 	/** After the cast, a free copy of the spell posts at the same tier. */
 	freeCopy: boolean;
+	/** The option's cost takes the place of the spell's own cost: a button under "Spend". */
+	replacesSpellCost: boolean;
+	/** The mana the spell costs at its own tier, with no upcast, or null for no change. */
+	manaSet: number | null;
+	/** The effect the caster gains after a cast with the option. */
+	effect: UseOptionEffect | null;
+	/** The option's Charge Pool has no use left. */
+	used: boolean;
+}
+
+/** An effect of the item that owns an option. */
+export interface UseOptionEffect {
+	itemUuid: string;
+	effectId: string;
 }
 
 /** The options that share one Charge Pool, or one option with none: one dropdown. */
@@ -38,6 +52,8 @@ export interface UseOptionGroup {
 	label: string;
 	/** The pool has no use left. */
 	used: boolean;
+	/** The options of the group take the place of the spell's cost: buttons under "Spend". */
+	spend: boolean;
 	options: UseOption[];
 }
 

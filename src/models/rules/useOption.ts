@@ -1,5 +1,6 @@
 import type { ActionCostChange, CostChange } from '#types/useOption.d.ts';
 import { ruleKey } from '#utils/actor/actorRules.js';
+import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { readsCastMana } from '#utils/cost/castManaCost.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -163,6 +164,34 @@ function schema() {
 			label: `${WORDS}.freeCopy.label`,
 			hint: `${WORDS}.freeCopy.hint`,
 		}),
+		replacesSpellCost: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: `${WORDS}.replacesSpellCost.label`,
+			hint: `${WORDS}.replacesSpellCost.hint`,
+		}),
+		manaSet: new fields.NumberField({
+			required: false,
+			nullable: true,
+			initial: null,
+			min: 0,
+			integer: true,
+			label: `${WORDS}.manaSet.label`,
+			hint: `${WORDS}.manaSet.hint`,
+		}),
+		effectId: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: `${WORDS}.effectId.label`,
+				hint: `${WORDS}.effectId.hint`,
+				widget: 'itemEffectPicker',
+				recipient: () => 'self' as const,
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'useOption' }),
 	};
 }
@@ -226,6 +255,15 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 
 	declare freeCopy: boolean;
 
+	/** The option's cost takes the place of the spell's own cost. */
+	declare replacesSpellCost: boolean;
+
+	/** The mana the spell costs at its own tier, with no upcast, or null for no change. */
+	declare manaSet: number | null;
+
+	/** An effect of the item that the caster gains after a cast with the option. */
+	declare effectId: string;
+
 	static override defineSchema(): UseOptionRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -256,6 +294,21 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	/** How the option changes the mana cost of the spell, or null when it does not. */
 	get manaCostChange(): CostChange | null {
 		return costChangeOf(this.manaDelta, this.manaMinimum);
+	}
+
+	/** The mana the spell costs with the option, or null when the option does not set it. */
+	get manaCostSet(): number | null {
+		const value = this.manaSet;
+		if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
+		return Math.max(0, Math.trunc(Number(value)));
+	}
+
+	/** The effect the caster gains after a cast with the option, or null for none. */
+	get effectAfterCast(): { itemUuid: string; effectId: string } | null {
+		const item = this.item;
+		const effectId = String(this.effectId ?? '').trim();
+		if (!effectId || !item?.uuid || !itemEffectOf(item as never, effectId)) return null;
+		return { itemUuid: item.uuid, effectId };
 	}
 
 	/** Whether the option goes into the cast dialog of this spell. */
@@ -294,6 +347,9 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 				['manaDelta', 'number'],
 				['manaMinimum', 'number'],
 				['freeCopy', 'boolean'],
+				['replacesSpellCost', 'boolean'],
+				['manaSet', 'number | null'],
+				['effectId', 'string'],
 			]),
 		);
 	}

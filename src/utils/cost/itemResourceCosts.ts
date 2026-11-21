@@ -59,7 +59,9 @@ async function settleResourceCosts(
 }
 
 /** What the use spends or sacrifices of each kind, for `@cost.mana` and the others. */
-function resourceCostRollData(costs: readonly ResourceCost[]): ResourceCostRollData {
+function resourceCostRollData(
+	costs: ReadonlyArray<Pick<ResourceCost, 'kind' | 'amount'>>,
+): ResourceCostRollData {
 	const totals: ResourceCostRollData = { mana: 0, hp: 0, tempHp: 0, wounds: 0 };
 	for (const cost of costs) totals[cost.kind] += Math.max(0, Number(cost.amount) || 0);
 	return totals;

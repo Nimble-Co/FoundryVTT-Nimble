@@ -8,7 +8,11 @@ import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { withActionCostChange } from '#utils/combat/withActionCostChange.js';
 import { withCastMana } from '#utils/cost/castManaCost.js';
 import { variableRangeOf } from '#utils/cost/resourceCost.js';
-import { optionEntryText, rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
+import {
+	optionEntryText,
+	resourceCostText,
+	rollWindowCostParts,
+} from '#utils/cost/resourceCostWords.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
@@ -95,6 +99,15 @@ export interface OptionGroupView {
 	/** The chosen pick, or ''. */
 	pick: string;
 	entries: Array<{ key: string; label: string }>;
+}
+
+/** The buttons under "Spend": the spell's own cost, then each option that spends in its place. */
+export interface SpendChoiceView {
+	key: string;
+	label: string;
+	/** The key of the chosen option, or '' for the spell's own cost. */
+	chosen: string;
+	buttons: Array<{ key: string; label: string; disabled: boolean }>;
 }
 
 export interface UpcastTier {
@@ -217,7 +230,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		(_, index) => baseMana + index,
 	);
 
-	const canUpcast =
+	const scalesUp =
 		spell.tier > 0 &&
 		!!spell.scaling &&
 		spell.scaling.mode !== 'none' &&
@@ -227,7 +240,6 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 
 	let manaToSpend = $state(effectiveCastTier ?? baseMana);
 	let choiceIndex = $state(0);
-	const upcastSteps = $derived(manaToSpend - baseMana);
 
 	// Mana costs track the chosen tier, so the label is rebuilt as it moves.
 	const costLabel = $derived(
@@ -254,17 +266,30 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		return group.options.find((each) => each.key === key) ?? null;
 	}
 
-	const manaCostChanges = $derived(
-		useOptionGroups.flatMap((group) => chosenOptionOf(group)?.manaCostChange ?? []),
+	const pickedOptions = $derived(useOptionGroups.flatMap((group) => chosenOptionOf(group) ?? []));
+	const manaCostChanges = $derived(pickedOptions.flatMap((option) => option.manaCostChange ?? []));
+	/** An option's cost takes the place of the spell's own cost. */
+	const replacesSpellCost = $derived(pickedOptions.some((option) => option.replacesSpellCost));
+	const manaSet = $derived(
+		pickedOptions.find((option) => option.manaSet !== null)?.manaSet ?? null,
 	);
+	/** A chosen option casts the spell at its own tier. */
+	const tierLocked = $derived(replacesSpellCost || manaSet !== null);
+	const canUpcast = $derived(scalesUp && !tierLocked);
+	const castTier = $derived(
+		!tierLocked ? manaToSpend : manaSet === null ? (effectiveCastTier ?? baseMana) : baseMana,
+	);
+	const upcastSteps = $derived(castTier - baseMana);
 
-	/** The mana a tier costs after the mana cuts of the chosen options. */
+	/** The mana a tier costs after the mana cuts of the chosen options, or the mana they set. */
 	function manaOfTier(tier: number): number {
-		return manaCostChanges.reduce(withActionCostChange, tier);
+		return manaCostChanges.reduce(withActionCostChange, manaSet ?? tier);
 	}
 
 	/** The mana of the spell at the chosen tier, which every other mana spend comes after. */
-	const spellMana = $derived(baseMana > 0 && !isPoolCost ? manaOfTier(manaToSpend) : 0);
+	const spellMana = $derived(
+		baseMana > 0 && !isPoolCost && !replacesSpellCost ? manaOfTier(castTier) : 0,
+	);
 
 	function optionAmountOf(option: UseOption): OptionAmount | null {
 		const range = variableRangeOf(actor as never, option.cost);
@@ -329,7 +354,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 			spellCost?.type === 'mana'
 				? [formatSpellCostLabel({ type: 'mana', amount: spellMana + otherMana }) ?? '']
 				: [
-						costLabel ?? '',
+						replacesSpellCost ? '' : (costLabel ?? ''),
 						...rollWindowCostParts(
 							otherMana > 0
 								? [
@@ -346,33 +371,72 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		return rollSpendLine(actionsSpent, [...mana, ...parts.spends], parts.sacrifices);
 	});
 
-	const optionGroups = $derived<OptionGroupView[]>(
-		useOptionGroups.map((group) => {
-			const disabled = enforcesOptionCosts && group.used;
-			const option = chosenOptionOf(group);
-			const amount = option ? optionAmountOf(option) : null;
-			return {
-				key: group.key,
-				label: group.label,
-				disabled,
-				note: disabled ? localize('NIMBLE.useOptions.usedThisTurn') : '',
-				chosen: option?.key ?? '',
-				amount,
-				amountLabel: option ? amountLabelOf(option, amount) : '',
-				picks: (option?.damageTypes ?? []).map((type) => ({
-					key: type,
-					label: localize(damageTypes[type as keyof typeof damageTypes] ?? type),
+	/** The spell's own cost, as its Spend button names it. */
+	function ownCostText(): string {
+		if (spellCost?.type === 'mana' || (!spellCost && baseMana > 0)) {
+			return resourceCostText('mana', manaOfTier(manaToSpend));
+		}
+		return (
+			(spellCost ? formatSpellCostLabel(spellCost) : null) ?? localize('NIMBLE.useOptions.none')
+		);
+	}
+
+	const spendChoice = $derived.by<SpendChoiceView | null>(() => {
+		const group = useOptionGroups.find((each) => each.spend);
+		if (!group) return null;
+		return {
+			key: group.key,
+			label: group.label,
+			chosen: chosenOptionOf(group)?.key ?? '',
+			buttons: [
+				{ key: '', label: ownCostText(), disabled: false },
+				...group.options.map((option) => ({
+					key: option.key,
+					label: spendText(option),
+					disabled: enforcesOptionCosts && option.used,
 				})),
-				pick: option ? pickOf(option) : '',
-				entries: [
-					{ key: '', label: localize('NIMBLE.useOptions.none') },
-					...group.options.map((each) => ({
-						key: each.key,
-						label: optionEntryText(each.name, withCastMana(actor, each.cost, spellMana)),
+			],
+		};
+	});
+
+	/** "10 temp HP (Shadowfrost)". */
+	function spendText(option: UseOption): string {
+		const cost = withCastMana(actor, option.cost, spellMana);
+		return localize('NIMBLE.useOptions.spendEntry', {
+			name: option.name,
+			cost: resourceCostText(cost.kind, cost.amount),
+		});
+	}
+
+	const optionGroups = $derived<OptionGroupView[]>(
+		useOptionGroups
+			.filter((group) => !group.spend)
+			.map((group) => {
+				const disabled = enforcesOptionCosts && group.used;
+				const option = chosenOptionOf(group);
+				const amount = option ? optionAmountOf(option) : null;
+				return {
+					key: group.key,
+					label: group.label,
+					disabled,
+					note: disabled ? localize('NIMBLE.useOptions.usedThisTurn') : '',
+					chosen: option?.key ?? '',
+					amount,
+					amountLabel: option ? amountLabelOf(option, amount) : '',
+					picks: (option?.damageTypes ?? []).map((type) => ({
+						key: type,
+						label: localize(damageTypes[type as keyof typeof damageTypes] ?? type),
 					})),
-				],
-			};
-		}),
+					pick: option ? pickOf(option) : '',
+					entries: [
+						{ key: '', label: localize('NIMBLE.useOptions.none') },
+						...group.options.map((each) => ({
+							key: each.key,
+							label: optionEntryText(each.name, withCastMana(actor, each.cost, spellMana)),
+						})),
+					],
+				};
+			}),
 	);
 
 	function amountLabelOf(option: UseOption, amount: OptionAmount | null): string {
@@ -388,8 +452,9 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	function chooseOption(groupKey: string, optionKey: string) {
 		const group = useOptionGroups.find((each) => each.key === groupKey);
 		if (!group || (enforcesOptionCosts && group.used)) return;
-		const known = optionKey === '' || group.options.some((each) => each.key === optionKey);
-		if (known) optionChoices = { ...optionChoices, [groupKey]: optionKey };
+		const option = group.options.find((each) => each.key === optionKey);
+		if (option && enforcesOptionCosts && option.used) return;
+		if (optionKey === '' || option) optionChoices = { ...optionChoices, [groupKey]: optionKey };
 	}
 
 	function chooseOptionPick(groupKey: string, pick: string) {
@@ -561,7 +626,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 
 		// Only a tiered spell that costs mana; a class pool cost is checked on
 		// the activation path.
-		if (baseMana > 0 && !isPoolCost && manaToSpend < baseMana) {
+		if (baseMana > 0 && !isPoolCost && castTier < baseMana) {
 			return format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) });
 		}
 		if (enforceManaCost && spellMana + otherMana > currentMana) {
@@ -571,7 +636,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 			});
 		}
 
-		if (manaToSpend > maxTier) {
+		if (!tierLocked && manaToSpend > maxTier) {
 			return format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) });
 		}
 		return '';
@@ -693,8 +758,12 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 			return spendLine;
 		},
 		pinnedCastTier,
-		effectiveCastTier,
-		canUpcast,
+		get effectiveCastTier() {
+			return manaSet === null ? effectiveCastTier : null;
+		},
+		get canUpcast() {
+			return canUpcast;
+		},
 		baseMana,
 		get tiers() {
 			return tiers;
@@ -731,6 +800,9 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		adjustResourceAmount: resources.adjust,
 		get optionGroups() {
 			return optionGroups;
+		},
+		get spendChoice() {
+			return spendChoice;
 		},
 		chooseOption,
 		chooseOptionPick,

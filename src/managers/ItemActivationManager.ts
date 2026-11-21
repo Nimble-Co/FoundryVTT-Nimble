@@ -10,7 +10,7 @@ import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
-import type { ChosenUseOption, UseOptionGroup } from '#types/useOption.d.ts';
+import type { ActionCostChange, ChosenUseOption, UseOptionGroup } from '#types/useOption.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
@@ -114,6 +114,7 @@ import {
 } from '../utils/spell/spellCost.js';
 import {
 	type ChosenUseOptions,
+	chosenCastCostChange,
 	chosenManaCostChanges,
 	noChosenUseOptions,
 	settleChosenUseOptions,
@@ -486,9 +487,16 @@ class ItemActivationManager {
 			return { activation: null, rolls: null };
 		}
 
+		// An option that sets the spell's cost casts it at its own tier. A pinned tier still
+		// applies to an option that spends in place of the spell's cost.
+		const castCostChange = chosenCastCostChange(this.useOptionGroups, dialogData.useOptions);
+		if (castCostChange.manaSet !== null || castCostChange.replacesSpellCost) {
+			dialogData.upcast = undefined;
+		}
+
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
-		if (this.#item.type === 'spell' && !dialogData.upcast) {
+		if (this.#item.type === 'spell' && !dialogData.upcast && castCostChange.manaSet === null) {
 			const synthesized = synthesizePinnedUpcast(
 				this.#item as unknown as SpellLike,
 				this.pinnedCastTier,
@@ -573,6 +581,10 @@ class ItemActivationManager {
 
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
+		if (castCostChange.manaSet !== null && this.spellCost?.type === 'mana') {
+			this.spellCost = { type: 'mana', amount: castCostChange.manaSet };
+		}
+
 		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
 			this.spellCost = { type: 'none' };
 		}
@@ -591,6 +603,7 @@ class ItemActivationManager {
 				),
 			};
 		}
+		if (castCostChange.replacesSpellCost) this.spellCost = { type: 'none' };
 		this.chosenOptions = await settleChosenUseOptions(
 			this.actor,
 			this.useOptionGroups,
@@ -1916,6 +1929,11 @@ namespace ItemActivationManager {
 		free?: FreeUse;
 		/** The tier to cast a spell at, for a caller that skips the dialog. */
 		upcast?: DialogData['upcast'];
+		/**
+		 * Asks whether the use may go ahead with the actions it costs after the options chosen in
+		 * its dialog. False stops the use.
+		 */
+		confirmActions?: (changes: readonly ActionCostChange[]) => Promise<boolean>;
 		/** The attack card this use answers, as a reaction from the Defend window does. */
 		answersCardId?: string;
 	}

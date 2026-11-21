@@ -4,6 +4,7 @@ import type {
 	ChosenUseOption,
 	CostChange,
 	UseOption,
+	UseOptionEffect,
 	UseOptionGroup,
 } from '#types/useOption.d.ts';
 import { rulesOfType } from '#utils/actor/actorRules.js';
@@ -16,11 +17,13 @@ import {
 import { hasRuleCharge } from '../chargePool/ruleChargeGate.js';
 import { withCastMana } from '../cost/castManaCost.js';
 import { settleResourceCost } from '../cost/resourceCost.js';
+import localize from '../localize.js';
 
 type OptionSpell = Parameters<UseOptionRule['appliesToSpell']>[0];
 
-function optionOf(rule: UseOptionRule): UseOption {
+function optionOf(actor: Actor | null | undefined, rule: UseOptionRule): UseOption {
 	const key = rule.key;
+	const pool = rule.poolIdentifier;
 	return {
 		key,
 		name: rule.resourceCost.source ?? '',
@@ -32,8 +35,15 @@ function optionOf(rule: UseOptionRule): UseOption {
 		damageTypes: [...(rule.damageTypes as string[])],
 		manaCostChange: rule.manaCostChange,
 		freeCopy: rule.freeCopy === true,
+		replacesSpellCost: rule.replacesSpellCost === true,
+		manaSet: rule.manaCostSet,
+		effect: rule.effectAfterCast,
+		used: pool ? !hasRuleCharge(actor, pool) : false,
 	};
 }
+
+/** The key of the group of the options that take the place of the spell's cost. */
+export const SPEND_GROUP = 'spend';
 
 function poolLabel(actor: Actor | null | undefined, identifier: string): string {
 	if (!isCharacterActor(actor)) return identifier;
@@ -44,7 +54,7 @@ function poolLabel(actor: Actor | null | undefined, identifier: string): string 
 /**
  * The Spell or Attack Options the caster can turn on for this spell: options that share a
  * Charge Pool make one group named after the pool, and an option with no pool is a group of
- * its own.
+ * its own. The options that take the place of the spell's cost make one group, "Spend".
  */
 export function spellUseOptionGroups(
 	actor: Actor | null | undefined,
@@ -55,19 +65,34 @@ export function spellUseOptionGroups(
 		(rule) => rule.appliesTo() && rule.appliesToSpell(spell),
 	);
 	for (const rule of rules) {
-		const option = optionOf(rule);
+		const option = optionOf(actor, rule);
 		const pool = option.poolIdentifier;
-		const key = pool || option.key;
+		const spend = option.replacesSpellCost;
+		const key = spend ? SPEND_GROUP : pool || option.key;
 		const group = groups.get(key) ?? {
 			key,
-			label: pool ? poolLabel(actor, pool) : option.name,
-			used: pool ? !hasRuleCharge(actor, pool) : false,
+			label: spend
+				? localize('NIMBLE.useOptions.spend')
+				: pool
+					? poolLabel(actor, pool)
+					: option.name,
+			used: !spend && option.used,
+			spend,
 			options: [],
 		};
 		group.options.push(option);
 		groups.set(key, group);
 	}
 	return [...groups.values()];
+}
+
+/** Whether an option the dialog of this item offers can change the actions the use costs. */
+export function offersActionCostChange(actor: Actor | null | undefined, item: unknown): boolean {
+	const spell = item as OptionSpell;
+	if (spell?.type !== 'spell') return false;
+	return spellUseOptionGroups(actor, spell).some((group) =>
+		group.options.some((option) => option.actionCostChange !== null),
+	);
 }
 
 /** What the options the player turned on cost and change, with their amounts settled. */
@@ -84,6 +109,8 @@ export interface ChosenUseOptions {
 	damageType: string;
 	/** The name of the option that posts a free copy of the cast, or ''. */
 	freeCopy: string;
+	/** The effects the caster gains after the cast. */
+	effects: UseOptionEffect[];
 }
 
 /** What a use with no option turned on costs and changes: nothing. */
@@ -96,6 +123,7 @@ export function noChosenUseOptions(): ChosenUseOptions {
 		notes: [],
 		damageType: '',
 		freeCopy: '',
+		effects: [],
 	};
 }
 
@@ -117,6 +145,26 @@ export function chosenManaCostChanges(
 	chosen: readonly ChosenUseOption[] = [],
 ): CostChange[] {
 	return pickedOptions(groups, chosen).flatMap(({ option }) => option.manaCostChange ?? []);
+}
+
+/** How the options the player chose change what the spell itself costs. */
+export interface CastCostChange {
+	/** An option's cost takes the place of the spell's cost. */
+	replacesSpellCost: boolean;
+	/** The mana the spell costs at its own tier, or null for no change. */
+	manaSet: number | null;
+}
+
+export function chosenCastCostChange(
+	groups: readonly UseOptionGroup[],
+	chosen: readonly ChosenUseOption[] = [],
+): CastCostChange {
+	const picked = pickedOptions(groups, chosen).map(({ option }) => option);
+	const set = picked.find((option) => option.manaSet !== null);
+	return {
+		replacesSpellCost: picked.some((option) => option.replacesSpellCost),
+		manaSet: set?.manaSet ?? null,
+	};
 }
 
 /**
@@ -147,6 +195,7 @@ export async function settleChosenUseOptions(
 			settled.notes.push(option.cardNote.replaceAll('{amount}', String(cost.amount)));
 		}
 		if (option.freeCopy) settled.freeCopy = option.name;
+		if (option.effect) settled.effects.push(option.effect);
 	}
 	return settled;
 }

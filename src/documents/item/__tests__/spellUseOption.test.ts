@@ -1,6 +1,10 @@
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CardResourceCost } from '#types/resourceCost.d.ts';
+import { cardCostLine } from '#utils/cost/resourceCostWords.js';
 import { testDependencies } from '../../../managers/ItemActivationManager.js';
 import { UseOptionRule } from '../../../models/rules/useOption.js';
+import { NimbleCharacter } from '../../actor/character.js';
 import { NimbleSpellItem } from '../spell.js';
 
 type Globals = Record<string, any>;
@@ -538,5 +542,408 @@ describe('an option with a free copy', () => {
 		await item.activate();
 
 		expect(dialog.opened[0]?.useOptionGroups).toEqual([]);
+	});
+});
+
+const PILFERED = 'actor:pilfered-power';
+
+/** A Shadowmancer: tiered spells cost 1 Pilfered Power, a class Charge Pool. */
+function shadowmancer({ tempHp = 0, hp = 20, maxHp = 29, pilfered = 3 } = {}) {
+	const actor = hero({ mana: 0 });
+	actor.system.attributes.hp = { value: hp, max: maxHp, temp: tempHp };
+	actor.getRollData = () => ({ attributes: { hp: { value: hp, max: maxHp, temp: tempHp } } });
+	(actor.flags.nimble.chargePools as Record<string, unknown>)[PILFERED] = {
+		identifier: 'pilfered-power',
+		current: pilfered,
+		max: 3,
+		seeded: true,
+	};
+	actor.items.contents.push(
+		{
+			id: 'shadowmancer',
+			name: 'Shadowmancer',
+			type: 'class',
+			identifier: 'shadowmancer',
+			flags: {},
+			system: {
+				identifier: 'shadowmancer',
+				spellcasting: { cost: { poolIdentifier: 'pilfered-power', amount: '1' } },
+			},
+		},
+		{
+			id: 'pilfered-item',
+			name: 'Pilfered Power',
+			type: 'feature',
+			flags: {},
+			system: {},
+			rules: new Map([
+				[
+					'pool',
+					{
+						type: 'chargePool',
+						disabled: false,
+						id: 'pool',
+						identifier: 'pilfered-power',
+						label: 'Pilfered Power',
+						scope: 'actor',
+						max: '3',
+						initial: 'max',
+						recoveries: [],
+					},
+				],
+			]),
+		},
+	);
+	return actor;
+}
+
+function pilferedLeft(actor: Hero): number {
+	return (actor.flags.nimble.chargePools as Record<string, { current: number }>)[PILFERED].current;
+}
+
+function iceSpell(actor: Hero, name = 'Rimeblades', tier = 1) {
+	const item = spell(actor, name, tier);
+	item.system.school = 'ice';
+	return item;
+}
+
+/** Shadowfrost: 10 temp HP in place of the spell's cost, on Cryosleep and Rimeblades. */
+function shadowfrost(actor: Hero) {
+	return giveOption(actor, 'Shadowfrost', {
+		amount: '10',
+		pool: '',
+		more: { kind: 'tempHp', spells: ['cryosleep', 'rimeblades'], replacesSpellCost: true },
+	});
+}
+
+describe('a different spend in place of the spell cost', () => {
+	// Foundry's Roll reads floor(); the Roll mock reads it from the globals.
+	beforeEach(() => {
+		globals.floor = Math.floor;
+	});
+	afterEach(() => {
+		delete globals.floor;
+	});
+
+	it('spends exactly 10 temp HP in place of Pilfered Power, and shows it on the card', async () => {
+		const actor = shadowmancer({ tempHp: 12 });
+		const frost = shadowfrost(actor);
+		const item = iceSpell(actor);
+		choose(frost.key);
+
+		await item.activate();
+
+		expect(actor.system.attributes.hp.temp).toBe(2);
+		expect(pilferedLeft(actor)).toBe(3);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'tempHp', amount: 10, source: 'Shadowfrost' },
+		]);
+	});
+
+	it('is refused with fewer than 10 temp HP, and spends nothing', async () => {
+		const actor = shadowmancer({ tempHp: 6 });
+		const frost = shadowfrost(actor);
+		const item = iceSpell(actor);
+		choose(frost.key);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Shadowfrost needs 10 temp HP. You have 6.']);
+	});
+
+	it('with no spend chosen, costs the spell its own Pilfered Power', async () => {
+		const actor = shadowmancer({ tempHp: 12 });
+		shadowfrost(actor);
+		const item = iceSpell(actor);
+
+		await item.activate();
+
+		expect(actor.system.attributes.hp.temp).toBe(12);
+		expect(pilferedLeft(actor)).toBe(2);
+		expect(cardOf(item)?.system.costs).toEqual([]);
+	});
+
+	it('sacrifices half the max HP, rounded down, in place of the mana of any Ice spell', async () => {
+		const actor = hero({ mana: 5 });
+		Object.assign(actor.system.attributes.hp, { value: 20, max: 29 });
+		actor.getRollData = () => ({ attributes: { hp: { value: 20, max: 29 } } });
+		const reprisal = cryomancersReprisal(actor);
+		const item = iceSpell(actor, 'Frost Lance', 2);
+		choose(reprisal.key);
+
+		await item.activate();
+
+		expect(actor.system.attributes.hp.value).toBe(6);
+		expect(actor.system.resources.mana.current).toBe(5);
+		const costs = cardOf(item)?.system.costs as CardResourceCost[];
+		expect(costs).toEqual([{ kind: 'hp', amount: 14, source: "Cryomancer's Reprisal" }]);
+		expect(costs.map(cardCostLine)).toEqual(["Cost: 14 HP (Cryomancer's Reprisal)"]);
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(0);
+	});
+
+	it('refuses the sacrifice unless the caster has more HP than it takes', async () => {
+		const actor = hero({ mana: 5 });
+		Object.assign(actor.system.attributes.hp, { value: 14, max: 29 });
+		actor.getRollData = () => ({ attributes: { hp: { value: 14, max: 29 } } });
+		const reprisal = cryomancersReprisal(actor);
+		const item = iceSpell(actor, 'Frost Lance', 2);
+		choose(reprisal.key);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(["Cryomancer's Reprisal needs more than 14 HP."]);
+	});
+
+	it('is not offered on a spell of another school', async () => {
+		const actor = hero({ mana: 5 });
+		cryomancersReprisal(actor);
+
+		await spell(actor).activate();
+
+		expect(dialog.opened[0]?.useOptionGroups).toEqual([]);
+	});
+
+	it('puts the effect of the option on the card, as a step that gives it to the caster', async () => {
+		const actor = hero({ mana: 5 });
+		Object.assign(actor.system.attributes.hp, { value: 20, max: 29 });
+		actor.getRollData = () => ({ attributes: { hp: { value: 20, max: 29 } } });
+		const reprisal = cryomancersReprisal(actor, { effectId: 'aura' });
+		Object.assign(reprisal.parent as object, {
+			effects: new Map([['aura', { name: 'Frost Aura', transfer: false }]]),
+		});
+		const item = iceSpell(actor, 'Frost Lance', 2);
+		choose(reprisal.key);
+
+		await item.activate();
+
+		const effects = (cardOf(item)?.system.activation as { effects: object[] }).effects;
+		expect(effects).toContainEqual(
+			expect.objectContaining({
+				type: 'applyEffect',
+				effectId: 'aura',
+				effectItemUuid: "Actor.mage.Item.Cryomancer's Reprisal",
+				recipient: 'self',
+			}),
+		);
+	});
+
+	it('gives no effect step when the option is not chosen', async () => {
+		const actor = hero({ mana: 5 });
+		const reprisal = cryomancersReprisal(actor, { effectId: 'aura' });
+		Object.assign(reprisal.parent as object, {
+			effects: new Map([['aura', { name: 'Frost Aura', transfer: false }]]),
+		});
+		const item = iceSpell(actor, 'Frost Lance', 2);
+
+		await item.activate();
+
+		expect((cardOf(item)?.system.activation as { effects: object[] }).effects).toEqual([]);
+	});
+
+	it('shows the temp HP spend as a card line', async () => {
+		const actor = shadowmancer({ tempHp: 10 });
+		const frost = shadowfrost(actor);
+		const item = iceSpell(actor);
+		choose(frost.key);
+
+		await item.activate();
+
+		const costs = cardOf(item)?.system.costs as CardResourceCost[];
+		expect(costs.map(cardCostLine)).toEqual(['Cost: 10 temp HP (Shadowfrost)']);
+	});
+});
+
+/** Cryomancer's Reprisal: half the max HP in place of the cost of any Ice spell. */
+function cryomancersReprisal(actor: Hero, more: Record<string, unknown> = {}) {
+	return giveOption(actor, "Cryomancer's Reprisal", {
+		amount: 'floor(@attributes.hp.max / 2)',
+		pool: '',
+		schools: ['ice'],
+		more: { kind: 'hp', replacesSpellCost: true, ...more },
+	});
+}
+
+/** A Charge Pool of the actor with one use. */
+function givePool(actor: Hero, identifier: string, label: string) {
+	(actor.flags.nimble.chargePools as Record<string, unknown>)[`actor:${identifier}`] = {
+		identifier,
+		current: 1,
+		max: 1,
+		seeded: true,
+	};
+	actor.items.contents.push({
+		id: `${identifier}-item`,
+		name: label,
+		type: 'feature',
+		flags: {},
+		system: {},
+		rules: new Map([
+			[
+				'pool',
+				{
+					type: 'chargePool',
+					disabled: false,
+					id: 'pool',
+					identifier,
+					label,
+					scope: 'actor',
+					max: '1',
+					initial: 'max',
+					recoveries: [],
+				},
+			],
+		]),
+	});
+}
+
+describe('an option that sets the mana of the spell', () => {
+	function masterOfStorm(actor: Hero) {
+		givePool(actor, 'master-of-storm', 'Master of Storm (1/Safe Rest)');
+		return giveOption(actor, 'Master of Storm', {
+			amount: '0',
+			pool: 'master-of-storm',
+			more: { spells: ['ride-the-lightning'], manaSet: 0 },
+		});
+	}
+
+	function rideTheLightning(actor: Hero) {
+		const item = spell(actor, 'Ride the Lightning', 3);
+		item.system.scaling = { mode: 'upcast', deltas: [] } as never;
+		return item;
+	}
+
+	it('casts the spell for 0 mana at its own tier, with no upcast, and uses the pool', async () => {
+		const actor = hero({ mana: 9 });
+		const storm = masterOfStorm(actor);
+		const item = rideTheLightning(actor);
+		dialog.result = { rollMode: 0, upcast: { manaToSpend: 5 }, useOptions: [{ key: storm.key }] };
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(9);
+		expect(item.spellCardData[0]?.system.upcast).toBeNull();
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(0);
+		expect(cardOf(item)?.system.costs).toEqual([]);
+		expect(
+			(actor.flags.nimble.chargePools as Record<string, { current: number }>)[
+				'actor:master-of-storm'
+			].current,
+		).toBe(0);
+	});
+
+	it('is refused when its use is spent, and spends nothing', async () => {
+		const actor = hero({ mana: 9 });
+		const storm = masterOfStorm(actor);
+		(actor.flags.nimble.chargePools as Record<string, { current: number }>)[
+			'actor:master-of-storm'
+		].current = 0;
+		const item = rideTheLightning(actor);
+		choose(storm.key);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Master of Storm (1/Safe Rest) has no use left.']);
+	});
+
+	it('with the option not chosen, the spell costs its tier in mana', async () => {
+		const actor = hero({ mana: 9 });
+		masterOfStorm(actor);
+		const item = rideTheLightning(actor);
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(6);
+	});
+});
+
+describe('the actions check of a cast in combat', () => {
+	const confirm = () => foundry.applications.api.DialogV2.confirm as unknown as Mock;
+	let savedCombat: unknown;
+
+	beforeEach(() => {
+		savedCombat = globals.game.combat;
+		confirm().mockReset().mockResolvedValue(false);
+	});
+
+	afterEach(() => {
+		globals.game.combat = savedCombat;
+	});
+
+	/** A real character, so its private steps run, with the hero's data and `actions` left. */
+	function fighter(actions: number) {
+		const data = hero({ mana: 9 });
+		const character = new NimbleCharacter({ _id: 'mage', type: 'character' } as never);
+		const { update: _update, ...fields } = data;
+		Object.assign(character, fields, {
+			getFlag: () => undefined,
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				for (const [path, value] of Object.entries(changes)) {
+					foundry.utils.setProperty(character, path, value);
+				}
+			}),
+		});
+		const combatants = Object.assign(
+			[{ id: 'turn', actorId: character.id, system: { actions: { base: { current: actions } } } }],
+			{ get: () => undefined },
+		);
+		globals.game.combat = { started: true, combatants };
+		return character as unknown as Hero;
+	}
+
+	function castsFor(actor: Hero, actions: number) {
+		const item = spell(actor);
+		item.system.activation = {
+			effects: [],
+			targets: { count: 1 },
+			cost: { type: 'action', quantity: actions },
+		} as never;
+		actor.items.get = () => item as never;
+		return item;
+	}
+
+	async function cast(actor: Hero) {
+		return NimbleCharacter.prototype.activateItem.call(actor as never, 'Fire Bolt');
+	}
+
+	it('counts an option that cuts the actions, and does not ask when the cut cost fits', async () => {
+		const actor = fighter(1);
+		const stretch = giveOption(actor, 'Stretch Time', { actionDelta: -1, actionMinimum: 1 });
+		const item = castsFor(actor, 2);
+		choose(stretch.key);
+
+		await cast(actor);
+
+		expect(confirm()).not.toHaveBeenCalled();
+		expect(item._createActivationCard).toHaveBeenCalledTimes(1);
+	});
+
+	it('counts an option that adds an action, asks once after the dialog, and a no casts nothing', async () => {
+		const actor = fighter(1);
+		const methodical = giveOption(actor, 'Methodical Spellweaver', { amount: '0', actionDelta: 1 });
+		const item = castsFor(actor, 1);
+		choose(methodical.key);
+
+		await cast(actor);
+
+		expect(dialog.opened).toHaveLength(1);
+		expect(confirm()).toHaveBeenCalledTimes(1);
+		expect(String(confirm().mock.calls[0]?.[0]?.content)).toContain('2');
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(actor.system.resources.mana.current).toBe(9);
+	});
+
+	it('asks once before the dialog when no option changes the actions', async () => {
+		const actor = fighter(1);
+		giveOption(actor, 'Frost Focus', { schools: ['ice'], actionDelta: -1 });
+		castsFor(actor, 2);
+
+		await cast(actor);
+
+		expect(confirm()).toHaveBeenCalledTimes(1);
+		expect(dialog.opened).toHaveLength(0);
 	});
 });

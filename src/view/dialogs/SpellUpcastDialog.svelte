@@ -105,6 +105,27 @@
 		/>
 	{/if}
 
+	{#if upcast.spendChoice}
+		{@const choice = upcast.spendChoice}
+		<div class="option-group">
+			<div class="lb">{choice.label}</div>
+			<div class="tiers" role="group" aria-label={choice.label}>
+				{#each choice.buttons as button (button.key)}
+					<button
+						type="button"
+						class="nimble-u-reset-button tier spend"
+						class:on={button.key === choice.chosen}
+						aria-pressed={button.key === choice.chosen}
+						disabled={button.disabled}
+						onclick={() => upcast.chooseOption(choice.key, button.key)}
+					>
+						{button.label}
+					</button>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	{#if upcast.canUpcast}
 		{#if upcast.pinnedCastTier === null}
 			<div>
@@ -282,6 +303,16 @@
 	}
 	.tier.short {
 		border-style: dashed;
+	}
+	.tier.spend {
+		height: auto;
+		min-height: 30px;
+		padding: 4px 6px;
+		text-align: center;
+	}
+	.tier:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.tier.on {
 		border-color: var(--nimble-ui-highlight);

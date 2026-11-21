@@ -3,6 +3,7 @@ import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
 import type { OfferCard } from '#types/movement.js';
+import type { CardResourceCost } from '#types/resourceCost.d.ts';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
@@ -11,6 +12,7 @@ import {
 } from '#utils/actor/applyEffectToActor.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { resourceCostRollData } from '#utils/cost/itemResourceCosts.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
@@ -126,6 +128,12 @@ export function stepRecipients(card: EffectCard, node: { recipient: string }): C
 	return user ? [user] : [];
 }
 
+/** What the use of the card spent and sacrificed, as its card records it. */
+function cardCosts(card: EffectCard): CardResourceCost[] {
+	const costs = (card.system as { costs?: unknown } | undefined)?.costs;
+	return Array.isArray(costs) ? (costs as CardResourceCost[]) : [];
+}
+
 function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | null {
 	const user = cardUser(card);
 	const effect = nodeEffect(card, node);
@@ -135,6 +143,7 @@ function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | nul
 			itemUuid,
 			user,
 			raises: { rules: node.ruleRaises, moments: node.momentRaises },
+			useData: { cost: resourceCostRollData(cardCosts(card)) },
 		});
 	}
 	if (!node.condition) return null;
