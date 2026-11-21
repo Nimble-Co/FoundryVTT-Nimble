@@ -12,15 +12,26 @@ import { buildCharacter, type CharacterActor } from './builders/buildCharacter.t
 import {
 	clearTargets,
 	createViewedTestScene,
+	getAutomationToggle,
 	importPackItem,
 	placeToken,
 	purgeTestDocuments,
+	setAutomationToggle,
 	settle,
 	targetToken,
 	waitFor,
 } from './liveHelpers.ts';
 
 const TEST_PREFIX = 'V14 Feature Costs';
+
+/** The costs are checked and spent only with this world setting on. */
+const RESOURCE_SPENDING_SETTING = 'automation.resourceSpending';
+let resourceSpendingBefore: boolean | null = null;
+
+beforeAll(async () => {
+	resourceSpendingBefore = getAutomationToggle(RESOURCE_SPENDING_SETTING);
+	await setAutomationToggle(RESOURCE_SPENDING_SETTING, true);
+});
 
 const t = (key: string, data?: Record<string, string>) =>
 	data ? game.i18n.format(key, data) : game.i18n.localize(key);
@@ -383,4 +394,7 @@ describe('Rimeblades cast with the Shadowfrost spend', () => {
 
 afterAll(async () => {
 	await purgeTestDocuments(TEST_PREFIX);
+	if (resourceSpendingBefore !== null) {
+		await setAutomationToggle(RESOURCE_SPENDING_SETTING, resourceSpendingBefore);
+	}
 });
