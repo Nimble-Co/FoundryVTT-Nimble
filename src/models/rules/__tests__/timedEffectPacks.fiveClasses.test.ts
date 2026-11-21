@@ -432,13 +432,14 @@ describe('Primordial Force', () => {
 		]);
 	});
 
-	it('Ice: you gain WIL temp HP', () => {
+	it('Ice: you gain WIL temp HP only on a click', () => {
 		expect(roots).toContainEqual(
 			expect.objectContaining({
 				type: 'healing',
 				healingType: 'tempHealing',
 				formula: '@will',
 				recipient: 'self',
+				waitsForClick: true,
 			}),
 		);
 	});
@@ -481,10 +482,10 @@ describe('Primordial Force', () => {
 		expectAtRoot(item, step);
 	});
 
-	it('Wind: you move up to 6 spaces for free', () => {
-		expect(roots).toContainEqual(
+	it('Wind: you move up to 6 spaces for free, given by the Wind effect', () => {
+		const move = roots.find((node) => node.type === 'move') as Json;
+		expect(move).toEqual(
 			expect.objectContaining({
-				type: 'move',
 				kind: 'free',
 				recipient: 'self',
 				distance: '6',
@@ -494,5 +495,7 @@ describe('Primordial Force', () => {
 				parentNode: null,
 			}),
 		);
+		expect(move.waitsForClick).toBeUndefined();
+		expect(stepApplying(item, effect._id).moveNodeId).toBe(move.id);
 	});
 });

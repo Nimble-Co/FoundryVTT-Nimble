@@ -46,6 +46,7 @@
 					"healingType": "tempHealing",
 					"formula": "@will",
 					"recipient": "self",
+					"waitsForClick": true,
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -84,6 +85,7 @@
 					"effectId": "2O0NMTS096pDQNJa",
 					"recipient": "self",
 					"tempHealingNodeId": null,
+					"moveNodeId": "evFXvKTfH5Ho7GHX",
 					"waitsForClick": true,
 					"parentContext": null,
 					"parentNode": null
