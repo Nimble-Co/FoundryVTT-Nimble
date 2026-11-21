@@ -76,6 +76,8 @@ interface OptionData {
 	actionMinimum?: number;
 	tieredOnly?: boolean;
 	schools?: string[];
+	/** Other fields of the rule, such as its changes. */
+	more?: Record<string, unknown>;
 }
 
 /** A feature on the actor with a Spell or Attack Option rule. */
@@ -101,6 +103,13 @@ function giveOption(actor: Hero, name: string, data: OptionData = {}) {
 		chargePoolIdentifier: data.pool ?? 'spellshaper',
 		actionDelta: data.actionDelta ?? 0,
 		actionMinimum: data.actionMinimum ?? 0,
+		rangePerMana: 0,
+		cardNote: '',
+		damageTypes: [],
+		manaDelta: 0,
+		manaMinimum: 0,
+		freeCopy: false,
+		...data.more,
 	});
 	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'predicate', {
@@ -332,5 +341,202 @@ describe('casting a spell with a Spell or Attack Option', () => {
 		expect(cardOf(item)?.system.costs).toEqual([
 			{ kind: 'mana', amount: 2, source: 'Stretch Time' },
 		]);
+	});
+});
+
+function variableMana(min: number, max: number) {
+	return { kind: 'mana', spendMode: 'variable', min: String(min), max: String(max) };
+}
+
+describe('the changes of a Spell or Attack Option', () => {
+	it('adds range for each mana the option spends to the range on the card', async () => {
+		const actor = hero({ mana: 5 });
+		const compression = giveOption(actor, 'Dimensional Compression', {
+			more: { ...variableMana(1, 8), rangePerMana: 4 },
+		});
+		const item = spell(actor);
+		item.system.activation = {
+			effects: [],
+			targets: { count: 1, attackType: 'range', distance: 8 },
+		} as never;
+		dialog.result = { rollMode: 0, useOptions: [{ key: compression.key, amount: 2 }] };
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(2);
+		const card = cardOf(item);
+		expect((card?.system.activation as { targets: { distance: number } }).targets.distance).toBe(
+			16,
+		);
+		expect(card?.system.costs).toEqual([
+			{ kind: 'mana', amount: 2, source: 'Dimensional Compression' },
+		]);
+	});
+
+	it('puts its note on the card, with the amount the option spent', async () => {
+		const actor = hero({ mana: 5 });
+		const precise = giveOption(actor, 'Precise Casting', {
+			more: { ...variableMana(1, 8), cardNote: '{amount} creatures unaffected' },
+		});
+		const item = spell(actor);
+		dialog.result = { rollMode: 0, useOptions: [{ key: precise.key, amount: 3 }] };
+
+		await item.activate();
+
+		expect(item.spellCardData[0]?.system.optionNotes).toEqual(['3 creatures unaffected']);
+	});
+
+	it('makes every damage of the spell the damage type the player picked', async () => {
+		const actor = hero({ mana: 5 });
+		const transmutation = giveOption(actor, 'Elemental Transmutation', {
+			amount: '1',
+			more: { damageTypes: ['fire', 'cold', 'lightning', 'necrotic', 'radiant'] },
+		});
+		const item = spell(actor);
+		item.system.activation = {
+			effects: [
+				{
+					id: 'bolt',
+					type: 'damage',
+					formula: '1d6',
+					damageType: 'fire',
+					on: { hit: [{ id: 'burn', type: 'damage', formula: '2', damageType: 'fire' }] },
+				},
+			],
+			targets: { count: 1 },
+		} as never;
+		dialog.result = {
+			rollMode: 0,
+			useOptions: [{ key: transmutation.key, pick: 'radiant' }],
+		};
+
+		await item.activate();
+
+		const effects = (cardOf(item)?.system.activation as { effects: any[] }).effects;
+		expect(effects[0].damageType).toBe('radiant');
+		expect(effects[0].on.hit[0].damageType).toBe('radiant');
+		expect(actor.system.resources.mana.current).toBe(3);
+	});
+
+	it('cuts the mana cost of the spell to its minimum, and adds an action', async () => {
+		const actor = hero({ mana: 5 });
+		const methodical = giveOption(actor, 'Methodical Spellweaver', {
+			amount: '0',
+			actionDelta: 1,
+			more: { manaDelta: -2, manaMinimum: 1 },
+		});
+		const item = spell(actor, 'Fire Bolt', 3);
+		choose(methodical.key);
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(4);
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(1);
+		expect(cardOf(item)?.flags.nimble.actionCostChanges).toEqual([{ delta: 1, minimum: 0 }]);
+		expect(usesLeft(actor)).toBe(0);
+	});
+
+	it('never cuts the mana cost below its minimum', async () => {
+		const actor = hero({ mana: 5 });
+		const methodical = giveOption(actor, 'Methodical Spellweaver', {
+			amount: '0',
+			more: { manaDelta: -2, manaMinimum: 1 },
+		});
+		const item = spell(actor, 'Fire Bolt', 1);
+		choose(methodical.key);
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(4);
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(1);
+	});
+
+	it('puts a fixed note on the card as it is', async () => {
+		const actor = hero({ mana: 5 });
+		const vision = giveOption(actor, 'Extra-Dimensional Vision', {
+			more: { cardNote: 'The spell ignores line of sight.' },
+		});
+		const item = spell(actor);
+		choose(vision.key);
+
+		await item.activate();
+
+		expect(item.spellCardData[0]?.system.optionNotes).toEqual(['The spell ignores line of sight.']);
+	});
+});
+
+describe('an option with a free copy', () => {
+	function echoCasting(actor: Hero, amount = '2 * @castManaSpent') {
+		return giveOption(actor, 'Echo Casting', {
+			amount,
+			more: { singleTargetOnly: true, freeCopy: true },
+		});
+	}
+
+	function upcastable(actor: Hero, tier: number) {
+		const item = spell(actor, 'Fire Bolt', tier);
+		item.system.scaling = { mode: 'upcast', deltas: [] } as never;
+		Object.assign(actor, {
+			activateItem: vi.fn((_id: string, options: object) => item.activate(options)),
+		});
+		return item;
+	}
+
+	it('costs twice the mana the cast spent, and posts a free copy at the same tier', async () => {
+		const actor = hero({ mana: 9 });
+		const echo = echoCasting(actor);
+		const item = upcastable(actor, 2);
+		dialog.result = {
+			rollMode: 0,
+			upcast: { manaToSpend: 3 },
+			useOptions: [{ key: echo.key }],
+		};
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(0);
+		expect(item._createActivationCard).toHaveBeenCalledTimes(2);
+		const [first, copy] = item._createActivationCard.mock.calls.map(([data]: any[]) => data);
+		expect(first.system.costs).toEqual([{ kind: 'mana', amount: 6, source: 'Echo Casting' }]);
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(3);
+		expect(copy.system.costs).toEqual([]);
+		expect(copy.flags.nimble.freeUseReason).toEqual({
+			key: 'NIMBLE.rules.useItemFree.cardLine',
+			data: { trigger: { key: 'NIMBLE.useOptions.copyReason' }, feature: 'Echo Casting' },
+		});
+		expect(item.spellCardData[1]?.system.castManaSpent).toBe(0);
+		expect((item.spellCardData[1]?.system.upcast as { manaSpent: number }).manaSpent).toBe(3);
+		expect(usesLeft(actor)).toBe(0);
+	});
+
+	it('costs at least its minimum when the cast spent no mana', async () => {
+		// Foundry's Roll reads max(); the Roll mock reads it from the globals.
+		globals.max = Math.max;
+		try {
+			const actor = hero({ mana: 5 });
+			const echo = echoCasting(actor, 'max(1, 2 * @castManaSpent)');
+			const item = upcastable(actor, 1);
+			dialog.result = { rollMode: 0, lessMana: true, useOptions: [{ key: echo.key }] };
+
+			await item.activate();
+
+			expect(actor.system.resources.mana.current).toBe(4);
+			expect(cardOf(item)?.system.costs).toEqual([
+				{ kind: 'mana', amount: 1, source: 'Echo Casting' },
+			]);
+		} finally {
+			delete globals.max;
+		}
+	});
+
+	it('is not offered for a spell with more than one target', async () => {
+		const actor = hero({ mana: 9 });
+		echoCasting(actor);
+		const item = spell(actor, 'Fire Bolt', 2);
+		item.system.activation.targets.count = 2;
+
+		await item.activate();
+
+		expect(dialog.opened[0]?.useOptionGroups).toEqual([]);
 	});
 });

@@ -169,10 +169,24 @@
 				</select>
 			</label>
 			{#if group.note}<p class="note">{group.note}</p>{/if}
-			{#if group.amount}
+			{#if group.picks.length > 0}
+				<div class="tiers" role="group" aria-label={group.label}>
+					{#each group.picks as pick (pick.key)}
+						<button
+							type="button"
+							class="nimble-u-reset-button tier"
+							class:on={pick.key === group.pick}
+							aria-pressed={pick.key === group.pick}
+							onclick={() => upcast.chooseOptionPick(group.key, pick.key)}
+						>
+							{pick.label}
+						</button>
+					{/each}
+				</div>
+			{:else if group.amount}
 				{@const label = localize(`NIMBLE.useOptions.amountLabel.${group.amount.kind}`)}
 				<AmountStepper
-					{label}
+					label={group.amountLabel}
 					value={group.amount.amount}
 					minimum={group.amount.minimum}
 					limit={group.amount.limit}

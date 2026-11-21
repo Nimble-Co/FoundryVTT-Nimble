@@ -19,6 +19,34 @@ function castManaOf(spell: NimbleSpellItem, manager: ItemActivationManager): num
 	return spell.system.tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
 }
 
+interface Caster {
+	activateItem(id: string, options: ItemActivationManager.ActivationOptions): Promise<unknown>;
+}
+
+/** Cast the spell again at the same tier, free of mana, as an option asked. */
+async function castFreeCopy(spell: NimbleSpellItem, manager: ItemActivationManager): Promise<void> {
+	const { id } = spell;
+	const actor = spell.actor as Caster | null;
+	if (!id || !actor) return;
+	const upcast = manager.upcastResult;
+	await actor.activateItem(id, {
+		fastForward: true,
+		free: {
+			of: ['mana'],
+			reason: {
+				key: 'NIMBLE.rules.useItemFree.cardLine',
+				data: {
+					trigger: { key: 'NIMBLE.useOptions.copyReason' },
+					feature: manager.chosenOptions.freeCopy,
+				},
+			},
+		},
+		...(upcast
+			? { upcast: { manaToSpend: upcast.manaSpent, choiceIndex: upcast.choiceIndex } }
+			: {}),
+	});
+}
+
 /** The Chaos Table rolls now: the cast invokes chaos and Feature Effects are on. */
 function chaosRollsNow(manager: ItemActivationManager): boolean {
 	return manager.invokesChaos && isRuleAutomationEnabled();
@@ -109,6 +137,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		if (card && chaosRollsNow(manager) && this.actor) {
 			await invokeChaos(this.actor as never, card.id);
 		}
+		if (manager.chosenOptions.freeCopy) await castFreeCopy(this, manager);
 	}
 
 	override async prepareChatCardData(
@@ -148,6 +177,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				spellName: this.name,
 				upcast: manager?.upcastResult,
 				castManaSpent: manager ? castManaOf(this, manager) : 0,
+				optionNotes: manager?.chosenOptions.notes ?? [],
 			},
 			type: 'spell',
 		};

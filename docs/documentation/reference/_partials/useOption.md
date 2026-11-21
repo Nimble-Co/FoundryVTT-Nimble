@@ -17,8 +17,17 @@ The spell mana and the option's cost are checked together when the player casts,
 
 Mana spent on an option is not mana spent on the spell. It does not raise the tier of the cast, and rules that read the mana spent on a spell do not count it. The card shows the option's cost, such as **Cost: 2 mana (Stretch Time)**.
 
+An option can also change the cast:
+
+- **Range for each mana** adds range for each mana the option spends. The amount stepper says the range, such as **Mana (+8 range)**, and the card shows the new range.
+- **Note on the card** puts a line on the card under the cost, such as "The spell ignores line of sight." `{amount}` puts in the amount spent, so `{amount} creatures unaffected` shows "3 creatures unaffected".
+- **Damage type pick** shows the listed damage types as buttons under the dropdown. The player must pick one, and all damage of the spell becomes that type.
+- **Mana cost change** takes mana off the spell's cost, down to the **Mana cost minimum**. For example, Methodical Spellweaver has `-2` mana, minimum `1`, and an action cost change of `1`. The tier buttons and the roll window count the cut.
+
+**Free copy** casts the spell again after the cast, at the same tier, free of mana and actions, for another target. The second card says "For free: a copy of the cast (Echo Casting)". The **Amount** of an option can read `@castManaSpent`, the mana the cast spends on the spell after cuts and free casts. Echo Casting uses `max(1, 2 * @castManaSpent)`, and the dropdown shows the cost at the chosen tier, such as **Echo Casting (4 mana)**.
+
 ::: details Edge cases
 - A **Variable** cost asks for the amount under the dropdown, such as 1 mana or more. The amount stops at the maximum and at the mana left after the spell.
-- An action cost cut never brings the cost below the minimum, and never raises a cost that is already lower.
+- An action or mana cost cut never brings the cost below the minimum, and never raises a cost that is already lower.
 - With the **Costs** automation setting off, nothing is checked or spent, the dropdown is never off, and the card still shows the cost line.
 :::

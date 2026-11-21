@@ -40,6 +40,7 @@ import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
+import { withActionCostChange } from '../utils/combat/withActionCostChange.js';
 import {
 	hasResourceCostRules,
 	refuseResourceCosts,
@@ -102,6 +103,7 @@ import {
 	UpcastError,
 	type UpcastErrorCode,
 } from '../utils/spell/applyUpcastDeltas.js';
+import { applyUseOptionChanges } from '../utils/spell/applyUseOptionChanges.js';
 import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import {
 	exceedsUnlockedSpellTier,
@@ -112,6 +114,8 @@ import {
 } from '../utils/spell/spellCost.js';
 import {
 	type ChosenUseOptions,
+	chosenManaCostChanges,
+	noChosenUseOptions,
 	settleChosenUseOptions,
 	spellUseOptionGroups,
 } from '../utils/spell/spellUseOptions.js';
@@ -253,7 +257,14 @@ class ItemActivationManager {
 	useOptionGroups: UseOptionGroup[] = [];
 
 	/** What the options the player turned on cost and change. */
-	chosenOptions: ChosenUseOptions = { costs: [], pools: [], actionCostChanges: [] };
+	chosenOptions: ChosenUseOptions = noChosenUseOptions();
+
+	/** The mana the cast spends on the spell, after free casts, less mana and mana cuts. */
+	get castManaSpent(): number {
+		const tier = (this.#item.system as { tier?: number }).tier ?? 0;
+		const cost = this.spellCost;
+		return this.#item.type === 'spell' && tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
+	}
 
 	/** A use that a rule gives for free, and what it is free of. It is always free of actions. */
 	get free(): ItemActivationManager.FreeUse | null {
@@ -474,11 +485,6 @@ class ItemActivationManager {
 		if (refuseResourceCosts(this.actor, this.resourceCosts)) {
 			return { activation: null, rolls: null };
 		}
-		this.chosenOptions = await settleChosenUseOptions(
-			this.actor,
-			this.useOptionGroups,
-			dialogData.useOptions,
-		);
 
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
@@ -575,6 +581,23 @@ class ItemActivationManager {
 			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
 			this.invokesChaos = true;
 		}
+
+		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
+			this.spellCost = {
+				...this.spellCost,
+				amount: chosenManaCostChanges(this.useOptionGroups, dialogData.useOptions).reduce(
+					withActionCostChange,
+					this.spellCost.amount,
+				),
+			};
+		}
+		this.chosenOptions = await settleChosenUseOptions(
+			this.actor,
+			this.useOptionGroups,
+			dialogData.useOptions,
+			this.castManaSpent,
+		);
+		applyUseOptionChanges(this.activationData, this.chosenOptions);
 
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
@@ -1613,6 +1636,7 @@ class ItemActivationManager {
 				primaryDieModifier: options.primaryDieModifier,
 				rollHidden: options.rollHidden,
 				conditionalDamages: options.conditionalDamages,
+				...(options.upcast ? { upcast: options.upcast } : {}),
 			};
 		}
 
@@ -1890,6 +1914,8 @@ namespace ItemActivationManager {
 		}>;
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
+		/** The tier to cast a spell at, for a caller that skips the dialog. */
+		upcast?: DialogData['upcast'];
 		/** The attack card this use answers, as a reaction from the Defend window does. */
 		answersCardId?: string;
 	}

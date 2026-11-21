@@ -410,6 +410,11 @@ function option(name: string, amount: number, more: object = {}) {
 		cost: manaCost(name, amount),
 		poolIdentifier: 'spellshaper',
 		actionCostChange: null,
+		rangePerMana: 0,
+		cardNote: '',
+		damageTypes: [] as string[],
+		manaCostChange: null,
+		freeCopy: false,
 		...more,
 	};
 }
@@ -417,6 +422,7 @@ function option(name: string, amount: number, more: object = {}) {
 const stretchTime = option('Stretch Time', 2, { actionCostChange: { delta: -1, minimum: 1 } });
 const compression = option('Dimensional Compression', 1, {
 	cost: manaCost('Dimensional Compression', 1, { min: 1, max: 8 }),
+	rangePerMana: 4,
 });
 
 function spellshaper(used = false, options = [stretchTime, compression]) {
@@ -435,6 +441,9 @@ describe('the upcast dialog Spell or Attack Options', () => {
 				note: '',
 				chosen: '',
 				amount: null,
+				amountLabel: '',
+				picks: [],
+				pick: '',
 				entries: [
 					{ key: '', label: 'None' },
 					{ key: stretchTime.key, label: 'Stretch Time (2 mana)' },
@@ -510,6 +519,86 @@ describe('the upcast dialog Spell or Attack Options', () => {
 		expect(state.optionGroups[0].amount?.amount).toBe(4);
 		expect(state.castData.useOptions).toEqual([{ key: compression.key, amount: 4 }]);
 		expect(state.spendLine).toBe('When you roll, it spends 5 Mana.');
+	});
+
+	it('show the damage types of a pick as buttons, and ask for one before the cast', () => {
+		const transmutation = option('Elemental Transmutation', 1, {
+			damageTypes: ['fire', 'radiant'],
+		});
+		const state = open(caster({ mana: 5 }), fireBolt(), {
+			useOptionGroups: [spellshaper(false, [transmutation])],
+		});
+
+		state.chooseOption('spellshaper', transmutation.key);
+
+		expect(state.optionGroups[0]).toMatchObject({
+			amount: null,
+			picks: [
+				{ key: 'fire', label: 'Fire' },
+				{ key: 'radiant', label: 'Radiant' },
+			],
+			pick: '',
+		});
+		expect(state.castWarning).toBe('Choose a damage type for Elemental Transmutation.');
+
+		state.chooseOptionPick('spellshaper', 'radiant');
+
+		expect(state.optionGroups[0].pick).toBe('radiant');
+		expect(state.castWarning).toBe('');
+		expect(state.castData.useOptions).toEqual([{ key: transmutation.key, pick: 'radiant' }]);
+		expect(state.spendLine).toBe('When you roll, it spends 2 Mana.');
+	});
+
+	it('take a mana cut off the spell mana in the spend line, down to its minimum', () => {
+		const methodical = option('Methodical Spellweaver', 0, {
+			actionCostChange: { delta: 1, minimum: 0 },
+			manaCostChange: { delta: -2, minimum: 1 },
+		});
+		const state = open(caster({ mana: 5, unlocked: 3 }), fireBolt(), {
+			useOptionGroups: [spellshaper(false, [methodical])],
+			spendsActions: 1,
+		});
+
+		state.chooseOption('spellshaper', methodical.key);
+
+		expect(state.spendLine).toBe('When you roll, it spends 2 actions and 1 Mana.');
+		state.manaToSpend = 3;
+		expect(state.spendLine).toBe('When you roll, it spends 2 actions and 1 Mana.');
+	});
+
+	it('work out a cost that reads the mana of the cast at the chosen tier', () => {
+		const echo = option('Echo Casting', 0, {
+			cost: { ...manaCost('Echo Casting', 0), amount: '2 * @castManaSpent' },
+			freeCopy: true,
+		});
+		const state = open(caster({ mana: 8, unlocked: 3 }), fireBolt({ tier: 2 }), {
+			useOptionGroups: [spellshaper(false, [echo])],
+		});
+
+		expect(state.optionGroups[0].entries[1].label).toBe('Echo Casting (4 mana)');
+
+		state.chooseOption('spellshaper', echo.key);
+
+		expect(state.spendLine).toBe('When you roll, it spends 6 Mana.');
+		expect(state.tiers.map((tier) => tier.short)).toEqual([false, true]);
+
+		state.manaToSpend = 3;
+
+		expect(state.optionGroups[0].entries[1].label).toBe('Echo Casting (6 mana)');
+		expect(state.spendLine).toBe('When you roll, it spends 9 Mana.');
+		expect(state.castWarning).toBe('Not enough mana. You have 8, but need 9.');
+	});
+
+	it('name what the amount does in its label', () => {
+		const state = open(caster({ mana: 5, unlocked: 3 }), fireBolt(), {
+			useOptionGroups: [spellshaper()],
+		});
+
+		state.chooseOption('spellshaper', compression.key);
+
+		expect(state.optionGroups[0].amountLabel).toBe('Mana (+4 range)');
+		state.setOptionAmount('spellshaper', 2);
+		expect(state.optionGroups[0].amountLabel).toBe('Mana (+8 range)');
 	});
 });
 

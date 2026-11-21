@@ -12,6 +12,7 @@ import {
 	metadata,
 	migrateIncomingReactions,
 	movementOffers,
+	optionNotes,
 	primaryDieBonuses,
 	rerollHistory,
 	targets,
@@ -65,6 +66,7 @@ declare namespace NimbleSpellCardData {
 		ReturnType<typeof primaryDieBonuses> &
 		ReturnType<typeof damageBack> &
 		ReturnType<typeof movementOffers> &
+		ReturnType<typeof optionNotes> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
 		ReturnType<typeof targets>;
@@ -93,6 +95,7 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 			...primaryDieBonuses(),
 			...damageBack(),
 			...movementOffers(),
+			...optionNotes(),
 			...spellCardSchema(),
 			...metadata(),
 			...targets(),

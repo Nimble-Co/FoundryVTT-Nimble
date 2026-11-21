@@ -1,5 +1,6 @@
-import type { ActionCostChange } from '#types/useOption.d.ts';
+import type { ActionCostChange, CostChange } from '#types/useOption.d.ts';
 import { ruleKey } from '#utils/actor/actorRules.js';
+import { readsCastMana } from '#utils/cost/castManaCost.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 import { ResourceCostRule, resourceCostFields } from './resourceCost.js';
@@ -105,6 +106,63 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => Number(data.actionDelta ?? 0) < 0,
 			}),
 		),
+		rangePerMana: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			min: 0,
+			integer: true,
+			label: `${WORDS}.rangePerMana.label`,
+			hint: `${WORDS}.rangePerMana.hint`,
+		}),
+		cardNote: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: `${WORDS}.cardNote.label`,
+			hint: `${WORDS}.cardNote.hint`,
+		}),
+		damageTypes: new fields.ArrayField(
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				choices: () => CONFIG.NIMBLE.damageTypes,
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: [] as string[],
+				label: `${WORDS}.damageTypes.label`,
+				hint: `${WORDS}.damageTypes.hint`,
+			},
+		),
+		manaDelta: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			label: `${WORDS}.manaDelta.label`,
+			hint: `${WORDS}.manaDelta.hint`,
+		}),
+		manaMinimum: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: 0,
+				integer: true,
+				label: `${WORDS}.manaMinimum.label`,
+				hint: `${WORDS}.manaMinimum.hint`,
+				showWhen: (data: Record<string, unknown>) => Number(data.manaDelta ?? 0) < 0,
+			}),
+		),
+		freeCopy: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: `${WORDS}.freeCopy.label`,
+			hint: `${WORDS}.freeCopy.hint`,
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'useOption' }),
 	};
 }
@@ -154,11 +212,30 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 
 	declare actionMinimum: number;
 
+	/** Range added for each of the amount the option spends. */
+	declare rangePerMana: number;
+
+	/** A line on the card of the cast. `{amount}` is the amount the option spent. */
+	declare cardNote: string;
+
+	// `damageTypes` is inferred from the schema's `choices`.
+
+	declare manaDelta: number;
+
+	declare manaMinimum: number;
+
+	declare freeCopy: boolean;
+
 	static override defineSchema(): UseOptionRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		} as UseOptionRule.Schema;
+	}
+
+	/** An amount that reads the mana the cast spends is worked out when the spell is cast. */
+	protected override keepsAmountAsText(text: string): boolean {
+		return super.keepsAmountAsText(text) || readsCastMana(text);
 	}
 
 	/** The key of the option on the actor. */
@@ -173,9 +250,12 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 
 	/** How the option changes the action cost, or null when it does not. */
 	get actionCostChange(): ActionCostChange | null {
-		const delta = Math.trunc(Number(this.actionDelta) || 0);
-		if (delta === 0) return null;
-		return { delta, minimum: Math.max(0, Math.trunc(Number(this.actionMinimum) || 0)) };
+		return costChangeOf(this.actionDelta, this.actionMinimum);
+	}
+
+	/** How the option changes the mana cost of the spell, or null when it does not. */
+	get manaCostChange(): CostChange | null {
+		return costChangeOf(this.manaDelta, this.manaMinimum);
 	}
 
 	/** Whether the option goes into the cast dialog of this spell. */
@@ -208,9 +288,21 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 				['chargePoolIdentifier', 'string'],
 				['actionDelta', 'number'],
 				['actionMinimum', 'number'],
+				['rangePerMana', 'number'],
+				['cardNote', 'string'],
+				['damageTypes', 'string[]'],
+				['manaDelta', 'number'],
+				['manaMinimum', 'number'],
+				['freeCopy', 'boolean'],
 			]),
 		);
 	}
+}
+
+function costChangeOf(delta: unknown, minimum: unknown): CostChange | null {
+	const change = Math.trunc(Number(delta) || 0);
+	if (change === 0) return null;
+	return { delta: change, minimum: Math.max(0, Math.trunc(Number(minimum) || 0)) };
 }
 
 function isSingleTarget(

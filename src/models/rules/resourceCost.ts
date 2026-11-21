@@ -179,10 +179,15 @@ class ResourceCostRule<
 			};
 		}
 		const text = String(this.amount ?? '').trim();
-		if (this.isDiceExpression(text)) {
+		if (this.keepsAmountAsText(text)) {
 			return { ...cost, amount: this.withStacks(text), spend: { mode: 'fixed' } };
 		}
 		return { ...cost, amount: this.#amountOf(text), spend: { mode: 'fixed' } };
+	}
+
+	/** An amount kept as text to work out at the use, such as a roll. */
+	protected keepsAmountAsText(text: string): boolean {
+		return this.isDiceExpression(text);
 	}
 
 	#amountOf(formula: string): number {

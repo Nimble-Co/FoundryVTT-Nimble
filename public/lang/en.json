@@ -2247,6 +2247,30 @@
 				"actionMinimum": {
 					"label": "Action cost minimum",
 					"hint": "The least a cut can bring the action cost to. A cost already below it does not go up."
+				},
+				"rangePerMana": {
+					"label": "Range for each mana",
+					"hint": "Range added to the spell for each mana the option spends, such as 4. The amount stepper says the range, such as Mana (+8 range). 0 is no change."
+				},
+				"cardNote": {
+					"label": "Note on the card",
+					"hint": "A line on the card of the cast, such as The spell ignores line of sight. {amount} is the amount the option spends, such as {amount} creatures unaffected. Empty is no line."
+				},
+				"damageTypes": {
+					"label": "Damage type pick",
+					"hint": "The damage types the player picks one of. All damage of the spell becomes the picked type. Empty is no pick."
+				},
+				"manaDelta": {
+					"label": "Mana cost change",
+					"hint": "Mana added to the spell's mana cost, such as -2 for 2 less. 0 is no change."
+				},
+				"manaMinimum": {
+					"label": "Mana cost minimum",
+					"hint": "The least a cut can bring the spell's mana cost to. A cost already below it does not go up."
+				},
+				"freeCopy": {
+					"label": "Free copy",
+					"hint": "After the cast, a second card of the same spell posts at the same tier, free of mana, for another target. An amount can read @castManaSpent, the mana the cast spends on the spell, such as max(1, 2 * @castManaSpent)."
 				}
 			},
 			"diceConsumer": {
@@ -4061,6 +4085,9 @@
 				"hp": "HP",
 				"wounds": "Wounds"
 			},
+			"amountWithRange": "{label} (+{range} range)",
+			"choosePick": "Choose a damage type for {name}.",
+			"copyReason": "a copy of the cast",
 			"increment": "One more: {label}",
 			"decrement": "One less: {label}",
 			"noUseLeft": "{pool} has no use left."
