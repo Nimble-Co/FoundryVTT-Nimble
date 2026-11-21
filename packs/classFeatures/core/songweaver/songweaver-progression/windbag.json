@@ -8,6 +8,44 @@
 		"identifier": "",
 		"rules": [
 			{
+				"id": "windbag-l3-utility",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Windbag: Choose a Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "windbag-l6-utility",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Windbag (2): Choose a 2nd Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
 				"id": "windbag-l14-all-utility",
 				"type": "grantSpells",
 				"schools": [
