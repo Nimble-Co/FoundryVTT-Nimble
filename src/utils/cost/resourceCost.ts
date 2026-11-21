@@ -170,8 +170,22 @@ function returnResource(actor: CostPayer, kind: ResourceCostKind, amount: number
 	return changeResource(actor, kind, resourceKind(kind).grows ? -amount : amount);
 }
 
-function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number): boolean {
-	return resourceKind(kind).available(actor) >= amount;
+/** Whether the creature has `amount` of a kind left after `used` of it. */
+function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number, used = 0): boolean {
+	return resourceKind(kind).available(actor) - used >= amount;
+}
+
+/** For each cost, the amount of its kind that the costs before it take, by `amountOf`. */
+function usedBefore(
+	costs: readonly ResourceCost[],
+	amountOf: (cost: ResourceCost) => number,
+): number[] {
+	const totals: Partial<Record<ResourceCostKind, number>> = {};
+	return costs.map((cost) => {
+		const used = totals[cost.kind] ?? 0;
+		totals[cost.kind] = used + amountOf(cost);
+		return used;
+	});
 }
 
 function allowsBeyond(cost: ResourceCost): boolean {
@@ -179,13 +193,13 @@ function allowsBeyond(cost: ResourceCost): boolean {
 }
 
 /**
- * Whether a cost allowed beyond what the creature has needs more than it has now, so the
- * player must confirm the use. Never with Resource Spending off.
+ * Whether a cost allowed beyond what the creature has needs more than it has left after `used`
+ * of the kind, so the player must confirm the use. Never with Resource Spending off.
  */
-function goesBeyond(actor: CostPayer, cost: ResourceCost): boolean {
+function goesBeyond(actor: CostPayer, cost: ResourceCost, used = 0): boolean {
 	if (!isResourceSpendingAutomationEnabled() || !allowsBeyond(cost)) return false;
 	const amount = fixedAmountOf(cost);
-	return amount !== null && amount > 0 && !hasEnough(actor, cost.kind, amount);
+	return amount !== null && amount > 0 && !hasEnough(actor, cost.kind, amount, used);
 }
 
 /** The damage the consequence of a use beyond what the creature has deals. */
@@ -202,14 +216,14 @@ async function applyBeyondConsequence(actor: CostPayer, cost: ResourceCost): Pro
 }
 
 /**
- * Whether the creature can cover the cost now, by its lowest amount. With Resource Spending
- * off, every cost can.
+ * Whether the creature can cover the cost by its lowest amount, after `used` of the kind. With
+ * Resource Spending off, every cost can.
  */
-function canSpendResource(actor: CostPayer, cost: ResourceCost): boolean {
+function canSpendResource(actor: CostPayer, cost: ResourceCost, used = 0): boolean {
 	if (!isResourceSpendingAutomationEnabled()) return true;
 	const amount = lowestAmountOf(actor, cost);
 	if (amount === null) return false;
-	return amount === 0 || allowsBeyond(cost) || hasEnough(actor, cost.kind, amount);
+	return amount === 0 || allowsBeyond(cost) || hasEnough(actor, cost.kind, amount, used);
 }
 
 /**
@@ -283,6 +297,7 @@ export {
 	resourceKind,
 	returnResource,
 	settleResourceCost,
+	usedBefore,
 	spendResource,
 	tempHpOf,
 	variableRangeOf,

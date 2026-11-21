@@ -16,12 +16,14 @@ import {
 	type HeroicReactionKey,
 } from '../incomingReactions/heroicActions.js';
 import {
+	fixedAmountOf,
 	fixedResourceCost,
 	goesBeyond,
 	RESOURCE_COST_KINDS,
 	resourceCostsOf,
 	returnResource,
 	spendResource,
+	usedBefore,
 } from './resourceCost.js';
 import {
 	actionCostOf,
@@ -250,13 +252,17 @@ async function spendResourceCosts(
 	costs: readonly ResourceCost[],
 	{ confirmBeyond = async () => false }: { confirmBeyond?: ConfirmBeyond } = {},
 ): Promise<ResourceCostsSpent | null> {
-	const beyond = costs.filter((cost) => goesBeyond(actor, cost));
+	const used = usedBefore(costs, (cost) => fixedAmountOf(cost) ?? 0);
+	const beyond = costs.filter((cost, index) => goesBeyond(actor, cost, used[index]));
 	if (beyond.length > 0 && !(await confirmBeyond(beyond))) return null;
 
 	const receipt = receiptOf();
 	const taken: ResourceCost[] = [];
 	for (const cost of costs) {
-		const amount = await spendResource(actor, cost);
+		const amount = await spendResource(actor, cost).catch(async (error) => {
+			await giveBack(actor, receipt);
+			throw error;
+		});
 		if (amount === null) {
 			await giveBack(actor, receipt);
 			return null;

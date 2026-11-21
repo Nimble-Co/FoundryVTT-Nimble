@@ -953,7 +953,7 @@ class ItemActivationManager {
 				// roll: run any automatic reroll (e.g. "reroll incoming crits") and
 				// filter interactive offers whose trigger the outcome does not meet.
 				if (node === primaryDamageNode && primaryDamagePlan) {
-					const rollData = this.actor!.getRollData() as DamageRoll.Data;
+					const rollData = activationRollData as DamageRoll.Data;
 					const result = await applyPostRollIncomingBehavior(
 						roll as DamageRoll,
 						primaryDamagePlan,
@@ -1569,8 +1569,10 @@ class ItemActivationManager {
 		rollOptions: ItemActivationManager.RollOptions,
 	): Promise<ItemActivationManager.DialogData | null> {
 		const options = this.#options;
+		// The amount of a variable Spend or Sacrifice cost is the player's pick, even on a fast forward.
+		const asksResourceAmount = this.resourceCosts.some((cost) => cost.spend.mode === 'variable');
 
-		if (options.fastForward) {
+		if (options.fastForward && !asksResourceAmount) {
 			// No window opens here, and a pinned tier that lands on a list of
 			// enhancements has no default: the pick belongs to the player. Refuse
 			// unless the caller named one, as an unofferable variable spend does.
@@ -1634,9 +1636,7 @@ class ItemActivationManager {
 		// player's input — so an item that asks for one always gets the dialog.
 		// The same holds for the enhancement a pinned upcast picks from a list.
 		const mustPrompt =
-			this.#hasVariableChargeSpend() ||
-			this.#hasPinnedUpcastChoice() ||
-			this.resourceCosts.some((cost) => cost.spend.mode === 'variable');
+			this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice() || asksResourceAmount;
 
 		if (!hasRolls && !isSpell && !mustPrompt && !this.#offersFreeUse()) {
 			// No rolls needed, use default

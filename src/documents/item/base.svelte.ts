@@ -145,6 +145,19 @@ interface BaseItemSystemData {
  * Override and extend the basic Item implementation.
  * @extends {Item}
  */
+/** The use did not happen, so it costs nothing: give back what it took. */
+async function giveBackUse(
+	actor: Parameters<typeof giveBack>[0],
+	receipts: Array<CostReceipt | null>,
+): Promise<void> {
+	for (const paid of receipts) {
+		if (!paid) continue;
+		await giveBack(actor, paid).catch((refundError) =>
+			console.error('Nimble | Could not give back the cost of a failed use.', refundError),
+		);
+	}
+}
+
 class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends Item<ItemType> {
 	declare type: ItemType;
 
@@ -457,12 +470,20 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			return null;
 		}
 		const costReceipt = costsSpent.receipt;
-		const receipt = await this._payForUse(manager);
+		let receipt: CostReceipt | null = null;
+		try {
+			receipt = await this._payForUse(manager);
+			if (receipt) {
+				for (const cost of costsSpent.beyond) await applyBeyondConsequence(this.actor, cost);
+			}
+		} catch (error) {
+			await giveBackUse(this.actor, [receipt, costReceipt]);
+			throw error;
+		}
 		if (!receipt) {
 			await giveBack(this.actor, costReceipt);
 			return null;
 		}
-		for (const cost of costsSpent.beyond) await applyBeyondConsequence(this.actor, cost);
 
 		const useEvents = openActivationEvents(this.actor);
 		let card: ChatMessage | null;
@@ -556,12 +577,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			);
 		} catch (error) {
 			useEvents?.close();
-			// The use did not happen, so it costs nothing.
-			for (const paid of [receipt, costReceipt]) {
-				await giveBack(this.actor, paid).catch((refundError) =>
-					console.error('Nimble | Could not give back the cost of a failed use.', refundError),
-				);
-			}
+			await giveBackUse(this.actor, [receipt, costReceipt]);
 			throw error;
 		}
 		await this._afterUse(card, manager);

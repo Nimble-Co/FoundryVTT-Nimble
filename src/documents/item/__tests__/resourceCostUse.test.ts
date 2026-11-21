@@ -298,6 +298,19 @@ describe('using a feature with a Spend or Sacrifice cost', () => {
 		expect(actor.system.attributes.hp.value).toBe(12);
 	});
 
+	it('gives the costs back when the payment of the item kind throws', async () => {
+		const actor = hero({ mana: 5 });
+		const item = feature(actor, 'Storm Pact', [['mana', '2']]);
+		const failure = new Error('kind failed');
+		item._payForUse = vi.fn(async () => {
+			throw failure;
+		});
+
+		await expect(item.activate()).rejects.toBe(failure);
+
+		expect(actor.system.resources.mana.current).toBe(5);
+	});
+
 	it('with Resource Spending off, checks and spends nothing but still shows the cost', async () => {
 		setResourceSpending(false);
 		const actor = hero({ mana: 0 });
@@ -349,6 +362,17 @@ describe('using a feature with a variable Spend or Sacrifice cost', () => {
 		expect(cardOf(item)?.system.costs).toEqual([
 			{ kind: 'mana', amount: 3, source: 'Supercharge' },
 		]);
+	});
+
+	it('asks for the amount on a fast forward too', async () => {
+		const actor = hero({ mana: 5 });
+		const item = feature(actor, 'Supercharge', [upToWill]);
+		dialog.result = { rollMode: 0, resourceAmounts: { 'cost-mana': 3 } };
+
+		await item.activate({ fastForward: true });
+
+		expect(dialog.opened).toHaveLength(1);
+		expect(actor.system.resources.mana.current).toBe(2);
 	});
 
 	it("gives the chosen amount to the item's formulas as @cost, and keeps @spent for charges", async () => {

@@ -8,6 +8,7 @@ import {
 	lowestAmountOf,
 	resourceKind,
 	settleResourceCost,
+	usedBefore,
 } from './resourceCost.js';
 import { resourceCostText, woundsWord } from './resourceCostWords.js';
 
@@ -64,22 +65,35 @@ function resourceCostRollData(costs: readonly ResourceCost[]): ResourceCostRollD
 	return totals;
 }
 
-function notEnoughNotice(actor: CostPayer, cost: ResourceCost): string {
+function notEnoughNotice(
+	actor: CostPayer,
+	cost: ResourceCost,
+	available = resourceKind(cost.kind).have(actor),
+): string {
 	const amount = lowestAmountOf(actor, cost) ?? 0;
-	const facts = resourceKind(cost.kind);
-	return localize(facts.notEnoughKey, {
+	return localize(resourceKind(cost.kind).notEnoughKey, {
 		source: cost.source ?? '',
 		amount: String(amount),
 		cost: resourceCostText(cost.kind, amount),
 		wounds: woundsWord(amount),
-		available: String(facts.have(actor)),
+		available: String(available),
 	});
 }
 
-/** The notice for the first cost the creature cannot cover, or null when it covers them all. */
+/**
+ * The notice for the first cost the creature cannot cover, or null when it covers them all. Each
+ * cost is checked against what is left after the costs before it.
+ */
 function resourceCostRefusal(actor: CostPayer, costs: readonly ResourceCost[]): string | null {
-	const short = costs.find((cost) => !canSpendResource(actor, cost));
-	return short ? notEnoughNotice(actor, short) : null;
+	const used = usedBefore(costs, (cost) => lowestAmountOf(actor, cost) ?? 0);
+	const index = costs.findIndex((cost, each) => !canSpendResource(actor, cost, used[each]));
+	if (index < 0) return null;
+	const short = costs[index];
+	return notEnoughNotice(
+		actor,
+		short,
+		Math.max(0, resourceKind(short.kind).have(actor) - used[index]),
+	);
 }
 
 /** Show the notice for the first cost the creature cannot cover. True when there is one. */
