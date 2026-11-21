@@ -103,7 +103,6 @@ import {
 	UpcastError,
 	type UpcastErrorCode,
 } from '../utils/spell/applyUpcastDeltas.js';
-import { applyUseOptionChanges } from '../utils/spell/applyUseOptionChanges.js';
 import { computeUpcastBounds } from '../utils/spell/computeUpcastBounds.js';
 import {
 	exceedsUnlockedSpellTier,
@@ -124,6 +123,7 @@ import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { applyUseOptionChanges } from './itemActivation/applyUseOptionChanges.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,

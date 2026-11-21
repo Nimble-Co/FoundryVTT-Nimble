@@ -84,7 +84,7 @@ describe('variable charge spends', () => {
 
 	/** The dialog holding the spend prompt, located from the prompt itself. */
 	const spendInput = () =>
-		document.querySelector<HTMLInputElement>('input.nimble-pool-spend__stepper-input');
+		document.querySelector<HTMLInputElement>('input.nimble-amount-stepper__input');
 
 	const submitButtonOutsideSheet = (): HTMLButtonElement | null => {
 		const buttons = [
@@ -170,7 +170,7 @@ describe('variable charge spends', () => {
 		if (!spendInput()) return;
 		for (const app of foundry.applications.instances.values()) {
 			const element = (app as { element?: HTMLElement }).element;
-			if (element?.querySelector('.nimble-pool-spend__stepper-input')) {
+			if (element?.querySelector('.nimble-amount-stepper__input')) {
 				await (app as { close(): Promise<unknown> }).close().catch(() => {});
 			}
 		}

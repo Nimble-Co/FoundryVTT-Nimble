@@ -1,6 +1,6 @@
 import type { ApplyEffectNode } from '#types/effectTree.js';
 import type { UseOptionEffect } from '#types/useOption.d.ts';
-import type { ChosenUseOptions } from './spellUseOptions.js';
+import type { ChosenUseOptions } from '../../utils/spell/spellUseOptions.js';
 
 interface OptionActivation {
 	effects?: unknown[];

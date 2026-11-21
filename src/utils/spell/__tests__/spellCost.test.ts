@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SpellCostActorLike } from '#types/spellCost.d.ts';
-import { paySpellCost } from '../paySpellCost.js';
+import type { CastCostPayer, SpellCostActorLike } from '#types/spellCost.d.ts';
 import {
 	applyOverdraftConsequence,
 	createSpellCostResolver,
@@ -11,6 +10,7 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../spellCost.js';
+import { spendCastCosts } from '../spendCastCosts.js';
 import { spendSpellCost } from '../spendSpellCost.js';
 import { validateSpellCost } from '../validateSpellCost.js';
 
@@ -89,7 +89,7 @@ function createMockActor(params: {
 	mana?: { current: number; max: number };
 	hpMax?: number;
 	unlockedTier?: number | null;
-}): MockActor & SpellCostActorLike {
+}): MockActor & CastCostPayer {
 	const actor: MockActor = {
 		type: 'character',
 		system: {
@@ -118,7 +118,7 @@ function createMockActor(params: {
 		}),
 		applyDamage: vi.fn(async () => undefined),
 	};
-	return actor as unknown as MockActor & SpellCostActorLike;
+	return actor as unknown as MockActor & CastCostPayer;
 }
 
 function createSpell(tier: number) {
@@ -532,7 +532,7 @@ describe('paying while the pool changes under the confirmation', () => {
 
 		// The pool is empty when the prompt opens, so an overdraw is offered. A
 		// Safe Rest, an ally, or another client refills it while the prompt is up.
-		const payment = await paySpellCost(actor, cost, {
+		const payment = await spendCastCosts(actor, cost, {
 			confirmOverdraft: () => {
 				classItem.flags.nimble.chargePools['stolen-power'] = { current: 3, max: 3 };
 				return true;
@@ -555,7 +555,7 @@ describe('paying while the pool changes under the confirmation', () => {
 		const actor = createMockActor({ items: [classItem], hpMax: 30 });
 		const cost = resolveSpellCost(actor, createSpell(1));
 
-		const payment = await paySpellCost(actor, cost, { confirmOverdraft: () => true });
+		const payment = await spendCastCosts(actor, cost, { confirmOverdraft: () => true });
 
 		expect(payment).toMatchObject({ paid: true, overdrawn: true, damage: 15 });
 		expect(actor.applyDamage).toHaveBeenCalledWith(15);
@@ -569,7 +569,7 @@ describe('paying while the pool changes under the confirmation', () => {
 		const actor = createMockActor({ items: [classItem], hpMax: 30 });
 		const cost = resolveSpellCost(actor, createSpell(1));
 
-		const payment = await paySpellCost(actor, cost, { confirmOverdraft: () => false });
+		const payment = await spendCastCosts(actor, cost, { confirmOverdraft: () => false });
 
 		expect(payment).toEqual({ paid: false, cancelled: true });
 		expect(actor.applyDamage).not.toHaveBeenCalled();

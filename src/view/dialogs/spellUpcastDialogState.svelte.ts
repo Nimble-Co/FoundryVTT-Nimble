@@ -155,7 +155,6 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	} = options;
 	const { spellUpcastDialog, effectTypes, spellProperties, itemConfig, objectTypes, damageTypes } =
 		CONFIG.NIMBLE;
-	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
 	// Snapshot at dialog-open time, as the activation dialog does.
 	const actor = options.actor();
@@ -312,7 +311,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 			const option = chosenOptionOf(group);
 			if (!option) return [];
 			const amount = optionAmountOf(option);
-			return [{ option, amount, pick: pickOf(option) }];
+			return [{ option, amount, damageType: pickOf(option) }];
 		}),
 	);
 
@@ -399,7 +398,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		};
 	});
 
-	/** "10 temp HP (Shadowfrost)". */
+	/** "10 temp HP (<option>)". */
 	function spendText(option: UseOption): string {
 		const cost = withCastMana(actor, option.cost, spellMana);
 		return localize('NIMBLE.useOptions.spendEntry', {
@@ -539,13 +538,13 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		}
 
 		if (delta.maxDieFaces) {
-			return format(spellUpcastDialog.increaseDieSizeCapped, {
+			return localize(spellUpcastDialog.increaseDieSizeCapped, {
 				steps: String(scaledSteps),
 				maxFaces: String(delta.maxDieFaces),
 			});
 		}
 
-		return format(spellUpcastDialog.increaseDieSize, { steps: String(scaledSteps) });
+		return localize(spellUpcastDialog.increaseDieSize, { steps: String(scaledSteps) });
 	}
 
 	function formatRaisePreview(delta: ScalingDelta, steps: number) {
@@ -557,7 +556,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		const amount = delta.formula
 			? formulaRaiseAmount(delta.formula, steps)
 			: String((delta.value ?? 0) * steps);
-		return format(spellUpcastDialog.raiseEffectRule, {
+		return localize(spellUpcastDialog.raiseEffectRule, {
 			rule: rule?.label ?? target?.label ?? '',
 			amount,
 			field: field?.label ?? delta.ruleField ?? '',
@@ -585,8 +584,8 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		const amount =
 			value === 1
 				? localize(`NIMBLE.lastsUntilText.units.${units}.one`)
-				: format(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
-		return format(spellUpcastDialog.lengthenLastsUntil, { effect: target?.label ?? '', amount });
+				: localize(`NIMBLE.lastsUntilText.units.${units}.many`, { value: String(value) });
+		return localize(spellUpcastDialog.lengthenLastsUntil, { effect: target?.label ?? '', amount });
 	}
 
 	function findDieSizeTargetEffect(targetEffectId: string | null | undefined) {
@@ -623,27 +622,27 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	/** Why the cast cannot go ahead, or '' when it can. */
 	const castWarning = $derived.by(() => {
 		if (situationalModifiers !== '' && !Roll.validate(situationalModifiers)) {
-			return format('NIMBLE.hitDice.invalidAddToRoll');
+			return localize('NIMBLE.hitDice.invalidAddToRoll');
 		}
 		const unpicked = chosenOptions.find(
-			({ option, pick }) => option.damageTypes.length > 0 && !pick,
+			({ option, damageType }) => option.damageTypes.length > 0 && !damageType,
 		);
 		if (unpicked) return localize('NIMBLE.useOptions.choosePick', { name: unpicked.option.name });
 
 		// Only a tiered spell that costs mana; a class pool cost is checked on
 		// the activation path.
 		if (baseMana > 0 && !isPoolCost && castTier < baseMana) {
-			return format(spellUpcastDialog.warnings.minMana, { min: String(baseMana) });
+			return localize(spellUpcastDialog.warnings.minMana, { min: String(baseMana) });
 		}
 		if (enforceManaCost && spellMana + otherMana > currentMana) {
-			return format(spellUpcastDialog.warnings.insufficientMana, {
+			return localize(spellUpcastDialog.warnings.insufficientMana, {
 				current: String(currentMana),
 				needed: String(spellMana + otherMana),
 			});
 		}
 
 		if (!tierLocked && manaToSpend > maxTier) {
-			return format(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) });
+			return localize(spellUpcastDialog.warnings.aboveMaxTier, { maxTier: String(maxTier) });
 		}
 		return '';
 	});
@@ -666,10 +665,10 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		...(resources.variableCosts.length > 0 ? { resourceAmounts: resources.amounts } : {}),
 		...(chosenOptions.length > 0
 			? {
-					useOptions: chosenOptions.map(({ option, amount, pick }) => ({
+					useOptions: chosenOptions.map(({ option, amount, damageType }) => ({
 						key: option.key,
 						...(amount ? { amount: amount.amount } : {}),
-						...(pick ? { pick } : {}),
+						...(damageType ? { damageType } : {}),
 					})),
 				}
 			: {}),

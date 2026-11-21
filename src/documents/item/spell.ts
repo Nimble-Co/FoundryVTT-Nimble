@@ -9,15 +9,9 @@ import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import localize from '../../utils/localize.js';
 import confirmSpellOverdraft from '../../utils/spell/confirmSpellOverdraft.js';
-import { paySpellCost } from '../../utils/spell/paySpellCost.js';
 import { previewOverdraftDamage } from '../../utils/spell/spellCost.js';
+import { spendCastCosts } from '../../utils/spell/spendCastCosts.js';
 import { NimbleBaseItem } from './base.svelte.js';
-
-/** The mana the cast spends on the spell, after Free of mana and less mana. A pool cost is 0. */
-function castManaOf(spell: NimbleSpellItem, manager: ItemActivationManager): number {
-	const cost = manager.spellCost;
-	return spell.system.tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
-}
 
 interface Caster {
 	activateItem(id: string, options: ItemActivationManager.ActivationOptions): Promise<unknown>;
@@ -72,7 +66,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 
 	/** `manaSpent`: the mana the cast spends on the spell. An option's mana is not in it. */
 	protected override _useContext(manager: ItemActivationManager): Record<string, unknown> {
-		return { upcast: manager.upcastResult, manaSpent: castManaOf(this, manager) };
+		return { upcast: manager.upcastResult, manaSpent: manager.castManaSpent };
 	}
 
 	/**
@@ -87,7 +81,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 		const actor = this.actor;
 		const spellCost: ResolvedSpellCost =
 			this.system.tier > 0 ? (manager.spellCost ?? { type: 'none' }) : { type: 'none' };
-		const payment = await paySpellCost(actor, spellCost, {
+		const payment = await spendCastCosts(actor, spellCost, {
 			confirmOverdraft: (available) =>
 				confirmSpellOverdraft({
 					spellName: this.name,
@@ -176,7 +170,7 @@ export class NimbleSpellItem extends NimbleBaseItem<'spell'> {
 				school: this.system.school,
 				spellName: this.name,
 				upcast: manager?.upcastResult,
-				castManaSpent: manager ? castManaOf(this, manager) : 0,
+				castManaSpent: manager?.castManaSpent ?? 0,
 				optionNotes: manager?.chosenOptions.notes ?? [],
 			},
 			type: 'spell',

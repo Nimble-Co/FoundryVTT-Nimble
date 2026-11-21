@@ -195,7 +195,7 @@ class ResourceCostRule<
 		return Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
 	}
 
-	override tooltipInfo(): string {
+	override tooltipInfo(props?: Map<string, string>): string {
 		return super.tooltipInfo(
 			new Map([
 				['kind', '"mana" | "hp" | "tempHp" | "wounds"'],
@@ -204,6 +204,7 @@ class ResourceCostRule<
 				['min', 'string'],
 				['max', 'string'],
 				['beyond', '"notAllowed" | "allowed" | "halfMaxHpDamage"'],
+				...(props ?? []),
 			]),
 		);
 	}

@@ -324,20 +324,13 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	}
 
 	override tooltipInfo(): string {
-		return NimbleBaseRule.prototype.tooltipInfo.call(
-			this,
+		return super.tooltipInfo(
 			new Map([
 				['target', '"spell"'],
 				['tieredOnly', 'boolean'],
 				['singleTargetOnly', 'boolean'],
 				['schools', 'string[]'],
 				['spells', 'string[]'],
-				['kind', '"mana" | "hp" | "tempHp" | "wounds"'],
-				['spendMode', '"fixed" | "variable"'],
-				['amount', 'string'],
-				['min', 'string'],
-				['max', 'string'],
-				['beyond', '"notAllowed" | "allowed" | "halfMaxHpDamage"'],
 				['chargePoolIdentifier', 'string'],
 				['actionDelta', 'number'],
 				['actionMinimum', 'number'],

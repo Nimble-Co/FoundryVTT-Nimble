@@ -567,7 +567,7 @@ describe('the upcast dialog Spell or Attack Options', () => {
 
 		expect(state.optionGroups[0].pick).toBe('radiant');
 		expect(state.castWarning).toBe('');
-		expect(state.castData.useOptions).toEqual([{ key: transmutation.key, pick: 'radiant' }]);
+		expect(state.castData.useOptions).toEqual([{ key: transmutation.key, damageType: 'radiant' }]);
 		expect(state.spendLine).toBe('When you roll, it spends 2 Mana.');
 	});
 

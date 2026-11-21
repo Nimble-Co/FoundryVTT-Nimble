@@ -411,7 +411,7 @@ describe('the changes of a Spell or Attack Option', () => {
 		} as never;
 		dialog.result = {
 			rollMode: 0,
-			useOptions: [{ key: transmutation.key, pick: 'radiant' }],
+			useOptions: [{ key: transmutation.key, damageType: 'radiant' }],
 		};
 
 		await item.activate();

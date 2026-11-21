@@ -59,10 +59,16 @@ export interface UseOptionGroup {
 	options: UseOption[];
 }
 
+/** A Charge Pool one use of which a use spends, such as an option's limit. */
+export interface PoolUse {
+	identifier: string;
+	label: string;
+}
+
 /** An option the player turned on, and the amount chosen for a variable cost. */
 export interface ChosenUseOption {
 	key: string;
 	amount?: number;
 	/** The damage type the player picked. */
-	pick?: string;
+	damageType?: string;
 }

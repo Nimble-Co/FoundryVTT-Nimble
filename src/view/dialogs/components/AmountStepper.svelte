@@ -8,21 +8,21 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 	let { label, value, minimum, limit, words, onadjust, onset }: AmountStepperProps = $props();
 </script>
 
-<div class="nimble-pool-spend__row">
-	<span class="nimble-pool-spend__label">{label}</span>
-	<div class="nimble-pool-spend__stepper">
+<div class="nimble-amount-stepper">
+	<span class="nimble-amount-stepper__label">{label}</span>
+	<div class="nimble-amount-stepper__controls">
 		<button
 			type="button"
-			class="nimble-pool-spend__stepper-btn"
+			class="nimble-amount-stepper__button"
 			aria-label={words.decrement}
 			disabled={value <= minimum}
 			onclick={() => onadjust(-1)}
 		>
 			−
 		</button>
-		<span class="nimble-pool-spend__stepper-value">
+		<span class="nimble-amount-stepper__value">
 			<input
-				class="nimble-pool-spend__stepper-input"
+				class="nimble-amount-stepper__input"
 				type="number"
 				min={minimum}
 				max={limit}
@@ -34,11 +34,11 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 					currentTarget.value = String(onset(currentTarget.valueAsNumber));
 				}}
 			/>
-			<span class="nimble-pool-spend__stepper-available" aria-hidden="true">/ {limit}</span>
+			<span class="nimble-amount-stepper__limit" aria-hidden="true">/ {limit}</span>
 		</span>
 		<button
 			type="button"
-			class="nimble-pool-spend__stepper-btn"
+			class="nimble-amount-stepper__button"
 			aria-label={words.increment}
 			disabled={value >= limit}
 			onclick={() => onadjust(1)}
@@ -49,14 +49,12 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 </div>
 
 <style lang="scss">
-	.nimble-pool-spend {
-		&__row {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			flex-wrap: wrap;
-			gap: 6px 8px;
-		}
+	.nimble-amount-stepper {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 6px 8px;
 
 		&__label {
 			display: flex;
@@ -67,13 +65,13 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 			font-weight: 600;
 		}
 
-		&__stepper {
+		&__controls {
 			display: flex;
 			align-items: center;
 			gap: 6px;
 		}
 
-		&__stepper-btn {
+		&__button {
 			display: grid;
 			place-items: center;
 			width: 28px;
@@ -95,7 +93,7 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 			}
 		}
 
-		&__stepper-value {
+		&__value {
 			display: flex;
 			align-items: baseline;
 			gap: 3px;
@@ -103,7 +101,7 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 			font-variant-numeric: tabular-nums;
 		}
 
-		&__stepper-input {
+		&__input {
 			width: 2.5em;
 			height: 28px;
 			padding: 0 4px;
@@ -116,7 +114,7 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 			color: var(--nimble-ui-ink);
 		}
 
-		&__stepper-available {
+		&__limit {
 			font-size: 0.75rem;
 			color: var(--nimble-ui-ink-muted);
 		}

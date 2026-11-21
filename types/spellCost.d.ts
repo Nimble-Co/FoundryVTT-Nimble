@@ -1,3 +1,5 @@
+import type { CostPayer } from '#types/useCost.d.ts';
+
 /** What exceeding a declared spell cost does to the caster. */
 export type OverdraftConsequence = '' | 'halfMaxHpDamage';
 
@@ -37,6 +39,9 @@ export interface SpellCostActorLike {
 }
 
 /** The structural slice of a spell the cost functions read. */
+/** A caster both the spell cost functions and the cost ledger can read and write. */
+export type CastCostPayer = SpellCostActorLike & NonNullable<CostPayer>;
+
 export interface SpellLike {
 	system?: { tier?: number; scaling?: { mode?: string } | null; classes?: string[] };
 }

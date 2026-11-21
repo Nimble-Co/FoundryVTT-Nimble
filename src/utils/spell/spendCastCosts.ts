@@ -1,21 +1,17 @@
-import type { CostReceipt } from '#types/costReceipt.d.ts';
-import type { ResourceCost } from '#types/resourceCost.d.ts';
-import type {
-	ResolvedSpellCost,
-	SpellCostActorLike,
-	SpellCostFailure,
-} from '#types/spellCost.d.ts';
+import type { CostReceipt, CostsSpent } from '#types/costReceipt.d.ts';
+import type { ConfirmBeyond, ResourceCost } from '#types/resourceCost.d.ts';
+import type { CastCostPayer, ResolvedSpellCost, SpellCostFailure } from '#types/spellCost.d.ts';
+import type { PoolUse } from '#types/useOption.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
-import { hasRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
-import { giveBack, receiptOf, spendMana } from '../cost/costLedger.js';
+import { giveBack, receiptOf, recordTaken, spendMana } from '../cost/costLedger.js';
 import { resourceCostRefusal } from '../cost/itemResourceCosts.js';
-import { goesBeyond, manaOf, spendResource } from '../cost/resourceCost.js';
-import localize from '../localize.js';
+import { emptyPoolNotice, spendPoolUses } from '../cost/poolUses.js';
+import { fixedAmountOf, goesBeyond, manaOf, spendResource } from '../cost/resourceCost.js';
 import { applyOverdraftConsequence } from './spellCost.js';
 import { spendSpellCost } from './spendSpellCost.js';
 import { validateSpellCost } from './validateSpellCost.js';
 
-export interface SpellCostPayment {
+export interface CastCostsSpent extends Partial<CostsSpent> {
 	/** False means the cast must not proceed. */
 	paid: boolean;
 	/** Set when the caster declined to overdraw; there is nothing to report. */
@@ -24,38 +20,26 @@ export interface SpellCostPayment {
 	failure?: SpellCostFailure;
 	/** Set when another cost of the cast was refused: the words to report. */
 	notice?: string;
-	/** Set when the cast was paid for by exceeding the pool. */
+	/** Set when the cast went beyond the pool. */
 	overdrawn?: boolean;
 	/** Damage the overdraft consequence dealt, if any. */
 	damage?: number;
-	/** What the cast took, to give back when it does not happen. Set when paid. */
+	/** What the cast took, to give back when it does not happen. Set when spent. */
 	receipt?: CostReceipt;
-	/** What the other costs took, to give back when the cast does not happen. Set when paid. */
+	/** What the other costs took, to give back when the cast does not happen. Set when spent. */
 	receipts?: CostReceipt[];
-	/** The other costs as the cast took them. With Resource Spending off, as they were asked. */
-	taken?: ResourceCost[];
-	/** The other costs that went beyond what the caster had, whose consequences still apply. */
-	beyond?: ResourceCost[];
-}
-
-/** A Charge Pool one use of which the cast spends, such as an option's limit. */
-export interface CastPoolUse {
-	identifier: string;
-	label: string;
 }
 
 interface CastCosts {
 	/** Costs spent with the spell: its Spend or Sacrifice costs and the options turned on. */
 	costs?: readonly ResourceCost[];
 	/** Pools that lose one use with the cast. */
-	pools?: readonly CastPoolUse[];
-	/** Asks the player to confirm costs that go beyond what the caster has. */
-	confirmBeyond?: (costs: ResourceCost[]) => Promise<boolean>;
+	pools?: readonly PoolUse[];
+	confirmBeyond?: ConfirmBeyond;
 }
 
 function fixedMana(cost: ResourceCost): number | null {
-	const amount = Number(cost.amount);
-	return cost.kind === 'mana' && Number.isFinite(amount) ? Math.max(0, amount) : null;
+	return cost.kind === 'mana' ? fixedAmountOf(cost) : null;
 }
 
 function plainManaOf(costs: readonly ResourceCost[]): number {
@@ -85,10 +69,10 @@ function manaShares(available: number, costs: readonly ResourceCost[]) {
  * other costs are checked as one total.
  */
 function castRefusal(
-	actor: SpellCostActorLike,
+	actor: CastCostPayer,
 	cost: ResolvedSpellCost,
 	costs: readonly ResourceCost[],
-	pools: readonly CastPoolUse[],
+	pools: readonly PoolUse[],
 ): { failure?: SpellCostFailure; notice?: string; overdrawn?: boolean; available?: number } | null {
 	const spellMana = cost.type === 'mana' ? cost.amount : 0;
 	const plainMana = plainManaOf(costs);
@@ -96,29 +80,28 @@ function castRefusal(
 		cost.type === 'mana' ? { type: 'mana', amount: spellMana + plainMana } : cost;
 	const validation = validateSpellCost(actor, total);
 	if (!validation.ok) return { failure: validation.failure };
-	if (cost.type !== 'mana' && plainMana > manaOf(actor as never)) {
+	if (cost.type !== 'mana' && plainMana > manaOf(actor)) {
 		return {
 			failure: {
 				code: 'insufficientMana',
 				poolIdentifier: 'mana',
 				poolLabel: 'mana',
 				required: plainMana,
-				available: manaOf(actor as never),
+				available: manaOf(actor),
 			},
 		};
 	}
-	const notice = resourceCostRefusal(
-		actor as never,
-		costs.filter((each) => fixedMana(each) === null),
-	);
+	const notice =
+		resourceCostRefusal(
+			actor,
+			costs.filter((each) => fixedMana(each) === null),
+		) ?? emptyPoolNotice(actor, pools);
 	if (notice) return { notice };
-	const empty = pools.find((pool) => !hasRuleCharge(actor as never, pool.identifier));
-	if (empty) return { notice: localize('NIMBLE.useOptions.noUseLeft', { pool: empty.label }) };
 	return validation.overdrawn ? { overdrawn: true, available: validation.available } : null;
 }
 
 /**
- * Pays for a cast, in one step: validate, confirm an overdraw if the cost
+ * Spends the costs of a cast, in one step: validate, confirm an overdraw if the cost
  * permits one, spend, and apply the declared consequence. The costs and pool
  * uses that come with the cast are checked and spent in the same step, and the
  * spell mana and their mana are one write.
@@ -130,8 +113,8 @@ function castRefusal(
  * The caller supplies the confirmations so this stays free of UI, and reports
  * `failure` itself so the message can name the item.
  */
-export async function paySpellCost(
-	actor: SpellCostActorLike,
+export async function spendCastCosts(
+	actor: CastCostPayer,
 	cost: ResolvedSpellCost,
 	{
 		confirmOverdraft,
@@ -139,7 +122,7 @@ export async function paySpellCost(
 		pools = [],
 		confirmBeyond = async () => false,
 	}: { confirmOverdraft: (available: number) => Promise<boolean> | boolean } & CastCosts,
-): Promise<SpellCostPayment> {
+): Promise<CastCostsSpent> {
 	if (!isResourceSpendingAutomationEnabled()) {
 		return { paid: true, receipt: receiptOf(), receipts: [], taken: [...costs], beyond: [] };
 	}
@@ -148,10 +131,10 @@ export async function paySpellCost(
 	if (refusal && !refusal.overdrawn) return { paid: false, ...refusal };
 
 	const spellMana = cost.type === 'mana' ? cost.amount : 0;
-	const firstShares = manaShares(manaOf(actor as never) - spellMana, costs);
+	const firstShares = manaShares(manaOf(actor) - spellMana, costs);
 	const otherBeyond = costs.filter((each, index) => {
 		const share = firstShares[index];
-		return share ? share.beyond : goesBeyond(actor as never, each);
+		return share ? share.beyond : goesBeyond(actor, each);
 	});
 
 	let waited = false;
@@ -168,16 +151,16 @@ export async function paySpellCost(
 		if (late && !late.overdrawn) return { paid: false, ...late };
 	}
 
-	const shares = manaShares(manaOf(actor as never) - spellMana, costs);
+	const shares = manaShares(manaOf(actor) - spellMana, costs);
 	const otherMana = shares.reduce((total, share) => total + (share?.take ?? 0), 0);
 	const receipts: CostReceipt[] = [];
-	const fail = async (result: SpellCostPayment): Promise<SpellCostPayment> => {
-		for (const receipt of receipts) await giveBack(actor as never, receipt);
+	const fail = async (result: CastCostsSpent): Promise<CastCostsSpent> => {
+		for (const receipt of receipts) await giveBack(actor, receipt);
 		return result;
 	};
 
 	if (spellMana + otherMana > 0) {
-		if (!(await spendMana(actor as never, spellMana + otherMana))) {
+		if (!(await spendMana(actor, spellMana + otherMana))) {
 			return fail({ paid: false, ...castRefusal(actor, cost, costs, pools) });
 		}
 	}
@@ -202,27 +185,19 @@ export async function paySpellCost(
 			taken.push({ ...each, amount: share.take });
 			continue;
 		}
-		const amount = await spendResource(actor as never, each);
+		const amount = await spendResource(actor, each);
 		if (amount === null) {
-			return fail({ paid: false, notice: resourceCostRefusal(actor as never, [each]) ?? '' });
+			return fail({ paid: false, notice: resourceCostRefusal(actor, [each]) ?? '' });
 		}
 		const part = receiptOf();
-		if (each.kind === 'hp') part.paid.hp = amount;
-		else if (each.kind === 'tempHp') part.paid.tempHp = amount;
-		else if (each.kind === 'wounds') part.paid.wounds = amount;
+		recordTaken(part.paid, each.kind, amount);
 		receipts.push(part);
 		taken.push({ ...each, amount });
 	}
 
-	for (const pool of pools) {
-		if (!(await spendRuleCharge(actor as never, pool.identifier))) {
-			return fail({
-				paid: false,
-				notice: localize('NIMBLE.useOptions.noUseLeft', { pool: pool.label }),
-			});
-		}
-		receipts.push(receiptOf({ charges: 1, chargePoolIdentifier: pool.identifier }));
-	}
+	const poolUses = await spendPoolUses(actor, pools);
+	if ('notice' in poolUses) return fail({ paid: false, notice: poolUses.notice });
+	receipts.push(...poolUses.receipts);
 
 	const others = receipts.filter((each) => each !== receipt);
 	const result = { paid: true, receipt, receipts: others, taken, beyond: otherBeyond };

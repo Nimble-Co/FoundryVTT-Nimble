@@ -3,6 +3,7 @@ import type {
 	ActionCostChange,
 	ChosenUseOption,
 	CostChange,
+	PoolUse,
 	UseOption,
 	UseOptionEffect,
 	UseOptionGroup,
@@ -21,7 +22,7 @@ import localize from '../localize.js';
 
 type OptionSpell = Parameters<UseOptionRule['appliesToSpell']>[0];
 
-function optionOf(actor: Actor | null | undefined, rule: UseOptionRule): UseOption {
+function useOptionOfRule(actor: Actor | null | undefined, rule: UseOptionRule): UseOption {
 	const key = rule.key;
 	const pool = rule.poolIdentifier;
 	return {
@@ -74,7 +75,7 @@ export function spellUseOptionGroups(
 		(rule) => rule.appliesTo() && rule.appliesToSpell(spell),
 	);
 	for (const rule of rules) {
-		const option = optionOf(actor, rule);
+		const option = useOptionOfRule(actor, rule);
 		const pool = option.poolIdentifier;
 		const spend = option.replacesSpellCost;
 		const key = spend ? SPEND_GROUP : pool || option.key;
@@ -109,7 +110,7 @@ export function offersActionCostChange(actor: Actor | null | undefined, item: un
 export interface ChosenUseOptions {
 	costs: ResourceCost[];
 	/** The pools whose uses the options spend, one use each. */
-	pools: Array<{ identifier: string; label: string }>;
+	pools: PoolUse[];
 	actionCostChanges: ActionCostChange[];
 	/** Range the options add to the spell. */
 	range: number;
@@ -200,7 +201,9 @@ export async function settleChosenUseOptions(
 		}
 		if (option.actionCostChange) settled.actionCostChanges.push(option.actionCostChange);
 		settled.range += option.rangePerMana * Number(cost.amount);
-		if (choice.pick && option.damageTypes.includes(choice.pick)) settled.damageType = choice.pick;
+		if (choice.damageType && option.damageTypes.includes(choice.damageType)) {
+			settled.damageType = choice.damageType;
+		}
 		if (option.cardNote) {
 			settled.notes.push(option.cardNote.replaceAll('{amount}', String(cost.amount)));
 		}
