@@ -1,5 +1,5 @@
 import type { CostReceipt } from '#types/costReceipt.d.ts';
-import type { ResourceCostKind } from '#types/resourceCost.d.ts';
+import type { ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
 import type { CostPayer, PaidUseCost, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
@@ -18,9 +18,11 @@ import {
 } from '../incomingReactions/heroicActions.js';
 import {
 	fixedResourceCost,
+	hpOf,
 	manaOf,
 	resourceCostsOf,
 	spendResource,
+	tempHpOf,
 	writeMana,
 } from './resourceCost.js';
 import {
@@ -70,8 +72,10 @@ async function spendMana(actor: CostPayer, amount: number): Promise<boolean> {
 
 /** Record what a resource spend took on the paid record. */
 function recordTaken(paid: PaidUseCost, kind: ResourceCostKind, taken: number): void {
-	if (kind === 'mana') paid.mana = taken;
-	else if (kind === 'wounds') paid.wounds = taken;
+	if (kind === 'mana') paid.mana += taken;
+	else if (kind === 'wounds') paid.wounds += taken;
+	else if (kind === 'hp') paid.hp = (paid.hp ?? 0) + taken;
+	else paid.tempHp = (paid.tempHp ?? 0) + taken;
 }
 
 async function spendHeroicReaction(
@@ -162,6 +166,12 @@ async function giveBack(actor: CostPayer, { cost, paid }: CostReceipt): Promise<
 		}
 	}
 	if (paid.mana > 0) await writeMana(actor, manaOf(actor) + paid.mana);
+	if ((paid.hp ?? 0) > 0 || (paid.tempHp ?? 0) > 0) {
+		await actor?.update({
+			...(paid.hp ? { 'system.attributes.hp.value': hpOf(actor) + paid.hp } : {}),
+			...(paid.tempHp ? { 'system.attributes.hp.temp': tempHpOf(actor) + paid.tempHp } : {}),
+		} as Record<string, unknown>);
+	}
 	if (paid.charges > 0) await refundRuleCharge(actor, cost.chargePoolIdentifier, paid.charges);
 	if (paid.dice) {
 		const current = getPools(actor).find((pool) => pool.id === paid.dice?.poolId)?.faces ?? [];
@@ -243,6 +253,26 @@ async function payCost(
 }
 
 /**
+ * Spend each cost of an item's own use, in order. When one cannot be covered,
+ * what was taken is given back and null is returned.
+ */
+async function spendResourceCosts(
+	actor: CostPayer,
+	costs: readonly ResourceCost[],
+): Promise<CostReceipt | null> {
+	const receipt = receiptOf();
+	for (const cost of costs) {
+		const taken = await spendResource(actor, cost);
+		if (taken === null) {
+			await giveBack(actor, receipt);
+			return null;
+		}
+		recordTaken(receipt.paid, cost.kind, taken);
+	}
+	return receipt;
+}
+
+/**
  * Give back the part of a per-die payment for dice that did not roll. Gives the
  * payment that is still paid.
  */
@@ -273,4 +303,4 @@ async function giveBackPart(
 	};
 }
 
-export { giveBack, giveBackPart, payCost, receiptOf, spendMana };
+export { giveBack, giveBackPart, payCost, receiptOf, spendMana, spendResourceCosts };

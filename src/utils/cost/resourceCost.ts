@@ -1,7 +1,10 @@
 import type { ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
 import type { CostPayer, UseCost } from '#types/useCost.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
+import { ACTOR_HP_PATHS, ACTOR_WOUNDS_PATHS } from '../actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../actor/actorResources.js';
+
+const ACTOR_TEMP_HP_PATH = 'system.attributes.hp.temp';
 
 function fixedResourceCost(kind: ResourceCostKind, amount: number): ResourceCost {
 	return { kind, amount, spend: { mode: 'fixed' }, beyond: 'notAllowed' };
@@ -34,16 +37,26 @@ function woundsOf(actor: CostPayer) {
 	return getActorWoundsValueAndMax(actor as Actor.Implementation);
 }
 
+function hpOf(actor: CostPayer): number {
+	return Number(foundry.utils.getProperty(actor ?? {}, ACTOR_HP_PATHS.value) ?? 0);
+}
+
+function tempHpOf(actor: CostPayer): number {
+	return Number(foundry.utils.getProperty(actor ?? {}, ACTOR_TEMP_HP_PATH) ?? 0);
+}
+
 function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number): boolean {
 	switch (kind) {
 		case 'mana':
 			return manaOf(actor) >= amount;
+		case 'hp':
+			return hpOf(actor) > amount;
+		case 'tempHp':
+			return tempHpOf(actor) >= amount;
 		case 'wounds': {
 			const wounds = woundsOf(actor);
 			return !!wounds && wounds.value + amount <= wounds.max;
 		}
-		default:
-			return false;
 	}
 }
 
@@ -69,14 +82,34 @@ async function spendResource(actor: CostPayer, cost: ResourceCost): Promise<numb
 		case 'mana':
 			await writeMana(actor, manaOf(actor) - amount);
 			return amount;
+		case 'hp':
+			await actor?.update({ [ACTOR_HP_PATHS.value]: hpOf(actor) - amount } as Record<
+				string,
+				unknown
+			>);
+			return amount;
+		case 'tempHp':
+			await actor?.update({ [ACTOR_TEMP_HP_PATH]: tempHpOf(actor) - amount } as Record<
+				string,
+				unknown
+			>);
+			return amount;
 		case 'wounds':
 			await actor?.update({
-				'system.attributes.wounds.value': (woundsOf(actor)?.value ?? 0) + amount,
+				[ACTOR_WOUNDS_PATHS.value]: (woundsOf(actor)?.value ?? 0) + amount,
 			} as Record<string, unknown>);
 			return amount;
-		default:
-			return null;
 	}
 }
 
-export { canSpendResource, fixedResourceCost, manaOf, resourceCostsOf, spendResource, writeMana };
+export {
+	canSpendResource,
+	fixedResourceCost,
+	hpOf,
+	manaOf,
+	resourceCostsOf,
+	spendResource,
+	tempHpOf,
+	woundsOf,
+	writeMana,
+};

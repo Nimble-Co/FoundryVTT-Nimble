@@ -21,3 +21,11 @@ export interface ResourceCost {
 	/** The name of what the cost is for, for notices and the card. */
 	source?: string;
 }
+
+/** One cost of a use, as its chat card keeps it. */
+export interface CardResourceCost {
+	kind: ResourceCostKind;
+	amount: number;
+	/** The name of what the cost is for. */
+	source: string;
+}
