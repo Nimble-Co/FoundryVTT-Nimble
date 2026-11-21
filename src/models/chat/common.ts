@@ -56,6 +56,7 @@ export const costs = () => ({
 			}),
 			amount: new fields.NumberField({ required: true, nullable: false, initial: 0, min: 0 }),
 			source: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			roll: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),

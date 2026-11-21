@@ -77,6 +77,8 @@ export interface ItemActivationConfigDialogSubmitData {
 	 * Optional: the upcast dialog submits the same shape without it.
 	 */
 	consumedVariableCharges?: ConsumedChargePool[];
+	/** The amounts chosen for the item's variable Spend or Sacrifice costs, keyed by rule id. */
+	resourceAmounts?: Record<string, number>;
 	/** The condition ticks that were on, apart from `rollMode`. */
 	conditionRollModes?: ConditionRollMode[];
 	/** With Feature Effects off, the keys of the Held Changes the player ticked. */

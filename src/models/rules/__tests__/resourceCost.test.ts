@@ -22,3 +22,16 @@ describe('ResourceCostRule', () => {
 		expect(ResourceCostRule.worksOnEffects).toBe(false);
 	});
 });
+
+describe('ResourceCostRule variable mode', () => {
+	it('offers a variable mode, with a minimum and a maximum shown only for it', () => {
+		const schema = ResourceCostRule.defineSchema() as any;
+
+		expect(Object.keys(schema.spendMode.choices())).toEqual(['fixed', 'variable']);
+		for (const field of ['min', 'max']) {
+			expect(schema[field].options.showWhen({ spendMode: 'variable' })).toBe(true);
+			expect(schema[field].options.showWhen({ spendMode: 'fixed' })).toBe(false);
+		}
+		expect(schema.amount.options.showWhen({ spendMode: 'variable' })).toBe(false);
+	});
+});

@@ -39,7 +39,13 @@ import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
-import { resourceCostRefusal, resourceCostsOfUse } from '../utils/cost/itemResourceCosts.js';
+import {
+	hasResourceCostRules,
+	resourceCostRefusal,
+	resourceCostRollData,
+	resourceCostsOfUse,
+	settleResourceCosts,
+} from '../utils/cost/itemResourceCosts.js';
 import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
@@ -358,9 +364,15 @@ class ItemActivationManager {
 	 * @param item - The item being activated.
 	 * @param options - Configuration options for the activation.
 	 */
-	/** Warn about an unknown `@` reference in a formula of the item. `@spent` is set for this use. */
-	#checkNodeFormula(formula: string | undefined, spent: unknown): void {
-		checkFormulaReferences(formula, this.actor, { item: this.#item }, { extraRollData: { spent } });
+	/** Warn about an unknown `@` reference in a formula of the item. `@spent` and `@cost` are set for this use. */
+	#checkNodeFormula(formula: string | undefined, rollData: Record<string, unknown>): void {
+		const { spent, cost } = rollData;
+		checkFormulaReferences(
+			formula,
+			this.actor,
+			{ item: this.#item },
+			{ extraRollData: { spent, ...(cost ? { cost } : {}) } },
+		);
 	}
 
 	constructor(item: NimbleBaseItem, options: ItemActivationManager.ActivationOptions) {
@@ -439,6 +451,17 @@ class ItemActivationManager {
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
+
+		this.resourceCosts = await settleResourceCosts(
+			this.actor,
+			this.resourceCosts,
+			dialogData.resourceAmounts,
+		);
+		const settledRefusal = resourceCostRefusal(this.actor, this.resourceCosts);
+		if (settledRefusal) {
+			ui.notifications?.error(settledRefusal);
+			return { activation: null, rolls: null };
+		}
 
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
@@ -649,6 +672,9 @@ class ItemActivationManager {
 		const activationRollData = {
 			...(this.actor?.getRollData() ?? {}),
 			spent: this.#resolveSpentCharges(),
+			...(hasResourceCostRules(this.#item as never)
+				? { cost: resourceCostRollData(this.resourceCosts) }
+				: {}),
 		};
 		let foundDamageRoll = false;
 		// The primary damage node and its incoming-attack plan, resolved after the
@@ -740,7 +766,7 @@ class ItemActivationManager {
 					const isVicious = itemSystem.properties?.selected?.includes('vicious') ?? false;
 
 					// Use modified formula if provided
-					this.#checkNodeFormula(dialogData.rollFormula || node.formula, activationRollData.spent);
+					this.#checkNodeFormula(dialogData.rollFormula || node.formula, activationRollData);
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
 					// Apply damage bonuses filtered by delivery, source, damage type, and target
@@ -917,7 +943,7 @@ class ItemActivationManager {
 						formula = this.#applyHealingBonus(formula, healingBonus);
 					}
 
-					this.#checkNodeFormula(node.formula, activationRollData.spent);
+					this.#checkNodeFormula(node.formula, activationRollData);
 					// The extra `spent` key widens the roll data past Roll's default
 					// EmptyObject parameter, which the two types will not narrow between.
 					roll = new Roll(formula, activationRollData) as unknown as Roll;
@@ -1608,10 +1634,13 @@ class ItemActivationManager {
 			return null;
 		}
 
-		// A variable charge spend has no sensible default — the amount is the
+		// A variable charge or resource spend has no sensible default — the amount is the
 		// player's input — so an item that asks for one always gets the dialog.
 		// The same holds for the enhancement a pinned upcast picks from a list.
-		const mustPrompt = this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice();
+		const mustPrompt =
+			this.#hasVariableChargeSpend() ||
+			this.#hasPinnedUpcastChoice() ||
+			this.resourceCosts.some((cost) => cost.spend.mode === 'variable');
 
 		if (!hasRolls && !isSpell && !mustPrompt && !this.#offersFreeUse()) {
 			// No rolls needed, use default
@@ -1929,6 +1958,11 @@ namespace ItemActivationManager {
 		 * player's choice.
 		 */
 		consumedVariableCharges?: Array<{ poolId: string; count: number }>;
+		/**
+		 * The amounts the player chose for the item's variable Spend or Sacrifice costs, keyed by
+		 * the cost's rule id. The formulas read them in `@cost`.
+		 */
+		resourceAmounts?: Record<string, number>;
 		/**
 		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
 		 * grants a specific damage type). Each becomes its own damage effect so the

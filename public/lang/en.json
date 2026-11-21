@@ -2183,14 +2183,23 @@
 				},
 				"spendMode": {
 					"label": "Spend mode",
-					"hint": "Fixed takes the amount on every use.",
+					"hint": "Fixed takes the amount on every use. Variable asks the player for the amount in the roll window, from the minimum up to the maximum and what the creature has. The item's formulas read the amount as @cost.mana, @cost.hp, @cost.tempHp or @cost.wounds.",
 					"choices": {
-						"fixed": "Fixed"
+						"fixed": "Fixed",
+						"variable": "Variable"
 					}
 				},
 				"amount": {
 					"label": "Amount",
-					"hint": "How much each use takes: a number or a formula, such as 3 or @level."
+					"hint": "How much each use takes: a number, a formula or a roll, such as 3, @level or 1d4. A roll is rolled at each use, and the use needs room for its lowest result."
+				},
+				"min": {
+					"label": "Minimum",
+					"hint": "The least the player can choose: a number or a formula."
+				},
+				"max": {
+					"label": "Maximum",
+					"hint": "The most the player can choose: a number or a formula, such as @will."
 				}
 			},
 			"diceConsumer": {
@@ -3996,6 +4005,7 @@
 		},
 		"resourceCosts": {
 			"cardLine": "Cost: {cost} ({source})",
+			"cardLineRolled": "Cost: {cost} ({roll}, {source})",
 			"card": {
 				"mana": "{amount} mana",
 				"hp": "{amount} HP",
@@ -5587,6 +5597,17 @@
 		},
 		"activationDialog": {
 			"spendPoolDice": "Spend Pool Dice",
+			"resourceCost": {
+				"heading": "Cost",
+				"label": {
+					"mana": "Mana to spend",
+					"tempHp": "Temp HP to spend",
+					"hp": "HP to sacrifice",
+					"wounds": "Wounds to sacrifice"
+				},
+				"increment": "One more: {label}",
+				"decrement": "One less: {label}"
+			},
 			"spendCharge": {
 				"increment": "Spend one more from {pool}",
 				"decrement": "Spend one less from {pool}",

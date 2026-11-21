@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ResourceCostKind } from '#types/resourceCost.d.ts';
+import { testDependencies } from '../../../managers/ItemActivationManager.js';
 import { ResourceCostRule } from '../../../models/rules/resourceCost.js';
 import { NimbleFeatureItem } from '../feature.js';
 import { NimbleSpellItem } from '../spell.js';
@@ -34,7 +35,7 @@ function hero(options: HeroOptions = {}) {
 				wounds: { value: options.wounds ?? 0, max: options.maxWounds ?? 6 },
 			},
 		},
-		getRollData: () => ({}),
+		getRollData: () => ({ will: 3 }),
 		getDomain: () => new Set<string>(),
 		getActiveTokens: () => [],
 		update: vi.fn(async (changes: Record<string, unknown>) => {
@@ -48,7 +49,12 @@ function hero(options: HeroOptions = {}) {
 
 type Hero = ReturnType<typeof hero>;
 
-function costRule(item: object, kind: ResourceCostKind, amount: string) {
+interface Variable {
+	min: string;
+	max: string;
+}
+
+function costRule(item: object, kind: ResourceCostKind, amount: string, variable?: Variable) {
 	const rule = new ResourceCostRule({ type: 'resourceCost' } as never, { strict: false });
 	Object.assign(rule, {
 		id: `cost-${kind}`,
@@ -56,7 +62,9 @@ function costRule(item: object, kind: ResourceCostKind, amount: string) {
 		disabled: false,
 		kind,
 		amount,
-		spendMode: 'fixed',
+		spendMode: variable ? 'variable' : 'fixed',
+		min: variable?.min ?? '',
+		max: variable?.max ?? '',
 	});
 	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
 	Object.defineProperty(rule, 'predicate', {
@@ -66,7 +74,7 @@ function costRule(item: object, kind: ResourceCostKind, amount: string) {
 	return rule;
 }
 
-type Cost = [ResourceCostKind, string];
+type Cost = [ResourceCostKind, string] | [ResourceCostKind, string, Variable];
 
 function itemOf(
 	prototype: object,
@@ -89,14 +97,16 @@ function itemOf(
 		prepareChatCardData: vi.fn(async () => ({})),
 		...extra,
 	});
-	item.rules = new Map(costs.map(([kind, amount]) => [kind, costRule(item, kind, amount)]));
+	item.rules = new Map(
+		costs.map(([kind, amount, variable]) => [kind, costRule(item, kind, amount, variable)]),
+	);
 	return item;
 }
 
-function feature(actor: Hero, name: string, costs: Cost[]) {
+function feature(actor: Hero, name: string, costs: Cost[], effects: unknown[] = []) {
 	return itemOf(NimbleFeatureItem.prototype, actor, name, costs, {
 		type: 'feature',
-		system: { activation: { effects: [] }, description: '', class: '' },
+		system: { activation: { effects }, description: '', class: '' },
 	});
 }
 
@@ -127,8 +137,24 @@ function setResourceSpending(on: boolean): void {
 
 let saved: Record<string, unknown>;
 
+const dialog = {
+	result: { rollMode: 0 } as Record<string, unknown> | null,
+	opened: [] as Array<Record<string, unknown>>,
+};
+
+function FakeActivationDialog(_actor: unknown, _item: unknown, _title: string, data: object) {
+	dialog.opened.push(data as Record<string, unknown>);
+	return { render: async () => undefined, promise: Promise.resolve(dialog.result) };
+}
+
 beforeEach(() => {
-	saved = { settings: globals.game.settings };
+	saved = {
+		settings: globals.game.settings,
+		ItemActivationConfigDialog: testDependencies.ItemActivationConfigDialog,
+	};
+	dialog.result = { rollMode: 0 };
+	dialog.opened = [];
+	testDependencies.ItemActivationConfigDialog = FakeActivationDialog as never;
 	setResourceSpending(true);
 	(Hooks.call as ReturnType<typeof vi.fn>).mockReturnValue(true);
 	globals.ChatMessage.getSpeaker = vi.fn(() => ({}));
@@ -140,6 +166,8 @@ beforeEach(() => {
 
 afterEach(() => {
 	globals.game.settings = saved.settings;
+	testDependencies.ItemActivationConfigDialog = saved.ItemActivationConfigDialog as never;
+	vi.mocked(Roll).mockReset();
 });
 
 function notices(): string[] {
@@ -303,5 +331,161 @@ describe('casting a spell with a Spend or Sacrifice cost', () => {
 
 		expect(actor.system.attributes.hp.value).toBe(20);
 		expect(item._createActivationCard).not.toHaveBeenCalled();
+	});
+});
+
+describe('using a feature with a variable Spend or Sacrifice cost', () => {
+	const upToWill: Cost = ['mana', '1', { min: '1', max: '@will' }];
+
+	it('asks for the amount and spends what the player chose', async () => {
+		const actor = hero({ mana: 5 });
+		const item = feature(actor, 'Supercharge', [upToWill]);
+		dialog.result = { rollMode: 0, resourceAmounts: { 'cost-mana': 3 } };
+
+		await item.activate();
+
+		expect(dialog.opened).toHaveLength(1);
+		expect(actor.system.resources.mana.current).toBe(2);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 3, source: 'Supercharge' },
+		]);
+	});
+
+	it("gives the chosen amount to the item's formulas as @cost, and keeps @spent for charges", async () => {
+		const actor = hero({ mana: 5 });
+		const healing = { id: 'heal', type: 'healing', healingType: 'healing', formula: '@cost.mana' };
+		const item = feature(actor, 'Supercharge', [upToWill], [healing]);
+		dialog.result = { rollMode: 0, resourceAmounts: { 'cost-mana': 2 } };
+
+		await item.activate();
+
+		const healingRoll = vi.mocked(Roll).mock.calls.find(([formula]) => formula === '@cost.mana');
+		expect(healingRoll?.[1]).toMatchObject({
+			spent: 0,
+			cost: { mana: 2, hp: 0, tempHp: 0, wounds: 0 },
+		});
+	});
+
+	it('takes no more than the creature has when the amount changed while the dialog waited', async () => {
+		const actor = hero({ mana: 2 });
+		const item = feature(actor, 'Supercharge', [upToWill]);
+		dialog.result = { rollMode: 0, resourceAmounts: { 'cost-mana': 3 } };
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(0);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 2, source: 'Supercharge' },
+		]);
+	});
+
+	it('refuses the use when the creature has less than the minimum', async () => {
+		const actor = hero({ mana: 1 });
+		const item = feature(actor, 'Supercharge', [['mana', '2', { min: '2', max: '@will' }]]);
+
+		await item.activate();
+
+		expect(dialog.opened).toHaveLength(0);
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Supercharge needs 2 mana. You have 1.']);
+	});
+
+	it('with Resource Spending off, still asks, spends nothing, and the amount reaches the card', async () => {
+		setResourceSpending(false);
+		const actor = hero({ mana: 0 });
+		const item = feature(actor, 'Supercharge', [upToWill]);
+		dialog.result = { rollMode: 0, resourceAmounts: { 'cost-mana': 3 } };
+
+		await item.activate();
+
+		expect(dialog.opened).toHaveLength(1);
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 3, source: 'Supercharge' },
+		]);
+	});
+});
+
+describe('using a feature with a rolled Spend or Sacrifice cost', () => {
+	/** A 1d4 that rolls `result`; its lowest result is 1. */
+	function rollsOn1d4(result: number) {
+		vi.mocked(Roll).mockImplementation(((formula: string) => {
+			if (formula !== '1d4') return undefined;
+			const roll = {
+				formula,
+				total: undefined as number | undefined,
+				evaluateSync: ({ minimize = false } = {}) => {
+					roll.total = minimize ? 1 : result;
+					return roll;
+				},
+				evaluate: async () => {
+					roll.total = result;
+					return roll;
+				},
+			};
+			return roll;
+		}) as never);
+	}
+
+	it('rolls the Wounds at use and the card shows the roll', async () => {
+		rollsOn1d4(3);
+		const actor = hero({ wounds: 1, maxWounds: 6 });
+		const item = feature(actor, 'Enveloped', [['wounds', '1d4']]);
+
+		await item.activate();
+
+		expect(actor.system.attributes.wounds.value).toBe(4);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'wounds', amount: 3, source: 'Enveloped', roll: '1d4' },
+		]);
+	});
+
+	it('is checked against its lowest result before the roll', async () => {
+		rollsOn1d4(3);
+		const actor = hero({ wounds: 6, maxWounds: 6 });
+		const item = feature(actor, 'Enveloped', [['wounds', '1d4']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Enveloped needs room for 1 more Wound. You have room for 0.']);
+	});
+
+	it('refuses a roll that would pass the maximum Wounds, and takes nothing', async () => {
+		rollsOn1d4(3);
+		const actor = hero({ wounds: 4, maxWounds: 6 });
+		const item = feature(actor, 'Enveloped', [['wounds', '1d4']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Enveloped needs room for 3 more Wounds. You have room for 2.']);
+	});
+
+	it('with Resource Spending off, still rolls and shows the roll, and gives no Wounds', async () => {
+		setResourceSpending(false);
+		rollsOn1d4(4);
+		const actor = hero({ wounds: 6, maxWounds: 6 });
+		const item = feature(actor, 'Enveloped', [['wounds', '1d4']]);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'wounds', amount: 4, source: 'Enveloped', roll: '1d4' },
+		]);
+	});
+});
+
+describe('using a feature with a formula Spend or Sacrifice cost', () => {
+	it("reads the formula against the creature's roll data", async () => {
+		const actor = hero({ mana: 5 });
+		const item = feature(actor, 'Will Drain', [['mana', '@will']]);
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(2);
+		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'mana', amount: 3, source: 'Will Drain' }]);
 	});
 });

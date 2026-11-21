@@ -3,7 +3,9 @@ import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const RESOURCE_COST_KINDS = ['mana', 'hp', 'tempHp', 'wounds'] as const;
-const RESOURCE_COST_SPEND_MODES = ['fixed'] as const;
+const RESOURCE_COST_SPEND_MODES = ['fixed', 'variable'] as const;
+
+const isVariable = (data: Record<string, unknown>) => data.spendMode === 'variable';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -45,6 +47,29 @@ function schema() {
 				label: 'NIMBLE.rules.resourceCost.amount.label',
 				hint: 'NIMBLE.rules.resourceCost.amount.hint',
 				widget: 'formula',
+				showWhen: (data: Record<string, unknown>) => !isVariable(data),
+			}),
+		),
+		min: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1',
+				label: 'NIMBLE.rules.resourceCost.min.label',
+				hint: 'NIMBLE.rules.resourceCost.min.hint',
+				widget: 'formula',
+				showWhen: isVariable,
+			}),
+		),
+		max: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1',
+				label: 'NIMBLE.rules.resourceCost.max.label',
+				hint: 'NIMBLE.rules.resourceCost.max.hint',
+				widget: 'formula',
+				showWhen: isVariable,
 			}),
 		),
 		type: new fields.StringField({
@@ -71,8 +96,14 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 
 	declare spendMode: (typeof RESOURCE_COST_SPEND_MODES)[number];
 
-	/** A number or a formula. */
+	/** A number, a formula or a roll such as `1d4`. Fixed mode only. */
 	declare amount: string;
+
+	/** The least a variable cost takes, as a formula. */
+	declare min: string;
+
+	/** The most a variable cost takes, as a formula. */
+	declare max: string;
 
 	static override defineSchema(): ResourceCostRule.Schema {
 		return {
@@ -81,24 +112,45 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 		};
 	}
 
-	/** The cost of one use, for the cost ledger, with its formula read now. */
+	/**
+	 * The cost of one use, for the cost ledger, with its formulas read now. A roll stays as
+	 * text, to be rolled when the item is used.
+	 */
 	get resourceCost(): ResourceCost {
-		const amount = Number(this.resolveFormula(String(this.amount ?? '').trim()) ?? 0);
-		return {
+		const cost = {
 			kind: this.kind,
-			amount: Number.isFinite(amount) ? Math.max(0, amount) : 0,
-			spend: { mode: 'fixed' },
-			beyond: 'notAllowed',
+			beyond: 'notAllowed' as const,
 			source: this.parentItem?.name ?? '',
+			id: this.id,
 		};
+		if (this.spendMode === 'variable') {
+			const min = this.#amountOf(this.min);
+			return {
+				...cost,
+				amount: min,
+				spend: { mode: 'variable', min: String(min), max: String(this.#amountOf(this.max)) },
+			};
+		}
+		const text = String(this.amount ?? '').trim();
+		if (this.isDiceExpression(text)) {
+			return { ...cost, amount: this.withStacks(text), spend: { mode: 'fixed' } };
+		}
+		return { ...cost, amount: this.#amountOf(text), spend: { mode: 'fixed' } };
+	}
+
+	#amountOf(formula: string): number {
+		const amount = Number(this.resolveFormula(String(formula ?? '').trim()) ?? 0);
+		return Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
 	}
 
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
 				['kind', '"mana" | "hp" | "tempHp" | "wounds"'],
-				['spendMode', '"fixed"'],
+				['spendMode', '"fixed" | "variable"'],
 				['amount', 'string'],
+				['min', 'string'],
+				['max', 'string'],
 			]),
 		);
 	}

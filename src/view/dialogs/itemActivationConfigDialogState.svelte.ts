@@ -18,6 +18,7 @@ import {
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
+import { variableRangeOf } from '#utils/cost/resourceCost.js';
 import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
@@ -66,13 +67,48 @@ export function createItemActivationConfigDialogState(
 	options: CreateItemActivationConfigDialogStateOptions,
 ) {
 	const { initialRollMode = 0, hideRollsDefault } = options;
-	const costParts = rollWindowCostParts(options.resourceCosts ?? []);
-	const spendLine = rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
 
 	// Snapshot actor and item at dialog-open time — pools reflect what is
 	// available when the player initiates the roll, not mid-dialog changes.
 	const actor = options.actor();
 	const item = options.item();
+
+	const resourceCosts = options.resourceCosts ?? [];
+	const resourceRanges = resourceCosts.flatMap((cost) => {
+		const range = cost.id ? variableRangeOf(actor, cost) : null;
+		return range ? [{ id: cost.id as string, kind: cost.kind, ...range }] : [];
+	});
+	let resourceAmounts = $state<Record<string, number>>(
+		Object.fromEntries(resourceRanges.map((range) => [range.id, range.minimum])),
+	);
+
+	function setResourceAmount(id: string, value: number) {
+		const range = resourceRanges.find((candidate) => candidate.id === id);
+		if (!range) return;
+		const next = Number.isFinite(value) ? Math.floor(value) : range.minimum;
+		resourceAmounts = { ...resourceAmounts, [id]: Math.clamp(next, range.minimum, range.limit) };
+	}
+
+	function adjustResourceAmount(id: string, delta: number) {
+		const range = resourceRanges.find((candidate) => candidate.id === id);
+		if (!range) return;
+		setResourceAmount(id, (resourceAmounts[id] ?? range.minimum) + delta);
+	}
+
+	const variableResourceCosts = $derived(
+		resourceRanges.map((range) => ({
+			...range,
+			amount: resourceAmounts[range.id] ?? range.minimum,
+		})),
+	);
+
+	const spendLine = $derived.by(() => {
+		const chosen = resourceCosts.map((cost) =>
+			cost.id && cost.id in resourceAmounts ? { ...cost, amount: resourceAmounts[cost.id] } : cost,
+		);
+		const costParts = rollWindowCostParts(chosen);
+		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
+	});
 
 	const attackDelivery: AttackDelivery = getAttackDeliveryFromActivation(item);
 
@@ -490,7 +526,17 @@ export function createItemActivationConfigDialogState(
 			usesKeptAmount = value;
 		},
 		maxDamageOffers: maxDamage,
-		spendLine,
+		get spendLine() {
+			return spendLine;
+		},
+		get variableResourceCosts() {
+			return variableResourceCosts;
+		},
+		get resourceAmounts() {
+			return resourceAmounts;
+		},
+		setResourceAmount,
+		adjustResourceAmount,
 		offersLessMana,
 		dualWieldOffer,
 		get dualWield() {

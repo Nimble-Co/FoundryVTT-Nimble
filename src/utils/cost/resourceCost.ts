@@ -25,6 +25,34 @@ function fixedAmountOf(cost: ResourceCost): number | null {
 	return Number.isFinite(amount) ? Math.max(0, amount) : null;
 }
 
+/** A cost whose amount is a roll, such as `1d4`, not yet rolled. */
+function isRolledCost(cost: ResourceCost): boolean {
+	return (
+		cost.spend.mode === 'fixed' &&
+		typeof cost.amount === 'string' &&
+		cost.amount.trim() !== '' &&
+		!Number.isFinite(Number(cost.amount))
+	);
+}
+
+function rollOf(actor: CostPayer, formula: string) {
+	return new Roll(formula, (actor?.getRollData?.() ?? {}) as Record<string, unknown>);
+}
+
+function wholeAmount(value: unknown): number {
+	const amount = Math.floor(Number(value));
+	return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+}
+
+/** The least the cost can take: a variable cost's minimum, or a roll's lowest result. */
+function lowestAmountOf(actor: CostPayer, cost: ResourceCost): number | null {
+	if (cost.spend.mode === 'variable') return wholeAmount(cost.spend.min);
+	if (isRolledCost(cost)) {
+		return wholeAmount(rollOf(actor, String(cost.amount)).evaluateSync({ minimize: true }).total);
+	}
+	return fixedAmountOf(cost);
+}
+
 function manaOf(actor: CostPayer): number {
 	return Number(foundry.utils.getProperty(actor ?? {}, 'system.resources.mana.current') ?? 0);
 }
@@ -45,27 +73,73 @@ function tempHpOf(actor: CostPayer): number {
 	return Number(foundry.utils.getProperty(actor ?? {}, ACTOR_TEMP_HP_PATH) ?? 0);
 }
 
-function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number): boolean {
+/** The most of a kind the creature can spend or sacrifice: HP keeps 1, Wounds stop at the max. */
+function availableOf(actor: CostPayer, kind: ResourceCostKind): number {
 	switch (kind) {
 		case 'mana':
-			return manaOf(actor) >= amount;
+			return manaOf(actor);
 		case 'hp':
-			return hpOf(actor) > amount;
+			return Math.max(0, hpOf(actor) - 1);
 		case 'tempHp':
-			return tempHpOf(actor) >= amount;
+			return tempHpOf(actor);
 		case 'wounds': {
 			const wounds = woundsOf(actor);
-			return !!wounds && wounds.value + amount <= wounds.max;
+			return wounds ? Math.max(0, wounds.max - wounds.value) : 0;
 		}
 	}
 }
 
-/** Whether the creature can cover the cost now. With Resource Spending off, every cost can. */
+function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number): boolean {
+	return availableOf(actor, kind) >= amount;
+}
+
+/**
+ * Whether the creature can cover the cost now, by its lowest amount. With Resource Spending
+ * off, every cost can.
+ */
 function canSpendResource(actor: CostPayer, cost: ResourceCost): boolean {
 	if (!isResourceSpendingAutomationEnabled()) return true;
-	const amount = fixedAmountOf(cost);
+	const amount = lowestAmountOf(actor, cost);
 	if (amount === null) return false;
 	return amount === 0 || hasEnough(actor, cost.kind, amount);
+}
+
+/**
+ * The range a player can choose a variable cost from. The top is the max formula, and also
+ * what the creature has while Resource Spending is on. Null for a cost that is not variable.
+ */
+function variableRangeOf(
+	actor: CostPayer,
+	cost: ResourceCost,
+): { minimum: number; limit: number } | null {
+	if (cost.spend.mode !== 'variable') return null;
+	const minimum = wholeAmount(cost.spend.min);
+	const max = wholeAmount(cost.spend.max);
+	const limit = isResourceSpendingAutomationEnabled()
+		? Math.min(max, availableOf(actor, cost.kind))
+		: max;
+	return { minimum, limit: Math.max(minimum, limit) };
+}
+
+/**
+ * The cost with its amount fixed for this use: a variable cost takes the chosen amount inside
+ * its range, and a roll is rolled now. The ledger then checks and spends it as a fixed cost.
+ */
+async function settleResourceCost(
+	actor: CostPayer,
+	cost: ResourceCost,
+	chosen?: number,
+): Promise<ResourceCost> {
+	const range = variableRangeOf(actor, cost);
+	if (range) {
+		const amount = Math.min(range.limit, Math.max(range.minimum, wholeAmount(chosen ?? 0)));
+		return { ...cost, amount, spend: { mode: 'fixed' } };
+	}
+	if (isRolledCost(cost)) {
+		const roll = await rollOf(actor, String(cost.amount)).evaluate();
+		return { ...cost, amount: wholeAmount(roll.total), roll: String(cost.amount) };
+	}
+	return cost;
 }
 
 /**
@@ -106,10 +180,14 @@ export {
 	canSpendResource,
 	fixedResourceCost,
 	hpOf,
+	isRolledCost,
+	lowestAmountOf,
 	manaOf,
 	resourceCostsOf,
+	settleResourceCost,
 	spendResource,
 	tempHpOf,
+	variableRangeOf,
 	woundsOf,
 	writeMana,
 };

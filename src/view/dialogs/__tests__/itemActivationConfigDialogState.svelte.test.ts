@@ -591,3 +591,93 @@ describe('the activation dialog spend line', () => {
 		expect(open({}).spendLine).toBe('');
 	});
 });
+
+describe('the activation dialog amount of a variable cost', () => {
+	const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+	let realSettings: unknown;
+
+	afterEach(() => {
+		gameGlobal.game.settings = realSettings;
+	});
+
+	function variable(kind: 'mana' | 'hp', min: number, max: number) {
+		return {
+			kind,
+			amount: min,
+			spend: { mode: 'variable' as const, min: String(min), max: String(max) },
+			beyond: 'notAllowed' as const,
+			source: 'Supercharge',
+			id: `cost-${kind}`,
+		};
+	}
+
+	function open(
+		resourceCosts: ReturnType<typeof variable>[],
+		{ mana = 4, hp = 10, resourceSpending = true } = {},
+	) {
+		realSettings = gameGlobal.game.settings;
+		gameGlobal.game.settings = {
+			get: (_scope: string, key: string) =>
+				key === 'automation.resourceSpending' ? resourceSpending : true,
+		};
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({
+					rules: [],
+					system: {
+						resources: { mana: { current: mana } },
+						attributes: { hp: { value: hp, temp: 0 }, wounds: { value: 0, max: 6 } },
+					},
+					items: [],
+					getFlag: () => undefined,
+				}) as never,
+			item: () => ({ type: 'feature', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+			resourceCosts,
+		});
+	}
+
+	it('opens at the minimum, and stops at the max or at what the creature has', () => {
+		expect(open([variable('mana', 1, 3)], { mana: 7 }).variableResourceCosts).toEqual([
+			{ id: 'cost-mana', kind: 'mana', minimum: 1, limit: 3, amount: 1 },
+		]);
+		expect(open([variable('mana', 1, 5)], { mana: 2 }).variableResourceCosts).toEqual([
+			{ id: 'cost-mana', kind: 'mana', minimum: 1, limit: 2, amount: 1 },
+		]);
+	});
+
+	it('keeps 1 HP: an HP amount stops at current HP - 1', () => {
+		expect(open([variable('hp', 1, 20)], { hp: 8 }).variableResourceCosts[0]?.limit).toBe(7);
+	});
+
+	it('with Resource Spending off, stops only at the max', () => {
+		const state = open([variable('mana', 1, 5)], { mana: 0, resourceSpending: false });
+		expect(state.variableResourceCosts[0]?.limit).toBe(5);
+	});
+
+	it('steps inside the range, and the spend line and the submitted amount follow', () => {
+		const state = open([variable('mana', 1, 3)], { mana: 7 });
+		expect(state.spendLine).toBe('When you roll, it spends 1 Mana.');
+
+		state.adjustResourceAmount('cost-mana', 1);
+		state.adjustResourceAmount('cost-mana', 1);
+		state.adjustResourceAmount('cost-mana', 1);
+		expect(state.resourceAmounts).toEqual({ 'cost-mana': 3 });
+		expect(state.spendLine).toBe('When you roll, it spends 3 Mana.');
+
+		state.setResourceAmount('cost-mana', 0);
+		expect(state.resourceAmounts).toEqual({ 'cost-mana': 1 });
+	});
+
+	it('names a rolled cost by its roll', () => {
+		const rolled = {
+			kind: 'wounds' as const,
+			amount: '1d4',
+			spend: { mode: 'fixed' as const },
+			beyond: 'notAllowed' as const,
+			source: 'Enveloped',
+		};
+		expect(open([rolled as never]).spendLine).toBe('When you roll, you sacrifice 1d4 Wounds.');
+	});
+});

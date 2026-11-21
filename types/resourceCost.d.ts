@@ -6,7 +6,10 @@ export type ResourceCostKind = 'mana' | 'hp' | 'tempHp' | 'wounds';
 /** A number, a formula such as `@abilities.will.mod`, or a roll such as `1d4`. */
 export type ResourceCostAmount = number | string;
 
-/** A fixed cost takes its amount; a variable one lets the player choose between min and max. */
+/**
+ * A fixed cost takes its amount; a variable one lets the player choose between min and max,
+ * which are formulas.
+ */
 export type ResourceCostSpend = { mode: 'fixed' } | { mode: 'variable'; min: string; max: string };
 
 /** What a use that needs more than the creature has does. */
@@ -20,7 +23,14 @@ export interface ResourceCost {
 	beyond: UsingBeyondWhatYouHave;
 	/** The name of what the cost is for, for notices and the card. */
 	source?: string;
+	/** The rule the cost comes from, which keys the amount the player chose. */
+	id?: string;
+	/** The roll a rolled amount came from, once it is rolled. */
+	roll?: string;
 }
+
+/** What one use spent or sacrificed of each kind, as the item's formulas read it in `@cost`. */
+export type ResourceCostRollData = Record<ResourceCostKind, number>;
 
 /** One cost of a use, as its chat card keeps it. */
 export interface CardResourceCost {
@@ -28,4 +38,6 @@ export interface CardResourceCost {
 	amount: number;
 	/** The name of what the cost is for. */
 	source: string;
+	/** The roll of a rolled amount, such as `1d4`. */
+	roll?: string;
 }
