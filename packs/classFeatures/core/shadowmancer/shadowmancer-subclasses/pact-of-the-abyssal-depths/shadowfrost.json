@@ -6,7 +6,44 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "useOption",
+				"disabled": false,
+				"id": "shadowfrost-option",
+				"identifier": "",
+				"label": "Shadowfrost",
+				"predicate": {},
+				"priority": 1,
+				"target": "spell",
+				"tieredOnly": false,
+				"singleTargetOnly": false,
+				"schools": [],
+				"spells": [
+					"cryosleep",
+					"rimeblades"
+				],
+				"kind": "tempHp",
+				"spendMode": "fixed",
+				"amount": "10",
+				"min": "1",
+				"max": "1",
+				"beyond": "notAllowed",
+				"chargePoolIdentifier": "",
+				"actionDelta": 0,
+				"actionMinimum": 0,
+				"rangePerMana": 0,
+				"cardNote": "",
+				"damageTypes": [],
+				"manaDelta": 0,
+				"manaMinimum": 0,
+				"freeCopy": false,
+				"replacesSpellCost": true,
+				"manaSet": null,
+				"effectId": "",
+				"picks": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
