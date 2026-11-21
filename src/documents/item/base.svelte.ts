@@ -35,7 +35,7 @@ import {
 } from '../../utils/actor/concentration.js';
 import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
 import { giveBack, spendResourceCosts } from '../../utils/cost/costLedger.js';
-import { resourceCostRefusal } from '../../utils/cost/itemResourceCosts.js';
+import { refuseResourceCosts } from '../../utils/cost/itemResourceCosts.js';
 import { applyBeyondConsequence } from '../../utils/cost/resourceCost.js';
 import { cardCostsOf } from '../../utils/cost/resourceCostWords.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
@@ -592,8 +592,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			confirmBeyond: (costs) => confirmUsingBeyond(this.actor, costs),
 		});
 		if (!spent) {
-			const refusal = resourceCostRefusal(this.actor, manager.resourceCosts);
-			if (refusal) ui.notifications?.error(refusal);
+			refuseResourceCosts(this.actor, manager.resourceCosts);
 			return null;
 		}
 		return { receipts: [spent.receipt], taken: spent.taken, beyond: spent.beyond };

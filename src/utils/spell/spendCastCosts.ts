@@ -4,7 +4,7 @@ import type { CastCostPayer, ResolvedSpellCost, SpellCostFailure } from '#types/
 import type { PoolUse } from '#types/useOption.d.ts';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { giveBack, receiptOf, recordTaken, spendMana } from '../cost/costLedger.js';
-import { resourceCostRefusal } from '../cost/itemResourceCosts.js';
+import { notEnoughNotice, resourceCostRefusal } from '../cost/itemResourceCosts.js';
 import { emptyPoolNotice, spendPoolUses } from '../cost/poolUses.js';
 import { fixedAmountOf, goesBeyond, manaOf, spendResource } from '../cost/resourceCost.js';
 import { applyOverdraftConsequence } from './spellCost.js';
@@ -65,8 +65,8 @@ function manaShares(available: number, costs: readonly ResourceCost[]) {
 }
 
 /**
- * Why the cast cannot go ahead now, or null when it can. The spell mana and the mana of the
- * other costs are checked as one total.
+ * Why the cast cannot go ahead now, or null when it can. The spell's own cost is checked first.
+ * Then each mana cost that cannot go beyond is checked against the mana left after the spell.
  */
 function castRefusal(
 	actor: CastCostPayer,
@@ -74,22 +74,14 @@ function castRefusal(
 	costs: readonly ResourceCost[],
 	pools: readonly PoolUse[],
 ): { failure?: SpellCostFailure; notice?: string; overdrawn?: boolean; available?: number } | null {
-	const spellMana = cost.type === 'mana' ? cost.amount : 0;
-	const plainMana = plainManaOf(costs);
-	const total: ResolvedSpellCost =
-		cost.type === 'mana' ? { type: 'mana', amount: spellMana + plainMana } : cost;
-	const validation = validateSpellCost(actor, total);
+	const validation = validateSpellCost(actor, cost);
 	if (!validation.ok) return { failure: validation.failure };
-	if (cost.type !== 'mana' && plainMana > manaOf(actor)) {
-		return {
-			failure: {
-				code: 'insufficientMana',
-				poolIdentifier: 'mana',
-				poolLabel: 'mana',
-				required: plainMana,
-				available: manaOf(actor),
-			},
-		};
+	let left = Math.max(0, manaOf(actor) - (cost.type === 'mana' ? cost.amount : 0));
+	for (const each of costs) {
+		const amount = fixedMana(each);
+		if (amount === null || each.beyond !== 'notAllowed') continue;
+		if (amount > left) return { notice: notEnoughNotice(actor, each, left) };
+		left -= amount;
 	}
 	const notice =
 		resourceCostRefusal(

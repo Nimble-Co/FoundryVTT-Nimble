@@ -17,7 +17,7 @@ export interface UseOption {
 	/** What the option costs, with its formulas read. */
 	cost: ResourceCost;
 	/** The Charge Pool whose uses the option spends, or '' for none. */
-	poolIdentifier: string;
+	chargePoolIdentifier: string;
 	actionCostChange: ActionCostChange | null;
 	/** Range added for each of the amount the option spends. */
 	rangePerMana: number;

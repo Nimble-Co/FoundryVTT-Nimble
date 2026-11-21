@@ -40,7 +40,6 @@ import { keyPressStore } from '../stores/keyPressStore.js';
 import { buildTargetDomain } from '../utils/actor/conditionalBonuses.js';
 import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.js';
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
-import { withActionCostChange } from '../utils/combat/withActionCostChange.js';
 import {
 	hasResourceCostRules,
 	refuseResourceCosts,
@@ -114,9 +113,9 @@ import {
 import {
 	type ChosenUseOptions,
 	chosenCastCostChange,
-	chosenManaCostChanges,
 	noChosenUseOptions,
 	settleChosenUseOptions,
+	spellManaWithOptions,
 	spellUseOptionGroups,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
@@ -438,11 +437,7 @@ class ItemActivationManager {
 			// Checked on every activation path, not just the dialog, so a macro or
 			// a spell without a tier control cannot cast above the caster's ladder.
 			if (exceedsUnlockedSpellTier(this.actor, this.#item)) {
-				ui.notifications?.warn(
-					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
-						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
-					}),
-				);
+				this.#warnAboveUnlockedTier();
 				return { activation: null, rolls: null };
 			}
 
@@ -579,11 +574,13 @@ class ItemActivationManager {
 			}
 		}
 
-		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
-
-		if (castCostChange.manaSet !== null && this.spellCost?.type === 'mana') {
-			this.spellCost = { type: 'mana', amount: castCostChange.manaSet };
+		// An option goes only with a cast at a tier the caster has unlocked, on every path.
+		if ((dialogData.useOptions?.length ?? 0) > 0 && this.#castsAboveUnlockedTier()) {
+			this.#warnAboveUnlockedTier();
+			return { activation: null, rolls: null };
 		}
+
+		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
 		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
 			this.spellCost = { type: 'none' };
@@ -597,10 +594,7 @@ class ItemActivationManager {
 		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
 			this.spellCost = {
 				...this.spellCost,
-				amount: chosenManaCostChanges(this.useOptionGroups, dialogData.useOptions).reduce(
-					withActionCostChange,
-					this.spellCost.amount,
-				),
+				amount: spellManaWithOptions(this.spellCost.amount, castCostChange),
 			};
 		}
 		if (castCostChange.replacesSpellCost) this.spellCost = { type: 'none' };
@@ -1782,6 +1776,23 @@ class ItemActivationManager {
 			actor as unknown as CharacterActorLike,
 			this.#item as unknown as RuleBackedItem,
 		);
+	}
+
+	#warnAboveUnlockedTier(): void {
+		ui.notifications?.warn(
+			localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
+				maxTier: String(this.actor?.system?.resources?.highestUnlockedSpellTier ?? 0),
+			}),
+		);
+	}
+
+	/** Whether the spell casts at a tier above the highest the caster has unlocked. */
+	#castsAboveUnlockedTier(): boolean {
+		if (this.#item.type !== 'spell') return false;
+		const unlocked = this.actor?.system?.resources?.highestUnlockedSpellTier;
+		if (unlocked === null || unlocked === undefined) return false;
+		const tier = this.upcastResult?.manaSpent ?? (this.#item.system as { tier?: number }).tier ?? 0;
+		return tier > 0 && tier > unlocked;
 	}
 
 	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */

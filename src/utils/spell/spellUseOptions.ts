@@ -1,4 +1,5 @@
 import type { ResourceCost } from '#types/resourceCost.d.ts';
+import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import type {
 	ActionCostChange,
 	ChosenUseOption,
@@ -16,20 +17,28 @@ import {
 	isCharacterActor,
 } from '../chargePool/helpers.js';
 import { hasRuleCharge } from '../chargePool/ruleChargeGate.js';
+import { withActionCostChange } from '../combat/withActionCostChange.js';
 import { withCastMana } from '../cost/castManaCost.js';
 import { settleResourceCost } from '../cost/resourceCost.js';
 import localize from '../localize.js';
+import { exceedsUnlockedSpellTier } from './spellCost.js';
 
 type OptionSpell = Parameters<UseOptionRule['appliesToSpell']>[0];
 
+/** A set mana cost as a whole number of 0 or more, or null when the option does not set it. */
+function manaSetOf(value: unknown): number | null {
+	if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
+	return Math.max(0, Math.trunc(Number(value)));
+}
+
 function useOptionOfRule(actor: Actor | null | undefined, rule: UseOptionRule): UseOption {
 	const key = rule.key;
-	const pool = rule.poolIdentifier;
+	const pool = String(rule.chargePoolIdentifier ?? '').trim();
 	return {
 		key,
 		name: rule.resourceCost.source ?? '',
 		cost: { ...rule.resourceCost, id: key },
-		poolIdentifier: rule.poolIdentifier,
+		chargePoolIdentifier: pool,
 		actionCostChange: rule.actionCostChange,
 		rangePerMana: Math.max(0, Math.trunc(Number(rule.rangePerMana) || 0)),
 		cardNote: String(rule.cardNote ?? '').trim(),
@@ -37,7 +46,7 @@ function useOptionOfRule(actor: Actor | null | undefined, rule: UseOptionRule): 
 		manaCostChange: rule.manaCostChange,
 		freeCopy: rule.freeCopy === true,
 		replacesSpellCost: rule.replacesSpellCost === true,
-		manaSet: rule.manaCostSet,
+		manaSet: manaSetOf(rule.manaSet),
 		effect: rule.effectAfterCast,
 		used: pool ? !hasRuleCharge(actor, pool) : false,
 	};
@@ -70,13 +79,14 @@ export function spellUseOptionGroups(
 	actor: Actor | null | undefined,
 	spell: OptionSpell,
 ): UseOptionGroup[] {
+	if (exceedsUnlockedSpellTier(actor as SpellCostActorLike, spell as SpellLike)) return [];
 	const groups = new Map<string, UseOptionGroup>();
 	const rules = rulesOfType(actor as { rules?: unknown } | null, 'useOption').filter(
 		(rule) => rule.appliesTo() && rule.appliesToSpell(spell),
 	);
 	for (const rule of rules) {
 		const option = useOptionOfRule(actor, rule);
-		const pool = option.poolIdentifier;
+		const pool = option.chargePoolIdentifier;
 		const spend = option.replacesSpellCost;
 		const key = spend ? SPEND_GROUP : pool || option.key;
 		const group = groups.get(key) ?? {
@@ -150,20 +160,23 @@ function pickedOptions(
 	});
 }
 
-/** How the options the player chose change the mana cost of the spell. */
-export function chosenManaCostChanges(
-	groups: readonly UseOptionGroup[],
-	chosen: readonly ChosenUseOption[] = [],
-): CostChange[] {
-	return pickedOptions(groups, chosen).flatMap(({ option }) => option.manaCostChange ?? []);
-}
-
 /** How the options the player chose change what the spell itself costs. */
 export interface CastCostChange {
 	/** An option's cost takes the place of the spell's cost. */
 	replacesSpellCost: boolean;
 	/** The mana the spell costs at its own tier, or null for no change. */
 	manaSet: number | null;
+	/** How the options change the mana cost of the spell. */
+	manaCostChanges: CostChange[];
+}
+
+/** The mana of the spell with the chosen options: a set mana is final, else each change applies. */
+export function spellManaWithOptions(
+	mana: number,
+	change: Pick<CastCostChange, 'manaSet' | 'manaCostChanges'>,
+): number {
+	if (change.manaSet !== null) return change.manaSet;
+	return change.manaCostChanges.reduce(withActionCostChange, mana);
 }
 
 export function chosenCastCostChange(
@@ -175,6 +188,7 @@ export function chosenCastCostChange(
 	return {
 		replacesSpellCost: picked.some((option) => option.replacesSpellCost),
 		manaSet: set?.manaSet ?? null,
+		manaCostChanges: picked.flatMap((option) => option.manaCostChange ?? []),
 	};
 }
 
@@ -196,8 +210,8 @@ export async function settleChosenUseOptions(
 			choice.amount,
 		);
 		if (Number(cost.amount) > 0) settled.costs.push(cost);
-		if (option.poolIdentifier) {
-			settled.pools.push({ identifier: option.poolIdentifier, label: group.label });
+		if (option.chargePoolIdentifier) {
+			settled.pools.push({ identifier: option.chargePoolIdentifier, label: group.label });
 		}
 		if (option.actionCostChange) settled.actionCostChanges.push(option.actionCostChange);
 		settled.range += option.rangePerMana * Number(cost.amount);

@@ -408,7 +408,7 @@ function option(name: string, amount: number, more: object = {}) {
 		key: `Item.${name}:option`,
 		name,
 		cost: manaCost(name, amount),
-		poolIdentifier: 'spellshaper',
+		chargePoolIdentifier: 'spellshaper',
 		actionCostChange: null,
 		rangePerMana: 0,
 		cardNote: '',
@@ -658,13 +658,13 @@ const pilferedPower = {
 
 const shadowfrost = option('Shadowfrost', 10, {
 	cost: { ...manaCost('Shadowfrost', 10), kind: 'tempHp' as const },
-	poolIdentifier: '',
+	chargePoolIdentifier: '',
 	replacesSpellCost: true,
 });
 
 const reprisal = option("Cryomancer's Reprisal", 14, {
 	cost: { ...manaCost("Cryomancer's Reprisal", 14), kind: 'hp' as const },
-	poolIdentifier: '',
+	chargePoolIdentifier: '',
 	replacesSpellCost: true,
 });
 
@@ -742,7 +742,7 @@ describe('the upcast dialog Spend buttons', () => {
 });
 
 describe('the upcast dialog option that sets the mana of the spell', () => {
-	const storm = option('Master of Storm', 0, { poolIdentifier: 'storm', manaSet: 0 });
+	const storm = option('Master of Storm', 0, { chargePoolIdentifier: 'storm', manaSet: 0 });
 
 	it('casts at the spell tier for that mana, with no tier buttons', () => {
 		const state = open(caster({ mana: 9, unlocked: 5 }), fireBolt({ tier: 3 }), {
@@ -765,5 +765,23 @@ describe('the upcast dialog option that sets the mana of the spell', () => {
 		expect(state.castData.upcast).toBeUndefined();
 		expect(state.spendLine).toBe('When you roll, it spends 1 action.');
 		expect(state.castWarning).toBe('');
+	});
+	it('keeps a set mana as it is when another option cuts the mana', () => {
+		const set = option('Set Mana', 0, { chargePoolIdentifier: 'set', manaSet: 2 });
+		const cut = option('Cut Mana', 0, {
+			chargePoolIdentifier: 'cut',
+			manaCostChange: { delta: -1, minimum: 0 },
+		});
+		const state = open(caster({ mana: 9, unlocked: 5 }), fireBolt({ tier: 3 }), {
+			useOptionGroups: [
+				{ key: 'set', label: 'Set', used: false, spend: false, options: [set] },
+				{ key: 'cut', label: 'Cut', used: false, spend: false, options: [cut] },
+			],
+		});
+
+		state.chooseOption('set', set.key);
+		state.chooseOption('cut', cut.key);
+
+		expect(state.spendLine).toBe('When you roll, it spends 2 Mana.');
 	});
 });

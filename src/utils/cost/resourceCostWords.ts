@@ -46,7 +46,7 @@ function rollWindowCostParts(costs: readonly ResourceCost[]): {
 	return { spends, sacrifices };
 }
 
-/** "Stretch Time (2 mana)", "Dimensional Compression (1+ mana)", or the name alone for no cost. */
+/** "<option> (2 mana)", "<option> (1+ mana)", or the name alone for no cost. */
 function optionEntryText(name: string, cost: ResourceCost): string {
 	const { spend } = cost;
 	const amount =

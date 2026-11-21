@@ -86,7 +86,7 @@ Everything a class gives you sits under that class. The features it hands you au
 
 ### Spells
 
-Your known spells. The buttons at the top group them **By tier** or **By school**. Click a spell to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys. When a feature gives an option for the cast, the cast window shows a dropdown for it, such as **Spellshaper (1/turn)**. Pick one option or **None**. When an option can take the place of the spell's cost, the window shows **Spend** buttons: the spell's own cost first, then each option.
+Your known spells. The buttons at the top group them **By tier** or **By school**. Click a spell to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
 Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
 

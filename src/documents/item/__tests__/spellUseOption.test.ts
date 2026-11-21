@@ -4,6 +4,7 @@ import type { CardResourceCost } from '#types/resourceCost.d.ts';
 import { cardCostLine } from '#utils/cost/resourceCostWords.js';
 import { testDependencies } from '../../../managers/ItemActivationManager.js';
 import { UseOptionRule } from '../../../models/rules/useOption.js';
+import { spellUseOptionGroups } from '../../../utils/spell/spellUseOptions.js';
 import { NimbleCharacter } from '../../actor/character.js';
 import { NimbleSpellItem } from '../spell.js';
 
@@ -242,6 +243,31 @@ describe('the options a spell dialog offers', () => {
 		expect(dialog.opened[0]?.useOptionGroups).toEqual([]);
 	});
 
+	it('are offered only for a spell at a tier the caster has unlocked', async () => {
+		const actor = hero();
+		actor.system.resources.highestUnlockedSpellTier = 1;
+		giveOption(actor, 'Frost Focus', { tieredOnly: false });
+
+		expect(spellUseOptionGroups(actor as never, spell(actor, 'Ice Lance', 2))).toEqual([]);
+		expect(spellUseOptionGroups(actor as never, spell(actor, 'Frost Bite', 0))).toHaveLength(1);
+	});
+
+	it('refuse a cast with an option above the unlocked tier, and spend nothing', async () => {
+		const actor = hero({ mana: 9 });
+		actor.system.resources.highestUnlockedSpellTier = 1;
+		const focus = giveOption(actor, 'Frost Focus', { tieredOnly: false });
+		const item = spell(actor, 'Ice Lance', 2);
+		choose(focus.key);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(notices()).toEqual([
+			'This spell is above your highest unlocked spell tier (1), so you cannot cast it.',
+		]);
+	});
+
 	it('mark a group as used when its pool has no use left', async () => {
 		const actor = hero({ uses: 0 });
 		giveOption(actor, 'Stretch Time');
@@ -269,7 +295,7 @@ describe('casting a spell with a Spell or Attack Option', () => {
 		expect(card?.flags.nimble.actionCostChanges).toEqual([{ delta: -1, minimum: 1 }]);
 	});
 
-	it('checks the spell mana and the option mana together, and spends nothing when they do not fit', async () => {
+	it('checks the option mana against the mana left after the spell, and spends nothing when it does not fit', async () => {
 		const actor = hero({ mana: 2 });
 		const stretch = giveOption(actor, 'Stretch Time');
 		const item = spell(actor);
@@ -279,6 +305,18 @@ describe('casting a spell with a Spell or Attack Option', () => {
 
 		expect(actor.update).not.toHaveBeenCalled();
 		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Stretch Time needs 2 mana. You have 1.']);
+	});
+
+	it('names the spell when the spell alone does not fit', async () => {
+		const actor = hero({ mana: 2 });
+		const stretch = giveOption(actor, 'Stretch Time');
+		const item = spell(actor, 'Fire Bolt', 3);
+		choose(stretch.key);
+
+		await item.activate();
+
+		expect(actor.update).not.toHaveBeenCalled();
 		expect(notices()).toEqual(['Fire Bolt needs 3 mana, but only 2 is available.']);
 	});
 
@@ -857,6 +895,27 @@ describe('an option that sets the mana of the spell', () => {
 		await item.activate();
 
 		expect(actor.system.resources.mana.current).toBe(6);
+	});
+
+	it('keeps a set mana as it is when another option cuts the mana', async () => {
+		const actor = hero({ mana: 9 });
+		givePool(actor, 'set-pool', 'Set (1/Safe Rest)');
+		const set = giveOption(actor, 'Set Mana', {
+			amount: '0',
+			pool: 'set-pool',
+			more: { id: 'set', manaSet: 2 },
+		});
+		const cut = giveOption(actor, 'Cut Mana', {
+			amount: '0',
+			more: { id: 'cut', manaDelta: -1, manaMinimum: 0 },
+		});
+		const item = rideTheLightning(actor);
+		choose(set.key, cut.key);
+
+		await item.activate();
+
+		expect(actor.system.resources.mana.current).toBe(7);
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(2);
 	});
 });
 

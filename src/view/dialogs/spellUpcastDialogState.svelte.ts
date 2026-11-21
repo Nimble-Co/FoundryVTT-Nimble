@@ -27,6 +27,7 @@ import { computeUpcastBounds } from '#utils/spell/computeUpcastBounds.js';
 import { effectMomentNumbers } from '#utils/spell/effectMomentNumbers.js';
 import { effectRuleNumbers } from '#utils/spell/effectRuleNumbers.js';
 import { formatSpellCostLabel, resolveEffectiveCastTier } from '#utils/spell/spellCost.js';
+import { spellManaWithOptions } from '#utils/spell/spellUseOptions.js';
 import { stepFormulaDieSize } from '#utils/spell/stepFormulaDieSize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -280,9 +281,9 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	);
 	const upcastSteps = $derived(castTier - baseMana);
 
-	/** The mana a tier costs after the mana cuts of the chosen options, or the mana they set. */
+	/** The mana a tier costs with the chosen options. */
 	function manaOfTier(tier: number): number {
-		return manaCostChanges.reduce(withActionCostChange, manaSet ?? tier);
+		return spellManaWithOptions(tier, { manaSet, manaCostChanges });
 	}
 
 	/** The mana of the spell at the chosen tier, which every other mana spend comes after. */

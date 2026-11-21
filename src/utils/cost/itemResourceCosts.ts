@@ -67,6 +67,10 @@ function resourceCostRollData(
 	return totals;
 }
 
+/**
+ * "<source> needs 3 mana. You have 2." `available` is what the creature has for this cost, when
+ * an earlier cost of the same use takes some of it first.
+ */
 function notEnoughNotice(
 	actor: CostPayer,
 	cost: ResourceCost,
@@ -107,6 +111,7 @@ function refuseResourceCosts(actor: CostPayer, costs: readonly ResourceCost[]): 
 
 export {
 	hasResourceCostRules,
+	notEnoughNotice,
 	refuseResourceCosts,
 	resourceCostRefusal,
 	resourceCostRollData,

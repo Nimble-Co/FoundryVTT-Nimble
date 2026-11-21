@@ -281,11 +281,6 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 		return ruleKey(this);
 	}
 
-	/** The Charge Pool whose uses the option spends, or '' for none. */
-	get poolIdentifier(): string {
-		return String(this.chargePoolIdentifier ?? '').trim();
-	}
-
 	/** How the option changes the action cost, or null when it does not. */
 	get actionCostChange(): ActionCostChange | null {
 		return costChangeOf(this.actionDelta, this.actionMinimum);
@@ -294,13 +289,6 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	/** How the option changes the mana cost of the spell, or null when it does not. */
 	get manaCostChange(): CostChange | null {
 		return costChangeOf(this.manaDelta, this.manaMinimum);
-	}
-
-	/** The mana the spell costs with the option, or null when the option does not set it. */
-	get manaCostSet(): number | null {
-		const value = this.manaSet;
-		if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
-		return Math.max(0, Math.trunc(Number(value)));
 	}
 
 	/** The effect the caster gains after a cast with the option, or null for none. */
