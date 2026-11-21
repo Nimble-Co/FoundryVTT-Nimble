@@ -32,7 +32,7 @@ async function useHere(
 ): Promise<boolean> {
 	const item = [...actor.items].find((each) => identifierOf(each) === itemIdentifier);
 	if (!item?.id) return false;
-	await actor.activateItem(item.id, { fastForward: true, free });
+	await actor.activateItem(item.id, { fastForward: free.upcast !== true, free });
 	return true;
 }
 
@@ -43,7 +43,7 @@ function canUseHere(actor: FreeUser): boolean {
 }
 
 /**
- * The actor uses its item with this identifier, with no window, as `free` says. The active GM or a
+ * The actor uses its item with this identifier as `free` says, with no window unless it asks for one. The active GM or a
  * player who owns the actor makes the use; another client asks the active GM. `free.host` is the
  * card that can show the use as one line.
  */

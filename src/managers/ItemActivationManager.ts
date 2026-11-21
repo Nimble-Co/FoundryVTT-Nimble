@@ -1,5 +1,6 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { FreeUseHost } from '#types/cardEvent.d.ts';
+import type { ConditionalDamage } from '#types/conditionalDamage.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
@@ -110,19 +111,16 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
+import { spellManaCostChange } from '../utils/spell/spellManaCostChange.js';
 import {
 	type ChosenUseOptions,
 	chosenCastCostChange,
 	noChosenUseOptions,
-	settleChosenUseOptions,
-	spellManaWithOptions,
-	spellUseOptionGroups,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
-import { applyUseOptionChanges } from './itemActivation/applyUseOptionChanges.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
@@ -142,6 +140,12 @@ import {
 	markOfferOnRollOptions,
 	offerSourceOf,
 } from './itemActivation/offerBonus.js';
+import {
+	addPickRiders,
+	settleUseOptions,
+	spellCostWithOptions,
+	useOptionGroupsOfItem,
+} from './itemActivation/useOptionActivation.js';
 
 /** One Primary Die Bonus as the card stores it, with the item of its rule. */
 interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
@@ -238,6 +242,12 @@ class ItemActivationManager {
 	 */
 	spellCost: ResolvedSpellCost | null = null;
 
+	/**
+	 * The change to the mana a tiered cast costs: Spell Mana Cost rules, and the cast tier taken
+	 * off by a use free of mana, so its upcast costs only the mana above that tier.
+	 */
+	manaCostChange = 0;
+
 	/** The tick for dual wielding was used on this activation. */
 	#dualWield = false;
 
@@ -274,6 +284,7 @@ class ItemActivationManager {
 			of: [...new Set<ItemActivationManager.FreeOf>(['action', ...free.of])],
 			reason: free.reason,
 			...(free.host ? { host: free.host } : {}),
+			...(free.upcast ? { upcast: true } : {}),
 		};
 	}
 
@@ -344,6 +355,9 @@ class ItemActivationManager {
 
 	/** The kept amount of this actor that ends with this roll, used or not. */
 	#keptAmountToEnd: HeldChange | null = null;
+
+	/** How many steps lower the target's armor counts for this attack, from the picks chosen. */
+	#lowerArmorSteps = 0;
 
 	/** With Feature Effects off, the keys of the Held Changes the player ticked; null when all apply. */
 	#heldChosen: ReadonlySet<string> | null = null;
@@ -446,6 +460,7 @@ class ItemActivationManager {
 					resolveEffectiveCastTier(this.#item as unknown as SpellLike, this.pinnedCastTier) ??
 					undefined,
 			});
+			this.manaCostChange = this.#manaCostChange();
 		}
 
 		this.resourceCosts = resourceCostsOfUse(this.#item, {
@@ -455,9 +470,7 @@ class ItemActivationManager {
 			return { activation: null, rolls: null };
 		}
 
-		if (this.#item.type === 'spell') {
-			this.useOptionGroups = spellUseOptionGroups(this.actor, this.#item as never);
-		}
+		this.useOptionGroups = useOptionGroupsOfItem(this.actor, this.#item);
 
 		const rollOptions = {
 			domain: this.#getItemDomain(),
@@ -493,6 +506,8 @@ class ItemActivationManager {
 			dialogData.upcast = undefined;
 		}
 
+		this.#lowerArmorSteps = addPickRiders(this.actor, this.useOptionGroups, dialogData);
+
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
 		if (this.#item.type === 'spell' && !dialogData.upcast && castCostChange.manaSet === null) {
@@ -518,7 +533,7 @@ class ItemActivationManager {
 			const enforceManaCost =
 				isResourceSpendingAutomationEnabled() &&
 				!flatCost &&
-				!this.free?.of.includes('mana') &&
+				!this.#wholeCastFree() &&
 				!castCostChange.replacesSpellCost;
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
@@ -526,6 +541,7 @@ class ItemActivationManager {
 				enforceManaCost,
 				flatCost,
 				pinnedCastTier: this.pinnedCastTier,
+				manaCostChange: this.manaCostChange,
 			});
 			const context = {
 				spell: {
@@ -541,7 +557,8 @@ class ItemActivationManager {
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
-				enforceManaCost,
+				// A changed cost is checked when it is spent, against the mana it really costs.
+				enforceManaCost: enforceManaCost && this.manaCostChange === 0,
 			};
 
 			try {
@@ -589,28 +606,28 @@ class ItemActivationManager {
 
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
-		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
-			this.spellCost = { type: 'none' };
-		}
+		const lessMana =
+			dialogData.lessMana === true &&
+			!this.#wholeCastFree() &&
+			this.spellCost?.type === 'mana' &&
+			this.spellCost.amount > 0;
+		if (lessMana) this.invokesChaos = true;
+		this.spellCost = spellCostWithOptions(
+			this.spellCost,
+			{ ...castCostChange, manaCostChange: this.manaCostChange, lessMana },
+			this.#wholeCastFree(),
+		);
 
-		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
-			const lessMana = dialogData.lessMana === true;
-			this.spellCost = {
-				...this.spellCost,
-				amount: spellManaWithOptions(this.spellCost.amount, { ...castCostChange, lessMana }),
-			};
-			if (lessMana) this.invokesChaos = true;
-		}
 		if (castCostChange.replacesSpellCost) this.spellCost = { type: 'none' };
-		const chosenOptions = await settleChosenUseOptions(
+		const chosenOptions = await settleUseOptions(
 			this.actor,
 			this.useOptionGroups,
 			dialogData.useOptions,
 			this.castManaSpent,
+			this.activationData,
 		);
 		if (!chosenOptions) return { activation: null, rolls: null };
 		this.chosenOptions = chosenOptions;
-		applyUseOptionChanges(this.activationData, this.chosenOptions);
 
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
@@ -1074,14 +1091,14 @@ class ItemActivationManager {
 			if (!formula) continue;
 			const roll = new Roll(formula, this.actor!.getRollData()) as Roll;
 			await roll.evaluate();
-			updatedEffects.push(
-				createBonusDamageNode({
-					damageType: conditional.damageType,
-					formula,
-					roll: roll.toJSON() as Record<string, unknown>,
-					fromItemIdentifier: conditional.fromItemIdentifier,
-				}),
-			);
+			const bonusNode = createBonusDamageNode({
+				damageType: conditional.damageType,
+				formula,
+				roll: roll.toJSON() as Record<string, unknown>,
+				fromItemIdentifier: conditional.fromItemIdentifier,
+			});
+			if (conditional.modifierOnly) bonusNode.modifierOnly = true;
+			updatedEffects.push(bonusNode);
 			rolls.push(roll);
 		}
 		for (const part of (await this.#heldPlan?.rollExtraDamage(this.actor!.getRollData())) ?? []) {
@@ -1103,6 +1120,11 @@ class ItemActivationManager {
 		//
 		// Rebuilding the tree here is also what reflects every roll added above
 		// back into the activation data.
+		if (this.#lowerArmorSteps > 0) {
+			for (const node of updatedEffects) {
+				if (node.type === 'damage') node.lowerArmorSteps = this.#lowerArmorSteps;
+			}
+		}
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 		const renderedNodesById = ItemActivationManager.#indexNodesById(
 			this.activationData.effects as EffectNode[],
@@ -1727,6 +1749,7 @@ class ItemActivationManager {
 			spellCost: this.spellCost,
 			resourceCosts: this.resourceCosts,
 			useOptionGroups: this.useOptionGroups,
+			manaCostChange: this.manaCostChange,
 		});
 		await dialog.render(true);
 		const result = await dialog.promise;
@@ -1800,6 +1823,25 @@ class ItemActivationManager {
 		if (unlocked === null || unlocked === undefined) return false;
 		const tier = this.upcastResult?.manaSpent ?? (this.#item.system as { tier?: number }).tier ?? 0;
 		return tier > 0 && tier > unlocked;
+	}
+
+	/** A use free of mana that opens the cast window: only its upcast above the base tier costs mana. */
+	#freeUpcastPaysAbove(): boolean {
+		return !!this.free?.of.includes('mana') && this.free.upcast === true;
+	}
+
+	/** A use free of mana with no cast window: the whole cast, at any tier, is free. */
+	#wholeCastFree(): boolean {
+		return !!this.free?.of.includes('mana') && this.free.upcast !== true;
+	}
+
+	#manaCostChange(): number {
+		const ruled = spellManaCostChange(this.actor as never, this.#item as never);
+		if (!this.#freeUpcastPaysAbove()) return ruled;
+		const spell = this.#item as unknown as SpellLike;
+		const freeTier =
+			resolveEffectiveCastTier(spell, this.pinnedCastTier) ?? spell.system?.tier ?? 0;
+		return ruled - freeTier;
 	}
 
 	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
@@ -1939,12 +1981,7 @@ namespace ItemActivationManager {
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
-		conditionalDamages?: Array<{
-			formula: string;
-			damageType: string;
-			label: string;
-			fromItemIdentifier?: string;
-		}>;
+		conditionalDamages?: ConditionalDamage[];
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
 		/** The tier to cast a spell at, for a caller that skips the dialog. */
@@ -1967,6 +2004,8 @@ namespace ItemActivationManager {
 		reason: FreeUseReason;
 		/** The card that shows the use as one line, when its own card would have nothing to click. */
 		host?: FreeUseHost;
+		/** The use opens its window, so a spell can be upcast. */
+		upcast?: boolean;
 	}
 
 	/**
@@ -2053,12 +2092,7 @@ namespace ItemActivationManager {
 		 * chosen type applies, rather than being folded into the primary roll's type.
 		 * Untyped conditional damage is already baked into `rollFormula`.
 		 */
-		conditionalDamages?: Array<{
-			formula: string;
-			damageType: string;
-			label: string;
-			fromItemIdentifier?: string;
-		}>;
+		conditionalDamages?: ConditionalDamage[];
 	}
 }
 

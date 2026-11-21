@@ -5,7 +5,8 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 <script lang="ts">
 	import type { AmountStepperProps } from '#types/components/AmountStepper.d.ts';
 
-	let { label, value, minimum, limit, words, onadjust, onset }: AmountStepperProps = $props();
+	let { label, value, minimum, limit, shown, words, onadjust, onset }: AmountStepperProps =
+		$props();
 </script>
 
 <div class="nimble-amount-stepper">
@@ -34,7 +35,7 @@ A row with a label and a − / + stepper with a number box, for an amount the pl
 					currentTarget.value = String(onset(currentTarget.valueAsNumber));
 				}}
 			/>
-			<span class="nimble-amount-stepper__limit" aria-hidden="true">/ {limit}</span>
+			<span class="nimble-amount-stepper__limit" aria-hidden="true">/ {shown ?? limit}</span>
 		</span>
 		<button
 			type="button"

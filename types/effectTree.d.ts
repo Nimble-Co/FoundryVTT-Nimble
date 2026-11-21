@@ -163,6 +163,10 @@ export type DamageNode = {
 	/** What a tick in the roll window multiplies the damage by. */
 	damageMultiplier?: number;
 	ignoreArmor?: boolean;
+	/** How many steps lower the target's armor counts for this damage: Heavy to Medium to none. */
+	lowerArmorSteps?: number;
+	/** Flat damage that armor treats as a damage modifier, not as dice. */
+	modifierOnly?: boolean;
 	ignoreAllies?: boolean;
 	targetDisposition?: EffectNodeDisposition;
 	/** A bonus step that is the damage of another item of the attacker: that item's identifier. */
@@ -181,6 +185,10 @@ export type DamageOutcomeNode = {
 	damageType?: string;
 	targetDisposition?: EffectNodeDisposition;
 	ignoreArmor?: boolean;
+	/** How many steps lower the target's armor counts for this damage: Heavy to Medium to none. */
+	lowerArmorSteps?: number;
+	/** Flat damage that armor treats as a damage modifier, not as dice. */
+	modifierOnly?: boolean;
 	ignoreAllies?: boolean;
 	outcome: 'fullDamage' | 'halfDamage';
 	roll?: Record<string, any>;

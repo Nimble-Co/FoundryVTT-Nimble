@@ -9,6 +9,7 @@ export interface ActivatableItem {
 	type?: string;
 	system?: {
 		identifier?: string;
+		tier?: number;
 		activation?: {
 			cost?: { type?: string; quantity?: number };
 		};

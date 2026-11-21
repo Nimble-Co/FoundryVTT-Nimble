@@ -36,6 +36,7 @@ import {
 import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
 import { giveBack, spendResourceCosts } from '../../utils/cost/costLedger.js';
 import { refuseResourceCosts } from '../../utils/cost/itemResourceCosts.js';
+import { emptyPoolNotice, spendPoolUses } from '../../utils/cost/poolUses.js';
 import { applyBeyondConsequence } from '../../utils/cost/resourceCost.js';
 import { cardCostsOf } from '../../utils/cost/resourceCostWords.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
@@ -588,14 +589,31 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	 * what this kind costs. Null stops the use; the step reports why.
 	 */
 	protected async _spendForUse(manager: ItemActivationManager): Promise<UseSpend | null> {
-		const spent = await spendResourceCosts(this.actor, manager.resourceCosts, {
-			confirmBeyond: (costs) => confirmUsingBeyond(this.actor, costs),
-		});
-		if (!spent) {
-			refuseResourceCosts(this.actor, manager.resourceCosts);
+		const { pools } = manager.chosenOptions;
+		const empty = emptyPoolNotice(this.actor, pools);
+		if (empty) {
+			ui.notifications?.error(empty);
 			return null;
 		}
-		return { receipts: [spent.receipt], taken: spent.taken, beyond: spent.beyond };
+		const costs = [...manager.resourceCosts, ...manager.chosenOptions.costs];
+		const spent = await spendResourceCosts(this.actor, costs, {
+			confirmBeyond: (beyond) => confirmUsingBeyond(this.actor, beyond),
+		});
+		if (!spent) {
+			refuseResourceCosts(this.actor, costs);
+			return null;
+		}
+		const poolUses = await spendPoolUses(this.actor, pools);
+		if ('notice' in poolUses) {
+			await giveBack(this.actor, spent.receipt);
+			ui.notifications?.error(poolUses.notice);
+			return null;
+		}
+		return {
+			receipts: [spent.receipt, ...poolUses.receipts],
+			taken: spent.taken,
+			beyond: spent.beyond,
+		};
 	}
 
 	/** Whether a healing use with no target picked heals the user, as a potion does. */

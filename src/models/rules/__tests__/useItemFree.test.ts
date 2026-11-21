@@ -34,6 +34,7 @@ function freeRule(
 		disabled?: boolean;
 		predicate?: Record<string, unknown>;
 		manaAtLeast?: number;
+		upcast?: boolean;
 	},
 ): UseItemFreeRuleClass {
 	ruleCount += 1;
@@ -53,6 +54,7 @@ function freeRule(
 		triggers: source.triggers,
 		freeOf: source.freeOf ?? ['uses', 'mana'],
 		manaAtLeast: source.manaAtLeast ?? 0,
+		upcast: source.upcast ?? false,
 		disabled: source.disabled ?? false,
 		predicate: new Predicate((source.predicate ?? {}) as never),
 	});
@@ -147,6 +149,28 @@ describe('UseItemFreeRule', () => {
 		await freeRule(actor, { triggers: ['onTurnEnd'], freeOf: ['mana'] }).onTurnEnd(turn(actor));
 
 		expect((useItemForFree.mock.calls[0]?.[2] as { of: string[] }).of).toEqual(['mana']);
+	});
+
+	it('with Upcast on, asks for the window of the use, so a free spell can be upcast', async () => {
+		const actor = makeActor();
+		const firebrand = freeRule(actor, {
+			triggers: ['onInitiative'],
+			itemIdentifier: 'enchant-weapon',
+			freeOf: ['mana'],
+			upcast: true,
+		});
+
+		await firebrand.onInitiativeRolled({ actor } as never);
+
+		expect(useItemForFree.mock.calls[0]?.[2]).toMatchObject({ of: ['mana'], upcast: true });
+	});
+
+	it('with Upcast off, the use has no window', async () => {
+		const actor = makeActor();
+
+		await freeRule(actor, { triggers: ['onTurnEnd'] }).onTurnEnd(turn(actor));
+
+		expect(useItemForFree.mock.calls[0]?.[2]).not.toHaveProperty('window');
 	});
 
 	it('does nothing for another creature, a trigger not in its list, or no item named', async () => {

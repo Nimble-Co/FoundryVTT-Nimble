@@ -37,6 +37,7 @@
 		spendsActions: untrack(() => data.spendsActions),
 		resourceCosts: untrack(() => data.resourceCosts ?? []),
 		useOptionGroups: untrack(() => data.useOptionGroups ?? []),
+		manaCostChange: untrack(() => data.manaCostChange ?? 0),
 	});
 
 	/** The amount of the chosen option of a group, after the state kept it in range. */

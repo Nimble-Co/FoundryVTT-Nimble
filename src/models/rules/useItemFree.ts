@@ -109,6 +109,17 @@ function schema() {
 				hint: `${WORDS}.freeOf.hint`,
 			} as unknown as never,
 		),
+		upcast: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.upcast.label`,
+				hint: `${WORDS}.upcast.hint`,
+				showWhen: (data: Record<string, unknown>) =>
+					Array.isArray(data.freeOf) && data.freeOf.includes('mana'),
+			}),
+		),
 	};
 }
 
@@ -139,6 +150,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 
 	declare manaAtLeast: number;
 	declare freeOf: ItemActivationManager.FreeOf[];
+	declare upcast: boolean;
 
 	static override defineSchema(): UseItemFreeRule.Schema {
 		return {
@@ -158,6 +170,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 				['triggers', join(RULE_TRIGGERS)],
 				['manaAtLeast', 'number'],
 				['freeOf', join(FREE_OF_CHOICES)],
+				['upcast', 'boolean'],
 			]),
 		);
 	}
@@ -269,6 +282,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 					data: { trigger: this.#reason(trigger), feature: ruleLabel(this) },
 				},
 				...(host ? { host } : {}),
+				...(this.upcast ? { upcast: true } : {}),
 			});
 		} finally {
 			inFlight.delete(key);

@@ -123,6 +123,10 @@ type DamageApplyOptions = {
 	damageType?: string;
 	damageMultiplier?: number;
 	ignoreArmor?: boolean;
+	/** How many steps lower the target's armor counts: Heavy to Medium to none. */
+	lowerArmorSteps?: number;
+	/** Flat damage that armor treats as a damage modifier, not as dice. */
+	modifierOnly?: boolean;
 	outcome?: DamageApplyOutcome;
 	roll?: DamageRoll.SerializedData | null;
 	rolls?: Array<DamageRoll.SerializedData | null | undefined>;
@@ -200,6 +204,24 @@ function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'he
 	const armor = foundry.utils.getProperty(actor, 'system.attributes.armor');
 	if (armor === 'medium' || armor === 'heavy') return armor;
 	return 'none';
+}
+
+const ARMOR_STEPS = ['none', 'medium', 'heavy'] as const;
+
+/** The armor steps lower that a damage node asks for, as damage options. */
+function lowerArmorStepsOf(node: object): { lowerArmorSteps?: number } {
+	const steps = (node as { lowerArmorSteps?: number }).lowerArmorSteps;
+	return steps ? { lowerArmorSteps: steps } : {};
+}
+
+/** The target's armor, counted `options.lowerArmorSteps` steps lower. */
+function getEffectiveArmorType(
+	actor: Actor.Implementation,
+	options?: DamageApplyOptions,
+): 'none' | 'medium' | 'heavy' {
+	const armor = getActorArmorType(actor);
+	const steps = Math.max(0, Math.trunc(Number(options?.lowerArmorSteps) || 0));
+	return ARMOR_STEPS[Math.max(0, ARMOR_STEPS.indexOf(armor) - steps)];
 }
 
 function getDamageRollTotal(serializedRoll: DamageRoll.SerializedData): number {
@@ -331,8 +353,8 @@ function calculateArmorAdjustedDamage(params: {
 	damage: number;
 	options?: DamageApplyOptions;
 }): number {
-	const armorType = getActorArmorType(params.actor);
 	const damageOptions = params.options;
+	const armorType = getEffectiveArmorType(params.actor, damageOptions);
 
 	// Vulnerability is defined in terms of armor rather than as a multiplier:
 	// "that kind of damage ignores its armor; if unarmored, they take double the
@@ -347,6 +369,9 @@ function calculateArmorAdjustedDamage(params: {
 	if (armorType === 'none') return isVulnerable ? params.damage * 2 : params.damage;
 	if (damageOptions?.ignoreArmor === true) return params.damage;
 	if (isVulnerable) return params.damage;
+	if (damageOptions?.modifierOnly === true) {
+		return damageOptions.attackIsCritical === true ? params.damage : 0;
+	}
 	const serializedRolls = getSerializedDamageRolls(damageOptions);
 	const applyOutcomeHalfDamage = damageOptions?.outcome === 'halfDamage';
 	const applyHeavyArmor = armorType === 'heavy';
@@ -499,7 +524,7 @@ function describeDefenseModifiers(
 	}
 
 	if (actorIsVulnerableToDamage(actor, damageType)) {
-		const unarmored = getActorArmorType(actor) === 'none';
+		const unarmored = getEffectiveArmorType(actor, options) === 'none';
 
 		// Against an armored target all vulnerability does is bypass the armor, so
 		// a card that already ignores armor gets no badge — nothing was changed.
@@ -1681,6 +1706,8 @@ class NimbleChatMessage extends ChatMessage {
 					options: {
 						damageType: (node as { damageType?: string }).damageType,
 						ignoreArmor: (node as { ignoreArmor?: boolean }).ignoreArmor,
+						...lowerArmorStepsOf(node),
+						...((node as { modifierOnly?: boolean }).modifierOnly ? { modifierOnly: true } : {}),
 						outcome,
 						...(nodeMultiplier !== 1 ? { damageMultiplier: nodeMultiplier } : {}),
 						roll: roll as unknown as DamageRoll.SerializedData,
