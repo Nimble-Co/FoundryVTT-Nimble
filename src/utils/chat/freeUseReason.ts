@@ -1,7 +1,7 @@
 import localize from '#utils/localize.js';
 
-/** A data value of a free use line: plain text, or a lang key that each reader localizes. */
-export type FreeUseReasonValue = string | { key: string };
+/** A data value of a free use line: plain text, or a lang key and its data that each reader localizes. */
+export type FreeUseReasonValue = string | { key: string; data?: Record<string, string> };
 
 /** The "For free" line of a card, stored as a lang key and its data. */
 export interface FreeUseReason {
@@ -15,7 +15,7 @@ function isReason(value: unknown): value is FreeUseReason {
 
 function valueText(value: unknown): string {
 	if (typeof value === 'string') return value;
-	if (isReason(value)) return localize(value.key);
+	if (isReason(value)) return freeUseReasonText(value);
 	return '';
 }
 

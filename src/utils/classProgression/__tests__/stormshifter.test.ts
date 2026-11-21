@@ -307,4 +307,36 @@ describe('Stormshifter - pack data', () => {
 			expect(byType.savingThrow.skills).toEqual([]);
 		});
 	});
+
+	describe('Deepening Study', () => {
+		it('asks for one school, Ice or Radiant, for its cantrips and tier 1 spells', () => {
+			const choices = rulesOf('Deepening Study', 'grantSpells').filter(
+				(rule) => rule.mode === 'selectSchool',
+			);
+			expect(choices).toEqual([
+				expect.objectContaining({
+					schools: ['ice', 'radiant'],
+					tiers: [0, 1],
+					count: 1,
+					predicate: { level: { min: 3 } },
+				}),
+			]);
+		});
+	});
+
+	describe('Stormcaller', () => {
+		it('asks for a utility spell from each known school at levels 4 and 7', () => {
+			const picks = rulesOf('Stormcaller', 'grantSpells');
+			expect(picks.map((rule) => rule.predicate.level.min)).toEqual([4, 7]);
+			for (const rule of picks) {
+				expect(rule).toMatchObject({
+					mode: 'selectSpell',
+					schools: ['known'],
+					tiers: [0],
+					count: 1,
+					utilityOnly: true,
+				});
+			}
+		});
+	});
 });

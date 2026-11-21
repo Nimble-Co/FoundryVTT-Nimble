@@ -1,9 +1,10 @@
 import type { MovementChip, MovementStatus } from '#types/components/MovementStatusChip.d.ts';
-import type { EffectNode, MoveNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, EffectNode, MoveNode } from '#types/effectTree.js';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import localize from '#utils/localize.ts';
 import {
 	isSaveOutcome,
+	moveGivers,
 	movementOfferOutcome,
 	speakerTokenUuid,
 } from '#utils/movement/movementOffers.js';
@@ -215,6 +216,12 @@ export function moveNodeText(
 		chip,
 		obstacleDamage,
 	};
+}
+
+/** The Apply Effect node of the card that gives the move, or null. */
+export function moveGiver(card: MoveTextCard | undefined, node: MoveNode): ApplyEffectNode | null {
+	const effects = ((card?.system ?? {}) as MoveTextCardSystem).activation?.effects ?? [];
+	return moveGivers(flattenEffectsTree(effects)).get(node.id)?.[0] ?? null;
 }
 
 /** Every chip the card holds for one creature, across all of its move nodes. */

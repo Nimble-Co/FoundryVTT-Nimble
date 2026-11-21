@@ -86,6 +86,8 @@ Strongly recommended: import an existing class from the **Classes** compendium a
 
 A **Grant Spells** rule on a class, subclass, or class feature also decides which spell tiers the character can cast. Give the rule a level condition (`level` is at least `5`, for example) and it unlocks the tiers it lists once the character reaches that level. The character's highest unlocked tier is the highest tier across all such rules they meet. A grant with no level condition still hands out its spells, but it does not unlock a tier. A class with no such rule leaves the character unable to cast tiered spells, whatever its mana formula says.
 
+A Grant Spells rule whose school list has **Known** reads the schools that the character knows. These are the schools that the Grant Spells rules of the character's features give, and the schools that the player chose in a school choice (**Selection mode** `selectSchool`). The rule keeps that choice in its **Chosen schools** field. Character creation and the level-up window fill it in, and a GM can change it in the Rules Builder. A **Selection mode** of `selectSpell` with **Known** asks for spells from each known school.
+
 ### Features can do things too
 
 A feature item is not limited to text plus rules. It also has a full **Activation** tab, so an ability like "Rage" or "Second Wind" can be clicked, roll dice, and post a chat card exactly like an item. See [Item Activations & Effects](activations.md).

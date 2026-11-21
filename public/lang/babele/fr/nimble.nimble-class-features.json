@@ -2779,6 +2779,12 @@
 			"rules": {
 				"windbag-l14-all-utility": {
 					"label": "Windbag (3): All Utility Spells from Known Schools"
+				},
+				"windbag-l3-utility": {
+					"label": "Windbag: Choose a Utility Spell"
+				},
+				"windbag-l6-utility": {
+					"label": "Windbag (2): Choose a 2nd Utility Spell"
 				}
 			}
 		},

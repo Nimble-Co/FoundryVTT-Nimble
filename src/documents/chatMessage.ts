@@ -1274,7 +1274,13 @@ class NimbleChatMessage extends ChatMessage {
 	#movementOfferChanges(changes: Record<string, unknown>): { movementOffers?: MovementOffer[] } {
 		if (!cardSchemaHas(this.type, 'movementOffers')) return {};
 		const system = { ...(this.system as object), ...changes } as OfferCard['system'];
-		return { movementOffers: reconcileMovementOffers({ speaker: this.speaker, system }) };
+		return {
+			movementOffers: reconcileMovementOffers({
+				speaker: this.speaker,
+				flags: this.flags as OfferCard['flags'],
+				system,
+			}),
+		};
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */
@@ -1923,14 +1929,14 @@ class NimbleChatMessage extends ChatMessage {
 		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));
 	}
 
-	/** Give the healing that goes to the one who used the item, with no click. */
+	/** Give the healing that goes to the one who used the item, unless it waits for its button. */
 	async applySelfHealing(): Promise<void> {
 		if (!this.isActivationCard() || !isRuleAutomationEnabled()) return;
 		for (const group of this.effectNodes) {
 			for (const node of group) {
 				const healing = node as HealingNode;
 				if (healing.type !== 'healing' || healing.recipient !== 'self') continue;
-				if (givenByAnEffect(this, healing.id)) continue;
+				if (healing.waitsForClick || givenByAnEffect(this, healing.id)) continue;
 				const total = Number(healing.roll?.total);
 				if (total > 0) await this.applyHealing(total, healing.healingType, healing.id, 'self');
 			}

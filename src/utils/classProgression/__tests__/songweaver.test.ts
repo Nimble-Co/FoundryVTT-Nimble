@@ -408,4 +408,30 @@ describe('Songweaver - pack data', () => {
 			});
 		});
 	});
+
+	describe('Windbag', () => {
+		it('asks for a utility spell from each known school at levels 3 and 6', () => {
+			const picks = rulesOf('Windbag', 'grantSpells').filter((rule) => rule.mode === 'selectSpell');
+			expect(picks.map((rule) => rule.predicate.level.min)).toEqual([3, 6]);
+			for (const rule of picks) {
+				expect(rule).toMatchObject({
+					schools: ['known'],
+					tiers: [0],
+					count: 1,
+					utilityOnly: true,
+				});
+			}
+		});
+
+		it('grants every utility spell of the known schools at level 14', () => {
+			const all = rulesOf('Windbag', 'grantSpells').filter((rule) => rule.mode === 'auto');
+			expect(all).toEqual([
+				expect.objectContaining({
+					schools: ['known'],
+					utilityOnly: true,
+					predicate: { level: { min: 14 } },
+				}),
+			]);
+		});
+	});
 });

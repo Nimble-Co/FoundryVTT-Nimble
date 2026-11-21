@@ -68,6 +68,17 @@ function schema() {
 			label: 'NIMBLE.rules.grantSpells.count.label',
 			showWhen: (data) => data.mode === 'selectSchool' || data.mode === 'selectSpell',
 		} as unknown as never),
+		chosenSchools: new fields.ArrayField(
+			new fields.StringField({ choices: () => Object.keys(CONFIG.NIMBLE.spellSchools) }),
+			{
+				required: false,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.grantSpells.chosenSchools.label',
+				hint: 'NIMBLE.rules.grantSpells.chosenSchools.hint',
+				showWhen: (data: Record<string, unknown>) => data.mode === 'selectSchool',
+			} as unknown as never,
+		),
 	};
 }
 
@@ -103,6 +114,8 @@ class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 
 	declare count: number | null;
 
+	declare chosenSchools: string[];
+
 	static override defineSchema(): GrantSpellsRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -119,6 +132,7 @@ class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 				['uuids', 'string[]'],
 				['mode', "'auto' | 'selectSchool' | 'selectSpell'"],
 				['count', 'number | null'],
+				['chosenSchools', 'string[]'],
 			]),
 		);
 	}

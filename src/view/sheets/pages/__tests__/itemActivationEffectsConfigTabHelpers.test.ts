@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	getEndableConditions,
 	getNodeOptions,
+	getSelfAppliesOptions,
 	toggleListedCondition,
 } from '../itemActivationEffectsConfigTabHelpers.js';
 
@@ -41,5 +42,11 @@ describe('the End Conditions step editor', () => {
 	it('adds a condition to the list, and takes it out again', () => {
 		expect(toggleListedCondition(['dazed'], 'poisoned')).toEqual(['dazed', 'poisoned']);
 		expect(toggleListedCondition(['dazed', 'poisoned'], 'dazed')).toEqual(['poisoned']);
+	});
+});
+
+describe('the Applies choice of a step for the user', () => {
+	it('applies when used, or waits for a click', () => {
+		expect(getSelfAppliesOptions().map(({ value }) => value)).toEqual(['used', 'click']);
 	});
 });

@@ -122,6 +122,8 @@ export type ApplyEffectNode = {
 	recipient: 'self' | 'targets' | 'savers';
 	/** A temp healing node of the same card: the effect gives that temp HP and takes back what is left. */
 	tempHealingNodeId?: string | null;
+	/** A move node of the same card: it makes no offer until the effect applies. */
+	moveNodeId?: string | null;
 	/** A self step that waits for its button and does not apply on use. Absent is false. */
 	waitsForClick?: boolean;
 	/** What the upcast adds to fields of the effect's rules. */
@@ -193,6 +195,8 @@ export type HealingNode = {
 	formula: string;
 	/** `self` goes to the one who used the item, with no target. Absent goes to the card's targets. */
 	recipient?: 'self';
+	/** Healing for the user that waits for its button. Absent is false. */
+	waitsForClick?: boolean;
 	targetDisposition?: EffectNodeDisposition;
 	parentContext: string | null;
 	parentNode: string | null;

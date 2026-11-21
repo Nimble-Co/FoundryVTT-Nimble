@@ -8,31 +8,14 @@
 		"identifier": "",
 		"rules": [
 			{
-				"id": "sky-storm-school-choice-tier0",
+				"id": "sky-storm-school-choice",
 				"type": "grantSpells",
 				"schools": [
 					"ice",
 					"radiant"
 				],
 				"tiers": [
-					0
-				],
-				"mode": "selectSchool",
-				"count": 1,
-				"predicate": {
-					"level": {
-						"min": 3
-					}
-				}
-			},
-			{
-				"id": "sky-storm-school-choice-tier1",
-				"type": "grantSpells",
-				"schools": [
-					"ice",
-					"radiant"
-				],
-				"tiers": [
+					0,
 					1
 				],
 				"mode": "selectSchool",

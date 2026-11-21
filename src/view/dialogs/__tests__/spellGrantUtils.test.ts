@@ -169,6 +169,79 @@ describe('collectKnownSchools', () => {
 		expect(knownSchools.size).toBe(0);
 	});
 
+	it('counts a school the player chose as known', () => {
+		const rules: RulesArray = [
+			{
+				type: 'grantSpells',
+				mode: 'selectSchool',
+				schools: ['fire', 'ice', 'radiant'],
+				chosenSchools: ['ice'],
+			},
+		];
+		const knownSchools = new Set<string>(['wind']);
+		collectKnownSchools(rules, knownSchools);
+		expect([...knownSchools].sort()).toEqual(['ice', 'wind']);
+	});
+
+	it('takes no school from a choice that is not made yet', () => {
+		const rules: RulesArray = [
+			{ type: 'grantSpells', mode: 'selectSchool', schools: ['fire'], chosenSchools: [] },
+			{ type: 'grantSpells', mode: 'selectSchool', schools: ['ice'] },
+		];
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools);
+		expect(knownSchools.size).toBe(0);
+	});
+
+	it('counts a school picked in the open window before any rule stores it', () => {
+		const rules: RulesArray = [
+			{ type: 'grantSpells', id: 'pick', mode: 'selectSchool', schools: ['fire', 'ice'] },
+			{
+				type: 'grantSpells',
+				id: 'done',
+				mode: 'selectSchool',
+				schools: ['wind', 'radiant'],
+				chosenSchools: ['wind'],
+			},
+		];
+		const picks = new Map([
+			['pick', ['ice']],
+			['other-item-rule', ['fire']],
+		]);
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools, picks);
+		expect([...knownSchools].sort()).toEqual(['ice', 'wind']);
+	});
+
+	it('grants the known spells of a school picked at the same level', () => {
+		const rules: RulesArray = [
+			{
+				type: 'grantSpells',
+				id: 'pick',
+				mode: 'selectSchool',
+				schools: ['fire', 'ice'],
+				tiers: [0],
+				predicate: { level: { min: 3 } },
+			},
+			{
+				type: 'grantSpells',
+				id: 'known',
+				mode: 'auto',
+				schools: ['known'],
+				tiers: [1],
+				predicate: { level: { min: 3 } },
+			},
+		];
+		const index = createSpellIndex([
+			createSpellEntry({ uuid: 'ice-1', name: 'Ice 1', school: 'ice', tier: 1 }),
+			createSpellEntry({ uuid: 'fire-1', name: 'Fire 1', school: 'fire', tier: 1 }),
+		]);
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools, new Map([['pick', ['ice']]]));
+		const result = collectSpellGrants([rules], index, '', 3, new Set(), knownSchools);
+		expect(result.autoGrant.map((spell) => spell.uuid)).toEqual(['ice-1']);
+	});
+
 	it('accumulates into an existing set', () => {
 		const rules: RulesArray = [{ type: 'grantSpells', mode: 'auto', schools: ['ice'] }];
 		const knownSchools = new Set(['fire']);

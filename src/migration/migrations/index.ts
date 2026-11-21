@@ -88,3 +88,4 @@ export { Migration087HeldChangeEffects } from './Migration087HeldChangeEffects.j
 export { Migration088LastsUntilVocabularies } from './Migration088LastsUntilVocabularies.js';
 export { Migration089TimedEffectsContent } from './Migration089TimedEffectsContent.js';
 export { Migration090InspirationStartsOff } from './Migration090InspirationStartsOff.js';
+export { Migration091ChoicesWaitAndKnownSchools } from './Migration091ChoicesWaitAndKnownSchools.js';

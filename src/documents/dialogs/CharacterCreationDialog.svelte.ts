@@ -7,6 +7,7 @@ import { canonicalVariant } from '#utils/classProgression/ancestryVariants.js';
 import calculateSavingThrowRollModes, {
 	type SavingThrowRollModeRuleData,
 } from '#utils/rolls/calculateSavingThrowRollModes.js';
+import { storeChosenSchoolsOnSource } from '#utils/spell/chosenSchools.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/spell/getSpells.js';
 import { getSpellsFromIndex } from '#utils/spell/getSpellsFromIndex.js';
 import {
@@ -182,6 +183,8 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const originDocumentSources: Item.CreateData[] = [];
 
+		const schoolChoices = results.spells?.selectedSchools ?? new Map<string, string[]>();
+
 		// Helper to process origin document sources
 		const processOriginSource = (
 			doc:
@@ -298,6 +301,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				}
 			}
 
+			storeChosenSchoolsOnSource(source, schoolChoices);
 			originDocumentSources.push(source as object as Item.CreateData);
 		};
 
@@ -333,6 +337,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			if (feature) {
 				const source = (feature as NimbleFeatureItem).toObject();
 				source._stats.compendiumSource = uuid;
+				storeChosenSchoolsOnSource(source, schoolChoices);
 				featureDocumentSources.push(source as object as Item.CreateData);
 			}
 		}
@@ -342,6 +347,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			for (const feature of features) {
 				const source = feature.toObject();
 				source._stats.compendiumSource = feature.uuid;
+				storeChosenSchoolsOnSource(source, schoolChoices);
 				featureDocumentSources.push(source as object as Item.CreateData);
 			}
 		}

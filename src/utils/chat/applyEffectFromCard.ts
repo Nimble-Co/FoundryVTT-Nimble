@@ -2,6 +2,7 @@ import { SYSTEM_ID } from '#system';
 import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { ApplyEffectNode, ApplyEffectSource, EffectNode } from '#types/effectTree.js';
+import type { OfferCard } from '#types/movement.js';
 import {
 	type AppliedEffect,
 	applyEffectToActor,
@@ -10,16 +11,18 @@ import {
 } from '#utils/actor/applyEffectToActor.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { usedUpOf } from '#utils/lastsUntil/describeLastsUntil.js';
 import { hasEscape } from '#utils/lastsUntil/escapeEffect.js';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 import { raiseMoments } from '#utils/lastsUntil/raiseMoments.js';
 import localize from '#utils/localize.js';
+import { givesMove, offersWithAppliedRecord } from '#utils/movement/movementOffers.js';
+import { queueMovementOfferWrite } from '#utils/movement/queueMovementOfferWrite.js';
 import { statusOf } from '#utils/treeManipulation/conditionsToItemEffects.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
-
-export const APPLIED_EFFECTS_FLAG = 'appliedEffects';
+import { APPLIED_EFFECTS_FLAG, appliedRecord } from './appliedEffectsFlag.js';
 
 interface CardItem {
 	uuid: string;
@@ -50,7 +53,6 @@ export interface EffectCard {
 function cardFlags(card: EffectCard): {
 	itemUuid?: string;
 	actorId?: string;
-	appliedEffects?: Record<string, AppliedEffect[]>;
 } {
 	return (card.flags?.[SYSTEM_ID] ?? {}) as never;
 }
@@ -103,7 +105,7 @@ export function applyEffectSource(
 }
 
 export function appliedEffects(card: EffectCard, nodeId: string): AppliedEffect[] | undefined {
-	return cardFlags(card).appliedEffects?.[nodeId];
+	return appliedRecord<AppliedEffect>(card.flags, nodeId);
 }
 
 /** The card's own targets, not what the user has selected on the canvas now. */
@@ -191,7 +193,28 @@ function recordEntry(applied: AppliedEffect): AppliedEffect {
 	return entry;
 }
 
+/** Writes the record of the node, and with it the card's Movement Offers when the node gives a move. */
+async function writeRecord(
+	card: EffectCard,
+	nodeId: string,
+	record: readonly AppliedEffect[],
+): Promise<void> {
+	const changes = { [appliedPath(nodeId)]: record };
+	const offerCard = card as EffectCard & OfferCard;
+	if (!cardSchemaHas(offerCard.type ?? '', 'movementOffers') || !givesMove(offerCard, nodeId)) {
+		await card.update(changes);
+		return;
+	}
+	await queueMovementOfferWrite(() =>
+		card.update({
+			...changes,
+			'system.movementOffers': offersWithAppliedRecord(offerCard, nodeId, record),
+		}),
+	);
+}
+
 const records = keyedQueue();
+const recordKey = (card: EffectCard, nodeId: string) => `${card.id ?? ''}.${nodeId}`;
 
 /**
  * Adds creatures that took the node's effect another way (a rule of the attack) to its record,
@@ -203,9 +226,9 @@ export function recordAppliedEffects(
 	applied: readonly AppliedEffect[],
 ): Promise<void> {
 	if (applied.length < 1) return Promise.resolve();
-	return records.run(`${card.id ?? ''}.${nodeId}`, async () => {
+	return records.run(recordKey(card, nodeId), async () => {
 		const record = [...(appliedEffects(card, nodeId) ?? []), ...applied.map(recordEntry)];
-		await card.update({ [appliedPath(nodeId)]: record });
+		await writeRecord(card, nodeId, record);
 	});
 }
 
@@ -264,10 +287,12 @@ export async function applyEffectFromCard(
 		ui.notifications?.info(localize('NIMBLE.chat.applyEffect.noneTook', { name }));
 		return [];
 	}
-	const record = options.recipients
-		? [...(appliedEffects(card, node.id) ?? []), ...applied]
-		: applied;
-	await card.update({ [appliedPath(node.id)]: record });
+	await records.run(recordKey(card, node.id), () => {
+		const record = options.recipients
+			? [...(appliedEffects(card, node.id) ?? []), ...applied]
+			: applied;
+		return writeRecord(card, node.id, record);
+	});
 	return taken;
 }
 
@@ -277,9 +302,11 @@ export async function forgetAppliedEffect(
 	nodeId: string,
 	effectUuid: string,
 ): Promise<void> {
-	const record = [...(appliedEffects(card, nodeId) ?? [])];
-	const index = record.findIndex((entry) => entry.effectUuid === effectUuid);
-	if (index < 0) return;
-	record.splice(index, 1);
-	await card.update({ [appliedPath(nodeId)]: record });
+	await records.run(recordKey(card, nodeId), async () => {
+		const record = [...(appliedEffects(card, nodeId) ?? [])];
+		const index = record.findIndex((entry) => entry.effectUuid === effectUuid);
+		if (index < 0) return;
+		record.splice(index, 1);
+		await writeRecord(card, nodeId, record);
+	});
 }

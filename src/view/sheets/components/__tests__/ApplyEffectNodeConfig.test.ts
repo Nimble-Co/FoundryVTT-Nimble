@@ -109,6 +109,41 @@ describe('ApplyEffectNodeConfig', () => {
 
 		expect(screen.getByRole('option', { name: 'Temp healing 2*@key' })).toBeTruthy();
 	});
+
+	it('offers each move of the same card, and stores the move it gives', async () => {
+		const document = makeItem();
+		const applyNode = node({ recipient: 'self' });
+		const move = {
+			id: 'm1',
+			type: 'move',
+			kind: 'free',
+			recipient: 'self',
+			distance: '6',
+			distanceBySize: {},
+			ignoreDifficultTerrain: false,
+			direction: 'any',
+			parentNode: null,
+			parentContext: null,
+		};
+		render(ApplyEffectNodeConfig, {
+			props: { document, effects: [applyNode, move] } as never,
+		});
+
+		const select = screen.getByRole('combobox', { name: 'Move it gives' });
+		await fireEvent.change(select, { target: { value: 'm1' } });
+
+		await waitFor(() =>
+			expect(document.update).toHaveBeenCalledWith({
+				'system.activation.effects': [expect.objectContaining({ moveNodeId: 'm1' }), move],
+			}),
+		);
+		expect(screen.getByRole('option', { name: 'Move for free, 6 spaces' })).toBeTruthy();
+	});
+
+	it('has no move link when the card has no move', () => {
+		render(ApplyEffectNodeConfig, { props: { document: makeItem(), effects: [node()] } as never });
+		expect(screen.queryByRole('combobox', { name: 'Move it gives' })).toBeNull();
+	});
 });
 
 describe('ApplyEffectNodeConfig recipients under a save', () => {

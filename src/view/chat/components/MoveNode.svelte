@@ -3,11 +3,12 @@
 	import type { MoveNodeProps } from '#types/components/MoveNode.d.ts';
 
 	import { getContext, untrack } from 'svelte';
+	import { applyEffectSource, type EffectCard } from '#utils/chat/applyEffectFromCard.ts';
 	import localize from '#utils/localize.ts';
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import { isTargetsSectionShown } from '../targetsSection.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
-	import { moveNodeText } from './moveNodeText.ts';
+	import { moveGiver, moveNodeText } from './moveNodeText.ts';
 
 	let { node, card, allRows = false }: MoveNodeProps = $props();
 
@@ -23,6 +24,10 @@
 	);
 
 	const text = $derived(moveNodeText(messageDocument, node, { tracking }));
+	const giver = $derived(moveGiver(messageDocument, node));
+	const giverName = $derived(
+		giver ? applyEffectSource(messageDocument as unknown as EffectCard, giver)?.name : null,
+	);
 	// A creature with a TARGETS row shows its chip there instead. TARGETS drops a
 	// token it cannot find, so that creature keeps its row here.
 	const rowOffers = $derived(
@@ -60,7 +65,13 @@
 		<span>{text.summary}</span>
 	</p>
 
-	{#if text.offers.length === 0}
+	{#if text.offers.length === 0 && giver}
+		<p class="nimble-move-node__hint">
+			{giverName
+				? localize('NIMBLE.chat.movementOffers.withEffect', { name: giverName })
+				: localize('NIMBLE.chat.movementOffers.withItsEffect')}
+		</p>
+	{:else if text.offers.length === 0}
 		<p class="nimble-move-node__hint">{localize('NIMBLE.chat.movementOffers.noRecipient')}</p>
 	{/if}
 

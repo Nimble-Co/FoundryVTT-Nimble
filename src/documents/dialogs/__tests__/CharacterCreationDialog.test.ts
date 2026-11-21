@@ -804,4 +804,60 @@ describe('CharacterCreationDialog.submitCharacterCreation spell grants', () => {
 		).toBe(false);
 		expect(actor.update).toHaveBeenCalled();
 	});
+
+	it('stores the school the player chose on the rule of the feature that offers it', async () => {
+		const actor = {
+			createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+		(Actor as unknown as { create: ReturnType<typeof vi.fn> }).create = vi
+			.fn()
+			.mockResolvedValue(actor);
+
+		const classDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-classes.Item.songweaver',
+			name: 'Songweaver',
+			system: { identifier: 'songweaver', savingThrows: {} },
+		});
+		const choiceRule = {
+			type: 'grantSpells',
+			id: 'bonus-school',
+			mode: 'selectSchool',
+			schools: ['fire', 'ice'],
+			tiers: [0],
+		};
+		const feature = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-class-features.Item.wind',
+			name: 'Wind Spellcasting and...',
+			system: { rules: [choiceRule] },
+		});
+		const documentByUuid = new Map<string, Item>([
+			[classDocument.uuid, classDocument],
+			[feature.uuid, feature],
+		]);
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => documentByUuid.get(uuid as string) ?? null),
+		);
+
+		const dialog = new CharacterCreationDialog();
+		dialog.spellIndex = Promise.resolve(createSpellIndex([]));
+
+		await dialog.submitCharacterCreation({
+			name: 'New Character',
+			origins: { characterClass: { uuid: classDocument.uuid } },
+			languages: ['common'],
+			classFeatures: { autoGrant: [feature.uuid], selected: new Map() },
+			spells: {
+				autoGrant: [],
+				selectedSchools: new Map([['bonus-school', ['ice']]]),
+				selectedSpells: new Map(),
+			},
+		});
+
+		const featureSources = actor.createEmbeddedDocuments.mock.calls[1][1] as Array<{
+			system: { rules: unknown[] };
+		}>;
+		expect(featureSources[0].system.rules).toEqual([{ ...choiceRule, chosenSchools: ['ice'] }]);
+	});
 });

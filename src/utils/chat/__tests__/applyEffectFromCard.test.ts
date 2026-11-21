@@ -513,4 +513,134 @@ describe('applyEffectFromCard for each creature that fails', () => {
 
 		expect(host.update).toHaveBeenCalledWith({ [`flags.${SYSTEM_ID}.appliedEffects.node1`]: [] });
 	});
+
+	it('keeps an addition that lands while a take-back of the same node waits', async () => {
+		const host = {
+			...hostCard(),
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				const record = changes[`flags.${SYSTEM_ID}.appliedEffects.node1`];
+				(
+					host.flags[SYSTEM_ID] as { appliedEffects: Record<string, unknown> }
+				).appliedEffects.node1 = record;
+			}),
+		};
+		const added = { effectUuid: 'Actor.Tessa.ActiveEffect.fx', actorName: 'Tessa' };
+
+		await Promise.all([
+			fromCard.recordAppliedEffects(host, 'node1', [added]),
+			fromCard.forgetAppliedEffect(host, 'node1', before.effectUuid),
+		]);
+
+		expect(host.flags[SYSTEM_ID].appliedEffects.node1).toEqual([added]);
+	});
+});
+
+describe('applyEffectFromCard for a step that gives a move', () => {
+	const applyEffectToActor = vi.fn();
+	const offersWithAppliedRecord = vi.fn();
+	let fromCard: typeof import('#utils/chat/applyEffectFromCard.js');
+	const move = {
+		id: 'mv',
+		type: 'move',
+		kind: 'free',
+		recipient: 'self',
+		distance: '6',
+		distanceBySize: {},
+		ignoreDifficultTerrain: false,
+		direction: 'any',
+		parentNode: null,
+		parentContext: null,
+	};
+	const giver = applyNode({ recipient: 'targets', moveNodeId: 'mv' });
+	const entry = { effectUuid: 'Actor.Goblin.ActiveEffect.fx', actorName: 'Goblin' };
+	const moveCard = (record?: unknown[]) => ({
+		id: 'card1',
+		type: 'feature',
+		speaker: { actor: 'hero' },
+		flags: {
+			[SYSTEM_ID]: {
+				itemUuid: item.uuid,
+				...(record ? { appliedEffects: { node1: record } } : {}),
+			},
+		},
+		system: {
+			targets: ['Scene.s.Token.goblin'],
+			activation: { effects: [giver, move] },
+			movementOffers: [],
+		},
+		update: vi.fn(async () => undefined),
+	});
+
+	beforeEach(async () => {
+		applyEffectToActor.mockReset().mockImplementation(async (actor: { name: string }) => ({
+			effectUuid: `Actor.${actor.name}.ActiveEffect.fx`,
+			actorName: actor.name,
+		}));
+		offersWithAppliedRecord
+			.mockReset()
+			.mockImplementation((_card: unknown, _nodeId: string, record: unknown[]) =>
+				record.length ? [{ id: 'mv.hero' }] : [],
+			);
+		vi.resetModules();
+		vi.doMock('#utils/actor/applyEffectToActor.js', async (importOriginal) => ({
+			...(await importOriginal<object>()),
+			applyEffectToActor,
+		}));
+		vi.doMock('#utils/movement/movementOffers.js', async (importOriginal) => ({
+			...(await importOriginal<object>()),
+			offersWithAppliedRecord,
+		}));
+		vi.doMock('#utils/documents/cardSchemaHas.js', () => ({ cardSchemaHas: () => true }));
+		fromCard = await import('#utils/chat/applyEffectFromCard.js');
+		vi.doUnmock('#utils/actor/applyEffectToActor.js');
+		vi.doUnmock('#utils/movement/movementOffers.js');
+		vi.doUnmock('#utils/documents/cardSchemaHas.js');
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === item.uuid ? item : uuid === 'Scene.s.Token.goblin' ? { actor: goblin } : null,
+			),
+		);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('records the application and makes the offer of the move in one write', async () => {
+		const host = moveCard();
+
+		await fromCard.applyEffectFromCard(host, giver);
+
+		expect(host.update).toHaveBeenCalledTimes(1);
+		expect(host.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.appliedEffects.node1`]: [entry],
+			'system.movementOffers': [{ id: 'mv.hero' }],
+		});
+	});
+
+	it('drops the offer of the move when the take-back empties the record', async () => {
+		const host = moveCard([entry]);
+
+		await fromCard.forgetAppliedEffect(host, 'node1', entry.effectUuid);
+
+		expect(host.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.appliedEffects.node1`]: [],
+			'system.movementOffers': [],
+		});
+	});
+
+	it('writes only the record for a step that gives no move', async () => {
+		const host = {
+			...moveCard(),
+			system: { targets: ['Scene.s.Token.goblin'], activation: { effects: [applyNode()] } },
+		};
+
+		await fromCard.applyEffectFromCard(host, applyNode());
+
+		expect(host.update).toHaveBeenCalledWith({
+			[`flags.${SYSTEM_ID}.appliedEffects.node1`]: [entry],
+		});
+	});
 });
