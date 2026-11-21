@@ -32,7 +32,7 @@ async function useHere(
 ): Promise<boolean> {
 	const item = [...actor.items].find((each) => identifierOf(each) === itemIdentifier);
 	if (!item?.id) return false;
-	await actor.activateItem(item.id, { fastForward: free.window !== true, free });
+	await actor.activateItem(item.id, { fastForward: free.upcast !== true, free });
 	return true;
 }
 

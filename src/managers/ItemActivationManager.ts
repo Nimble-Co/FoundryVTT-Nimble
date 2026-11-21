@@ -1,5 +1,6 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { FreeUseHost } from '#types/cardEvent.d.ts';
+import type { ConditionalDamage } from '#types/conditionalDamage.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
@@ -118,13 +119,12 @@ import {
 	settleChosenUseOptions,
 	spellManaWithOptions,
 	spellUseOptionGroups,
-	weaponUseOptionGroups,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
-import { pickRidersOf, withPickAmounts } from '../utils/useOption/useOptionPicks.js';
+import { weaponUseOptionGroups } from '../utils/useOption/weaponUseOptions.js';
 import { applyUseOptionChanges } from './itemActivation/applyUseOptionChanges.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
@@ -145,6 +145,7 @@ import {
 	markOfferOnRollOptions,
 	offerSourceOf,
 } from './itemActivation/offerBonus.js';
+import { pickRidersOf, withPickAmounts } from './itemActivation/useOptionPicks.js';
 
 /** One Primary Die Bonus as the card stores it, with the item of its rule. */
 interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
@@ -283,7 +284,7 @@ class ItemActivationManager {
 			of: [...new Set<ItemActivationManager.FreeOf>(['action', ...free.of])],
 			reason: free.reason,
 			...(free.host ? { host: free.host } : {}),
-			...(free.window ? { window: true } : {}),
+			...(free.upcast ? { upcast: true } : {}),
 		};
 	}
 
@@ -1843,12 +1844,12 @@ class ItemActivationManager {
 
 	/** A use free of mana that opens the cast window: only its upcast above the base tier costs mana. */
 	#freeUpcastPaysAbove(): boolean {
-		return !!this.free?.of.includes('mana') && this.free.window === true;
+		return !!this.free?.of.includes('mana') && this.free.upcast === true;
 	}
 
 	/** A use free of mana with no cast window: the whole cast, at any tier, is free. */
 	#wholeCastFree(): boolean {
-		return !!this.free?.of.includes('mana') && this.free.window !== true;
+		return !!this.free?.of.includes('mana') && this.free.upcast !== true;
 	}
 
 	#manaCostChange(): number {
@@ -1997,14 +1998,7 @@ namespace ItemActivationManager {
 		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
 		/** Typed conditional-bonus damage to roll as its own effect (see DialogData). */
-		conditionalDamages?: Array<{
-			formula: string;
-			damageType: string;
-			label: string;
-			fromItemIdentifier?: string;
-			/** Flat damage that armor treats as a damage modifier. */
-			modifierOnly?: boolean;
-		}>;
+		conditionalDamages?: ConditionalDamage[];
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
 		/** The tier to cast a spell at, for a caller that skips the dialog. */
@@ -2028,7 +2022,7 @@ namespace ItemActivationManager {
 		/** The card that shows the use as one line, when its own card would have nothing to click. */
 		host?: FreeUseHost;
 		/** The use opens its window, so a spell can be upcast. */
-		window?: boolean;
+		upcast?: boolean;
 	}
 
 	/**
@@ -2115,14 +2109,7 @@ namespace ItemActivationManager {
 		 * chosen type applies, rather than being folded into the primary roll's type.
 		 * Untyped conditional damage is already baked into `rollFormula`.
 		 */
-		conditionalDamages?: Array<{
-			formula: string;
-			damageType: string;
-			label: string;
-			fromItemIdentifier?: string;
-			/** Flat damage that armor treats as a damage modifier. */
-			modifierOnly?: boolean;
-		}>;
+		conditionalDamages?: ConditionalDamage[];
 	}
 }
 

@@ -54,7 +54,7 @@ describe('useItemForFree', () => {
 	it('opens the window of the item when the free use asks for one', async () => {
 		const { useItemForFree } = await load();
 		const actor = actorWith([{ id: 'b', identifier: 'enchant-weapon' }]);
-		const withWindow = { ...free, of: ['mana' as const], window: true };
+		const withWindow = { ...free, of: ['mana' as const], upcast: true };
 
 		await useItemForFree(actor, 'enchant-weapon', withWindow);
 

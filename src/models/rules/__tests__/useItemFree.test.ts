@@ -162,7 +162,7 @@ describe('UseItemFreeRule', () => {
 
 		await firebrand.onInitiativeRolled({ actor } as never);
 
-		expect(useItemForFree.mock.calls[0]?.[2]).toMatchObject({ of: ['mana'], window: true });
+		expect(useItemForFree.mock.calls[0]?.[2]).toMatchObject({ of: ['mana'], upcast: true });
 	});
 
 	it('with Upcast off, the use has no window', async () => {

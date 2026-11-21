@@ -11,6 +11,6 @@ The cost never goes below 0, so a tier 3 spell costs 0 mana. An upcast costs les
 
 ::: details Edge cases
 - A cantrip has no mana cost, so the rule does nothing for it, and the effect stays on.
-- A spell that a class pays for from a charge pool keeps its pool cost.
+- A spell whose class spends a charge pool on it keeps its pool cost.
 - Two rules add up. A positive change raises the cost.
 :::

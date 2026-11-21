@@ -524,12 +524,6 @@
 		flex-direction: column;
 		gap: 6px;
 
-		&__total {
-			margin: 0;
-			font-size: 0.75rem;
-			color: var(--nimble-ui-ink-muted);
-		}
-
 		&__row {
 			display: flex;
 			align-items: center;
@@ -636,8 +630,10 @@
 			flex-wrap: wrap;
 			justify-content: flex-end;
 			gap: 4px 10px;
+			margin: 0;
 			font-size: 0.812rem;
 			font-weight: 700;
+			color: var(--nimble-ui-ink-muted);
 		}
 
 		&__total-part {

@@ -282,7 +282,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 					data: { trigger: this.#reason(trigger), feature: ruleLabel(this) },
 				},
 				...(host ? { host } : {}),
-				...(this.upcast ? { window: true } : {}),
+				...(this.upcast ? { upcast: true } : {}),
 			});
 		} finally {
 			inFlight.delete(key);

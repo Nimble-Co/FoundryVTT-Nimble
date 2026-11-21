@@ -1,25 +1,14 @@
+import type { ConditionalDamage } from '#types/conditionalDamage.d.ts';
+import type { CostPayer } from '#types/useCost.d.ts';
 import type { ChosenUseOption, UseOption, UseOptionGroup } from '#types/useOption.d.ts';
-import { variableRangeOf } from '../cost/resourceCost.js';
-
-/** A damage step that picks add to the attack, rolled as its own damage. */
-export interface PickDamage {
-	formula: string;
-	damageType: string;
-	label: string;
-	/** A flat amount, which armor treats as a damage modifier. */
-	modifierOnly?: boolean;
-}
+import { variableRangeOf, wholeAmount } from '../../utils/cost/resourceCost.js';
 
 /** What the picks of the chosen split options add to the attack. */
 export interface PickRiders {
-	damages: PickDamage[];
+	/** Rolled as damage of their own. */
+	damages: ConditionalDamage[];
 	/** Steps lower the target's armor counts for the whole attack. */
 	lowerArmorSteps: number;
-}
-
-function wholeAmount(value: unknown): number {
-	const amount = Math.floor(Number(value));
-	return Number.isFinite(amount) ? Math.max(0, amount) : 0;
 }
 
 function optionOf(groups: readonly UseOptionGroup[], key: string): UseOption | null {
@@ -42,14 +31,14 @@ function repeatedDamage(formula: string, count: number): string {
  * its picks, and its amount the sum of its picks.
  */
 export function withPickAmounts(
-	actor: Actor | null | undefined,
+	actor: CostPayer,
 	groups: readonly UseOptionGroup[],
 	chosen: readonly ChosenUseOption[] = [],
 ): ChosenUseOption[] {
 	return chosen.map((choice) => {
 		const option = optionOf(groups, choice.key);
 		if (!option?.picks) return choice;
-		let left = variableRangeOf(actor as never, option.cost)?.limit ?? 0;
+		let left = variableRangeOf(actor, option.cost)?.limit ?? 0;
 		const picks: Record<string, number> = {};
 		for (const pick of option.picks) {
 			const amount = Math.min(wholeAmount(choice.picks?.[pick.key]), left);

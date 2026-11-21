@@ -2,6 +2,7 @@ import {
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '#utils/incomingReactions/heroicActions.js';
+import { isTieredSpell } from '#utils/spell/isTieredSpell.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -176,7 +177,7 @@ class ActionCostRule extends NimbleBaseRule<ActionCostRule.Schema> {
 		if (this.itemIdentifier !== '' && this.itemIdentifier !== (item.system?.identifier ?? '')) {
 			return false;
 		}
-		if (this.tieredOnly && (item.type !== 'spell' || (item.system?.tier ?? 0) < 1)) return false;
+		if (this.tieredOnly && !isTieredSpell(item)) return false;
 		return true;
 	}
 

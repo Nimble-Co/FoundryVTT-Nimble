@@ -3,6 +3,7 @@ import { ruleKey } from '#utils/actor/actorRules.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { readsCastMana } from '#utils/cost/castManaCost.js';
 import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
+import { isTieredSpell } from '#utils/spell/isTieredSpell.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 import { ResourceCostRule, resourceCostFields } from './resourceCost.js';
@@ -364,7 +365,7 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	appliesToSpell(spell: OptionSpell | null | undefined): boolean {
 		if (this.target !== 'spell' || spell?.type !== 'spell') return false;
 		const system = spell.system ?? {};
-		if (this.tieredOnly && (system.tier ?? 0) <= 0) return false;
+		if (this.tieredOnly && !isTieredSpell(spell)) return false;
 		if (this.singleTargetOnly && !isSingleTarget(system.activation)) return false;
 		const schools = this.schools as string[];
 		if (schools.length > 0 && !schools.includes(system.school ?? '')) return false;

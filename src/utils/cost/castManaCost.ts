@@ -1,5 +1,6 @@
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+import { wholeAmount } from './resourceCost.js';
 
 const CAST_MANA = '@castManaSpent';
 
@@ -22,9 +23,8 @@ export function castManaCostOf(
 	if (!readsCastMana(cost.amount)) return cost;
 	const rollData = { ...(actor?.getRollData?.() ?? {}), castManaSpent: castMana };
 	const value = getDeterministicBonus(String(cost.amount), rollData as never);
-	const amount = Math.floor(Number(value));
-	if (value === null || !Number.isFinite(amount)) return null;
-	return { ...cost, amount: Math.max(0, amount) };
+	if (value === null || !Number.isFinite(Number(value))) return null;
+	return { ...cost, amount: wholeAmount(value) };
 }
 
 /** As `castManaCostOf`, for a preview: a formula that cannot be worked out shows 0. */

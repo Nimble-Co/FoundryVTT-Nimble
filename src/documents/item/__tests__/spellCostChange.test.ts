@@ -270,7 +270,7 @@ describe('a free cast of a spell that a rule gives free of mana', () => {
 	const free = {
 		of: ['mana'] as ['mana'],
 		reason: { key: 'NIMBLE.rules.useItemFree.cardLine', data: {} },
-		window: true,
+		upcast: true,
 	};
 
 	it('at the spell tier spends no mana', async () => {

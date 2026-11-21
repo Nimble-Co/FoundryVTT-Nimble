@@ -1,11 +1,12 @@
-import type { ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
+import type { ResourceCost } from '#types/resourceCost.d.ts';
+import type { CostPayer } from '#types/useCost.d.ts';
 import type {
 	ChosenUseOption,
 	UseOption,
 	UseOptionGroup,
 	UseOptionPick,
 } from '#types/useOption.d.ts';
-import { hpOf, manaOf, tempHpOf, variableRangeOf, woundsOf } from '#utils/cost/resourceCost.js';
+import { resourceKind, variableRangeOf, wholeAmount } from '#utils/cost/resourceCost.js';
 import { resourceCostText } from '#utils/cost/resourceCostWords.js';
 import localize from '#utils/localize.js';
 
@@ -28,27 +29,7 @@ export interface SplitView {
 	totalLine: string;
 }
 
-function wholeAmount(value: unknown): number {
-	const amount = Math.floor(Number(value));
-	return Number.isFinite(amount) ? Math.max(0, amount) : 0;
-}
-
-function haveOf(actor: unknown, kind: ResourceCostKind): number {
-	switch (kind) {
-		case 'mana':
-			return manaOf(actor as never);
-		case 'hp':
-			return hpOf(actor as never);
-		case 'tempHp':
-			return tempHpOf(actor as never);
-		case 'wounds': {
-			const wounds = woundsOf(actor as never);
-			return wounds ? Math.max(0, wounds.max - wounds.value) : 0;
-		}
-	}
-}
-
-/** "Condemning Strike: +5 Radiant", "Blessed Aim: armor 1 step lower", or the name alone. */
+/** "<pick>: +5 Radiant", "<pick>: armor 1 step lower", or the name alone. */
 function pickLabel(pick: UseOptionPick): string {
 	const effects: string[] = [];
 	if (pick.damage) {
@@ -77,13 +58,13 @@ type SplitOption = UseOption & { picks: NonNullable<UseOption['picks']> };
  * The split options of a use: an amount up to a cap, shared between named picks that each have
  * their own stepper. Nothing is put in a pick at first.
  */
-export function useOptionSplits(actor: unknown, groups: readonly UseOptionGroup[]) {
+export function useOptionSplits(actor: CostPayer, groups: readonly UseOptionGroup[]) {
 	const splits = groups
 		.flatMap((group) => group.options)
 		.filter((option): option is SplitOption => (option.picks?.length ?? 0) > 0)
 		.map((option) => ({
 			option,
-			cap: variableRangeOf(actor as never, option.cost)?.limit ?? 0,
+			cap: variableRangeOf(actor, option.cost)?.limit ?? 0,
 		}));
 
 	let amounts = $state<Record<string, Record<string, number>>>({});
@@ -115,7 +96,7 @@ export function useOptionSplits(actor: unknown, groups: readonly UseOptionGroup[
 				totalLine: localize('NIMBLE.useOptions.split.total', {
 					spent: String(total),
 					cost: resourceCostText(kind, max),
-					available: String(haveOf(actor, kind)),
+					available: String(resourceKind(kind).have(actor)),
 				}),
 			};
 		}),

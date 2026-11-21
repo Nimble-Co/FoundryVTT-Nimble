@@ -208,12 +208,13 @@ function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'he
 
 const ARMOR_STEPS = ['none', 'medium', 'heavy'] as const;
 
-/** The target's armor, counted `options.lowerArmorSteps` steps lower. */
+/** The armor steps lower that a damage node asks for, as damage options. */
 function lowerArmorStepsOf(node: object): { lowerArmorSteps?: number } {
 	const steps = (node as { lowerArmorSteps?: number }).lowerArmorSteps;
 	return steps ? { lowerArmorSteps: steps } : {};
 }
 
+/** The target's armor, counted `options.lowerArmorSteps` steps lower. */
 function getEffectiveArmorType(
 	actor: Actor.Implementation,
 	options?: DamageApplyOptions,

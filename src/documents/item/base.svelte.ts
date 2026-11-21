@@ -33,13 +33,12 @@ import {
 	applyCasterConcentration,
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
-import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
-import { giveBack, receiptOf, spendResourceCosts } from '../../utils/cost/costLedger.js';
+import { giveBack, spendResourceCosts } from '../../utils/cost/costLedger.js';
 import { refuseResourceCosts } from '../../utils/cost/itemResourceCosts.js';
+import { emptyPoolNotice, spendPoolUses } from '../../utils/cost/poolUses.js';
 import { applyBeyondConsequence } from '../../utils/cost/resourceCost.js';
 import { cardCostsOf } from '../../utils/cost/resourceCostWords.js';
-import localize from '../../utils/localize.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
 /** What the activation card needs to know of the use beyond its data. */
@@ -591,9 +590,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	 */
 	protected async _spendForUse(manager: ItemActivationManager): Promise<UseSpend | null> {
 		const { pools } = manager.chosenOptions;
-		const empty = pools.find((pool) => !hasRuleCharge(this.actor, pool.identifier));
+		const empty = emptyPoolNotice(this.actor, pools);
 		if (empty) {
-			ui.notifications?.error(localize('NIMBLE.useOptions.noUseLeft', { pool: empty.label }));
+			ui.notifications?.error(empty);
 			return null;
 		}
 		const costs = [...manager.resourceCosts, ...manager.chosenOptions.costs];
@@ -604,16 +603,17 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			refuseResourceCosts(this.actor, costs);
 			return null;
 		}
-		const receipts = [spent.receipt];
-		for (const pool of pools) {
-			if (!(await spendRuleCharge(this.actor, pool.identifier))) {
-				for (const receipt of receipts) await giveBack(this.actor, receipt);
-				ui.notifications?.error(localize('NIMBLE.useOptions.noUseLeft', { pool: pool.label }));
-				return null;
-			}
-			receipts.push(receiptOf({ charges: 1, chargePoolIdentifier: pool.identifier }));
+		const poolUses = await spendPoolUses(this.actor, pools);
+		if ('notice' in poolUses) {
+			await giveBack(this.actor, spent.receipt);
+			ui.notifications?.error(poolUses.notice);
+			return null;
 		}
-		return { receipts, taken: spent.taken, beyond: spent.beyond };
+		return {
+			receipts: [spent.receipt, ...poolUses.receipts],
+			taken: spent.taken,
+			beyond: spent.beyond,
+		};
 	}
 
 	/** Whether a healing use with no target picked heals the user, as a potion does. */

@@ -1,3 +1,4 @@
+import { isTieredSpell } from '#utils/spell/isTieredSpell.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -71,7 +72,7 @@ class SpellManaCostRule extends NimbleBaseRule<SpellManaCostRule.Schema> {
 
 	/** True for a tiered spell this rule names, or any tiered spell when no identifier is set. */
 	matchesSpell(spell: ManaCostedSpell | null | undefined): boolean {
-		if (spell?.type !== 'spell' || (spell.system?.tier ?? 0) < 1) return false;
+		if (!isTieredSpell(spell)) return false;
 		const identifier = this.itemIdentifier?.trim() ?? '';
 		return identifier === '' || identifier === (spell.system?.identifier ?? '');
 	}
