@@ -28,6 +28,7 @@ import collectSwappableOptions from '#utils/optionSwap/collectSwappableOptions.t
 import planOptionSwap, { type OptionSwapPlan } from '#utils/optionSwap/planOptionSwap.ts';
 import resolveOptionSwapOffer from '#utils/optionSwap/resolveOptionSwapOffer.ts';
 import summarizeOptionSwap from '#utils/optionSwap/summarizeOptionSwap.ts';
+import { forgetSchoolChoicesAt, storeChosenSchools } from '#utils/spell/chosenSchools.ts';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
@@ -178,6 +179,8 @@ interface LevelUpDialogData {
 		grantedOptionItems?: string[];
 	};
 	spellUuids: string[];
+	/** The schools the player chose, by the id of the school choice rule. */
+	schoolChoices?: Map<string, string[]>;
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -2005,6 +2008,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Grant any class features gained at this level (auto + selected)
 		const classFeatureIds = await this.grantLevelUpFeatures(typedDialogData.classFeatures);
+		await storeChosenSchools(this, typedDialogData.schoolChoices ?? new Map());
 
 		const grantedFeatureIds = [...epicBoonIds, ...classFeatureIds];
 
@@ -2263,6 +2267,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				await this.deleteEmbeddedDocuments('Item', validSpellIds);
 			}
 		}
+
+		await forgetSchoolChoicesAt(this, lastHistory.level);
 
 		// Revert class level
 		itemUpdates['system.classLevel'] = characterClass.system.classLevel - 1;

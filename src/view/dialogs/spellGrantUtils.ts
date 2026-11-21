@@ -58,15 +58,24 @@ export function resolveSchools(schools: string[], knownSchools: Set<string>): st
 }
 
 /**
- * Collects known schools from auto-mode grantSpells rules.
- * Only considers schools explicitly listed in auto-mode rules (not "known" sentinels).
+ * Collects known schools from grantSpells rules: the schools an auto-mode rule lists, and the
+ * schools the player chose on a selectSchool rule, also a pick in `picks` (by rule id) that no
+ * rule stores yet. A "known" sentinel adds nothing.
  */
-export function collectKnownSchools(rules: RulesArray, knownSchools: Set<string>): void {
+export function collectKnownSchools(
+	rules: RulesArray,
+	knownSchools: Set<string>,
+	picks: ReadonlyMap<string, readonly string[]> = new Map(),
+): void {
 	for (const rule of rules) {
 		if (rule.type !== 'grantSpells') continue;
-		if ((rule.mode as string) !== 'auto' && rule.mode !== undefined) continue;
-		const schools = rule.schools as string[] | undefined;
-		if (schools) {
+		let schools: readonly string[] | undefined;
+		if (rule.mode === 'auto' || rule.mode === undefined) schools = rule.schools as string[];
+		else if (rule.mode === 'selectSchool') {
+			const picked = picks.get(String(rule.id));
+			schools = picked?.length ? picked : (rule.chosenSchools as string[]);
+		}
+		if (Array.isArray(schools)) {
 			for (const school of schools) {
 				if (school !== 'known') knownSchools.add(school);
 			}

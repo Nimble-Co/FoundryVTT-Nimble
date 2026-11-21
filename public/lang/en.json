@@ -2581,6 +2581,10 @@
 				},
 				"count": {
 					"label": "How many to choose"
+				},
+				"chosenSchools": {
+					"label": "Chosen schools",
+					"hint": "The schools that the player chose. The character knows these schools. Character creation and the level-up window set them."
 				}
 			},
 			"healingPotionBonus": {

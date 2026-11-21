@@ -243,8 +243,9 @@ export function createLevelUpState(
 			if (source) ownedSpellUuids.add(source);
 		}
 
-		// Derive known schools from auto-mode grantSpells rules on class features,
-		// NOT from owned spells. A background-granted spell doesn't make a school "known".
+		// Derive known schools from the grantSpells rules on class features (the schools an auto
+		// rule lists and the schools the player chose), NOT from owned spells. A
+		// background-granted spell doesn't make a school "known".
 		const knownSchools = new Set<string>();
 
 		// Collect rules from multiple sources
@@ -258,7 +259,7 @@ export function createLevelUpState(
 				};
 				const rules = (featureItem.system?.rules ?? []) as unknown as RulesArray;
 				if (rules.length > 0) allRulesArrays.push(rules);
-				collectKnownSchools(rules, knownSchools);
+				collectKnownSchools(rules, knownSchools, selectedSchools);
 			}
 		}
 
@@ -269,7 +270,7 @@ export function createLevelUpState(
 			const hasGrantSpells = rules.some((r) => r.type === 'grantSpells');
 			if (hasGrantSpells) {
 				allRulesArrays.push(rules);
-				collectKnownSchools(rules, knownSchools);
+				collectKnownSchools(rules, knownSchools, selectedSchools);
 			}
 		}
 
@@ -471,6 +472,12 @@ export function createLevelUpState(
 					}
 				: undefined,
 			spellUuids: getGrantedSpellUuids(),
+			schoolChoices: new Map(
+				schoolSelections.flatMap((group) => {
+					const schools = selectedSchools.get(group.ruleId) ?? [];
+					return schools.length > 0 ? [[group.ruleId, schools] as const] : [];
+				}),
+			),
 		});
 	}
 
