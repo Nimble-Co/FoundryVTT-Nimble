@@ -89,3 +89,4 @@ export { Migration088LastsUntilVocabularies } from './Migration088LastsUntilVoca
 export { Migration089TimedEffectsContent } from './Migration089TimedEffectsContent.js';
 export { Migration090InspirationStartsOff } from './Migration090InspirationStartsOff.js';
 export { Migration091ChoicesWaitAndKnownSchools } from './Migration091ChoicesWaitAndKnownSchools.js';
+export { Migration092FeatureCostsContent } from './Migration092FeatureCostsContent.js';
