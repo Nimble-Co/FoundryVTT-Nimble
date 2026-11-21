@@ -44,6 +44,23 @@ export const targets = () => ({
 	}),
 });
 
+/** What the use spent or sacrificed through Spend or Sacrifice rules: one line each on the card. */
+export const costs = () => ({
+	costs: new fields.ArrayField(
+		new fields.SchemaField({
+			kind: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'mana',
+				choices: ['mana', 'hp', 'tempHp', 'wounds'],
+			}),
+			amount: new fields.NumberField({ required: true, nullable: false, initial: 0, min: 0 }),
+			source: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
+});
+
 /** Schema for tracking applied healing/damage on activation cards */
 export const appliedHealing = () => ({
 	appliedHealing: new fields.ObjectField({ required: false, nullable: false, initial: {} }),

@@ -7,6 +7,7 @@
 	import FreeUseLine from './components/FreeUseLine.svelte';
 	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
+	import CostLines from './components/CostLines.svelte';
 	import ChaosButton from './components/ChaosButton.svelte';
 	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
 	import { cardPrimaryRoll } from './components/attackOutcomeTags.ts';
@@ -86,6 +87,8 @@
 		image={image || 'icons/svg/item-bag.svg'}
 		{subheading}
 	/>
+
+	<CostLines />
 
 	<FreeUseLine />
 
