@@ -83,7 +83,6 @@ export interface OptionAmount {
 	amount: number;
 }
 
-/** One dropdown of options, as the dialog shows it. */
 /** The amount stepper and the damage type picks of the chosen option. */
 export interface OptionControlsView {
 	amount: OptionAmount | null;
@@ -95,6 +94,7 @@ export interface OptionControlsView {
 	pick: string;
 }
 
+/** One dropdown of options, as the dialog shows it. */
 export interface OptionGroupView extends OptionControlsView {
 	key: string;
 	label: string;
@@ -279,18 +279,17 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	);
 	/** A chosen option casts the spell at its own tier. */
 	const tierLocked = $derived(replacesSpellCost || manaSet !== null);
-	/** A different spend keeps a pinned tier, and with it the choice of enhancement. */
-	const keepsPinnedTier = $derived(manaSet === null && pinnedCastTier !== null);
-	const canUpcast = $derived(scalesUp && (!tierLocked || keepsPinnedTier));
+	/** A pinned tier and no set mana: a different spend keeps the tier and its enhancement choice. */
+	const pinnedTierWithoutSetMana = $derived(manaSet === null && pinnedCastTier !== null);
+	const canUpcast = $derived(scalesUp && (!tierLocked || pinnedTierWithoutSetMana));
 	const castTier = $derived(
 		!tierLocked ? manaToSpend : manaSet === null ? (effectiveCastTier ?? baseMana) : baseMana,
 	);
 	const upcastSteps = $derived(castTier - baseMana);
 
-	/** The mana a tier costs: less mana first, then the chosen options, as the cast spends it. */
+	/** The mana a tier costs, as the cast spends it. */
 	function manaOfTier(tier: number): number {
-		const mana = lessMana && tier > 0 ? tier - 1 : tier;
-		return mana > 0 ? spellManaWithOptions(mana, { manaSet, manaCostChanges }) : 0;
+		return spellManaWithOptions(tier, { manaSet, manaCostChanges, lessMana });
 	}
 
 	/** The mana of the spell at the chosen tier, which every other mana spend comes after. */

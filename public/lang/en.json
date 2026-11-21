@@ -4088,6 +4088,7 @@
 		},
 		"useOptions": {
 			"none": "None",
+			"badCostFormula": "The cost of {name} cannot be worked out. Check its formula.",
 			"usedThisTurn": "Used this turn",
 			"noUsesLeft": "No uses left",
 			"entry": "{name} ({cost})",

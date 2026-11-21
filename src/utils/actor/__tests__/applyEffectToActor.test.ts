@@ -327,6 +327,18 @@ describe('payloadFromEffect', () => {
 			expect(rulesOf(payload)[0].value).toBe('floor(14 / 2) + @key');
 		});
 
+		it('leaves a cost of an unknown kind as it is, for the reference check to report', () => {
+			const payload = payloadFromEffect(
+				effectWith({
+					readsHolder: true,
+					rules: [{ id: 'back', type: 'damageBack', value: '@cost.hpp' }],
+				}),
+				{ itemUuid: null, user, useData: { cost: { mana: 0, hp: 14, tempHp: 0, wounds: 0 } } },
+			);
+
+			expect(rulesOf(payload)[0].value).toBe('@cost.hpp');
+		});
+
 		it('reads the user at apply time when the box is off, and the Escape DC too', () => {
 			const payload = payloadFromEffect(
 				effectWith({

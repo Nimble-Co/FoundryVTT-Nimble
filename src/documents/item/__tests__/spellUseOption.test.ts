@@ -539,6 +539,27 @@ describe('an option with a free copy', () => {
 		return item;
 	}
 
+	it('refuses the cast, and spends nothing, when the cost formula cannot be worked out', async () => {
+		const actor = hero({ mana: 9 });
+		const echo = echoCasting(actor, '2 * @castManaSpent +');
+		const item = upcastable(actor, 2);
+		dialog.result = { rollMode: 0, useOptions: [{ key: echo.key }] };
+		// The Roll mock takes every formula; Foundry refuses this one.
+		const validate = vi
+			.spyOn(Roll, 'validate')
+			.mockImplementation((formula: string) => !formula.trim().endsWith('+'));
+
+		await item.activate();
+		validate.mockRestore();
+
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(actor.system.resources.mana.current).toBe(9);
+		expect(usesLeft(actor)).toBe(1);
+		expect(notices()).toContain(
+			'The cost of Echo Casting cannot be worked out. Check its formula.',
+		);
+	});
+
 	it('costs twice the mana the cast spent, and posts a free copy at the same tier', async () => {
 		const actor = hero({ mana: 9 });
 		const echo = echoCasting(actor);
@@ -1007,11 +1028,20 @@ describe('the actions check of a cast in combat', () => {
 				}
 			}),
 		});
-		const combatants = Object.assign(
-			[{ id: 'turn', actorId: character.id, system: { actions: { base: { current: actions } } } }],
-			{ get: () => undefined },
-		);
-		globals.game.combat = { started: true, combatants };
+		const combatant = {
+			id: 'turn',
+			actorId: character.id,
+			system: { actions: { base: { current: actions } } },
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				for (const [path, value] of Object.entries(changes)) {
+					foundry.utils.setProperty(combatant, path, value);
+				}
+			}),
+		};
+		const combatants = Object.assign([combatant], {
+			get: (id: string) => (id === combatant.id ? combatant : undefined),
+		});
+		globals.game.combat = { id: 'combat', started: true, combatants };
 		return character as unknown as Hero;
 	}
 
@@ -1034,13 +1064,34 @@ describe('the actions check of a cast in combat', () => {
 		const actor = fighter(1);
 		const stretch = giveOption(actor, 'Stretch Time', { actionDelta: -1, actionMinimum: 1 });
 		const item = castsFor(actor, 2);
+		item._createActivationCard.mockImplementation(async (chatData: unknown) => chatData);
+		globals.game.settings = {
+			get: (_scope: string, key: string) =>
+				key === 'automation.resourceSpending' || key === 'automation.actionTracking',
+		};
 		choose(stretch.key);
 
 		await cast(actor);
 
 		expect(confirm()).not.toHaveBeenCalled();
-		expect(item._createActivationCard).toHaveBeenCalledTimes(1);
+		expect(globals.game.combat.combatants[0].system.actions.base.current).toBe(0);
 		expect(actor.system.resources.mana.current).toBe(6);
+	});
+
+	it('spends the actions the option cut the cost to', async () => {
+		const actor = fighter(3);
+		const stretch = giveOption(actor, 'Stretch Time', { actionDelta: -1, actionMinimum: 1 });
+		const item = castsFor(actor, 2);
+		item._createActivationCard.mockImplementation(async (chatData: unknown) => chatData);
+		globals.game.settings = {
+			get: (_scope: string, key: string) =>
+				key === 'automation.resourceSpending' || key === 'automation.actionTracking',
+		};
+		choose(stretch.key);
+
+		await cast(actor);
+
+		expect(globals.game.combat.combatants[0].system.actions.base.current).toBe(2);
 	});
 
 	it('counts an option that adds an action, asks once after the dialog, and a no casts nothing', async () => {

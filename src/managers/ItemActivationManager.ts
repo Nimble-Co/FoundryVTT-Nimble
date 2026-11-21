@@ -485,8 +485,11 @@ class ItemActivationManager {
 		// An option that sets the spell's cost casts it at its own tier. A pinned tier still
 		// applies to an option that spends in place of the spell's cost.
 		const castCostChange = chosenCastCostChange(this.useOptionGroups, dialogData.useOptions);
-		const keepsPinnedTier = castCostChange.replacesSpellCost && this.pinnedCastTier !== null;
-		if (castCostChange.manaSet !== null || (castCostChange.replacesSpellCost && !keepsPinnedTier)) {
+		const spendsAtPinnedTier = castCostChange.replacesSpellCost && this.pinnedCastTier !== null;
+		if (
+			castCostChange.manaSet !== null ||
+			(castCostChange.replacesSpellCost && !spendsAtPinnedTier)
+		) {
 			dialogData.upcast = undefined;
 		}
 
@@ -590,24 +593,23 @@ class ItemActivationManager {
 			this.spellCost = { type: 'none' };
 		}
 
-		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
-			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
-			this.invokesChaos = true;
-		}
-
 		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
+			const lessMana = dialogData.lessMana === true;
 			this.spellCost = {
 				...this.spellCost,
-				amount: spellManaWithOptions(this.spellCost.amount, castCostChange),
+				amount: spellManaWithOptions(this.spellCost.amount, { ...castCostChange, lessMana }),
 			};
+			if (lessMana) this.invokesChaos = true;
 		}
 		if (castCostChange.replacesSpellCost) this.spellCost = { type: 'none' };
-		this.chosenOptions = await settleChosenUseOptions(
+		const chosenOptions = await settleChosenUseOptions(
 			this.actor,
 			this.useOptionGroups,
 			dialogData.useOptions,
 			this.castManaSpent,
 		);
+		if (!chosenOptions) return { activation: null, rolls: null };
+		this.chosenOptions = chosenOptions;
 		applyUseOptionChanges(this.activationData, this.chosenOptions);
 
 		// Resolve the first target's domain for targetCondition evaluation

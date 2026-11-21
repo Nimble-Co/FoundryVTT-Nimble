@@ -115,7 +115,10 @@ function resolveRuleFormulas(
 	}
 }
 
-/** A rule that reads the holder keeps its references, but `@cost` is the cost of this use. */
+/**
+ * A rule that reads the holder keeps its references, but `@cost` is the cost of this use. An
+ * unknown kind stays, so the reference check at the roll reports it.
+ */
 function resolveCostReferences(rules: unknown, useData: Record<string, unknown> = {}): void {
 	if (!Array.isArray(rules)) return;
 	const cost = (useData.cost ?? {}) as Record<string, unknown>;
@@ -123,7 +126,9 @@ function resolveCostReferences(rules: unknown, useData: Record<string, unknown> 
 		if (!rule || typeof rule !== 'object') continue;
 		for (const [key, value] of Object.entries(rule)) {
 			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@cost.')) continue;
-			rule[key] = value.replace(/@cost\.(\w+)/g, (_, kind: string) => String(cost[kind] ?? 0));
+			rule[key] = value.replace(/@cost\.(\w+)/g, (reference, kind: string) =>
+				kind in cost ? String(cost[kind]) : reference,
+			);
 		}
 	}
 }

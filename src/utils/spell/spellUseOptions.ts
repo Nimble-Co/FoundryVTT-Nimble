@@ -18,7 +18,7 @@ import {
 } from '../chargePool/helpers.js';
 import { hasRuleCharge } from '../chargePool/ruleChargeGate.js';
 import { withActionCostChange } from '../combat/withActionCostChange.js';
-import { withCastMana } from '../cost/castManaCost.js';
+import { castManaCostOf } from '../cost/castManaCost.js';
 import { settleResourceCost } from '../cost/resourceCost.js';
 import localize from '../localize.js';
 import { exceedsUnlockedSpellTier } from './spellCost.js';
@@ -170,13 +170,19 @@ export interface CastCostChange {
 	manaCostChanges: CostChange[];
 }
 
-/** The mana of the spell with the chosen options: a set mana is final, else each change applies. */
+/**
+ * The mana of the spell at its tier mana `mana`, in the order the cast spends it: less mana takes
+ * 1 first, then a set mana is final, else each change of the chosen options applies. A cast that
+ * costs no mana stays free.
+ */
 export function spellManaWithOptions(
 	mana: number,
-	change: Pick<CastCostChange, 'manaSet' | 'manaCostChanges'>,
+	change: Pick<CastCostChange, 'manaSet' | 'manaCostChanges'> & { lessMana?: boolean },
 ): number {
+	const left = change.lessMana && mana > 0 ? mana - 1 : mana;
+	if (left <= 0) return 0;
 	if (change.manaSet !== null) return change.manaSet;
-	return change.manaCostChanges.reduce(withActionCostChange, mana);
+	return change.manaCostChanges.reduce(withActionCostChange, left);
 }
 
 export function chosenCastCostChange(
@@ -194,21 +200,23 @@ export function chosenCastCostChange(
 
 /**
  * What the options the player chose cost and change. `castMana` is the mana the cast spends on
- * the spell, which a cost can read as `@castManaSpent`.
+ * the spell, which a cost can read as `@castManaSpent`. Null, with a notice, when the cost of an
+ * option cannot be worked out.
  */
 export async function settleChosenUseOptions(
 	actor: Actor | null | undefined,
 	groups: readonly UseOptionGroup[],
 	chosen: readonly ChosenUseOption[] = [],
 	castMana = 0,
-): Promise<ChosenUseOptions> {
+): Promise<ChosenUseOptions | null> {
 	const settled = noChosenUseOptions();
 	for (const { group, option, choice } of pickedOptions(groups, chosen)) {
-		const cost = await settleResourceCost(
-			actor as never,
-			withCastMana(actor, option.cost, castMana),
-			choice.amount,
-		);
+		const castCost = castManaCostOf(actor, option.cost, castMana);
+		if (!castCost) {
+			ui.notifications?.error(localize('NIMBLE.useOptions.badCostFormula', { name: option.name }));
+			return null;
+		}
+		const cost = await settleResourceCost(actor as never, castCost, choice.amount);
 		if (Number(cost.amount) > 0) settled.costs.push(cost);
 		if (option.chargePoolIdentifier) {
 			settled.pools.push({ identifier: option.chargePoolIdentifier, label: group.label });
