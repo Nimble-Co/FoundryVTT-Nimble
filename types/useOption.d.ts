@@ -8,6 +8,16 @@ export interface CostChange {
 
 export type ActionCostChange = CostChange;
 
+/** One pick of a split option, and what each unit of the amount put in it adds. */
+export interface UseOptionPick {
+	name: string;
+	/** Damage added for each unit, as a formula. Empty adds none. */
+	damage: string;
+	damageType: string;
+	/** Steps lower the target's armor counts for each unit. */
+	lowerArmorSteps: number;
+}
+
 /** One Spell or Attack Option a creature can turn on in the dialog of an item. */
 export interface UseOption {
 	/** The key of the option's rule on the creature. */
@@ -37,6 +47,8 @@ export interface UseOption {
 	effect: UseOptionEffect | null;
 	/** The option's Charge Pool has no use left. */
 	used: boolean;
+	/** The picks the amount is split between. Absent for an option that is not split. */
+	picks?: Array<UseOptionPick & { key: string }>;
 }
 
 /** An effect of the item that owns an option. */
@@ -71,4 +83,6 @@ export interface ChosenUseOption {
 	amount?: number;
 	/** The damage type the player picked. */
 	damageType?: string;
+	/** For a split option: the amount put in each pick, by pick key. */
+	picks?: Record<string, number>;
 }

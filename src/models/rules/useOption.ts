@@ -1,7 +1,8 @@
-import type { ActionCostChange, CostChange } from '#types/useOption.d.ts';
+import type { ActionCostChange, CostChange, UseOptionPick } from '#types/useOption.d.ts';
 import { ruleKey } from '#utils/actor/actorRules.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { readsCastMana } from '#utils/cost/castManaCost.js';
+import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 import { ResourceCostRule, resourceCostFields } from './resourceCost.js';
@@ -9,7 +10,7 @@ import { ResourceCostRule, resourceCostFields } from './resourceCost.js';
 const WORDS = 'NIMBLE.rules.useOption';
 
 /** What an option goes into the dialog of. */
-const USE_OPTION_TARGETS = ['spell'] as const;
+const USE_OPTION_TARGETS = ['spell', 'meleeWeapon'] as const;
 type UseOptionTarget = (typeof USE_OPTION_TARGETS)[number];
 
 const forSpells = (data: Record<string, unknown>) => (data.target ?? 'spell') === 'spell';
@@ -192,6 +193,54 @@ function schema() {
 				recipient: () => 'self' as const,
 			}),
 		),
+		picks: new fields.ArrayField(
+			new fields.SchemaField({
+				name: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: '',
+					label: `${WORDS}.picks.name.label`,
+					hint: `${WORDS}.picks.name.hint`,
+				}),
+				damage: new fields.StringField(
+					withWidget({
+						required: true,
+						nullable: false,
+						blank: true,
+						initial: '',
+						label: `${WORDS}.picks.damage.label`,
+						hint: `${WORDS}.picks.damage.hint`,
+						widget: 'formula',
+					}),
+				),
+				damageType: new fields.StringField({
+					required: true,
+					nullable: false,
+					blank: true,
+					initial: '',
+					label: `${WORDS}.picks.damageType.label`,
+					hint: `${WORDS}.picks.damageType.hint`,
+					choices: () => CONFIG.NIMBLE.damageTypes,
+				}),
+				lowerArmorSteps: new fields.NumberField({
+					required: true,
+					nullable: false,
+					initial: 0,
+					min: 0,
+					integer: true,
+					label: `${WORDS}.picks.lowerArmorSteps.label`,
+					hint: `${WORDS}.picks.lowerArmorSteps.hint`,
+				}),
+			}),
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: [],
+				label: `${WORDS}.picks.label`,
+				hint: `${WORDS}.picks.hint`,
+				showWhen: (data: Record<string, unknown>) => data.target === 'meleeWeapon',
+			}) as unknown as never,
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'useOption' }),
 	};
 }
@@ -212,6 +261,16 @@ interface OptionSpell {
 			acquireTargetsFromTemplate?: boolean;
 			targets?: { count?: number };
 		};
+	};
+}
+
+/** The parts of a weapon an option reads to decide whether it applies. */
+interface OptionWeapon {
+	type?: string;
+	actor?: { type?: string | null } | null;
+	system?: {
+		objectType?: string;
+		activation?: Parameters<typeof deliveryOfAttack>[0];
 	};
 }
 
@@ -264,6 +323,8 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	/** An effect of the item that the caster gains after a cast with the option. */
 	declare effectId: string;
 
+	// `picks` is inferred from the schema: named picks that share the chosen amount.
+
 	static override defineSchema(): UseOptionRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -311,10 +372,29 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 		return this.spells.length === 0 || this.spells.includes(identifier);
 	}
 
+	/** The picks of a split option, keyed by their place in the list. Empty for other options. */
+	get pickList(): Array<UseOptionPick & { key: string }> {
+		if (this.spendMode !== 'variable') return [];
+		return (this.picks ?? []).map((each, index) => ({
+			key: String(index),
+			name: String(each.name ?? ''),
+			damage: String(each.damage ?? '').trim(),
+			damageType: String(each.damageType ?? ''),
+			lowerArmorSteps: Math.max(0, Math.trunc(Number(each.lowerArmorSteps) || 0)),
+		}));
+	}
+
+	/** Whether the option goes into the activation dialog of this weapon. */
+	appliesToWeapon(item: OptionWeapon | null | undefined): boolean {
+		if (this.target !== 'meleeWeapon') return false;
+		if (item?.type !== 'object' || item.system?.objectType !== 'weapon') return false;
+		return deliveryOfAttack(item.system.activation, item.actor) === 'melee';
+	}
+
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
-				['target', '"spell"'],
+				['target', '"spell" | "meleeWeapon"'],
 				['tieredOnly', 'boolean'],
 				['singleTargetOnly', 'boolean'],
 				['schools', 'string[]'],
@@ -331,6 +411,7 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 				['replacesSpellCost', 'boolean'],
 				['manaSet', 'number | null'],
 				['effectId', 'string'],
+				['picks', '{ name, damage, damageType, lowerArmorSteps }[]'],
 			]),
 		);
 	}

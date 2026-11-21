@@ -11,6 +11,7 @@ import type { AppliedTicks } from '#types/conditionRollMode.d.ts';
 import type { DualWieldOffer } from '#types/dualWield.d.ts';
 import type { MaxDamageChoice, MaxDamageOffer } from '#types/maxDamage.d.ts';
 import type { ResourceCost } from '#types/resourceCost.d.ts';
+import type { UseOptionGroup } from '#types/useOption.d.ts';
 import {
 	type ConditionalBonusOption,
 	getActiveConditionalBonuses,
@@ -47,6 +48,7 @@ import {
 	getAttackDeliveryFromActivation,
 } from './itemActivationConfigDialogHelpers.js';
 import { resourceAmounts } from './resourceAmounts.svelte.ts';
+import { useOptionSplits } from './useOptionSplits.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
 
@@ -61,6 +63,8 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	spendsActions?: number;
 	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
 	resourceCosts?: readonly ResourceCost[];
+	/** The Spell or Attack Options the attacker can turn on for this weapon. */
+	useOptionGroups?: readonly UseOptionGroup[];
 }
 
 export function createItemActivationConfigDialogState(
@@ -74,9 +78,10 @@ export function createItemActivationConfigDialogState(
 	const item = options.item();
 
 	const resources = resourceAmounts(actor, options.resourceCosts ?? []);
+	const splits = useOptionSplits(actor, options.useOptionGroups ?? []);
 
 	const spendLine = $derived.by(() => {
-		const costParts = rollWindowCostParts(resources.chosen());
+		const costParts = rollWindowCostParts([...resources.chosen(), ...splits.costs()]);
 		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
 	});
 
@@ -507,6 +512,15 @@ export function createItemActivationConfigDialogState(
 		},
 		setResourceAmount: resources.set,
 		adjustResourceAmount: resources.adjust,
+		get optionSplits() {
+			return splits.views;
+		},
+		/** The Spell or Attack Options the player turned on. */
+		get useOptions() {
+			return splits.chosen;
+		},
+		setPick: splits.set,
+		adjustPick: splits.adjust,
 		offersLessMana,
 		dualWieldOffer,
 		get dualWield() {

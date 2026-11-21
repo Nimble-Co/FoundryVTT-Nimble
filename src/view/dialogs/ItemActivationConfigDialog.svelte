@@ -28,6 +28,7 @@
 		spendsActions,
 		ignoreDisadvantage,
 		resourceCosts,
+		useOptionGroups,
 	}: ItemActivationConfigDialogProps = $props();
 
 	const state = createItemActivationConfigDialogState({
@@ -38,6 +39,7 @@
 		ignoresDisadvantage: untrack(() => ignoreDisadvantage),
 		spendsActions: untrack(() => spendsActions),
 		resourceCosts: untrack(() => resourceCosts),
+		useOptionGroups: untrack(() => useOptionGroups ?? []),
 	});
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
@@ -95,6 +97,7 @@
 			consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
 			resourceAmounts: state.resourceAmounts,
+			...(state.useOptions.length > 0 ? { useOptions: state.useOptions } : {}),
 			// Typed conditional-bonus damage rolls as its own damage effect so the
 			// chosen type applies; untyped choices are already folded into rollFormula.
 			conditionalDamages: state.conditionalTypedDamages,
@@ -431,6 +434,29 @@
 			{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
 		</div>
 	{/each}
+
+	{#each state.optionSplits as split (split.key)}
+		<div class="nimble-pool-spend">
+			<h5 class="lb">{split.heading}</h5>
+			{#each split.picks as pick (pick.key)}
+				<AmountStepper
+					label={pick.label}
+					value={pick.amount}
+					minimum={0}
+					limit={pick.limit}
+					shown={pick.cap}
+					words={{
+						decrement: localize('NIMBLE.useOptions.split.decrement', { pick: pick.label }),
+						increment: localize('NIMBLE.useOptions.split.increment', { pick: pick.label }),
+						amount: pick.label,
+					}}
+					onadjust={(delta) => state.adjustPick(split.key, pick.key, delta)}
+					onset={(value) => state.setPick(split.key, pick.key, value)}
+				/>
+			{/each}
+			<p class="nimble-pool-spend__total">{split.totalLine}</p>
+		</div>
+	{/each}
 	{#if game.user?.isGM}
 		<label class="check">
 			<input type="checkbox" bind:checked={state.shouldRollBeHidden} />
@@ -497,6 +523,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
+
+		&__total {
+			margin: 0;
+			font-size: 0.75rem;
+			color: var(--nimble-ui-ink-muted);
+		}
 
 		&__row {
 			display: flex;

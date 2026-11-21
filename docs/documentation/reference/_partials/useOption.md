@@ -44,3 +44,22 @@ The Spell or Attack Option rule (type `useOption`) gives the owner an option to 
 - A cut never raises a cost that is already lower than the minimum.
 - With the **Costs** automation setting off, nothing is checked or spent, the dropdown is never off, and the card still shows the cost line.
 :::
+
+**Example: Zealot.** When you attack with a melee weapon, spend mana up to your highest unlocked spell tier. For each mana, pick one: +5 radiant damage, or the target's armor counts 1 step lower for this attack.
+
+- **Applies to** → `Melee weapons`
+- **Resource** → `Mana`
+- **Spend mode** → `Variable`
+- **Minimum** → `0`
+- **Maximum** → `@resources.highestUnlockedSpellTier`
+- **Picks** → `Condemning Strike` with **Damage for each** `5` and **Damage type** `Radiant`; `Blessed Aim` with **Armor steps lower for each** `1`
+
+An option for **Melee weapons** shows in the roll window of each equipped weapon whose attack is melee. With **Picks**, the window shows a heading such as **Zealot (up to 3 mana)**, one counter for each pick, and a total line such as "2 of 3 mana. You have 7." The counters together stop at the maximum and at what the creature has. Nothing is picked at first.
+
+The player picks before the roll. The amount is spent when the attack is rolled, and the card shows **Cost: 2 mana (Zealot)**. Each unit in a pick adds that pick's change to the attack. Damage for each rolls as its own damage step with its type, such as **Radiant: 10** for two units of 5. A flat amount is a damage modifier, so Medium and Heavy armor drop it, unless the attack crits. Each armor step counts the target's armor one step lower when the damage is applied: Heavy to Medium to none. It applies to all the damage of the attack, as Ignore armor does.
+
+::: details Edge cases
+- **Picks** need **Spend mode** `Variable`. With `Fixed`, the picks do not show.
+- An option for melee weapons with no picks does not show in the roll window yet.
+- Armor steps count only against a creature with Medium or Heavy armor. A hero's Armor is a Defend value and does not change.
+:::

@@ -24,6 +24,7 @@ import localize from '../localize.js';
 import { exceedsUnlockedSpellTier } from './spellCost.js';
 
 type OptionSpell = Parameters<UseOptionRule['appliesToSpell']>[0];
+type OptionWeapon = Parameters<UseOptionRule['appliesToWeapon']>[0];
 
 /** A set mana cost as a whole number of 0 or more, or null when the option does not set it. */
 function manaSetOf(value: unknown): number | null {
@@ -42,13 +43,14 @@ function useOptionOfRule(actor: Actor | null | undefined, rule: UseOptionRule): 
 		actionCostChange: rule.actionCostChange,
 		rangePerMana: Math.max(0, Math.trunc(Number(rule.rangePerMana) || 0)),
 		cardNote: String(rule.cardNote ?? '').trim(),
-		damageTypes: [...(rule.damageTypes as string[])],
-		manaCostChange: rule.manaCostChange,
+		damageTypes: [...((rule.damageTypes as string[] | undefined) ?? [])],
+		manaCostChange: rule.manaCostChange ?? null,
 		freeCopy: rule.freeCopy === true,
 		replacesSpellCost: rule.replacesSpellCost === true,
 		manaSet: manaSetOf(rule.manaSet),
 		effect: rule.effectAfterCast,
 		used: pool ? !hasRuleCharge(actor, pool) : false,
+		...(rule.pickList.length > 0 ? { picks: rule.pickList } : {}),
 	};
 }
 
@@ -80,9 +82,24 @@ export function spellUseOptionGroups(
 	spell: OptionSpell,
 ): UseOptionGroup[] {
 	if (exceedsUnlockedSpellTier(actor as SpellCostActorLike, spell as SpellLike)) return [];
+	return useOptionGroups(actor, (rule) => rule.appliesToSpell(spell));
+}
+
+/** The Spell or Attack Options the attacker can turn on for this weapon, grouped as for a spell. */
+export function weaponUseOptionGroups(
+	actor: Actor | null | undefined,
+	weapon: OptionWeapon,
+): UseOptionGroup[] {
+	return useOptionGroups(actor, (rule) => rule.appliesToWeapon(weapon));
+}
+
+function useOptionGroups(
+	actor: Actor | null | undefined,
+	appliesHere: (rule: UseOptionRule) => boolean,
+): UseOptionGroup[] {
 	const groups = new Map<string, UseOptionGroup>();
 	const rules = rulesOfType(actor as { rules?: unknown } | null, 'useOption').filter(
-		(rule) => rule.appliesTo() && rule.appliesToSpell(spell),
+		(rule) => rule.appliesTo() && appliesHere(rule),
 	);
 	for (const rule of rules) {
 		const option = useOptionOfRule(actor, rule);

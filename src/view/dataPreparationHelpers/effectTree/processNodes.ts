@@ -13,6 +13,8 @@ export function processNodes(effects: EffectNode[], relevantNodes: EffectNode[])
 				node.damageType = parentNode.damageType;
 				node.targetDisposition = parentNode.targetDisposition;
 				node.ignoreArmor = parentNode.ignoreArmor;
+				if (parentNode.lowerArmorSteps) node.lowerArmorSteps = parentNode.lowerArmorSteps;
+				if (parentNode.modifierOnly) node.modifierOnly = true;
 				node.ignoreAllies = parentNode.ignoreAllies;
 				node.roll = parentNode.roll;
 				node.damageMultiplier = parentNode.damageMultiplier;

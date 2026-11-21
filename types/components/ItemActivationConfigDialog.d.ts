@@ -1,4 +1,5 @@
 import type { ResourceCost } from '#types/resourceCost.d.ts';
+import type { UseOptionGroup } from '#types/useOption.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
@@ -102,4 +103,6 @@ export interface ItemActivationConfigDialogProps {
 	ignoreDisadvantage?: boolean;
 	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
 	resourceCosts?: ResourceCost[];
+	/** The Spell or Attack Options the attacker can turn on for this weapon. */
+	useOptionGroups?: UseOptionGroup[];
 }

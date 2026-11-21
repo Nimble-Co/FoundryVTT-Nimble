@@ -118,11 +118,13 @@ import {
 	settleChosenUseOptions,
 	spellManaWithOptions,
 	spellUseOptionGroups,
+	weaponUseOptionGroups,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { pickRidersOf, withPickAmounts } from '../utils/useOption/useOptionPicks.js';
 import { applyUseOptionChanges } from './itemActivation/applyUseOptionChanges.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
@@ -353,6 +355,9 @@ class ItemActivationManager {
 	/** The kept amount of this actor that ends with this roll, used or not. */
 	#keptAmountToEnd: HeldChange | null = null;
 
+	/** How many steps lower the target's armor counts for this attack, from the picks chosen. */
+	#lowerArmorSteps = 0;
+
 	/** With Feature Effects off, the keys of the Held Changes the player ticked; null when all apply. */
 	#heldChosen: ReadonlySet<string> | null = null;
 
@@ -467,6 +472,9 @@ class ItemActivationManager {
 		if (this.#item.type === 'spell') {
 			this.useOptionGroups = spellUseOptionGroups(this.actor, this.#item as never);
 		}
+		if (this.#item.type === 'object') {
+			this.useOptionGroups = weaponUseOptionGroups(this.actor, this.#item as never);
+		}
 
 		const rollOptions = {
 			domain: this.#getItemDomain(),
@@ -501,6 +509,17 @@ class ItemActivationManager {
 		) {
 			dialogData.upcast = undefined;
 		}
+
+		dialogData.useOptions = withPickAmounts(
+			this.actor,
+			this.useOptionGroups,
+			dialogData.useOptions,
+		);
+		const riders = pickRidersOf(this.useOptionGroups, dialogData.useOptions);
+		if (riders.damages.length > 0) {
+			dialogData.conditionalDamages = [...(dialogData.conditionalDamages ?? []), ...riders.damages];
+		}
+		this.#lowerArmorSteps = riders.lowerArmorSteps;
 
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
@@ -1088,14 +1107,14 @@ class ItemActivationManager {
 			if (!formula) continue;
 			const roll = new Roll(formula, this.actor!.getRollData()) as Roll;
 			await roll.evaluate();
-			updatedEffects.push(
-				createBonusDamageNode({
-					damageType: conditional.damageType,
-					formula,
-					roll: roll.toJSON() as Record<string, unknown>,
-					fromItemIdentifier: conditional.fromItemIdentifier,
-				}),
-			);
+			const bonusNode = createBonusDamageNode({
+				damageType: conditional.damageType,
+				formula,
+				roll: roll.toJSON() as Record<string, unknown>,
+				fromItemIdentifier: conditional.fromItemIdentifier,
+			});
+			if (conditional.modifierOnly) bonusNode.modifierOnly = true;
+			updatedEffects.push(bonusNode);
 			rolls.push(roll);
 		}
 		for (const part of (await this.#heldPlan?.rollExtraDamage(this.actor!.getRollData())) ?? []) {
@@ -1117,6 +1136,11 @@ class ItemActivationManager {
 		//
 		// Rebuilding the tree here is also what reflects every roll added above
 		// back into the activation data.
+		if (this.#lowerArmorSteps > 0) {
+			for (const node of updatedEffects) {
+				if (node.type === 'damage') node.lowerArmorSteps = this.#lowerArmorSteps;
+			}
+		}
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 		const renderedNodesById = ItemActivationManager.#indexNodesById(
 			this.activationData.effects as EffectNode[],
@@ -1978,6 +2002,8 @@ namespace ItemActivationManager {
 			damageType: string;
 			label: string;
 			fromItemIdentifier?: string;
+			/** Flat damage that armor treats as a damage modifier. */
+			modifierOnly?: boolean;
 		}>;
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
@@ -2094,6 +2120,8 @@ namespace ItemActivationManager {
 			damageType: string;
 			label: string;
 			fromItemIdentifier?: string;
+			/** Flat damage that armor treats as a damage modifier. */
+			modifierOnly?: boolean;
 		}>;
 	}
 }

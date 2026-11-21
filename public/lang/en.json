@@ -2217,12 +2217,13 @@
 				}
 			},
 			"useOption": {
-				"description": "An option the player can turn on in the cast window of a spell, with its own cost and change. It goes on the feature that gives the option. It is off at first.",
+				"description": "An option the player can turn on in the cast window of a spell or the roll window of a melee weapon, with its own cost and change. It goes on the feature that gives the option. It is off at first.",
 				"target": {
 					"label": "Applies to",
 					"hint": "The window the option shows in.",
 					"choices": {
-						"spell": "Spells"
+						"spell": "Spells",
+						"meleeWeapon": "Melee weapons"
 					}
 				},
 				"tieredOnly": {
@@ -2288,6 +2289,26 @@
 				"effectId": {
 					"label": "Effect after the cast",
 					"hint": "An effect of this item that the caster gains after a cast with the option. Its rule formulas can read @cost, what the cast spent and sacrificed, such as floor(@cost.hp / 2). Empty is no effect."
+				},
+				"picks": {
+					"label": "Picks",
+					"hint": "Melee weapons. Named picks that share the amount the player chooses, one stepper each. Each unit put in a pick adds that pick's change. Needs Spend mode Variable; the maximum is the most for all the picks together.",
+					"name": {
+						"label": "Name",
+						"hint": "The name of the pick in the roll window, such as Condemning Strike."
+					},
+					"damage": {
+						"label": "Damage for each",
+						"hint": "Damage added to the attack for each unit in the pick, rolled as its own damage. A flat amount is a damage modifier, which Medium and Heavy armor drop. Empty adds none."
+					},
+					"damageType": {
+						"label": "Damage type",
+						"hint": "The type of the added damage."
+					},
+					"lowerArmorSteps": {
+						"label": "Armor steps lower for each",
+						"hint": "For each unit in the pick, the target's armor counts 1 step lower for this attack: Heavy to Medium to none."
+					}
 				}
 			},
 			"diceConsumer": {
@@ -4126,7 +4147,17 @@
 			"copyReason": "a copy of the cast",
 			"increment": "One more: {label}",
 			"decrement": "One less: {label}",
-			"noUseLeft": "{pool} has no use left."
+			"noUseLeft": "{pool} has no use left.",
+			"split": {
+				"heading": "{name} (up to {cost})",
+				"pick": "{name}: {effects}",
+				"damage": "+{damage} {type}",
+				"armorStep": "armor 1 step lower",
+				"armorSteps": "armor {steps} steps lower",
+				"total": "{spent} of {cost}. You have {available}.",
+				"increment": "One more: {pick}",
+				"decrement": "One less: {pick}"
+			}
 		},
 		"resourceCosts": {
 			"cardLine": "Cost: {cost} ({source})",
