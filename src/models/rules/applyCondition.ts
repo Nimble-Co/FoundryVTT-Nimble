@@ -9,6 +9,7 @@ import {
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
 import { UNDO_APPLICATION_OPTION } from '#utils/actor/effectStacks.js';
+import { linkedActorFlags } from '#utils/actor/linkedActor.js';
 import {
 	giveWounds,
 	takeBackWounds,
@@ -219,9 +220,14 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onItemUsed(context: ItemUsedContext): Promise<void> {
 		if (!this.#shouldFireOnItemUsed(context)) return;
+
 		const targetActor = context.targetActor as unknown as ConditionTargetActor | null;
 		if (!targetActor) return;
-		await this.#applyConditionTo(targetActor, undefined, context.card as unknown as WoundCard);
+		await this.#applyConditionTo(
+			targetActor,
+			linkedActorFlags((this.actor as unknown as { uuid?: string } | null)?.uuid),
+			context.card as unknown as WoundCard,
+		);
 	}
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {

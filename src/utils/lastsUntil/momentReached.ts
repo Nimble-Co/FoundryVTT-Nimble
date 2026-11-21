@@ -75,6 +75,8 @@ export interface MomentSubject {
 	startSeat: TurnSeat | null;
 	holder: object | null;
 	source: object | null;
+	/** The creature the effect is tied to, when the rule that applied it named one. */
+	linked: object | null;
 	origin: string | null;
 	/** The id of the effect itself. */
 	effectId?: string | null;
@@ -256,8 +258,14 @@ function eventMomentReached(
 		const dealt = check.damageTypes ?? [];
 		if (!moment.damageTypes.some((type) => dealt.includes(type))) return false;
 	}
-	const creature = moment.who === 'source' ? subject.source : subject.holder;
+	const creature = subjectCreature(moment.who, subject);
 	return creature !== null && check.actor === creature;
+}
+
+function subjectCreature(who: EventSubject | null, subject: MomentSubject): object | null {
+	if (who === 'source') return subject.source;
+	if (who === 'linked') return subject.linked;
+	return subject.holder;
 }
 
 export function momentReached(

@@ -28,6 +28,7 @@ interface MockActiveEffect {
 
 interface MockActor {
 	isOwner: boolean;
+	uuid: string;
 	statuses: Set<string>;
 	effects: MockActiveEffect[];
 	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
@@ -84,9 +85,13 @@ interface ApplyConditionRuleTestInstance extends ApplyConditionRule {
 	label: string;
 }
 
+let nextActorId = 0;
+
 function createMockActor(): MockActor {
+	nextActorId += 1;
 	const actor: MockActor = {
 		isOwner: true,
+		uuid: `Actor.mock-${nextActorId}`,
 		statuses: new Set<string>(),
 		effects: [],
 		deleteEmbeddedDocuments: vi.fn(async (_type: string, ids: string[]) => {
@@ -332,6 +337,21 @@ describe('ApplyConditionRule', () => {
 			await rule.onItemUsed(buildItemUsedContext(otherActor, targetActor, { isCritical: true }));
 
 			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+		});
+
+		it('records the attacker as the link on a condition applied to the target', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'swallowed', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
+				linkedActorUuid: attackerActor.uuid,
+			});
 		});
 
 		it('no-ops gracefully when targetActor is null', async () => {

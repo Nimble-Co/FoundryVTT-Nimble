@@ -18,6 +18,8 @@ export type Person = { kind: 'you' } | { kind: 'they' } | { kind: 'named'; name:
 export interface LastsUntilReader {
 	holder: Person;
 	source: Person;
+	/** The creature the effect is tied to. Unnamed, it reads as "the creature they hold". */
+	linked?: Person;
 }
 
 /** A card that puts the effect on its targets: they hold it, you used the card. */
@@ -33,10 +35,14 @@ export const CARD_SELF_READER: LastsUntilReader = {
 };
 
 /** The sheet of the holder. With no source name, or the holder as source, the source is "you". */
-export function holderReader(sourceName: string | null): LastsUntilReader {
+export function holderReader(
+	sourceName: string | null,
+	linkedName: string | null = null,
+): LastsUntilReader {
 	return {
 		holder: { kind: 'you' },
 		source: sourceName ? { kind: 'named', name: sourceName } : { kind: 'you' },
+		...(linkedName ? { linked: { kind: 'named' as const, name: linkedName } } : {}),
 	};
 }
 
@@ -89,6 +95,16 @@ export interface DescribeInput {
 	reader: LastsUntilReader;
 	localize: Localize;
 	format: Format;
+}
+
+function readerPerson(who: Moment['who'], input: DescribeInput): Person {
+	if (who === 'source') return input.reader.source;
+	if (who === 'linked') {
+		return (
+			input.reader.linked ?? { kind: 'named', name: input.localize(`${WORDS}.linkedCreature`) }
+		);
+	}
+	return input.reader.holder;
 }
 
 function possessive(person: Person, input: DescribeInput): string {
@@ -214,7 +230,7 @@ function eventPhrase(moment: Moment, input: DescribeInput): string {
 	if (event === 'tempHpGone') {
 		return input.format(`${WORDS}.until`, { moment: input.localize(`${WORDS}.tempHpGone`) });
 	}
-	const person = moment.who === 'source' ? input.reader.source : input.reader.holder;
+	const person = readerPerson(moment.who, input);
 	const action = eventAction(moment, event, person, input);
 	return input.format(`${WORDS}.until`, {
 		moment: `${subjectWord(person, input)} ${action}`,

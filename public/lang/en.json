@@ -4275,6 +4275,7 @@
 			"rangedAttack": "ranged attack",
 			"nextAttack": "{whose} next {attack}",
 			"nextAttackFrom": "{whose} next {attack} against {whom}",
+			"linkedCreature": "the creature they hold",
 			"nextAttackOn": "the next {attack} against {whom}",
 			"units": {
 				"rounds": { "one": "1 round", "many": "{value} rounds" },
@@ -4393,6 +4394,7 @@
 				"subject": {
 					"holder": "they",
 					"source": "you",
+					"linked": "the creature they hold",
 					"effect": "the effect"
 				},
 				"event": {

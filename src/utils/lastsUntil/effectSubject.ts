@@ -7,6 +7,7 @@ import {
 	type TurnSeat,
 } from '#utils/lastsUntil/momentReached.js';
 import { secondsOf } from '#utils/lastsUntil/secondsOf.js';
+import { linkedActorUuidOf } from '#utils/actor/linkedActor.js';
 import { getMinionGroupId } from '#utils/minions/minionGrouping.js';
 
 type CombatantLike = Combatant.Implementation;
@@ -33,6 +34,14 @@ export function sourceOf(effect: ActiveEffect): Actor | null {
 	if (origin instanceof Actor) return origin;
 	if (origin instanceof Item) return (origin.actor as Actor | null) ?? null;
 	return null;
+}
+
+/** The creature an effect is tied to, stamped on it when the effect was applied. */
+export function linkedOf(effect: ActiveEffect): Actor | null {
+	const uuid = linkedActorUuidOf(effect);
+	if (!uuid) return null;
+	const linked = fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false });
+	return linked instanceof Actor ? linked : null;
 }
 
 function sameActor(a: Actor | null | undefined, b: Actor | null | undefined): boolean {
@@ -69,6 +78,7 @@ export function effectSubject(
 ): MomentSubject {
 	const holder = holderOf(effect);
 	const source = sourceOf(effect);
+	const linked = linkedOf(effect);
 	const start = (effect.start ?? { time: 0 }) as Partial<Omit<EffectStart, 'combat'>> & {
 		combat?: string | { id?: string | null } | null;
 	};
@@ -91,6 +101,7 @@ export function effectSubject(
 		startSeat: startCombatant ? seatOf(startCombatant) : null,
 		holder,
 		source,
+		linked,
 		origin: effect.origin ?? null,
 		effectId: effect.id ?? null,
 		holderInCombat: !!(holder as { inCombat?: boolean } | null)?.inCombat,

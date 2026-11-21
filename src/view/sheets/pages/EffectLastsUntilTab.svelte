@@ -48,7 +48,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 	let { effect }: EffectTabProps = $props();
 
-	const SUBJECTS = ['holder', 'source', 'effect'] as const;
+	const SUBJECTS = ['holder', 'source', 'linked', 'effect'] as const;
 	const DAMAGE_TYPES = Object.keys(CONFIG.NIMBLE.damageTypes ?? {});
 	const SKILL_WORDS = (CONFIG.NIMBLE.skills ?? {}) as Record<string, string>;
 	const tab = createEffectLastsUntilTabState(() => effect);

@@ -13,6 +13,7 @@ function makeActor(uuid: string, type = 'npc') {
 
 const goblin = makeActor('Actor.goblin');
 const tessa = makeActor('Actor.tessa', 'character');
+const bruno = makeActor('Actor.bruno', 'character');
 
 function makeCombatant(id: string, actor: object, type = 'npc') {
 	return Object.assign(Object.create(Combatant.prototype), { id, actor, type, flags: {} });
@@ -73,7 +74,11 @@ let coreIsExpiryEvent: ReturnType<typeof vi.fn>;
 beforeEach(() => {
 	vi.stubGlobal(
 		'fromUuidSync',
-		vi.fn((uuid: string) => (uuid === spell.uuid ? spell : null)),
+		vi.fn((uuid: string) => {
+			if (uuid === spell.uuid) return spell;
+			if (uuid === bruno.uuid) return bruno;
+			return null;
+		}),
 	);
 	coreIsExpiryEvent = vi.fn(() => true);
 	Object.assign(ActiveEffect.prototype, { isExpiryEvent: coreIsExpiryEvent });
@@ -92,6 +97,21 @@ describe('effectEndsAt', () => {
 
 		expect(effectEndsAt(effect, turnEnd(tessaCombatant, 1), combat)).toBe(false);
 		expect(effectEndsAt(effect, turnEnd(goblinCombatant, 1), combat)).toBe(true);
+	});
+
+	it('ends Latched On when the creature it latched onto dies', () => {
+		const dies = (actor: object): LastsUntilCheck => ({ type: 'event', event: 'die', actor });
+		const effect = makeEffect({
+			lastsUntil: [
+				moment({ kind: 'event', who: 'holder', event: 'die' }),
+				moment({ kind: 'event', who: 'linked', event: 'die' }),
+			],
+			flags: { [SYSTEM_ID]: { linkedActorUuid: bruno.uuid } },
+		});
+
+		expect(effectEndsAt(effect, dies(bruno), combat)).toBe(true);
+		expect(effectEndsAt(effect, dies(goblin), combat)).toBe(true);
+		expect(effectEndsAt(effect, dies(tessa), combat)).toBe(false);
 	});
 
 	it('reads a prepared start, whose combat is the Combat document', () => {
