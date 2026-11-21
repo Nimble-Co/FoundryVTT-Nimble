@@ -25,6 +25,7 @@ async function castFreeCopy(spell: NimbleSpellItem, manager: ItemActivationManag
 	const upcast = manager.upcastResult;
 	await actor.activateItem(id, {
 		fastForward: true,
+		countsAsAttack: false,
 		free: {
 			of: ['mana'],
 			reason: {

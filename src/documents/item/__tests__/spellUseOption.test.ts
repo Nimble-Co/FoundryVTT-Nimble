@@ -585,6 +585,10 @@ describe('an option with a free copy', () => {
 		expect(item.spellCardData[1]?.system.castManaSpent).toBe(0);
 		expect((item.spellCardData[1]?.system.upcast as { manaSpent: number }).manaSpent).toBe(3);
 		expect(usesLeft(actor)).toBe(0);
+		expect((actor as unknown as { activateItem: unknown }).activateItem).toHaveBeenCalledWith(
+			item.id,
+			expect.objectContaining({ countsAsAttack: false }),
+		);
 	});
 
 	it('costs at least its minimum when the cast spent no mana', async () => {

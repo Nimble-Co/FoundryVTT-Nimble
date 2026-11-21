@@ -47,6 +47,14 @@ export function countsAsAttack(item: ItemLike | null | undefined): boolean {
 	return !!activation?.targets?.attackType;
 }
 
+/** Whether this use of the item counts as an attack of the turn. A use inside another use does not. */
+export function usesCountAsAttack(
+	item: ItemLike | null | undefined,
+	options: { countsAsAttack?: boolean },
+): boolean {
+	return options.countsAsAttack !== false && countsAsAttack(item);
+}
+
 /** A roll by the attacker takes the disadvantage. With a save, the rule gives the enemy advantage. */
 export function rollsWithRushedDisadvantage(item: ItemLike | null | undefined): boolean {
 	return countsAsAttack(item) && !effectTypes(item as ItemLike).has(SAVE_NODE);

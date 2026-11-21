@@ -46,9 +46,9 @@ import {
 } from '../../utils/combat/combatTurnActions.js';
 import {
 	attacksMadeThisTurn,
-	countsAsAttack,
 	recordAttack,
 	rollsWithRushedDisadvantage,
+	usesCountAsAttack,
 } from '../../utils/combat/rushedAttacks.js';
 import showInsufficientActionsConfirmation from '../../utils/combat/showInsufficientActionsConfirmation.js';
 import { withActionCostChange } from '../../utils/combat/withActionCostChange.js';
@@ -2474,7 +2474,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				: {}),
 		});
 
-		if (result && countsAsAttack(item)) await recordAttack(this);
+		if (result && usesCountAsAttack(item, options)) await recordAttack(this);
 
 		if (result && item && paysActions) {
 			const changes = (foundry.utils.getProperty(result, `flags.${SYSTEM_ID}.actionCostChanges`) ??
