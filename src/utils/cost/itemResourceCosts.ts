@@ -82,8 +82,16 @@ function resourceCostRefusal(actor: CostPayer, costs: readonly ResourceCost[]): 
 	return short ? notEnoughNotice(actor, short) : null;
 }
 
+/** Show the notice for the first cost the creature cannot cover. True when there is one. */
+function refuseResourceCosts(actor: CostPayer, costs: readonly ResourceCost[]): boolean {
+	const refusal = resourceCostRefusal(actor, costs);
+	if (refusal) ui.notifications?.error(refusal);
+	return refusal !== null;
+}
+
 export {
 	hasResourceCostRules,
+	refuseResourceCosts,
 	resourceCostRefusal,
 	resourceCostRollData,
 	resourceCostsOfUse,

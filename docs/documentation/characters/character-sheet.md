@@ -88,8 +88,6 @@ Everything a class gives you sits under that class. The features it hands you au
 
 Your known spells. The buttons at the top group them **By tier** or **By school**. Click a spell to cast it. Spells that can be upcast open a window asking how much mana to spend, with a preview of what the extra mana buys.
 
-When a spell or feature spends or sacrifices mana, HP, temp HP or Wounds, its chat card shows a **Cost:** line, such as **Cost: 2 mana (Stretch Time)**. When a use needs more than you have and its rule allows it, a window asks you to confirm before you use it beyond what you have.
-
 Dropping a spell from a compendium onto the sheet asks whether to add it to your spell list or to add it as a single-use spell scroll. If the spell's tier is above your highest unlocked spell tier, the spell list option shows a warning: the spell would be added to your list, but you would not be able to cast it.
 
 Each spell row shows what casting it costs. For most classes that is the spell's tier in mana. Some classes pay from a pool of uses instead: their rows show the uses that are left and when they come back.

@@ -46,14 +46,16 @@ function rollWindowCostParts(costs: readonly ResourceCost[]): {
 	return { spends, sacrifices };
 }
 
-/** The card record of a use's costs. */
+/** The card record of a use's costs. A cost that took nothing has no line. */
 function cardCostsOf(costs: readonly ResourceCost[]): CardResourceCost[] {
-	return costs.map((cost) => ({
-		kind: cost.kind,
-		amount: Number(cost.amount),
-		source: cost.source ?? '',
-		...(cost.roll ? { roll: cost.roll } : {}),
-	}));
+	return costs
+		.filter((cost) => Number(cost.amount) > 0)
+		.map((cost) => ({
+			kind: cost.kind,
+			amount: Number(cost.amount),
+			source: cost.source ?? '',
+			...(cost.roll ? { roll: cost.roll } : {}),
+		}));
 }
 
 export { cardCostLine, cardCostsOf, resourceCostText, rollWindowCostParts, woundsWord };

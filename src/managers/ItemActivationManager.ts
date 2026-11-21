@@ -41,7 +41,7 @@ import { ChargePoolRuleConfig } from '../utils/chargePool/chargePoolRuleConfig.j
 import { spendRuleCharge } from '../utils/chargePool/ruleChargeGate.js';
 import {
 	hasResourceCostRules,
-	resourceCostRefusal,
+	refuseResourceCosts,
 	resourceCostRollData,
 	resourceCostsOfUse,
 	settleResourceCosts,
@@ -432,9 +432,7 @@ class ItemActivationManager {
 		this.resourceCosts = resourceCostsOfUse(this.#item, {
 			freeOfMana: this.free?.of.includes('mana'),
 		});
-		const refusal = resourceCostRefusal(this.actor, this.resourceCosts);
-		if (refusal) {
-			ui.notifications?.error(refusal);
+		if (refuseResourceCosts(this.actor, this.resourceCosts)) {
 			return { activation: null, rolls: null };
 		}
 
@@ -457,9 +455,7 @@ class ItemActivationManager {
 			this.resourceCosts,
 			dialogData.resourceAmounts,
 		);
-		const settledRefusal = resourceCostRefusal(this.actor, this.resourceCosts);
-		if (settledRefusal) {
-			ui.notifications?.error(settledRefusal);
+		if (refuseResourceCosts(this.actor, this.resourceCosts)) {
 			return { activation: null, rolls: null };
 		}
 
