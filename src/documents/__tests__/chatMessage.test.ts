@@ -2914,7 +2914,7 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 });
 
 describe('healing that goes to the one who used the item', () => {
-	function selfHealingMessage(total = 7) {
+	function selfHealingMessage(total = 7, node: Record<string, unknown> = {}) {
 		const actor = {
 			uuid: 'Actor.hero',
 			name: 'Hero',
@@ -2939,6 +2939,7 @@ describe('healing that goes to the one who used the item', () => {
 						healingType: 'tempHealing',
 						recipient: 'self',
 						roll: { total },
+						...node,
 					},
 				],
 			],
@@ -2979,6 +2980,15 @@ describe('healing that goes to the one who used the item', () => {
 		await message.applySelfHealing();
 
 		expect(actor.applyHealing).not.toHaveBeenCalled();
+	});
+
+	it('waits for its button when it applies on a click', async () => {
+		const { actor, message } = selfHealingMessage(7, { waitsForClick: true });
+
+		await message.applySelfHealing();
+
+		expect(actor.applyHealing).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
 	});
 
 	it('leaves temp healing that an Apply Effect step gives to that step', async () => {

@@ -4,6 +4,7 @@
 	import { updateEffectNode } from '#utils/treeManipulation/updateEffectNode.ts';
 	import ItemEffectSelect from '../../components/ItemEffectSelect.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
+	import { getSelfAppliesOptions } from '../pages/itemActivationEffectsConfigTabHelpers.ts';
 	import { tempHealingOptions } from './applyEffectNodeOptions.ts';
 
 	const WORDS = 'NIMBLE.activationEffects.applyEffectNode';
@@ -26,10 +27,7 @@
 		node.condition ? (CONFIG.NIMBLE.conditions[node.condition] ?? node.condition) : null,
 	);
 	const tempHealing = $derived(tempHealingOptions(effects));
-	const appliesOptions = [
-		{ value: 'used', label: localize(`${WORDS}.appliesWhen.used`) },
-		{ value: 'click', label: localize(`${WORDS}.appliesWhen.click`) },
-	];
+	const appliesOptions = getSelfAppliesOptions();
 
 	function storeEffect(effectId: string | null) {
 		return updateEffectNode(document, effects, node, 'effectId', effectId);

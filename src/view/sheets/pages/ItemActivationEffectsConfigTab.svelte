@@ -19,6 +19,7 @@
 		getNoteTypes,
 		getPoolActions,
 		getPoolTypes,
+		getSelfAppliesOptions,
 		getValidActionConsequences,
 		prepareSavingThrowOptions,
 		toggleListedCondition,
@@ -32,6 +33,7 @@
 	const moveKinds = getMoveKinds();
 	const moveRecipients = getMoveRecipients();
 	const moveDirections = getMoveDirections();
+	const selfAppliesOptions = getSelfAppliesOptions();
 	const sizeCategories = Object.entries(CONFIG.NIMBLE.sizeCategories);
 	const poolTypes = getPoolTypes();
 	const poolActions = getPoolActions();
@@ -364,6 +366,20 @@
 	</li>
 {/snippet}
 
+{#snippet SelfApplies(node)}
+	<div style="width: 100%;">
+		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.activationEffects.applyEffectNode.applies')}
+		</h5>
+		<TagGroup
+			options={selfAppliesOptions}
+			selectedOptions={[node.waitsForClick ? 'click' : 'used']}
+			toggleOption={(value) =>
+				updateEffectNode(document, effects, node, 'waitsForClick', value === 'click')}
+		/>
+	</div>
+{/snippet}
+
 {#snippet HealingNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
@@ -469,6 +485,10 @@
 						</select>
 					</label>
 				</div>
+
+				{#if node.recipient === 'self'}
+					{@render SelfApplies(node)}
+				{/if}
 			</div>
 		</div>
 	</li>

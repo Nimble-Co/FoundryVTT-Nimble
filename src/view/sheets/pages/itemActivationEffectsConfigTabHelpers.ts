@@ -177,6 +177,14 @@ export function getMoveRecipients(): LabeledOption[] {
 	];
 }
 
+/** When a step for the user applies: when the item is used, or on a click of its button. */
+export function getSelfAppliesOptions(): LabeledOption[] {
+	return ['used', 'click'].map((value) => ({
+		value,
+		label: localize(`NIMBLE.activationEffects.applyEffectNode.appliesWhen.${value}`),
+	}));
+}
+
 export function getMoveDirections(): LabeledOption[] {
 	return ['any', 'away', 'toward'].map((value) => ({
 		value,

@@ -39,7 +39,7 @@ A damage entry in a bucket can hold its own Damage Outcome, and the rule is the 
 
 ## Healing
 
-A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Temporary Healing**), a **Who gets it?** choice, and a Target Disposition. **The one who uses it** gives the healing to the item's user with no target and no click. On a consumable object, the healing potion bonus rules of the drinker add to the healing formula.
+A healing entry has a **Roll Formula**, a **Healing Type** (**Healing** or **Temporary Healing**), a **Who gets it?** choice, and a Target Disposition. **The one who uses it** gives the healing to the item's user with no target and no click. Set its **Applies** to **On a click** to make it wait for its **Apply Healing** button, as an Apply Effect entry can. On a consumable object, the healing potion bonus rules of the drinker add to the healing formula.
 
 ## Save
 

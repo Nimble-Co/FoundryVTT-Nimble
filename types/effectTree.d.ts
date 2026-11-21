@@ -193,6 +193,8 @@ export type HealingNode = {
 	formula: string;
 	/** `self` goes to the one who used the item, with no target. Absent goes to the card's targets. */
 	recipient?: 'self';
+	/** Healing for the user that waits for its button. Absent is false. */
+	waitsForClick?: boolean;
 	targetDisposition?: EffectNodeDisposition;
 	parentContext: string | null;
 	parentNode: string | null;
