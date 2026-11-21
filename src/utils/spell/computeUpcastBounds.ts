@@ -14,6 +14,8 @@ export interface UpcastBoundsInput {
 	flatCost?: boolean;
 	/** The tier a class pins the cast to, or null when the caster chooses. */
 	pinnedCastTier?: number | null;
+	/** A change to the mana every tier costs, such as -5. A tier never costs less than 0. */
+	manaCostChange?: number;
 }
 
 export interface UpcastBounds {
@@ -34,11 +36,12 @@ export function computeUpcastBounds({
 	enforceManaCost,
 	flatCost = false,
 	pinnedCastTier = null,
+	manaCostChange = 0,
 }: UpcastBoundsInput): UpcastBounds {
 	const currentMana = resources?.mana?.current ?? 0;
 	const ladderTier = resources?.highestUnlockedSpellTier ?? spellTier;
 	const maxTier = flatCost && pinnedCastTier === null ? spellTier : ladderTier;
-	const maxMana = enforceManaCost ? Math.min(currentMana, maxTier) : maxTier;
+	const maxMana = enforceManaCost ? Math.min(currentMana - manaCostChange, maxTier) : maxTier;
 
 	return { currentMana, maxTier, maxMana };
 }

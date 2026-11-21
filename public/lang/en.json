@@ -1982,6 +1982,7 @@
 			"grantActivation": "Grant Activation",
 			"freeMove": "Move for Free",
 			"freeSpellCost": "Free Spell Cost",
+			"spellManaCost": "Spell Mana Cost",
 			"grantMovement": "Grant Movement Mode",
 			"diceConsumer": "Dice Consumer",
 			"dicePool": "Dice Pool",
@@ -2085,6 +2086,10 @@
 				"itemIdentifier": {
 					"label": "Item identifier",
 					"hint": "Only affect the item whose identifier matches this. Leave blank to affect all matching items."
+				},
+				"tieredOnly": {
+					"label": "Tiered spells only",
+					"hint": "Only a spell of tier 1 or more. A cantrip keeps its cost."
 				},
 				"reactions": {
 					"label": "Heroic reactions",
@@ -3066,7 +3071,7 @@
 				}
 			},
 			"useItemFree": {
-				"description": "When one of the triggers happens and the \"Only while\" condition is true, the creature uses another item with no window. The use spends no action, and its card says why it was free.",
+				"description": "When one of the triggers happens and the \"Only while\" condition is true, the creature uses another item with no window, unless Can upcast is on. The use spends no action, and its card says why it was free.",
 				"itemIdentifier": {
 					"label": "Item identifier",
 					"hint": "The identifier of the item to use."
@@ -3096,11 +3101,15 @@
 				},
 				"freeOf": {
 					"label": "Free of",
-					"hint": "The use never spends an action. Use limits: the use does not count toward the uses of the item, such as 1/turn, and needs none left. Mana: a spell costs no mana.",
+					"hint": "The use never spends an action. Use limits: the use does not count toward the uses of the item, such as 1/turn, and needs none left. Mana: a spell costs no mana at its own tier.",
 					"choices": {
 						"uses": "Use limits",
 						"mana": "Mana"
 					}
+				},
+				"upcast": {
+					"label": "Can upcast",
+					"hint": "The use opens the spell window, so the caster can upcast the spell or close the window. An upcast spends only the mana above the spell's tier."
 				},
 				"cardLine": "For free: {trigger} ({feature})",
 				"reasons": {
@@ -3649,6 +3658,17 @@
 						"ranged": "Ranged attacks",
 						"any": "All attacks"
 					}
+				}
+			},
+			"spellManaCost": {
+				"description": "Changes the mana that a tiered spell costs by a number, such as -5 for 5 fewer mana. The cost never goes below 0. Upcast tiers cost less too. On an effect, the Lasts Until of the effect ends it, for example when you cast a tiered spell.",
+				"value": {
+					"label": "Mana change",
+					"hint": "A number or formula added to the mana cost. A negative number lowers it."
+				},
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "Only the spell with this identifier. Blank means every tiered spell."
 				}
 			},
 			"freeSpellCost": {

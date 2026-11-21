@@ -858,3 +858,46 @@ describe('the upcast dialog option that sets the mana of the spell', () => {
 		expect(state.spendLine).toBe('When you roll, it spends 2 Mana.');
 	});
 });
+
+describe('the upcast dialog with a change to the mana cost', () => {
+	it('lowers the mana of each tier, down to 0, and offers the tiers the lowered cost reaches', () => {
+		const state = open(caster({ mana: 3, unlocked: 9 }), fireBolt({ tier: 3 }), {
+			spendsActions: 1,
+			manaCostChange: -5,
+		});
+
+		expect(state.tiers.map((tier) => tier.tier)).toEqual([3, 4, 5, 6, 7, 8]);
+		expect(state.spendLine).toBe('When you roll, it spends 1 action.');
+
+		state.manaToSpend = 7;
+
+		expect(state.spendLine).toBe('When you roll, it spends 1 action and 2 Mana.');
+		expect(state.castWarning).toBe('');
+		expect(state.castData.upcast).toEqual({ manaToSpend: 7, choiceIndex: undefined });
+	});
+
+	it('for a use free of mana, spends only the mana above the spell tier', () => {
+		const state = open(caster({ mana: 1, unlocked: 5 }), fireBolt({ tier: 2 }), {
+			manaCostChange: -2,
+		});
+
+		expect(state.tiers).toEqual([
+			{ tier: 2, short: false },
+			{ tier: 3, short: false },
+		]);
+
+		state.manaToSpend = 3;
+
+		expect(state.spendLine).toBe('When you roll, it spends 1 Mana.');
+	});
+
+	it('is refused when the lowered cost is still more than the caster has', () => {
+		const state = open(caster({ mana: 1, unlocked: 5 }), fireBolt({ tier: 2 }), {
+			manaCostChange: -2,
+		});
+
+		state.manaToSpend = 4;
+
+		expect(state.castWarning).toBe('Not enough mana. You have 1, but need 2.');
+	});
+});

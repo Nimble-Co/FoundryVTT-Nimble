@@ -110,6 +110,7 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
+import { spellManaCostChange, withManaCostChange } from '../utils/spell/spellManaCostChange.js';
 import {
 	type ChosenUseOptions,
 	chosenCastCostChange,
@@ -238,6 +239,12 @@ class ItemActivationManager {
 	 */
 	spellCost: ResolvedSpellCost | null = null;
 
+	/**
+	 * The change to the mana a tiered cast costs: Spell Mana Cost rules, and the cast tier taken
+	 * off by a use free of mana, so its upcast costs only the mana above that tier.
+	 */
+	manaCostChange = 0;
+
 	/** The tick for dual wielding was used on this activation. */
 	#dualWield = false;
 
@@ -274,6 +281,7 @@ class ItemActivationManager {
 			of: [...new Set<ItemActivationManager.FreeOf>(['action', ...free.of])],
 			reason: free.reason,
 			...(free.host ? { host: free.host } : {}),
+			...(free.window ? { window: true } : {}),
 		};
 	}
 
@@ -446,6 +454,7 @@ class ItemActivationManager {
 					resolveEffectiveCastTier(this.#item as unknown as SpellLike, this.pinnedCastTier) ??
 					undefined,
 			});
+			this.manaCostChange = this.#manaCostChange();
 		}
 
 		this.resourceCosts = resourceCostsOfUse(this.#item, {
@@ -518,7 +527,7 @@ class ItemActivationManager {
 			const enforceManaCost =
 				isResourceSpendingAutomationEnabled() &&
 				!flatCost &&
-				!this.free?.of.includes('mana') &&
+				!this.#wholeCastFree() &&
 				!castCostChange.replacesSpellCost;
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
@@ -526,6 +535,7 @@ class ItemActivationManager {
 				enforceManaCost,
 				flatCost,
 				pinnedCastTier: this.pinnedCastTier,
+				manaCostChange: this.manaCostChange,
 			});
 			const context = {
 				spell: {
@@ -541,7 +551,8 @@ class ItemActivationManager {
 				activationData: this.activationData,
 				manaToSpend: dialogData.upcast.manaToSpend,
 				choiceIndex: dialogData.upcast.choiceIndex,
-				enforceManaCost,
+				// A changed cost is checked when it is spent, against the mana it really costs.
+				enforceManaCost: enforceManaCost && this.manaCostChange === 0,
 			};
 
 			try {
@@ -589,8 +600,11 @@ class ItemActivationManager {
 
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
-		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
+		if (this.#wholeCastFree() && this.spellCost?.type === 'mana') {
 			this.spellCost = { type: 'none' };
+		} else if (this.spellCost?.type === 'mana' && this.manaCostChange !== 0) {
+			const amount = withManaCostChange(this.spellCost.amount, this.manaCostChange);
+			this.spellCost = amount > 0 ? { ...this.spellCost, amount } : { type: 'none' };
 		}
 
 		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
@@ -1727,6 +1741,7 @@ class ItemActivationManager {
 			spellCost: this.spellCost,
 			resourceCosts: this.resourceCosts,
 			useOptionGroups: this.useOptionGroups,
+			manaCostChange: this.manaCostChange,
 		});
 		await dialog.render(true);
 		const result = await dialog.promise;
@@ -1800,6 +1815,25 @@ class ItemActivationManager {
 		if (unlocked === null || unlocked === undefined) return false;
 		const tier = this.upcastResult?.manaSpent ?? (this.#item.system as { tier?: number }).tier ?? 0;
 		return tier > 0 && tier > unlocked;
+	}
+
+	/** A use free of mana that opens the cast window: only its upcast above the base tier costs mana. */
+	#freeUpcastPaysAbove(): boolean {
+		return !!this.free?.of.includes('mana') && this.free.window === true;
+	}
+
+	/** A use free of mana with no cast window: the whole cast, at any tier, is free. */
+	#wholeCastFree(): boolean {
+		return !!this.free?.of.includes('mana') && this.free.window !== true;
+	}
+
+	#manaCostChange(): number {
+		const ruled = spellManaCostChange(this.actor as never, this.#item as never);
+		if (!this.#freeUpcastPaysAbove()) return ruled;
+		const spell = this.#item as unknown as SpellLike;
+		const freeTier =
+			resolveEffectiveCastTier(spell, this.pinnedCastTier) ?? spell.system?.tier ?? 0;
+		return ruled - freeTier;
 	}
 
 	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
@@ -1967,6 +2001,8 @@ namespace ItemActivationManager {
 		reason: FreeUseReason;
 		/** The card that shows the use as one line, when its own card would have nothing to click. */
 		host?: FreeUseHost;
+		/** The use opens its window, so a spell can be upcast. */
+		window?: boolean;
 	}
 
 	/**

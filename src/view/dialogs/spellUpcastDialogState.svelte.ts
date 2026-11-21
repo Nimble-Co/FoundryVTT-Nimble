@@ -28,6 +28,7 @@ import { effectMomentNumbers } from '#utils/spell/effectMomentNumbers.js';
 import { effectRuleNumbers } from '#utils/spell/effectRuleNumbers.js';
 import { formatSpellCostLabel, resolveEffectiveCastTier } from '#utils/spell/spellCost.js';
 import { spellManaWithOptions } from '#utils/spell/spellUseOptions.js';
+import { withManaCostChange } from '#utils/spell/spellManaCostChange.js';
 import { stepFormulaDieSize } from '#utils/spell/stepFormulaDieSize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -73,6 +74,8 @@ export interface CreateSpellUpcastDialogStateOptions {
 	resourceCosts?: readonly ResourceCost[];
 	/** The Spell or Attack Options the caster can turn on for this spell. */
 	useOptionGroups?: readonly UseOptionGroup[];
+	/** The change to the mana each tier costs, resolved by the activation manager. */
+	manaCostChange?: number;
 }
 
 /** The amount a player chooses for a variable option cost. */
@@ -157,6 +160,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		spendsActions = 0,
 		resourceCosts = [],
 		useOptionGroups = [],
+		manaCostChange = 0,
 	} = options;
 	const { spellUpcastDialog, effectTypes, spellProperties, itemConfig, objectTypes, damageTypes } =
 		CONFIG.NIMBLE;
@@ -228,6 +232,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 		enforceManaCost: enforceManaCost && !isPoolCost,
 		flatCost: isPoolCost,
 		pinnedCastTier,
+		manaCostChange,
 	});
 	const tierNumbers = Array.from(
 		{ length: maxMana - baseMana + 1 },
@@ -244,16 +249,6 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 
 	let manaToSpend = $state(effectiveCastTier ?? baseMana);
 	let choiceIndex = $state(0);
-
-	// Mana costs track the chosen tier, so the label is rebuilt as it moves.
-	const costLabel = $derived(
-		spellCost
-			? formatSpellCostLabel(
-					spellCost.type === 'mana' ? { type: 'mana', amount: manaToSpend } : spellCost,
-				)
-			: null,
-	);
-	const resources = resourceAmounts(actor, resourceCosts);
 
 	const enforcesOptionCosts = isResourceSpendingAutomationEnabled();
 	let optionChoices = $state<Record<string, string>>({});
@@ -287,15 +282,27 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	);
 	const upcastSteps = $derived(castTier - baseMana);
 
-	/** The mana a tier costs, as the cast spends it. */
+	/** The mana a tier costs: less mana first, then the spell's mana cost change and the chosen options, as the cast spends it. */
 	function manaOfTier(tier: number): number {
-		return spellManaWithOptions(tier, { manaSet, manaCostChanges, lessMana });
+		if (baseMana <= 0 || isPoolCost) return 0;
+		const mana = lessMana && tier > 0 ? tier - 1 : tier;
+		return mana > 0
+			? spellManaWithOptions(withManaCostChange(mana, manaCostChange), { manaSet, manaCostChanges })
+			: 0;
 	}
 
 	/** The mana of the spell at the chosen tier, which every other mana spend comes after. */
-	const spellMana = $derived(
-		baseMana > 0 && !isPoolCost && !replacesSpellCost ? manaOfTier(castTier) : 0,
+	const spellMana = $derived(replacesSpellCost ? 0 : manaOfTier(castTier));
+
+	// Mana costs track the chosen tier, so the label is rebuilt as it moves.
+	const costLabel = $derived(
+		spellCost
+			? formatSpellCostLabel(
+					spellCost.type === 'mana' ? { type: 'mana', amount: spellMana } : spellCost,
+				)
+			: null,
 	);
+	const resources = resourceAmounts(actor, resourceCosts);
 
 	function optionAmountOf(option: UseOption): OptionAmount | null {
 		const range = variableRangeOf(actor as never, option.cost);

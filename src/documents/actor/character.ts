@@ -2446,6 +2446,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const item = this.items.get(id);
 		const paysActions = !options.skipActionDeduction && !options.free;
 		const force = options.force === true;
+		// Read before the use: the use can end an effect that changes the cost.
+		const itemActionCost = item ? resolveCharacterItemActionCost(this, item as ActivatableItem) : 0;
 
 		// Soft-block gate: when the activation costs more actions than the
 		// combatant has remaining, confirm before any activation side effects
@@ -2465,7 +2467,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			...(rushed > 0 && options.rollMode === undefined
 				? { rollMode: -rushed, rushedAttack: rushed + 1 }
 				: {}),
-			spendsActions: paysActions ? this.#actionsSpentBy(item) : 0,
+			spendsActions: paysActions ? this.#actionsSpentBy(item, itemActionCost) : 0,
 			...(checksAfterDialog
 				? {
 						confirmActions: (changes: readonly ActionCostChange[]) =>
@@ -2532,11 +2534,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	/** The actions that a use spends: only in a started combat. */
-	#actionsSpentBy(item: unknown): number {
+	#actionsSpentBy(item: unknown, actionCost: number): number {
 		if (!item || !isActionTrackingAutomationEnabled()) return 0;
 		const combat = game.combat as Combat | null;
 		const inCombat =
 			combat?.started && combat.combatants?.some((entry) => entry.actorId === this.id);
-		return inCombat ? resolveCharacterItemActionCost(this, item as ActivatableItem) : 0;
+		return inCombat ? actionCost : 0;
 	}
 }

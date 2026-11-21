@@ -82,6 +82,7 @@ import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SkillPointMoveRule } from '../models/rules/skillPointMove.js';
 import { SkillRollModeRule } from '../models/rules/skillRollMode.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
+import { SpellManaCostRule } from '../models/rules/spellManaCost.js';
 import { TableRollRule } from '../models/rules/tableRoll.js';
 import { TableRollOptionsRule } from '../models/rules/tableRollOptions.js';
 import { TagsRule } from '../models/rules/tags.js';
@@ -179,6 +180,7 @@ export const RULE_CLASSES = {
 	skillPointMove: SkillPointMoveRule,
 	skillRollMode: SkillRollModeRule,
 	speedBonus: SpeedBonusRule,
+	spellManaCost: SpellManaCostRule,
 	tags: TagsRule,
 	turnDamage: TurnDamageRule,
 	useItemFree: UseItemFreeRule,

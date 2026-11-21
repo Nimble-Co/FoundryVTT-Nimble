@@ -69,6 +69,16 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.applies !== 'heroicReaction',
 			}),
 		),
+		tieredOnly: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: 'NIMBLE.rules.actionCost.tieredOnly.label',
+				hint: 'NIMBLE.rules.actionCost.tieredOnly.hint',
+				showWhen: (data: Record<string, unknown>) => data.applies !== 'heroicReaction',
+			}),
+		),
 		reactions: new fields.ArrayField(
 			new fields.StringField({
 				required: true,
@@ -97,6 +107,7 @@ interface ActionCostTargetItem {
 	type?: string;
 	system?: {
 		identifier?: string;
+		tier?: number;
 	};
 }
 
@@ -130,6 +141,8 @@ class ActionCostRule extends NimbleBaseRule<ActionCostRule.Schema> {
 
 	declare itemIdentifier: string;
 
+	declare tieredOnly: boolean;
+
 	static override defineSchema(): ActionCostRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -145,6 +158,7 @@ class ActionCostRule extends NimbleBaseRule<ActionCostRule.Schema> {
 				['value', 'string'],
 				['itemTypes', 'string[]'],
 				['itemIdentifier', 'string'],
+				['tieredOnly', 'boolean'],
 				['reactions', 'string[]'],
 			]),
 		);
@@ -162,6 +176,7 @@ class ActionCostRule extends NimbleBaseRule<ActionCostRule.Schema> {
 		if (this.itemIdentifier !== '' && this.itemIdentifier !== (item.system?.identifier ?? '')) {
 			return false;
 		}
+		if (this.tieredOnly && (item.type !== 'spell' || (item.system?.tier ?? 0) < 1)) return false;
 		return true;
 	}
 

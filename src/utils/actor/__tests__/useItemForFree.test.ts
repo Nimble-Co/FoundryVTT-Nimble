@@ -51,6 +51,19 @@ describe('useItemForFree', () => {
 		expect(askActiveGm).not.toHaveBeenCalled();
 	});
 
+	it('opens the window of the item when the free use asks for one', async () => {
+		const { useItemForFree } = await load();
+		const actor = actorWith([{ id: 'b', identifier: 'enchant-weapon' }]);
+		const withWindow = { ...free, of: ['mana' as const], window: true };
+
+		await useItemForFree(actor, 'enchant-weapon', withWindow);
+
+		expect(actor.activateItem).toHaveBeenCalledWith('b', {
+			fastForward: false,
+			free: withWindow,
+		});
+	});
+
 	it('finds an item by its system identifier when the item has no identifier getter', async () => {
 		const { useItemForFree } = await load();
 		const actor = actorWith([{ id: 'b', system: { identifier: 'rage' } }]);
