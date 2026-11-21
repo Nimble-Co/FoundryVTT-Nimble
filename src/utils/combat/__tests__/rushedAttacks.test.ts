@@ -4,6 +4,7 @@ import {
 	countsAsAttack,
 	recordAttack,
 	rollsWithRushedDisadvantage,
+	usesCountAsAttack,
 } from '../rushedAttacks.ts';
 
 const ACTOR = { id: 'hero' };
@@ -35,6 +36,12 @@ describe('which items are attacks', () => {
 	it('does not count an item with no attack, or a spell with no damage', () => {
 		expect(countsAsAttack(item('feature', ''))).toBe(false);
 		expect(countsAsAttack(item('spell', '', [{ type: 'condition' }]))).toBe(false);
+	});
+
+	it('does not count a use that is part of another use, such as a free copy', () => {
+		expect(usesCountAsAttack(damageSpell, { countsAsAttack: false })).toBe(false);
+		expect(usesCountAsAttack(damageSpell, {})).toBe(true);
+		expect(usesCountAsAttack(item('feature', ''), {})).toBe(false);
 	});
 
 	it('gives the disadvantage to a roll by the attacker, not to a spell with a save', () => {

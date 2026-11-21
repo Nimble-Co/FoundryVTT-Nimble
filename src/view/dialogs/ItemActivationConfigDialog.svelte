@@ -5,6 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
+	import AmountStepper from './components/AmountStepper.svelte';
 	import DualWieldField from './components/DualWieldField.svelte';
 	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
@@ -248,59 +249,6 @@
 		/>
 	{/if}
 
-	{#snippet stepper(
-		label: string,
-		selected: number,
-		minimum: number,
-		limit: number,
-		words: { decrement: string; increment: string; amount: string },
-		adjust: (delta: number) => void,
-		set: (value: number) => number,
-	)}
-		<div class="nimble-pool-spend__row">
-			<span class="nimble-pool-spend__label">{label}</span>
-			<div class="nimble-pool-spend__stepper">
-				<button
-					type="button"
-					class="nimble-pool-spend__stepper-btn"
-					aria-label={words.decrement}
-					disabled={selected <= minimum}
-					onclick={() => adjust(-1)}
-				>
-					−
-				</button>
-				<span class="nimble-pool-spend__stepper-value">
-					<input
-						class="nimble-pool-spend__stepper-input"
-						type="number"
-						min={minimum}
-						max={limit}
-						value={selected}
-						aria-label={words.amount}
-						onchange={({ currentTarget }) => {
-							// The clamp often lands on the value already stored — typing 99 at
-							// the limit, or clearing the field — which leaves Svelte nothing to
-							// push back, so the box would keep showing what was typed.
-							currentTarget.value = String(set(currentTarget.valueAsNumber));
-						}}
-					/>
-					<span class="nimble-pool-spend__stepper-available" aria-hidden="true">
-						/ {limit}
-					</span>
-				</span>
-				<button
-					type="button"
-					class="nimble-pool-spend__stepper-btn"
-					aria-label={words.increment}
-					disabled={selected >= limit}
-					onclick={() => adjust(1)}
-				>
-					+
-				</button>
-			</div>
-		</div>
-	{/snippet}
-
 	{#if state.variableResourceCosts.length > 0}
 		<div>
 			<div class="nimble-pool-spend">
@@ -308,22 +256,22 @@
 
 				{#each state.variableResourceCosts as cost (cost.id)}
 					{@const label = localize(`NIMBLE.activationDialog.resourceCost.label.${cost.kind}`)}
-					{@render stepper(
-						label,
-						cost.amount,
-						cost.minimum,
-						cost.limit,
-						{
+					<AmountStepper
+						{label}
+						value={cost.amount}
+						minimum={cost.minimum}
+						limit={cost.limit}
+						words={{
 							decrement: localize('NIMBLE.activationDialog.resourceCost.decrement', { label }),
 							increment: localize('NIMBLE.activationDialog.resourceCost.increment', { label }),
 							amount: label,
-						},
-						(delta) => state.adjustResourceAmount(cost.id, delta),
-						(value) => {
+						}}
+						onadjust={(delta) => state.adjustResourceAmount(cost.id, delta)}
+						onset={(value) => {
 							state.setResourceAmount(cost.id, value);
 							return state.resourceAmounts[cost.id] ?? cost.minimum;
-						},
-					)}
+						}}
+					/>
 				{/each}
 			</div>
 		</div>
@@ -337,12 +285,12 @@
 				</h5>
 
 				{#each state.variableChargeSpends as spend (spend.poolId)}
-					{@render stepper(
-						spend.label,
-						state.variableSpendCounts[spend.poolId] ?? spend.minimum,
-						spend.minimum,
-						spend.limit,
-						{
+					<AmountStepper
+						label={spend.label}
+						value={state.variableSpendCounts[spend.poolId] ?? spend.minimum}
+						minimum={spend.minimum}
+						limit={spend.limit}
+						words={{
 							decrement: localize('NIMBLE.activationDialog.spendCharge.decrement', {
 								pool: spend.label,
 							}),
@@ -352,13 +300,13 @@
 							amount: localize('NIMBLE.activationDialog.spendCharge.amount', {
 								pool: spend.label,
 							}),
-						},
-						(delta) => state.adjustVariableSpend(spend.poolId, delta),
-						(value) => {
+						}}
+						onadjust={(delta) => state.adjustVariableSpend(spend.poolId, delta)}
+						onset={(value) => {
 							state.setVariableSpend(spend.poolId, value);
 							return state.variableSpendCounts[spend.poolId] ?? spend.minimum;
-						},
-					)}
+						}}
+					/>
 				{/each}
 			</div>
 		</div>
@@ -644,19 +592,6 @@
 			gap: 3px;
 			font-size: 0.812rem;
 			font-variant-numeric: tabular-nums;
-		}
-
-		&__stepper-input {
-			width: 2.5em;
-			height: 28px;
-			padding: 0 4px;
-			border: 1px solid var(--nimble-ui-ring);
-			border-radius: 2px;
-			background: var(--nimble-ui-well);
-			box-shadow: none;
-			text-align: center;
-			font-weight: 700;
-			color: var(--nimble-ui-ink);
 		}
 
 		&__stepper-available {

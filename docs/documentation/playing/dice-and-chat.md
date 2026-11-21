@@ -38,6 +38,8 @@ An item that rolls damage or healing opens the same window. The ticks also list 
 
 A line tells what the roll spends or sacrifices: the actions in combat, and the mana, HP, temp HP or Wounds of the use. When a use needs more than you have and its rule lets you go beyond, a window asks you to confirm first. It asks only while the **Costs** automation setting is on. Your second attack in a turn starts with the disadvantage of a Rushed Attack. Move the slider when a feature or the GM says otherwise.
 
+The cast window of a spell shows a dropdown for each option that a feature gives, such as **Spellshaper (1/turn)**: pick one option or **None**. When an option can take the place of the spell's cost, the window shows **Spend** buttons, with the spell's own cost first.
+
 Some features add a tick to the window, for example **Max damage** or **Dual wield**. **Dual wield** shows when you have 2 equipped weapons, or 1 equipped weapon with a quantity of 2 or more. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it. With **Feature Effects** off, each line is a tick box that starts unticked, and only the changes you tick go on the roll. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
 
 ::: details More about the Primary Die fields

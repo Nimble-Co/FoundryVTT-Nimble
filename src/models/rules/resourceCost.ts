@@ -23,7 +23,8 @@ function beyondChoices(): Record<string, string> {
 
 const isVariable = (data: Record<string, unknown>) => data.spendMode === 'variable';
 
-function schema() {
+/** The fields of one cost: resource, spend mode, amount, minimum, maximum and beyond. */
+function resourceCostFields() {
 	const { fields } = foundry.data;
 
 	return {
@@ -96,6 +97,14 @@ function schema() {
 			hint: 'NIMBLE.rules.resourceCost.beyond.hint',
 			choices: beyondChoices,
 		}),
+	};
+}
+
+function schema() {
+	const { fields } = foundry.data;
+
+	return {
+		...resourceCostFields(),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -118,7 +127,9 @@ function shownName(item: { name?: string | null; type?: string; system?: unknown
 }
 
 /** What one use of its item costs in mana, HP, temp HP or Wounds. */
-class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
+class ResourceCostRule<
+	TSchema extends ResourceCostRule.Schema = ResourceCostRule.Schema,
+> extends NimbleBaseRule<TSchema> {
 	static override worksOnEffects = false;
 
 	static override group = 'resource';
@@ -168,10 +179,15 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 			};
 		}
 		const text = String(this.amount ?? '').trim();
-		if (this.isDiceExpression(text)) {
+		if (this.keepsAmountAsText(text)) {
 			return { ...cost, amount: this.withStacks(text), spend: { mode: 'fixed' } };
 		}
 		return { ...cost, amount: this.#amountOf(text), spend: { mode: 'fixed' } };
+	}
+
+	/** An amount kept as text to work out at the use, such as a roll. */
+	protected keepsAmountAsText(text: string): boolean {
+		return this.isDiceExpression(text);
 	}
 
 	#amountOf(formula: string): number {
@@ -179,7 +195,7 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 		return Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
 	}
 
-	override tooltipInfo(): string {
+	override tooltipInfo(props?: Map<string, string>): string {
 		return super.tooltipInfo(
 			new Map([
 				['kind', '"mana" | "hp" | "tempHp" | "wounds"'],
@@ -188,9 +204,10 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 				['min', 'string'],
 				['max', 'string'],
 				['beyond', '"notAllowed" | "allowed" | "halfMaxHpDamage"'],
+				...(props ?? []),
 			]),
 		);
 	}
 }
 
-export { ResourceCostRule };
+export { ResourceCostRule, resourceCostFields };

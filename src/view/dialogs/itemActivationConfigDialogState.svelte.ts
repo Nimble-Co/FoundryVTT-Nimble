@@ -18,7 +18,6 @@ import {
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
-import { variableRangeOf } from '#utils/cost/resourceCost.js';
 import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
@@ -47,6 +46,7 @@ import {
 	extractVariableChargeSpends,
 	getAttackDeliveryFromActivation,
 } from './itemActivationConfigDialogHelpers.js';
+import { resourceAmounts } from './resourceAmounts.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
 
@@ -73,40 +73,10 @@ export function createItemActivationConfigDialogState(
 	const actor = options.actor();
 	const item = options.item();
 
-	const resourceCosts = options.resourceCosts ?? [];
-	const resourceRanges = resourceCosts.flatMap((cost) => {
-		const range = cost.id ? variableRangeOf(actor, cost) : null;
-		return range ? [{ id: cost.id as string, kind: cost.kind, ...range }] : [];
-	});
-	let resourceAmounts = $state<Record<string, number>>(
-		Object.fromEntries(resourceRanges.map((range) => [range.id, range.minimum])),
-	);
-
-	function setResourceAmount(id: string, value: number) {
-		const range = resourceRanges.find((candidate) => candidate.id === id);
-		if (!range) return;
-		const next = Number.isFinite(value) ? Math.floor(value) : range.minimum;
-		resourceAmounts = { ...resourceAmounts, [id]: Math.clamp(next, range.minimum, range.limit) };
-	}
-
-	function adjustResourceAmount(id: string, delta: number) {
-		const range = resourceRanges.find((candidate) => candidate.id === id);
-		if (!range) return;
-		setResourceAmount(id, (resourceAmounts[id] ?? range.minimum) + delta);
-	}
-
-	const variableResourceCosts = $derived(
-		resourceRanges.map((range) => ({
-			...range,
-			amount: resourceAmounts[range.id] ?? range.minimum,
-		})),
-	);
+	const resources = resourceAmounts(actor, options.resourceCosts ?? []);
 
 	const spendLine = $derived.by(() => {
-		const chosen = resourceCosts.map((cost) =>
-			cost.id && cost.id in resourceAmounts ? { ...cost, amount: resourceAmounts[cost.id] } : cost,
-		);
-		const costParts = rollWindowCostParts(chosen);
+		const costParts = rollWindowCostParts(resources.chosen());
 		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
 	});
 
@@ -530,13 +500,13 @@ export function createItemActivationConfigDialogState(
 			return spendLine;
 		},
 		get variableResourceCosts() {
-			return variableResourceCosts;
+			return resources.variableCosts;
 		},
 		get resourceAmounts() {
-			return resourceAmounts;
+			return resources.amounts;
 		},
-		setResourceAmount,
-		adjustResourceAmount,
+		setResourceAmount: resources.set,
+		adjustResourceAmount: resources.adjust,
 		offersLessMana,
 		dualWieldOffer,
 		get dualWield() {

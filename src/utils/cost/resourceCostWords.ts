@@ -46,6 +46,17 @@ function rollWindowCostParts(costs: readonly ResourceCost[]): {
 	return { spends, sacrifices };
 }
 
+/** "<option> (2 mana)", "<option> (1+ mana)", or the name alone for no cost. */
+function optionEntryText(name: string, cost: ResourceCost): string {
+	const { spend } = cost;
+	const amount =
+		spend.mode === 'variable'
+			? localize('NIMBLE.useOptions.atLeast', { amount: spend.min })
+			: amountText(cost);
+	if (spend.mode === 'fixed' && Number(amount) === 0) return name;
+	return localize('NIMBLE.useOptions.entry', { name, cost: resourceCostText(cost.kind, amount) });
+}
+
 /** The card record of a use's costs. A cost that took nothing has no line. */
 function cardCostsOf(costs: readonly ResourceCost[]): CardResourceCost[] {
 	return costs
@@ -58,4 +69,11 @@ function cardCostsOf(costs: readonly ResourceCost[]): CardResourceCost[] {
 		}));
 }
 
-export { cardCostLine, cardCostsOf, resourceCostText, rollWindowCostParts, woundsWord };
+export {
+	cardCostLine,
+	cardCostsOf,
+	optionEntryText,
+	resourceCostText,
+	rollWindowCostParts,
+	woundsWord,
+};

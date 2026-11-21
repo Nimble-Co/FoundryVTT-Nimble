@@ -91,9 +91,14 @@ const ENRICHER = /@[A-Z][A-Za-z]*\[/;
 
 /**
  * The `@` references of each rule formula, from the roll data of the one who used the item: the
- * numbers of the caster at the time it is applied, not the holder's.
+ * numbers of the caster at the time it is applied, not the holder's. `useData` adds what the use
+ * itself knows, such as `@cost`.
  */
-function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
+function resolveRuleFormulas(
+	rules: unknown,
+	user: SourceUser | null,
+	useData: Record<string, unknown> = {},
+): void {
 	if (!user || !Array.isArray(rules)) return;
 	let rollData: Record<string, unknown> | null = null;
 	for (const rule of rules as Record<string, unknown>[]) {
@@ -102,10 +107,28 @@ function resolveRuleFormulas(rules: unknown, user: SourceUser | null): void {
 			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@')) continue;
 			if (ENRICHER.test(value)) continue;
 			// The count of stacks is the holder's, read when the rule runs. `@speed` is the mover's.
-			rollData ??= { ...user.getRollData(), stacks: '@stacks', speed: '@speed' };
+			rollData ??= { ...user.getRollData(), ...useData, stacks: '@stacks', speed: '@speed' };
 			checkFormulaReferences(value, user, {}, { rollData });
 			// A reference the source has no value for is 0 here, not the holder's value at the roll.
 			rule[key] = Roll.replaceFormulaData(value, rollData, { missing: '0' });
+		}
+	}
+}
+
+/**
+ * A rule that reads the holder keeps its references, but `@cost` is the cost of this use. An
+ * unknown kind stays, so the reference check at the roll reports it.
+ */
+function resolveCostReferences(rules: unknown, useData: Record<string, unknown> = {}): void {
+	if (!Array.isArray(rules)) return;
+	const cost = (useData.cost ?? {}) as Record<string, unknown>;
+	for (const rule of rules as Record<string, unknown>[]) {
+		if (!rule || typeof rule !== 'object') continue;
+		for (const [key, value] of Object.entries(rule)) {
+			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@cost.')) continue;
+			rule[key] = value.replace(/@cost\.(\w+)/g, (reference, kind: string) =>
+				kind in cost ? String(cost[kind]) : reference,
+			);
 		}
 	}
 }
@@ -150,6 +173,8 @@ export function payloadFromEffect(
 		user: SourceUser | null;
 		raises?: EffectRaises;
 		cardId?: string | null;
+		/** Roll data of the use that applies the effect, such as `@cost`. */
+		useData?: Record<string, unknown>;
 	},
 ): EffectPayload {
 	const data = foundry.utils.deepClone(effect.toObject());
@@ -162,7 +187,8 @@ export function payloadFromEffect(
 	if (source.raises?.moments?.length && Array.isArray(system?.lastsUntil)) {
 		system.lastsUntil = raiseMoments(system.lastsUntil, source.raises.moments);
 	}
-	if (!system?.readsHolder) resolveRuleFormulas(system?.rules, source.user);
+	if (system?.readsHolder) resolveCostReferences(system.rules, source.useData);
+	else resolveRuleFormulas(system?.rules, source.user, source.useData);
 	return {
 		data,
 		sourceItemUuid: source.itemUuid,

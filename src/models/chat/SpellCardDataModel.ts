@@ -12,6 +12,7 @@ import {
 	metadata,
 	migrateIncomingReactions,
 	movementOffers,
+	optionNotes,
 	primaryDieBonuses,
 	rerollHistory,
 	targets,
@@ -37,6 +38,17 @@ const spellCardSchema = () => ({
 		nullable: false,
 	}),
 	upcast: new fields.ObjectField({ required: false, nullable: true, initial: null }),
+	/**
+	 * The mana the cast spent on the spell, after free casts and less mana. An option's mana
+	 * is not in it. With Resource Spending off, the mana the cast would have spent.
+	 */
+	castManaSpent: new fields.NumberField({
+		required: true,
+		nullable: false,
+		initial: 0,
+		min: 0,
+		integer: true,
+	}),
 });
 
 declare namespace NimbleSpellCardData {
@@ -54,6 +66,7 @@ declare namespace NimbleSpellCardData {
 		ReturnType<typeof primaryDieBonuses> &
 		ReturnType<typeof damageBack> &
 		ReturnType<typeof movementOffers> &
+		ReturnType<typeof optionNotes> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
 		ReturnType<typeof targets>;
@@ -82,6 +95,7 @@ class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 			...primaryDieBonuses(),
 			...damageBack(),
 			...movementOffers(),
+			...optionNotes(),
 			...spellCardSchema(),
 			...metadata(),
 			...targets(),

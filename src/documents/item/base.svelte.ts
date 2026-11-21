@@ -1,7 +1,7 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, CardEventMoment, EventHost, EventSink } from '#types/cardEvent.d.ts';
-import type { CostReceipt } from '#types/costReceipt.d.ts';
+import type { CostReceipt, UseSpend } from '#types/costReceipt.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
@@ -34,7 +34,7 @@ import {
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
 import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
-import { giveBack, receiptOf, spendResourceCosts } from '../../utils/cost/costLedger.js';
+import { giveBack, spendResourceCosts } from '../../utils/cost/costLedger.js';
 import { refuseResourceCosts } from '../../utils/cost/itemResourceCosts.js';
 import { applyBeyondConsequence } from '../../utils/cost/resourceCost.js';
 import { cardCostsOf } from '../../utils/cost/resourceCostWords.js';
@@ -433,6 +433,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		if (activation === null || rolls === null) {
 			return null;
 		}
+		if (
+			options.confirmActions &&
+			!(await options.confirmActions(manager.chosenOptions.actionCostChanges))
+		) {
+			return null;
+		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 		const useContext = {
 			freeUse: manager.freeUse,
@@ -462,28 +468,15 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		});
 		if (!allowed) return null;
 
-		const costsSpent = await spendResourceCosts(this.actor, manager.resourceCosts, {
-			confirmBeyond: (costs) => confirmUsingBeyond(this.actor, costs),
-		});
-		if (!costsSpent) {
-			refuseResourceCosts(this.actor, manager.resourceCosts);
-			return null;
-		}
-		const costReceipt = costsSpent.receipt;
-		let receipt: CostReceipt | null = null;
+		const spent = await this._spendForUse(manager);
+		if (!spent) return null;
 		try {
-			receipt = await this._payForUse(manager);
-			if (receipt) {
-				for (const cost of costsSpent.beyond) await applyBeyondConsequence(this.actor, cost);
-			}
+			for (const cost of spent.beyond) await applyBeyondConsequence(this.actor, cost);
 		} catch (error) {
-			await giveBackUse(this.actor, [receipt, costReceipt]);
+			await giveBackUse(this.actor, spent.receipts);
 			throw error;
 		}
-		if (!receipt) {
-			await giveBack(this.actor, costReceipt);
-			return null;
-		}
+		const { actionCostChanges } = manager.chosenOptions;
 
 		const useEvents = openActivationEvents(this.actor);
 		let card: ChatMessage | null;
@@ -526,6 +519,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 								? { chargeConsumption: manager.chargeConsumption }
 								: {}),
 							...(manager.free ? { freeUseReason: manager.free.reason } : {}),
+							...(actionCostChanges.length > 0 ? { actionCostChanges } : {}),
 							...(options.answersCardId ? { [ANSWERS_CARD_FLAG]: options.answersCardId } : {}),
 						},
 					},
@@ -533,7 +527,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 						actorName: this.actor?.name ?? '',
 						actorType: this.actor?.type ?? '',
 						activation,
-						costs: cardCostsOf(costsSpent.taken),
+						costs: cardCostsOf(spent.taken),
 						image: this.img || 'icons/svg/item-bag.svg',
 						incomingReactions: [
 							...(incomingReactions ?? []),
@@ -577,7 +571,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			);
 		} catch (error) {
 			useEvents?.close();
-			await giveBackUse(this.actor, [receipt, costReceipt]);
+			await giveBackUse(this.actor, spent.receipts);
 			throw error;
 		}
 		await this._afterUse(card, manager);
@@ -589,9 +583,19 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		return {};
 	}
 
-	/** Pay what this kind costs to use, after the gate allows it. Null stops the use. */
-	protected async _payForUse(_manager: ItemActivationManager): Promise<CostReceipt | null> {
-		return receiptOf();
+	/**
+	 * Spend what the use costs, after the gate allows it: the Spend or Sacrifice costs, and
+	 * what this kind costs. Null stops the use; the step reports why.
+	 */
+	protected async _spendForUse(manager: ItemActivationManager): Promise<UseSpend | null> {
+		const spent = await spendResourceCosts(this.actor, manager.resourceCosts, {
+			confirmBeyond: (costs) => confirmUsingBeyond(this.actor, costs),
+		});
+		if (!spent) {
+			refuseResourceCosts(this.actor, manager.resourceCosts);
+			return null;
+		}
+		return { receipts: [spent.receipt], taken: spent.taken, beyond: spent.beyond };
 	}
 
 	/** Whether a healing use with no target picked heals the user, as a potion does. */

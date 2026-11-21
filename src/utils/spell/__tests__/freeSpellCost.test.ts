@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import type { SpellCostActorLike } from '#types/spellCost.d.ts';
+import type { CastCostPayer } from '#types/spellCost.d.ts';
 import { NimbleBaseActor } from '../../../documents/actor/base.svelte.js';
 import { FreeSpellCostRule } from '../../../models/rules/freeSpellCost.js';
-import { paySpellCost } from '../paySpellCost.js';
 import { resolveSpellCost } from '../spellCost.js';
+import { spendCastCosts } from '../spendCastCosts.js';
 
 const POOL = 'pilfered-power';
 
@@ -125,7 +125,7 @@ function createCaster(options: {
 		update: vi.fn(async () => ({})),
 		applyDamage: vi.fn(async () => undefined),
 	};
-	return { actor: actor as typeof actor & SpellCostActorLike, classItem };
+	return { actor: actor as unknown as typeof actor & CastCostPayer, classItem };
 }
 
 const tiered = { system: { tier: 2 } };
@@ -143,7 +143,7 @@ describe('a free spell cost', () => {
 		const confirmOverdraft = vi.fn(() => true);
 
 		const cost = resolveSpellCost(actor, tiered);
-		const payment = await paySpellCost(actor, cost, { confirmOverdraft });
+		const payment = await spendCastCosts(actor, cost, { confirmOverdraft });
 
 		expect(cost).toMatchObject({ type: 'pool', poolIdentifier: POOL, amount: 0 });
 		expect(payment).toMatchObject({ paid: true });
@@ -163,7 +163,7 @@ describe('a free spell cost', () => {
 		});
 
 		const cost = resolveSpellCost(actor, tiered);
-		await paySpellCost(actor, cost, { confirmOverdraft: () => true });
+		await spendCastCosts(actor, cost, { confirmOverdraft: () => true });
 
 		expect(cost).toMatchObject({ type: 'pool', amount: 1 });
 		expect(classItem.update).toHaveBeenCalled();

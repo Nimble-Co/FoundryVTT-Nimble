@@ -10,6 +10,7 @@ import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
+import type { ActionCostChange, ChosenUseOption, UseOptionGroup } from '#types/useOption.d.ts';
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
@@ -109,10 +110,19 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
+import {
+	type ChosenUseOptions,
+	chosenCastCostChange,
+	noChosenUseOptions,
+	settleChosenUseOptions,
+	spellManaWithOptions,
+	spellUseOptionGroups,
+} from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { applyUseOptionChanges } from './itemActivation/applyUseOptionChanges.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
@@ -242,6 +252,19 @@ class ItemActivationManager {
 
 	/** What this use spends or sacrifices through Spend or Sacrifice rules, checked before the dialog. */
 	resourceCosts: ResourceCost[] = [];
+
+	/** The Spell or Attack Options the dialog offers for this use. */
+	useOptionGroups: UseOptionGroup[] = [];
+
+	/** What the options the player turned on cost and change. */
+	chosenOptions: ChosenUseOptions = noChosenUseOptions();
+
+	/** The mana the cast spends on the spell, after free casts, less mana and mana cuts. */
+	get castManaSpent(): number {
+		const tier = (this.#item.system as { tier?: number }).tier ?? 0;
+		const cost = this.spellCost;
+		return this.#item.type === 'spell' && tier > 0 && cost?.type === 'mana' ? cost.amount : 0;
+	}
 
 	/** A use that a rule gives for free, and what it is free of. It is always free of actions. */
 	get free(): ItemActivationManager.FreeUse | null {
@@ -414,11 +437,7 @@ class ItemActivationManager {
 			// Checked on every activation path, not just the dialog, so a macro or
 			// a spell without a tier control cannot cast above the caster's ladder.
 			if (exceedsUnlockedSpellTier(this.actor, this.#item)) {
-				ui.notifications?.warn(
-					localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
-						maxTier: String(this.actor.system?.resources?.highestUnlockedSpellTier ?? 0),
-					}),
-				);
+				this.#warnAboveUnlockedTier();
 				return { activation: null, rolls: null };
 			}
 
@@ -434,6 +453,10 @@ class ItemActivationManager {
 		});
 		if (refuseResourceCosts(this.actor, this.resourceCosts)) {
 			return { activation: null, rolls: null };
+		}
+
+		if (this.#item.type === 'spell') {
+			this.useOptionGroups = spellUseOptionGroups(this.actor, this.#item as never);
 		}
 
 		const rollOptions = {
@@ -459,9 +482,20 @@ class ItemActivationManager {
 			return { activation: null, rolls: null };
 		}
 
+		// An option that sets the spell's cost casts it at its own tier. A pinned tier still
+		// applies to an option that spends in place of the spell's cost.
+		const castCostChange = chosenCastCostChange(this.useOptionGroups, dialogData.useOptions);
+		const spendsAtPinnedTier = castCostChange.replacesSpellCost && this.pinnedCastTier !== null;
+		if (
+			castCostChange.manaSet !== null ||
+			(castCostChange.replacesSpellCost && !spendsAtPinnedTier)
+		) {
+			dialogData.upcast = undefined;
+		}
+
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
-		if (this.#item.type === 'spell' && !dialogData.upcast) {
+		if (this.#item.type === 'spell' && !dialogData.upcast && castCostChange.manaSet === null) {
 			const synthesized = synthesizePinnedUpcast(
 				this.#item as unknown as SpellLike,
 				this.pinnedCastTier,
@@ -482,7 +516,10 @@ class ItemActivationManager {
 			// costs; a class-declared pool cost is validated at spend time.
 			const flatCost = this.spellCost?.type === 'pool';
 			const enforceManaCost =
-				isResourceSpendingAutomationEnabled() && !flatCost && !this.free?.of.includes('mana');
+				isResourceSpendingAutomationEnabled() &&
+				!flatCost &&
+				!this.free?.of.includes('mana') &&
+				!castCostChange.replacesSpellCost;
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
 				resources: actorSystem.resources,
@@ -544,16 +581,36 @@ class ItemActivationManager {
 			}
 		}
 
+		// An option goes only with a cast at a tier the caster has unlocked, on every path.
+		if ((dialogData.useOptions?.length ?? 0) > 0 && this.#castsAboveUnlockedTier()) {
+			this.#warnAboveUnlockedTier();
+			return { activation: null, rolls: null };
+		}
+
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
 		if (this.free?.of.includes('mana') && this.spellCost?.type === 'mana') {
 			this.spellCost = { type: 'none' };
 		}
 
-		if (dialogData.lessMana && this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
-			this.spellCost = { ...this.spellCost, amount: this.spellCost.amount - 1 };
-			this.invokesChaos = true;
+		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
+			const lessMana = dialogData.lessMana === true;
+			this.spellCost = {
+				...this.spellCost,
+				amount: spellManaWithOptions(this.spellCost.amount, { ...castCostChange, lessMana }),
+			};
+			if (lessMana) this.invokesChaos = true;
 		}
+		if (castCostChange.replacesSpellCost) this.spellCost = { type: 'none' };
+		const chosenOptions = await settleChosenUseOptions(
+			this.actor,
+			this.useOptionGroups,
+			dialogData.useOptions,
+			this.castManaSpent,
+		);
+		if (!chosenOptions) return { activation: null, rolls: null };
+		this.chosenOptions = chosenOptions;
+		applyUseOptionChanges(this.activationData, this.chosenOptions);
 
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
@@ -1576,7 +1633,8 @@ class ItemActivationManager {
 			// No window opens here, and a pinned tier that lands on a list of
 			// enhancements has no default: the pick belongs to the player. Refuse
 			// unless the caller named one, as an unofferable variable spend does.
-			if (this.#hasPinnedUpcastChoice() && options.upcastChoiceIndex === undefined) {
+			const namedChoice = options.upcastChoiceIndex ?? options.upcast?.choiceIndex;
+			if (this.#hasPinnedUpcastChoice() && namedChoice === undefined) {
 				ui.notifications?.error(
 					game.i18n.format(CONFIG.NIMBLE.spellNotifications.pinnedUpcastChoice, {
 						item: this.#item.name ?? '',
@@ -1592,6 +1650,7 @@ class ItemActivationManager {
 				primaryDieModifier: options.primaryDieModifier,
 				rollHidden: options.rollHidden,
 				conditionalDamages: options.conditionalDamages,
+				...(options.upcast ? { upcast: options.upcast } : {}),
 			};
 		}
 
@@ -1667,6 +1726,7 @@ class ItemActivationManager {
 			pinnedCastTier: this.pinnedCastTier,
 			spellCost: this.spellCost,
 			resourceCosts: this.resourceCosts,
+			useOptionGroups: this.useOptionGroups,
 		});
 		await dialog.render(true);
 		const result = await dialog.promise;
@@ -1723,6 +1783,23 @@ class ItemActivationManager {
 			actor as unknown as CharacterActorLike,
 			this.#item as unknown as RuleBackedItem,
 		);
+	}
+
+	#warnAboveUnlockedTier(): void {
+		ui.notifications?.warn(
+			localize(CONFIG.NIMBLE.spellUpcastDialog.warnings.aboveUnlockedTier, {
+				maxTier: String(this.actor?.system?.resources?.highestUnlockedSpellTier ?? 0),
+			}),
+		);
+	}
+
+	/** Whether the spell casts at a tier above the highest the caster has unlocked. */
+	#castsAboveUnlockedTier(): boolean {
+		if (this.#item.type !== 'spell') return false;
+		const unlocked = this.actor?.system?.resources?.highestUnlockedSpellTier;
+		if (unlocked === null || unlocked === undefined) return false;
+		const tier = this.upcastResult?.manaSpent ?? (this.#item.system as { tier?: number }).tier ?? 0;
+		return tier > 0 && tier > unlocked;
 	}
 
 	/** Whether a pinned cast tier would pick an upcast enhancement on the player's behalf. */
@@ -1836,6 +1913,8 @@ namespace ItemActivationManager {
 		rollMode?: number;
 		/** Which attack of the turn this is, when `rollMode` starts with Rushed Attack disadvantage. */
 		rushedAttack?: number;
+		/** False for a use inside another use, such as a free copy: it is not an attack of the turn. */
+		countsAsAttack?: boolean;
 		/** The actions that this use spends; the roll window says so. */
 		spendsActions?: number;
 		/**
@@ -1868,6 +1947,13 @@ namespace ItemActivationManager {
 		}>;
 		/** A use that a rule gives for free. */
 		free?: FreeUse;
+		/** The tier to cast a spell at, for a caller that skips the dialog. */
+		upcast?: DialogData['upcast'];
+		/**
+		 * Asks whether the use may go ahead with the actions it costs after the options chosen in
+		 * its dialog. False stops the use.
+		 */
+		confirmActions?: (changes: readonly ActionCostChange[]) => Promise<boolean>;
 		/** The attack card this use answers, as a reaction from the Defend window does. */
 		answersCardId?: string;
 	}
@@ -1959,6 +2045,8 @@ namespace ItemActivationManager {
 		 * the cost's rule id. The formulas read them in `@cost`.
 		 */
 		resourceAmounts?: Record<string, number>;
+		/** The Spell or Attack Options the player turned on. */
+		useOptions?: ChosenUseOption[];
 		/**
 		 * Typed damage from conditional-bonus choices (e.g. a marked-target rule that
 		 * grants a specific damage type). Each becomes its own damage effect so the

@@ -304,4 +304,4 @@ async function giveBackPart(
 	};
 }
 
-export { giveBack, giveBackPart, payCost, receiptOf, spendMana, spendResourceCosts };
+export { giveBack, giveBackPart, payCost, receiptOf, recordTaken, spendMana, spendResourceCosts };

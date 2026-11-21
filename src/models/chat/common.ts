@@ -63,6 +63,15 @@ export const costs = () => ({
 	),
 });
 
+/** The lines the Spell or Attack Options of the use put on the card. */
+export const optionNotes = () => ({
+	optionNotes: new fields.ArrayField(new fields.StringField({ required: true, nullable: false }), {
+		required: true,
+		nullable: false,
+		initial: [],
+	}),
+});
+
 /** Schema for tracking applied healing/damage on activation cards */
 export const appliedHealing = () => ({
 	appliedHealing: new fields.ObjectField({ required: false, nullable: false, initial: {} }),

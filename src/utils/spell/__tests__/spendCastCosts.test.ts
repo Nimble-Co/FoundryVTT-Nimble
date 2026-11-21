@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ResolvedSpellCost, SpellCostActorLike } from '#types/spellCost.d.ts';
-import { paySpellCost } from '../paySpellCost.js';
+import type { CastCostPayer, ResolvedSpellCost } from '#types/spellCost.d.ts';
+import { spendCastCosts } from '../spendCastCosts.js';
 
 function setResourceSpendingAutomation(enabled: boolean): void {
 	(
@@ -71,19 +71,19 @@ function createActor(current: number, max = 3) {
 		update: vi.fn(async () => ({})),
 		applyDamage: vi.fn(async () => undefined),
 	};
-	return { actor: actor as unknown as SpellCostActorLike, item, flags };
+	return { actor: actor as unknown as CastCostPayer, item, flags };
 }
 
 afterEach(() => {
 	(globalThis as unknown as { game: { settings?: unknown } }).game.settings = undefined;
 });
 
-describe('paySpellCost', () => {
+describe('spendCastCosts', () => {
 	it('refuses a cast the pool cannot cover', async () => {
 		setResourceSpendingAutomation(true);
 		const { actor } = createActor(0);
 
-		const payment = await paySpellCost(actor, poolCost(), {
+		const payment = await spendCastCosts(actor, poolCost(), {
 			confirmOverdraft: () => true,
 		});
 
@@ -95,7 +95,7 @@ describe('paySpellCost', () => {
 		setResourceSpendingAutomation(true);
 		const { actor } = createActor(0);
 
-		const payment = await paySpellCost(
+		const payment = await spendCastCosts(
 			actor,
 			poolCost({ overdraftConsequence: 'halfMaxHpDamage' }),
 			{ confirmOverdraft: () => false },
@@ -108,7 +108,7 @@ describe('paySpellCost', () => {
 		setResourceSpendingAutomation(true);
 		const { actor } = createActor(0);
 
-		const payment = await paySpellCost(
+		const payment = await spendCastCosts(
 			actor,
 			poolCost({ overdraftConsequence: 'halfMaxHpDamage' }),
 			{ confirmOverdraft: () => true },
@@ -124,7 +124,7 @@ describe('paySpellCost', () => {
 		setResourceSpendingAutomation(true);
 		const { actor, flags } = createActor(0);
 
-		const payment = await paySpellCost(
+		const payment = await spendCastCosts(
 			actor,
 			poolCost({ overdraftConsequence: 'halfMaxHpDamage' }),
 			{
@@ -141,11 +141,74 @@ describe('paySpellCost', () => {
 		expect(flags.nimble.chargePools['pilfered-power'].current).toBe(2);
 	});
 
+	it('asks to confirm only the second of two HP costs that together go beyond the HP', async () => {
+		setResourceSpendingAutomation(true);
+		const actor = {
+			system: { resources: { mana: { current: 0 } }, attributes: { hp: { value: 10, max: 20 } } },
+			update: vi.fn(async () => ({})),
+		};
+		const hpCost = (source: string) => ({
+			kind: 'hp' as const,
+			amount: 5,
+			spend: { mode: 'fixed' as const },
+			beyond: 'allowed' as const,
+			source,
+		});
+		const first = hpCost('First');
+		const second = hpCost('Second');
+		const confirmBeyond = vi.fn(async () => true);
+
+		await spendCastCosts(
+			actor as unknown as CastCostPayer,
+			{ type: 'none' },
+			{
+				confirmOverdraft: () => true,
+				costs: [first, second],
+				confirmBeyond,
+			},
+		);
+
+		expect(confirmBeyond).toHaveBeenCalledWith([second]);
+	});
+
+	it('gives back the spell mana when a later cost throws', async () => {
+		setResourceSpendingAutomation(true);
+		const failure = new Error('update failed');
+		const actor = {
+			system: { resources: { mana: { current: 5 } }, attributes: { hp: { value: 10, max: 20 } } },
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				if ('system.attributes.hp.value' in changes) throw failure;
+				for (const [path, value] of Object.entries(changes)) {
+					foundry.utils.setProperty(actor, path, value);
+				}
+			}),
+		};
+		const hpCost = {
+			kind: 'hp' as const,
+			amount: 2,
+			spend: { mode: 'fixed' as const },
+			beyond: 'notAllowed' as const,
+		};
+
+		await expect(
+			spendCastCosts(
+				actor as unknown as CastCostPayer,
+				{ type: 'mana', amount: 3 },
+				{
+					confirmOverdraft: () => true,
+					costs: [hpCost],
+				},
+			),
+		).rejects.toBe(failure);
+
+		expect(actor.system.resources.mana.current).toBe(5);
+	});
+
 	it('pays without touching anything when spending automation is off', async () => {
 		setResourceSpendingAutomation(false);
 		const { actor, item } = createActor(0);
 
-		const payment = await paySpellCost(actor, poolCost(), { confirmOverdraft: () => false });
+		const payment = await spendCastCosts(actor, poolCost(), { confirmOverdraft: () => false });
 
 		expect(payment).toMatchObject({ paid: true, receipt: { paid: { charges: 0 } } });
 		expect(item.update).not.toHaveBeenCalled();

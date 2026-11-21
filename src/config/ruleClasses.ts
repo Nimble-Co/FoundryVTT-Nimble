@@ -88,6 +88,7 @@ import { TagsRule } from '../models/rules/tags.js';
 import { TurnDamageRule } from '../models/rules/turnDamage.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 import { UseItemFreeRule } from '../models/rules/useItemFree.js';
+import { UseOptionRule } from '../models/rules/useOption.js';
 import { ZeroHpAtEndRule } from '../models/rules/zeroHpAtEnd.js';
 
 /** Every rule type and its class. A rule type's label key is `NIMBLE.ruleTypes.<type>`. */
@@ -181,6 +182,7 @@ export const RULE_CLASSES = {
 	tags: TagsRule,
 	turnDamage: TurnDamageRule,
 	useItemFree: UseItemFreeRule,
+	useOption: UseOptionRule,
 	unarmedDamage: UnarmedDamageRule,
 	zeroHpAtEnd: ZeroHpAtEndRule,
 } as const;

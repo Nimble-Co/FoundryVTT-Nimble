@@ -1968,6 +1968,7 @@
 			"attackOutcome": "Attack Outcome",
 			"chargeConsumer": "Charge Consumer",
 			"resourceCost": "Spend or Sacrifice",
+			"useOption": "Spell or Attack Option",
 			"changeDie": "Change a Die",
 			"changeResult": "Change a Result",
 			"chargePool": "Charge Pool",
@@ -2208,6 +2209,80 @@
 						"notAllowed": "Not Allowed",
 						"allowed": "Allowed"
 					}
+				}
+			},
+			"useOption": {
+				"description": "An option the player can turn on in the cast window of a spell, with its own cost and change. It goes on the feature that gives the option. It is off at first.",
+				"target": {
+					"label": "Applies to",
+					"hint": "The window the option shows in.",
+					"choices": {
+						"spell": "Spells"
+					}
+				},
+				"tieredOnly": {
+					"label": "Tiered spells only",
+					"hint": "Leave out cantrips."
+				},
+				"singleTargetOnly": {
+					"label": "Single-target spells only",
+					"hint": "Leave out spells with an area or with more than one target."
+				},
+				"schools": {
+					"label": "Schools",
+					"hint": "Only spells of these schools. Empty is every school."
+				},
+				"spells": {
+					"label": "Named spells",
+					"hint": "Only the spells with these identifiers, such as rimeblades. Empty is every spell."
+				},
+				"chargePoolIdentifier": {
+					"label": "Use limit",
+					"hint": "A Charge Pool that the option spends 1 use of. Options that name the same pool share one dropdown, named after the pool, and its uses. When the pool is empty, the dropdown is off. Empty is no limit."
+				},
+				"actionDelta": {
+					"label": "Action cost change",
+					"hint": "Actions added to the spell's action cost, such as -1 for one less. 0 is no change."
+				},
+				"actionMinimum": {
+					"label": "Action cost minimum",
+					"hint": "The least a cut can bring the action cost to. A cost already below it does not go up."
+				},
+				"rangePerMana": {
+					"label": "Range for each mana",
+					"hint": "Range added to the spell for each mana the option spends, such as 4. The amount stepper says the range, such as Mana (+8 range). 0 is no change."
+				},
+				"cardNote": {
+					"label": "Note on the card",
+					"hint": "A line on the card of the cast, such as The spell ignores line of sight. {amount} is the amount the option spends, such as {amount} creatures unaffected. Empty is no line."
+				},
+				"damageTypes": {
+					"label": "Damage type pick",
+					"hint": "The damage types the player picks one of. All damage of the spell becomes the picked type. Empty is no pick."
+				},
+				"manaDelta": {
+					"label": "Mana cost change",
+					"hint": "Mana added to the spell's mana cost, such as -2 for 2 less. 0 is no change."
+				},
+				"manaMinimum": {
+					"label": "Mana cost minimum",
+					"hint": "The least a cut can bring the spell's mana cost to. A cost already below it does not go up."
+				},
+				"freeCopy": {
+					"label": "Free copy",
+					"hint": "After the cast, a second card of the same spell posts at the same tier, free of mana, for another target. An amount can read @castManaSpent, the mana the cast spends on the spell, such as max(1, 2 * @castManaSpent)."
+				},
+				"replacesSpellCost": {
+					"label": "Spend in place of the spell's cost",
+					"hint": "The option's cost takes the place of what the spell costs, mana or a class pool. The option is a button under Spend in the cast window, next to the spell's own cost. The spell casts at its own tier."
+				},
+				"manaSet": {
+					"label": "Set the mana cost to",
+					"hint": "The spell costs this much mana, at its own tier, with no upcast. Empty is no change."
+				},
+				"effectId": {
+					"label": "Effect after the cast",
+					"hint": "An effect of this item that the caster gains after a cast with the option. Its rule formulas can read @cost, what the cast spent and sacrificed, such as floor(@cost.hp / 2). Empty is no effect."
 				}
 			},
 			"diceConsumer": {
@@ -4010,6 +4085,28 @@
 					"hint": "A click on the row shows the other three stats, and the player picks one for the new roll. On a save it uses that stat's save modifier. On a skill check it swaps the stat part and keeps the other bonuses. On an attack it swaps the stat in the formula; an attack with no stat in its formula gets no row."
 				}
 			}
+		},
+		"useOptions": {
+			"none": "None",
+			"badCostFormula": "The cost of {name} cannot be worked out. Check its formula.",
+			"usedThisTurn": "Used this turn",
+			"noUsesLeft": "No uses left",
+			"entry": "{name} ({cost})",
+			"spend": "Spend",
+			"spendEntry": "{cost} ({name})",
+			"atLeast": "{amount}+",
+			"amountLabel": {
+				"mana": "Mana",
+				"tempHp": "Temp HP",
+				"hp": "HP",
+				"wounds": "Wounds"
+			},
+			"amountWithRange": "{label} (+{range} range)",
+			"choosePick": "Choose a damage type for {name}.",
+			"copyReason": "a copy of the cast",
+			"increment": "One more: {label}",
+			"decrement": "One less: {label}",
+			"noUseLeft": "{pool} has no use left."
 		},
 		"resourceCosts": {
 			"cardLine": "Cost: {cost} ({source})",
