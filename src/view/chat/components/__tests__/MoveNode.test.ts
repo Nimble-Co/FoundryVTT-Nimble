@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import { SYSTEM_ID } from '#system';
 import MoveNode from '../MoveNode.svelte';
 import MoveNodeTestHarness from './MoveNode.testHarness.svelte';
 
@@ -422,6 +423,56 @@ describe('MoveNode', () => {
 		]);
 		expect(rowNames(container)).toEqual(['Goblin Cutthroat']);
 		expect(screen.queryByText(/Goblin Archer/)).toBeNull();
+	});
+
+	describe('a move that an Apply Effect step gives', () => {
+		const giver = {
+			id: 'fx',
+			type: 'applyEffect',
+			effectId: 'e1',
+			recipient: 'self',
+			moveNodeId: 'node1',
+		};
+
+		function renderGiven(offers: unknown[]) {
+			const message = {
+				...createMessage(offers),
+				flags: { [SYSTEM_ID]: { itemUuid: 'Actor.a.Item.i' } },
+				system: {
+					actorName: 'Sir Brannon',
+					movementOffers: offers,
+					targets: [],
+					activation: { effects: [giver, selfNode()] },
+				},
+			};
+			vi.stubGlobal(
+				'fromUuidSync',
+				vi.fn((uuid: string) =>
+					uuid === 'Actor.a.Item.i'
+						? {
+								uuid,
+								effects: { get: (id: string) => (id === 'e1' ? { name: 'Gust' } : undefined) },
+							}
+						: {},
+				),
+			);
+			return render(MoveNodeTestHarness, {
+				props: { messageDocument: message, node: selfNode(), targetsShown: false },
+			});
+		}
+
+		it('says that it comes with the effect before the effect applies', () => {
+			renderGiven([]);
+			expect(screen.getByText('Comes with Gust.')).toBeTruthy();
+			expect(screen.queryByText('No creature to move.')).toBeNull();
+			expect(screen.queryByRole('button')).toBeNull();
+		});
+
+		it('shows the move as any other once the effect applied', () => {
+			const { container } = renderGiven([createSelfOffer()]);
+			expect(screen.queryByText('Comes with Gust.')).toBeNull();
+			expect(summaryText(container)).toBe('Can move up to 2 spaces for free.');
+		});
 	});
 
 	it('carries no button in any state', () => {

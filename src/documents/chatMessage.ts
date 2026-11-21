@@ -1274,7 +1274,13 @@ class NimbleChatMessage extends ChatMessage {
 	#movementOfferChanges(changes: Record<string, unknown>): { movementOffers?: MovementOffer[] } {
 		if (!cardSchemaHas(this.type, 'movementOffers')) return {};
 		const system = { ...(this.system as object), ...changes } as OfferCard['system'];
-		return { movementOffers: reconcileMovementOffers({ speaker: this.speaker, system }) };
+		return {
+			movementOffers: reconcileMovementOffers({
+				speaker: this.speaker,
+				flags: this.flags as OfferCard['flags'],
+				system,
+			}),
+		};
 	}
 
 	/** Whether this client may press the card's Roll Damage button. */

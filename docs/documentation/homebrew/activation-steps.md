@@ -54,14 +54,14 @@ A save entry has three sections:
 
 ## Apply Effect
 
-Puts an effect of the item, one with **Apply to the actor** off, on the card's targets or on the user, as set in **Who takes it**. A new entry makes an effect with the item's name. **Effect** picks another. The pen opens the [effect window](effects.md). Its **Details** tab has the conditions that the effect gives, such as Frightened, and its **Lasts Until** tab has the Lasts Until and the Escape. **Temp HP that it gives** links a Temporary Healing entry. The effect then gives those temp HP, and takes back what is left when it ends.
+Puts an effect of the item, one with **Apply to the actor** off, on the card's targets or on the user, as set in **Who takes it**. A new entry makes an effect with the item's name. **Effect** picks another. The pen opens the [effect window](effects.md). Its **Details** tab has the conditions that the effect gives, such as Frightened, and its **Lasts Until** tab has the Lasts Until and the Escape. **Temp HP that it gives** links a Temporary Healing entry. The effect then gives those temp HP, and takes back what is left when it ends. **Move it gives** links a Move entry, which waits until the effect applies, such as the Wind move of Primordial Force.
 
 An entry for **The creature that uses this** applies by itself when the item is used, while the Feature Effects automation setting is on. Set its **Applies** to **On a click** to make it wait for its **Apply to You** button. Use that when the player picks one of several entries, such as one element of Primordial Force. Under **On Hit**, **On Critical Hit** or **On Miss**, the entry applies only when the card has that outcome. A new use while the user has the effect keeps one copy.
 
 An entry for **The targets** waits for the **Apply to Targets** button. Under **On Failed Save**, **Each creature that fails** puts the effect by itself on each creature that fails its save from this card. Under **On Passed Save**, **Each creature that saves** does the same for each creature that saves. A reroll that changes the result takes the effect back, once. With Feature Effects off, the entry has the **Apply to Targets** button. To make a state such as Rage, see [Build a state such as Rage](effects.md#build-a-state-such-as-rage).
 
 ::: details A reroll that takes the effect back
-The take-back also removes the "At N stacks" effect that the application gave. An older copy that the application replaced comes back.
+The take-back also removes the "At N stacks" effect that the application gave. An older copy that the application replaced comes back. A move that the effect gives also goes, if the token did not make it.
 :::
 
 ::: details The temp HP link
@@ -72,9 +72,9 @@ The link holds only while the temp HP are that effect's. It ends when the temp H
 
 Gives a creature a move for free or Forced Movement. The card watches that creature's next drag. The drag counts as that movement, and the ruler shows how far the creature can go. There is nothing to click, and nothing stops a longer drag.
 
-Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance**, a formula that reads the data of the feature's user. For example, `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The system works out the distance once, when the card posts. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so. Forced Movement always ignores it.
+Choose the **Kind** (Move for free or Forced Movement), **Who Moves** (the creature that uses the feature, or the card's targets), and the **Distance**, a formula that reads the data of the feature's user. For example, `@abilities.strength.mod` is their Strength modifier, `2` a fixed number, and `@speed` the walk speed of the creature that moves (`@speed / 2` half of it). The system works out the distance once, when the card posts, or when the effect that gives the move applies. **Distance by size** can override the formula for a size category (a push that moves Small creatures twice as far, for example). Turn on **Ignore difficult terrain** for a move for free that says so. Forced Movement always ignores it.
 
-The card shows the **Direction**: away from or toward the feature's user, or any direction for Forced Movement. Nothing enforces the direction. Under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome. A critical hit is also a hit. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
+The card shows the **Direction**: away from or toward the feature's user, or any direction for Forced Movement. Nothing enforces the direction. An Apply Effect entry can give the move. Then the move waits for that effect (see [Apply Effect](#apply-effect)). Under **On Hit**, **On Critical Hit** or **On Miss**, the move is on the card only when the card has that outcome. A critical hit is also a hit. See [Running Combat](../gm/combat.md#forced-movement-and-moves-for-free).
 
 ::: details How the card words the move
 **Show the distance as "up to"** sets how the card words the distance. It starts on for a move for free ("Can move up to 6 spaces for free.") and off for Forced Movement ("Pushed 2 spaces away from Grug."), as the rulebooks word them. Turn it on for a push or pull whose text says "up to". Turn it off for a move for free of a set distance. It changes only the words on the card.

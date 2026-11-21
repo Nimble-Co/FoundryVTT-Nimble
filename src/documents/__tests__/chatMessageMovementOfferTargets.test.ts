@@ -72,10 +72,12 @@ function createCard(
 	targets: string[],
 	movementOffers: MovementOffer[],
 	effects: unknown[] = [pushNode()],
+	flags: Record<string, unknown> = {},
 ): MockedMessage {
 	const message = new NimbleChatMessage({
 		type: 'feature',
 		speaker: { scene: 's', token: 'hero', actor: 'hero-actor' },
+		flags,
 		system: { targets, movementOffers, activation: { effects } },
 	} as unknown as ChatMessage.CreateData) as MockedMessage;
 	message.update = vi.fn().mockResolvedValue(undefined);
@@ -163,6 +165,17 @@ describe('adding a target to a card with a move node', () => {
 		const system = written(message);
 		expect(system.targets).toEqual([GOBLIN]);
 		expect(offerIds(system)).toEqual(['n1.gob']);
+	});
+
+	it('keeps the offers of a move whose Apply Effect step applied', async () => {
+		vi.stubGlobal('canvas', { tokens: { controlled: [canvasToken(OGRE)] } });
+		const giver = { id: 'fx', type: 'applyEffect', effectId: 'e1', moveNodeId: 'n1' };
+		const applied = { [SYSTEM_ID]: { appliedEffects: { fx: [{ effectUuid: 'x' }] } } };
+		const message = createCard([GOBLIN], [offerTo(GOBLIN)], [giver, pushNode()], applied);
+
+		await message.addSelectedTokensAsTargets();
+
+		expect(offerIds(written(message))).toEqual(['n1.gob', 'n1.ogre']);
 	});
 
 	it('makes no offer on a card with no move node', async () => {

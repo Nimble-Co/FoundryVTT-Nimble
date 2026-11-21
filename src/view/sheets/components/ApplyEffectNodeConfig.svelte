@@ -5,7 +5,7 @@
 	import ItemEffectSelect from '../../components/ItemEffectSelect.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
 	import { getSelfAppliesOptions } from '../pages/itemActivationEffectsConfigTabHelpers.ts';
-	import { tempHealingOptions } from './applyEffectNodeOptions.ts';
+	import { moveOptions, tempHealingOptions } from './applyEffectNodeOptions.ts';
 
 	const WORDS = 'NIMBLE.activationEffects.applyEffectNode';
 
@@ -27,6 +27,7 @@
 		node.condition ? (CONFIG.NIMBLE.conditions[node.condition] ?? node.condition) : null,
 	);
 	const tempHealing = $derived(tempHealingOptions(effects));
+	const moves = $derived(moveOptions(effects));
 	const appliesOptions = getSelfAppliesOptions();
 
 	function storeEffect(effectId: string | null) {
@@ -100,6 +101,32 @@
 				</option>
 			{/each}
 		</select>
+	</label>
+{/if}
+
+{#if moves.length}
+	<label class="nimble-field" data-field-variant="stacked">
+		<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+			{localize(`${WORDS}.move`)}
+		</h5>
+		<select
+			aria-label={localize(`${WORDS}.move`)}
+			onchange={({ currentTarget }) =>
+				updateEffectNode(document, effects, node, 'moveNodeId', currentTarget.value || null)}
+		>
+			<option value="" selected={!node.moveNodeId}>
+				{localize(`${WORDS}.noMove`)}
+			</option>
+			{#each moves as option (option.id)}
+				<option value={option.id} selected={option.id === node.moveNodeId}>
+					{localize(`${WORDS}.moveOption`, {
+						kind: localize(`NIMBLE.activationEffects.moveNode.kinds.${option.kind}`),
+						distance: option.distance,
+					})}
+				</option>
+			{/each}
+		</select>
+		<small class="nimble-hint">{localize(`${WORDS}.moveHint`)}</small>
 	</label>
 {/if}
 

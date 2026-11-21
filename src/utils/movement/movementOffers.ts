@@ -1,5 +1,5 @@
 import { SYSTEM_ID } from '#system';
-import type { EffectNode, MoveNode } from '#types/effectTree.js';
+import type { ApplyEffectNode, EffectNode, MoveNode } from '#types/effectTree.js';
 import type {
 	ArmedMovementOffer,
 	MovementOffer,
@@ -8,6 +8,7 @@ import type {
 	OfferCard,
 } from '#types/movement.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
+import { appliedRecord, withAppliedRecord } from '../chat/appliedEffectsFlag.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 import { resolveMoveDistance } from './resolveMoveDistance.js';
 
@@ -57,19 +58,58 @@ interface OfferedMoveNode {
 	conditional: boolean;
 }
 
+/** The Apply Effect nodes that give a move, by the id of that move. */
+export function moveGivers(nodes: EffectNode[]): Map<string, ApplyEffectNode[]> {
+	const givers = new Map<string, ApplyEffectNode[]>();
+	for (const node of nodes) {
+		if (node.type !== 'applyEffect' || !node.moveNodeId) continue;
+		givers.set(node.moveNodeId, [...(givers.get(node.moveNodeId) ?? []), node]);
+	}
+	return givers;
+}
+
+/** The move nodes that wait until one of the Apply Effect nodes that give them has applied. */
+function waitingMoves(card: OfferCard, nodes: EffectNode[]): Set<string> {
+	const hasApplied = (node: ApplyEffectNode) => !!appliedRecord(card.flags, node.id)?.length;
+	return new Set(
+		[...moveGivers(nodes)].filter(([, givers]) => !givers.some(hasApplied)).map(([id]) => id),
+	);
+}
+
+/** Whether the node of the card is an Apply Effect node that gives a move. */
+export function givesMove(card: OfferCard, nodeId: string): boolean {
+	const node = flattenEffectsTree(card.system?.activation?.effects ?? []).find(
+		(entry) => entry.id === nodeId,
+	);
+	return node?.type === 'applyEffect' && !!node.moveNodeId;
+}
+
+/** The card's Movement Offers once the record of the Apply Effect node is `record`. */
+export function offersWithAppliedRecord(
+	card: OfferCard,
+	nodeId: string,
+	record: readonly unknown[],
+	lookups: OfferLookups = {},
+): MovementOffer[] {
+	const flags = withAppliedRecord(card.flags, nodeId, record);
+	return reconcileMovementOffers({ ...card, flags }, lookups);
+}
+
 /**
  * The move nodes that make offers on this card. A node under an attack outcome
- * that did not occur makes none. A node under a save outcome is conditional:
+ * that did not occur makes none, and nor does a node that an Apply Effect node
+ * gives before that effect applies. A node under a save outcome is conditional:
  * the card does not know each target's save.
  */
 function offeredMoveNodes(card: OfferCard): OfferedMoveNode[] {
 	const nodes = flattenEffectsTree(card.system?.activation?.effects ?? []);
 	const byId = new Map(nodes.map((node) => [node.id, node]));
 	const outcomes = cardOutcomes(card);
+	const waiting = waitingMoves(card, nodes);
 
 	const offered: OfferedMoveNode[] = [];
 	for (const node of nodes) {
-		if (node.type !== 'move') continue;
+		if (node.type !== 'move' || waiting.has(node.id)) continue;
 		let occurs = true;
 		let conditional = false;
 		const seen = new Set<EffectNode>();

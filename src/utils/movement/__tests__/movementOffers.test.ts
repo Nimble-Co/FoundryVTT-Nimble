@@ -6,8 +6,10 @@ import {
 	findArmedMovementOffer,
 	forgetArmedMovementOffers,
 	lapseMovementOffers,
+	moveGivers,
 	movementOfferOutcome,
 	type OfferToken,
+	offersWithAppliedRecord,
 	reconcileMovementOffers,
 	settleMovementOffer,
 	untrackMovementOffers,
@@ -191,6 +193,48 @@ describe('reconcileMovementOffers', () => {
 
 	it('makes no offer on a card with no move node', () => {
 		expect(reconcileMovementOffers(card([]), lookups)).toEqual([]);
+	});
+});
+
+describe('a move that an Apply Effect step gives', () => {
+	const linked = () => [
+		{ id: 'fx', type: 'applyEffect', effectId: 'e1', recipient: 'self', moveNodeId: 'n1' },
+		moveNode(),
+	];
+	const withRecord = (base: OfferCard, record: unknown[]): OfferCard => ({
+		...base,
+		flags: { [SYSTEM_ID]: { appliedEffects: { fx: record } } },
+	});
+
+	it('makes no offer while the effect has not applied', () => {
+		expect(reconcileMovementOffers(card(linked()), lookups)).toEqual([]);
+		expect(reconcileMovementOffers(withRecord(card(linked()), []), lookups)).toEqual([]);
+	});
+
+	it('makes the offer once the effect applied', () => {
+		const applied = withRecord(card(linked()), [{ effectUuid: 'Actor.a.ActiveEffect.x' }]);
+		expect(reconcileMovementOffers(applied, lookups)).toEqual([offer()]);
+	});
+
+	it('reads the record that is about to be written, not the one on the card', () => {
+		const record = [{ effectUuid: 'Actor.a.ActiveEffect.x' }];
+		expect(offersWithAppliedRecord(card(linked()), 'fx', record, lookups)).toEqual([offer()]);
+		const applied = withRecord(card(linked(), undefined, [offer()]), record);
+		expect(offersWithAppliedRecord(applied, 'fx', [], lookups)).toEqual([]);
+	});
+
+	it('lists the givers of each move', () => {
+		const second = { id: 'fx2', type: 'applyEffect', moveNodeId: 'n1' };
+		const givers = moveGivers([...linked(), second] as never);
+		expect([...givers.keys()]).toEqual(['n1']);
+		expect(givers.get('n1')?.map((node) => node.id)).toEqual(['fx', 'fx2']);
+	});
+
+	it('drops the open offer when the effect is taken back, but keeps a settled one', () => {
+		const open = withRecord(card(linked(), undefined, [offer()]), []);
+		expect(reconcileMovementOffers(open, lookups)).toEqual([]);
+		const settled = withRecord(card(linked(), undefined, [offer({ state: 'taken' })]), []);
+		expect(reconcileMovementOffers(settled, lookups)).toEqual([offer({ state: 'taken' })]);
 	});
 });
 

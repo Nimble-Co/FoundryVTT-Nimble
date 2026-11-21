@@ -688,7 +688,9 @@
 				},
 				"chip": { "notMoved": "Not {passive}", "notUsed": "Not used" },
 				"obstacleDamage": "If an obstacle stopped {name}, {name} takes {dice}d6 bludgeoning damage. If {name} hit another creature, the two creatures split this damage.",
-				"noRecipient": "No creature to move."
+				"noRecipient": "No creature to move.",
+				"withEffect": "Comes with {name}.",
+				"withItsEffect": "Comes with its effect."
 			},
 			"movementTrigger": {
 				"use": "Use {name}",
@@ -5319,7 +5321,11 @@
 				},
 				"tempHealing": "Temp HP that it gives",
 				"noTempHealing": "None",
-				"tempHealingFormula": "Temp healing {formula}"
+				"tempHealingFormula": "Temp healing {formula}",
+				"move": "Move it gives",
+				"noMove": "None",
+				"moveOption": "{kind}, {distance} spaces",
+				"moveHint": "The move waits until this effect applies. Then the token can make the move."
 			},
 			"damage": "Damage",
 			"damageOutcome": "Damage Outcome",
