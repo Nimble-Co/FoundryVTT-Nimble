@@ -2173,7 +2173,7 @@
 				"description": "Spend mana or temp HP, or sacrifice HP or Wounds, each time the item is used. A use the creature cannot cover stops before the roll.",
 				"kind": {
 					"label": "Resource",
-					"hint": "What each use takes. Mana and temp HP are spent. HP and Wounds are sacrificed. A sacrifice of HP is not damage, and the creature must keep at least 1 HP.",
+					"hint": "What each use takes. Mana and temp HP are spent. HP and Wounds are sacrificed. A sacrifice of HP is not damage. The creature must keep at least 1 HP, unless Using Beyond What You Have allows more.",
 					"choices": {
 						"mana": "Mana",
 						"hp": "HP",
@@ -2200,6 +2200,14 @@
 				"max": {
 					"label": "Maximum",
 					"hint": "The most the player can choose: a number or a formula, such as @will."
+				},
+				"beyond": {
+					"label": "Using Beyond What You Have",
+					"hint": "What happens when a use needs more than the creature has. Not Allowed blocks the use. Otherwise the creature spends or sacrifices what it has, down to 0.",
+					"choices": {
+						"notAllowed": "Not Allowed",
+						"allowed": "Allowed"
+					}
 				}
 			},
 			"diceConsumer": {
@@ -4020,7 +4028,18 @@
 			"notEnoughHp": "{source} needs more than {amount} HP.",
 			"notEnoughWoundRoom": "{source} needs room for {amount} more {wounds}. You have room for {available}.",
 			"woundWord": "Wound",
-			"woundsWord": "Wounds"
+			"woundsWord": "Wounds",
+			"beyond": {
+				"title": "Using Beyond What You Have",
+				"mana": "You have {available} mana. {source} needs {amount}.",
+				"tempHp": "You have {available} temp HP. {source} needs {amount}.",
+				"hp": "You have {available} HP. {source} needs more than {amount}.",
+				"wounds": "You have room for {available} more {wounds}. {source} needs {amount}.",
+				"halfMaxHpDamage": "Using it anyway deals {damage} damage to you (half your max HP).",
+				"question": "Use it anyway?",
+				"confirm": "Use Anyway",
+				"cancel": "Cancel"
+			}
 		},
 		"charges": {
 			"header": "Charges",

@@ -93,6 +93,47 @@ function hasEnough(actor: CostPayer, kind: ResourceCostKind, amount: number): bo
 	return availableOf(actor, kind) >= amount;
 }
 
+function allowsBeyond(cost: ResourceCost): boolean {
+	return cost.beyond !== 'notAllowed';
+}
+
+/** The most a use beyond what the creature has takes: all mana, temp HP and HP; Wounds have no end. */
+function reachOf(actor: CostPayer, kind: ResourceCostKind): number {
+	switch (kind) {
+		case 'mana':
+			return Math.max(0, manaOf(actor));
+		case 'hp':
+			return Math.max(0, hpOf(actor));
+		case 'tempHp':
+			return Math.max(0, tempHpOf(actor));
+		case 'wounds':
+			return Number.POSITIVE_INFINITY;
+	}
+}
+
+/**
+ * Whether a cost allowed beyond what the creature has needs more than it has now, so the
+ * player must confirm the use. Never with Resource Spending off.
+ */
+function goesBeyond(actor: CostPayer, cost: ResourceCost): boolean {
+	if (!isResourceSpendingAutomationEnabled() || !allowsBeyond(cost)) return false;
+	const amount = fixedAmountOf(cost);
+	return amount !== null && amount > 0 && !hasEnough(actor, cost.kind, amount);
+}
+
+/** The damage the consequence of a use beyond what the creature has deals. */
+function beyondConsequenceDamage(actor: CostPayer, cost: ResourceCost): number {
+	if (cost.beyond !== 'halfMaxHpDamage') return 0;
+	return Math.floor(Number(foundry.utils.getProperty(actor ?? {}, ACTOR_HP_PATHS.max) ?? 0) / 2);
+}
+
+/** Apply the consequence of a use beyond what the creature has. */
+async function applyBeyondConsequence(actor: CostPayer, cost: ResourceCost): Promise<void> {
+	const damage = beyondConsequenceDamage(actor, cost);
+	const target = actor as { applyDamage?: (damage: number) => Promise<void> } | null | undefined;
+	if (damage > 0) await target?.applyDamage?.(damage);
+}
+
 /**
  * Whether the creature can cover the cost now, by its lowest amount. With Resource Spending
  * off, every cost can.
@@ -101,7 +142,7 @@ function canSpendResource(actor: CostPayer, cost: ResourceCost): boolean {
 	if (!isResourceSpendingAutomationEnabled()) return true;
 	const amount = lowestAmountOf(actor, cost);
 	if (amount === null) return false;
-	return amount === 0 || hasEnough(actor, cost.kind, amount);
+	return amount === 0 || allowsBeyond(cost) || hasEnough(actor, cost.kind, amount);
 }
 
 /**
@@ -144,14 +185,18 @@ async function settleResourceCost(
 
 /**
  * Take the cost from the creature. Gives the amount taken, or null when the
- * creature cannot cover it and nothing was taken. With Resource Spending off,
- * nothing is taken.
+ * creature cannot cover it and nothing was taken. A cost allowed beyond what the
+ * creature has takes what there is, down to 0; Wounds go past the max. With
+ * Resource Spending off, nothing is taken.
  */
 async function spendResource(actor: CostPayer, cost: ResourceCost): Promise<number | null> {
 	if (!isResourceSpendingAutomationEnabled()) return 0;
-	const amount = fixedAmountOf(cost);
+	const needed = fixedAmountOf(cost);
+	if (needed === 0) return 0;
+	if (needed === null) return null;
+	if (!allowsBeyond(cost) && !hasEnough(actor, cost.kind, needed)) return null;
+	const amount = Math.min(needed, reachOf(actor, cost.kind));
 	if (amount === 0) return 0;
-	if (amount === null || !hasEnough(actor, cost.kind, amount)) return null;
 	switch (cost.kind) {
 		case 'mana':
 			await writeMana(actor, manaOf(actor) - amount);
@@ -177,8 +222,11 @@ async function spendResource(actor: CostPayer, cost: ResourceCost): Promise<numb
 }
 
 export {
+	applyBeyondConsequence,
+	beyondConsequenceDamage,
 	canSpendResource,
 	fixedResourceCost,
+	goesBeyond,
 	hpOf,
 	isRolledCost,
 	lowestAmountOf,

@@ -18,6 +18,7 @@ import {
 } from '../incomingReactions/heroicActions.js';
 import {
 	fixedResourceCost,
+	goesBeyond,
 	hpOf,
 	manaOf,
 	resourceCostsOf,
@@ -252,24 +253,41 @@ async function payCost(
 	return paid;
 }
 
+interface ResourceCostsSpent {
+	receipt: CostReceipt;
+	/** The costs as the use took them. With Resource Spending off, the amounts the use needed. */
+	taken: ResourceCost[];
+	/** The costs that went beyond what the creature had, whose consequences still apply. */
+	beyond: ResourceCost[];
+}
+
 /**
- * Spend each cost of an item's own use, in order. When one cannot be covered,
- * what was taken is given back and null is returned.
+ * Spend each cost of an item's own use, in order. When a cost allowed beyond what the
+ * creature has needs more than it has, `confirmBeyond` asks first. When the player
+ * declines, or a cost cannot be covered, what was taken is given back and null is returned.
  */
 async function spendResourceCosts(
 	actor: CostPayer,
 	costs: readonly ResourceCost[],
-): Promise<CostReceipt | null> {
+	{
+		confirmBeyond = async () => false,
+	}: { confirmBeyond?: (costs: ResourceCost[]) => Promise<boolean> } = {},
+): Promise<ResourceCostsSpent | null> {
+	const beyond = costs.filter((cost) => goesBeyond(actor, cost));
+	if (beyond.length > 0 && !(await confirmBeyond(beyond))) return null;
+
 	const receipt = receiptOf();
+	const taken: ResourceCost[] = [];
 	for (const cost of costs) {
-		const taken = await spendResource(actor, cost);
-		if (taken === null) {
+		const amount = await spendResource(actor, cost);
+		if (amount === null) {
 			await giveBack(actor, receipt);
 			return null;
 		}
-		recordTaken(receipt.paid, cost.kind, taken);
+		recordTaken(receipt.paid, cost.kind, amount);
+		taken.push(isResourceSpendingAutomationEnabled() ? { ...cost, amount } : cost);
 	}
-	return receipt;
+	return { receipt, taken, beyond };
 }
 
 /**

@@ -1,9 +1,25 @@
-import type { ResourceCost, ResourceCostKind } from '#types/resourceCost.d.ts';
+import type {
+	ResourceCost,
+	ResourceCostKind,
+	UsingBeyondWhatYouHave,
+} from '#types/resourceCost.d.ts';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const RESOURCE_COST_KINDS = ['mana', 'hp', 'tempHp', 'wounds'] as const;
 const RESOURCE_COST_SPEND_MODES = ['fixed', 'variable'] as const;
+
+/** Not Allowed, Allowed, then the consequences a class spell pool offers. */
+function beyondChoices(): Record<string, string> {
+	const consequences = Object.entries(CONFIG.NIMBLE?.overdraftConsequences ?? {}).filter(
+		([key]) => key !== '',
+	);
+	return {
+		notAllowed: 'NIMBLE.rules.resourceCost.beyond.choices.notAllowed',
+		allowed: 'NIMBLE.rules.resourceCost.beyond.choices.allowed',
+		...Object.fromEntries(consequences),
+	};
+}
 
 const isVariable = (data: Record<string, unknown>) => data.spendMode === 'variable';
 
@@ -72,6 +88,14 @@ function schema() {
 				showWhen: isVariable,
 			}),
 		),
+		beyond: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'notAllowed',
+			label: 'NIMBLE.rules.resourceCost.beyond.label',
+			hint: 'NIMBLE.rules.resourceCost.beyond.hint',
+			choices: beyondChoices,
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -105,6 +129,9 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 	/** The most a variable cost takes, as a formula. */
 	declare max: string;
 
+	/** What a use that needs more than the creature has does. */
+	declare beyond: UsingBeyondWhatYouHave;
+
 	static override defineSchema(): ResourceCostRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -119,7 +146,7 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 	get resourceCost(): ResourceCost {
 		const cost = {
 			kind: this.kind,
-			beyond: 'notAllowed' as const,
+			beyond: this.beyond ?? 'notAllowed',
 			source: this.parentItem?.name ?? '',
 			id: this.id,
 		};
@@ -151,6 +178,7 @@ class ResourceCostRule extends NimbleBaseRule<ResourceCostRule.Schema> {
 				['amount', 'string'],
 				['min', 'string'],
 				['max', 'string'],
+				['beyond', '"notAllowed" | "allowed" | "halfMaxHpDamage"'],
 			]),
 		);
 	}

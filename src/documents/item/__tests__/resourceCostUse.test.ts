@@ -406,27 +406,27 @@ describe('using a feature with a variable Spend or Sacrifice cost', () => {
 	});
 });
 
-describe('using a feature with a rolled Spend or Sacrifice cost', () => {
-	/** A 1d4 that rolls `result`; its lowest result is 1. */
-	function rollsOn1d4(result: number) {
-		vi.mocked(Roll).mockImplementation(((formula: string) => {
-			if (formula !== '1d4') return undefined;
-			const roll = {
-				formula,
-				total: undefined as number | undefined,
-				evaluateSync: ({ minimize = false } = {}) => {
-					roll.total = minimize ? 1 : result;
-					return roll;
-				},
-				evaluate: async () => {
-					roll.total = result;
-					return roll;
-				},
-			};
-			return roll;
-		}) as never);
-	}
+/** A 1d4 that rolls `result`; its lowest result is 1. */
+function rollsOn1d4(result: number) {
+	vi.mocked(Roll).mockImplementation(((formula: string) => {
+		if (formula !== '1d4') return undefined;
+		const roll = {
+			formula,
+			total: undefined as number | undefined,
+			evaluateSync: ({ minimize = false } = {}) => {
+				roll.total = minimize ? 1 : result;
+				return roll;
+			},
+			evaluate: async () => {
+				roll.total = result;
+				return roll;
+			},
+		};
+		return roll;
+	}) as never);
+}
 
+describe('using a feature with a rolled Spend or Sacrifice cost', () => {
 	it('rolls the Wounds at use and the card shows the roll', async () => {
 		rollsOn1d4(3);
 		const actor = hero({ wounds: 1, maxWounds: 6 });
@@ -487,5 +487,203 @@ describe('using a feature with a formula Spend or Sacrifice cost', () => {
 
 		expect(actor.system.resources.mana.current).toBe(2);
 		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'mana', amount: 3, source: 'Will Drain' }]);
+	});
+});
+
+describe('using a cost beyond what the creature has', () => {
+	const confirm = () =>
+		vi.mocked(foundry.applications.api.DialogV2.confirm as (...args: unknown[]) => unknown);
+
+	function answer(yes: boolean) {
+		confirm().mockReset();
+		confirm().mockResolvedValue(yes as never);
+	}
+
+	function asked(): string {
+		const options = confirm().mock.calls[0]?.[0] as { content?: string } | undefined;
+		return (options?.content ?? '')
+			.replace(/<[^>]+>/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim();
+	}
+
+	function beyond<T extends { rules: Map<string, unknown> }>(
+		item: T,
+		kind: ResourceCostKind,
+		value: string,
+	): T {
+		Object.assign(item.rules.get(kind) as object, { beyond: value });
+		return item;
+	}
+
+	it('asks, then spends what the creature has, down to 0, and the card shows what was spent', async () => {
+		answer(true);
+		const actor = hero({ mana: 1 });
+		const item = beyond(feature(actor, 'Stretch Time', [['mana', '2']]), 'mana', 'allowed');
+
+		await item.activate();
+
+		expect(asked()).toBe('You have 1 mana. Stretch Time needs 2. Use it anyway?');
+		expect(actor.system.resources.mana.current).toBe(0);
+		expect(notices()).toEqual([]);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 1, source: 'Stretch Time' },
+		]);
+	});
+
+	it('stops the use with nothing spent and no notice when the player cancels', async () => {
+		answer(false);
+		const actor = hero({ mana: 1 });
+		const item = beyond(feature(actor, 'Stretch Time', [['mana', '2']]), 'mana', 'allowed');
+
+		await item.activate();
+
+		expect(confirm()).toHaveBeenCalledTimes(1);
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(item._createActivationCard).not.toHaveBeenCalled();
+		expect(notices()).toEqual([]);
+	});
+
+	it('does not ask when the creature has enough', async () => {
+		answer(true);
+		const actor = hero({ mana: 3 });
+		const item = beyond(feature(actor, 'Stretch Time', [['mana', '2']]), 'mana', 'allowed');
+
+		await item.activate();
+
+		expect(confirm()).not.toHaveBeenCalled();
+		expect(actor.system.resources.mana.current).toBe(1);
+	});
+
+	it('does not ask when the cost is Not Allowed, and refuses as before', async () => {
+		answer(true);
+		const actor = hero({ mana: 1 });
+		const item = feature(actor, 'Stretch Time', [['mana', '2']]);
+
+		await item.activate();
+
+		expect(confirm()).not.toHaveBeenCalled();
+		expect(notices()).toEqual(['Stretch Time needs 2 mana. You have 1.']);
+	});
+
+	it('sacrifices HP down to 0, never below', async () => {
+		answer(true);
+		const actor = hero({ hp: 4, temp: 3 });
+		const item = beyond(feature(actor, 'Blood Price', [['hp', '5']]), 'hp', 'allowed');
+
+		await item.activate();
+
+		expect(asked()).toBe('You have 4 HP. Blood Price needs more than 5. Use it anyway?');
+		expect(actor.system.attributes.hp).toEqual({ value: 0, max: 20, temp: 3 });
+		expect(cardOf(item)?.system.costs).toEqual([{ kind: 'hp', amount: 4, source: 'Blood Price' }]);
+	});
+
+	it('spends temp HP down to 0 and leaves HP alone', async () => {
+		answer(true);
+		const actor = hero({ hp: 20, temp: 6 });
+		const item = beyond(feature(actor, 'Shadowfrost', [['tempHp', '10']]), 'tempHp', 'allowed');
+
+		await item.activate();
+
+		expect(asked()).toBe('You have 6 temp HP. Shadowfrost needs 10. Use it anyway?');
+		expect(actor.system.attributes.hp).toEqual({ value: 20, max: 20, temp: 0 });
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'tempHp', amount: 6, source: 'Shadowfrost' },
+		]);
+	});
+
+	it('gives every Wound, even past the max', async () => {
+		answer(true);
+		const actor = hero({ wounds: 5, maxWounds: 6 });
+		const item = beyond(feature(actor, 'Dark Bargain', [['wounds', '2']]), 'wounds', 'allowed');
+
+		await item.activate();
+
+		expect(asked()).toBe('You have room for 1 more Wound. Dark Bargain needs 2. Use it anyway?');
+		expect(actor.system.attributes.wounds.value).toBe(7);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'wounds', amount: 2, source: 'Dark Bargain' },
+		]);
+	});
+
+	it('applies the consequence when the player confirms', async () => {
+		answer(true);
+		const actor = Object.assign(hero({ mana: 1 }), { applyDamage: vi.fn(async () => undefined) });
+		const item = beyond(feature(actor, 'Stretch Time', [['mana', '2']]), 'mana', 'halfMaxHpDamage');
+
+		await item.activate();
+
+		expect(asked()).toBe(
+			'You have 1 mana. Stretch Time needs 2. Using it anyway deals 10 damage to you (half your max HP). Use it anyway?',
+		);
+		expect(actor.system.resources.mana.current).toBe(0);
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('applies no consequence when the player cancels, or when the use stops after the cost', async () => {
+		answer(false);
+		const cancelled = Object.assign(hero({ mana: 1 }), {
+			applyDamage: vi.fn(async () => undefined),
+		});
+		await beyond(
+			feature(cancelled, 'Stretch Time', [['mana', '2']]),
+			'mana',
+			'halfMaxHpDamage',
+		).activate();
+		expect(cancelled.applyDamage).not.toHaveBeenCalled();
+
+		answer(true);
+		const stopped = Object.assign(hero({ mana: 0, hp: 4 }), {
+			applyDamage: vi.fn(async () => undefined),
+		});
+		const item = beyond(spell(stopped, 'Frost Pact', [['hp', '5']]), 'hp', 'halfMaxHpDamage');
+		await item.activate({ fastForward: true });
+		expect(stopped.applyDamage).not.toHaveBeenCalled();
+		expect(stopped.system.attributes.hp.value).toBe(4);
+	});
+
+	it('takes every rolled Wound past the max', async () => {
+		answer(true);
+		rollsOn1d4(3);
+		const actor = hero({ wounds: 4, maxWounds: 6 });
+		const item = beyond(feature(actor, 'Enveloped', [['wounds', '1d4']]), 'wounds', 'allowed');
+
+		await item.activate();
+
+		expect(asked()).toBe('You have room for 2 more Wounds. Enveloped needs 3. Use it anyway?');
+		expect(actor.system.attributes.wounds.value).toBe(7);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'wounds', amount: 3, source: 'Enveloped', roll: '1d4' },
+		]);
+	});
+
+	it('takes what there is when a rolled amount comes out higher than the creature has', async () => {
+		answer(true);
+		rollsOn1d4(3);
+		const actor = hero({ mana: 2 });
+		const item = beyond(feature(actor, 'Mana Burn', [['mana', '1d4']]), 'mana', 'allowed');
+
+		await item.activate();
+
+		expect(asked()).toBe('You have 2 mana. Mana Burn needs 3. Use it anyway?');
+		expect(actor.system.resources.mana.current).toBe(0);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 2, source: 'Mana Burn', roll: '1d4' },
+		]);
+	});
+
+	it('with Resource Spending off, asks nothing and takes nothing', async () => {
+		setResourceSpending(false);
+		answer(true);
+		const actor = hero({ mana: 1 });
+		const item = beyond(feature(actor, 'Stretch Time', [['mana', '2']]), 'mana', 'allowed');
+
+		await item.activate();
+
+		expect(confirm()).not.toHaveBeenCalled();
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 2, source: 'Stretch Time' },
+		]);
 	});
 });

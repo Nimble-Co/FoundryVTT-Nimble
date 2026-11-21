@@ -33,8 +33,10 @@ import {
 	applyCasterConcentration,
 	type ConcentrationSource,
 } from '../../utils/actor/concentration.js';
+import confirmUsingBeyond from '../../utils/cost/confirmUsingBeyond.js';
 import { giveBack, receiptOf, spendResourceCosts } from '../../utils/cost/costLedger.js';
 import { resourceCostRefusal } from '../../utils/cost/itemResourceCosts.js';
+import { applyBeyondConsequence } from '../../utils/cost/resourceCost.js';
 import { cardCostsOf } from '../../utils/cost/resourceCostWords.js';
 import { NO_DICE_SO_NICE_FLAGS } from '../../utils/rolls/showDiceAnimation.js';
 
@@ -447,17 +449,21 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		});
 		if (!allowed) return null;
 
-		const costReceipt = await spendResourceCosts(this.actor, manager.resourceCosts);
-		if (!costReceipt) {
+		const costsSpent = await spendResourceCosts(this.actor, manager.resourceCosts, {
+			confirmBeyond: (costs) => confirmUsingBeyond(this.actor, costs),
+		});
+		if (!costsSpent) {
 			const refusal = resourceCostRefusal(this.actor, manager.resourceCosts);
 			if (refusal) ui.notifications?.error(refusal);
 			return null;
 		}
+		const costReceipt = costsSpent.receipt;
 		const receipt = await this._payForUse(manager);
 		if (!receipt) {
 			await giveBack(this.actor, costReceipt);
 			return null;
 		}
+		for (const cost of costsSpent.beyond) await applyBeyondConsequence(this.actor, cost);
 
 		const useEvents = openActivationEvents(this.actor);
 		let card: ChatMessage | null;
@@ -507,7 +513,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 						actorName: this.actor?.name ?? '',
 						actorType: this.actor?.type ?? '',
 						activation,
-						costs: cardCostsOf(manager.resourceCosts),
+						costs: cardCostsOf(costsSpent.taken),
 						image: this.img || 'icons/svg/item-bag.svg',
 						incomingReactions: [
 							...(incomingReactions ?? []),
