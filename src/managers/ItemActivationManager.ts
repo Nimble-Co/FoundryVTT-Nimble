@@ -485,7 +485,8 @@ class ItemActivationManager {
 		// An option that sets the spell's cost casts it at its own tier. A pinned tier still
 		// applies to an option that spends in place of the spell's cost.
 		const castCostChange = chosenCastCostChange(this.useOptionGroups, dialogData.useOptions);
-		if (castCostChange.manaSet !== null || castCostChange.replacesSpellCost) {
+		const keepsPinnedTier = castCostChange.replacesSpellCost && this.pinnedCastTier !== null;
+		if (castCostChange.manaSet !== null || (castCostChange.replacesSpellCost && !keepsPinnedTier)) {
 			dialogData.upcast = undefined;
 		}
 
@@ -512,7 +513,10 @@ class ItemActivationManager {
 			// costs; a class-declared pool cost is validated at spend time.
 			const flatCost = this.spellCost?.type === 'pool';
 			const enforceManaCost =
-				isResourceSpendingAutomationEnabled() && !flatCost && !this.free?.of.includes('mana');
+				isResourceSpendingAutomationEnabled() &&
+				!flatCost &&
+				!this.free?.of.includes('mana') &&
+				!castCostChange.replacesSpellCost;
 			const bounds = computeUpcastBounds({
 				spellTier: spellSystem.tier,
 				resources: actorSystem.resources,
@@ -1627,7 +1631,8 @@ class ItemActivationManager {
 			// No window opens here, and a pinned tier that lands on a list of
 			// enhancements has no default: the pick belongs to the player. Refuse
 			// unless the caller named one, as an unofferable variable spend does.
-			if (this.#hasPinnedUpcastChoice() && options.upcastChoiceIndex === undefined) {
+			const namedChoice = options.upcastChoiceIndex ?? options.upcast?.choiceIndex;
+			if (this.#hasPinnedUpcastChoice() && namedChoice === undefined) {
 				ui.notifications?.error(
 					game.i18n.format(CONFIG.NIMBLE.spellNotifications.pinnedUpcastChoice, {
 						item: this.#item.name ?? '',

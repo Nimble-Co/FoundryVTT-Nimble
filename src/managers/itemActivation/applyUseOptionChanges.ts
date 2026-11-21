@@ -47,9 +47,9 @@ export function applyUseOptionChanges(
 }
 
 /** A step of the card that gives the caster an effect of the option's item. */
-function selfStepOf({ itemUuid, effectId }: UseOptionEffect): ApplyEffectNode {
+function selfStepOf({ itemUuid, effectId }: UseOptionEffect, index: number): ApplyEffectNode {
 	return {
-		id: `useOption${effectId}`,
+		id: `useOption${index}${effectId}`,
 		type: 'applyEffect',
 		effectId,
 		effectItemUuid: itemUuid,

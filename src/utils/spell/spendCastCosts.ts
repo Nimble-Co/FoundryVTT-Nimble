@@ -6,7 +6,13 @@ import { isResourceSpendingAutomationEnabled } from '../../settings/automationSe
 import { giveBack, receiptOf, recordTaken, spendMana } from '../cost/costLedger.js';
 import { notEnoughNotice, resourceCostRefusal } from '../cost/itemResourceCosts.js';
 import { emptyPoolNotice, spendPoolUses } from '../cost/poolUses.js';
-import { fixedAmountOf, goesBeyond, manaOf, spendResource } from '../cost/resourceCost.js';
+import {
+	fixedAmountOf,
+	goesBeyond,
+	manaOf,
+	spendResource,
+	usedBefore,
+} from '../cost/resourceCost.js';
 import { applyOverdraftConsequence } from './spellCost.js';
 import { spendSpellCost } from './spendSpellCost.js';
 import { validateSpellCost } from './validateSpellCost.js';
@@ -124,9 +130,10 @@ export async function spendCastCosts(
 
 	const spellMana = cost.type === 'mana' ? cost.amount : 0;
 	const firstShares = manaShares(manaOf(actor) - spellMana, costs);
+	const used = usedBefore(costs, (each) => fixedAmountOf(each) ?? 0);
 	const otherBeyond = costs.filter((each, index) => {
 		const share = firstShares[index];
-		return share ? share.beyond : goesBeyond(actor, each);
+		return share ? share.beyond : goesBeyond(actor, each, used[index]);
 	});
 
 	let waited = false;

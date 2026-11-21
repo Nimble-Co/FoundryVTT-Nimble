@@ -88,7 +88,7 @@ export function spellUseOptionGroups(
 		const option = useOptionOfRule(actor, rule);
 		const pool = option.chargePoolIdentifier;
 		const spend = option.replacesSpellCost;
-		const key = spend ? SPEND_GROUP : pool || option.key;
+		const key = spend ? SPEND_GROUP : pool ? `pool:${pool}` : `option:${option.key}`;
 		const group = groups.get(key) ?? {
 			key,
 			label: spend

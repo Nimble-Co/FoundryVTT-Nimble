@@ -2,7 +2,10 @@
 	import { untrack } from 'svelte';
 	import { SYSTEM_ID } from '#system';
 	import localize from '#utils/localize.js';
-	import { createSpellUpcastDialogState } from './spellUpcastDialogState.svelte.ts';
+	import {
+		createSpellUpcastDialogState,
+		type OptionControlsView,
+	} from './spellUpcastDialogState.svelte.ts';
 	import AmountStepper from './components/AmountStepper.svelte';
 	import KeptAmountField from './components/KeptAmountField.svelte';
 	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
@@ -36,6 +39,15 @@
 		useOptionGroups: untrack(() => data.useOptionGroups ?? []),
 	});
 
+	/** The amount of the chosen option of a group, after the state kept it in range. */
+	function amountOf(key: string): number | undefined {
+		const view =
+			upcast.spendChoice?.key === key
+				? upcast.spendChoice
+				: upcast.optionGroups.find((each) => each.key === key);
+		return view?.amount?.amount;
+	}
+
 	function onCast() {
 		if (upcast.castWarning) {
 			ui.notifications?.warn(upcast.castWarning);
@@ -44,6 +56,43 @@
 		dialog.submitActivation(upcast.castData);
 	}
 </script>
+
+{#snippet optionControls(key: string, label: string, group: OptionControlsView)}
+	{#if group.picks.length > 0}
+		<div class="tiers" role="group" aria-label={label}>
+			{#each group.picks as pick (pick.key)}
+				<button
+					type="button"
+					class="nimble-u-reset-button tier"
+					class:on={pick.key === group.pick}
+					aria-pressed={pick.key === group.pick}
+					onclick={() => upcast.chooseOptionPick(key, pick.key)}
+				>
+					{pick.label}
+				</button>
+			{/each}
+		</div>
+	{/if}
+	{#if group.amount}
+		{@const word = localize(`NIMBLE.useOptions.amountLabel.${group.amount.kind}`)}
+		<AmountStepper
+			label={group.amountLabel}
+			value={group.amount.amount}
+			minimum={group.amount.minimum}
+			limit={group.amount.limit}
+			words={{
+				decrement: localize('NIMBLE.useOptions.decrement', { label: word }),
+				increment: localize('NIMBLE.useOptions.increment', { label: word }),
+				amount: word,
+			}}
+			onadjust={(delta) => upcast.setOptionAmount(key, (group.amount?.amount ?? 0) + delta)}
+			onset={(value) => {
+				upcast.setOptionAmount(key, value);
+				return amountOf(key) ?? value;
+			}}
+		/>
+	{/if}
+{/snippet}
 
 <RollWindow
 	title={spellName}
@@ -123,6 +172,7 @@
 					</button>
 				{/each}
 			</div>
+			{@render optionControls(choice.key, choice.label, choice)}
 		</div>
 	{/if}
 
@@ -190,42 +240,7 @@
 				</select>
 			</label>
 			{#if group.note}<p class="note">{group.note}</p>{/if}
-			{#if group.picks.length > 0}
-				<div class="tiers" role="group" aria-label={group.label}>
-					{#each group.picks as pick (pick.key)}
-						<button
-							type="button"
-							class="nimble-u-reset-button tier"
-							class:on={pick.key === group.pick}
-							aria-pressed={pick.key === group.pick}
-							onclick={() => upcast.chooseOptionPick(group.key, pick.key)}
-						>
-							{pick.label}
-						</button>
-					{/each}
-				</div>
-			{:else if group.amount}
-				{@const label = localize(`NIMBLE.useOptions.amountLabel.${group.amount.kind}`)}
-				<AmountStepper
-					label={group.amountLabel}
-					value={group.amount.amount}
-					minimum={group.amount.minimum}
-					limit={group.amount.limit}
-					words={{
-						decrement: localize('NIMBLE.useOptions.decrement', { label }),
-						increment: localize('NIMBLE.useOptions.increment', { label }),
-						amount: label,
-					}}
-					onadjust={(delta) =>
-						upcast.setOptionAmount(group.key, (group.amount?.amount ?? 0) + delta)}
-					onset={(value) => {
-						upcast.setOptionAmount(group.key, value);
-						return (
-							upcast.optionGroups.find((each) => each.key === group.key)?.amount?.amount ?? value
-						);
-					}}
-				/>
-			{/if}
+			{@render optionControls(group.key, group.label, group)}
 		</div>
 	{/each}
 

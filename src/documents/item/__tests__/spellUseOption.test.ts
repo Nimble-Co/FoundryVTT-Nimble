@@ -206,6 +206,7 @@ beforeEach(() => {
 afterEach(() => {
 	globals.game.settings = saved.settings;
 	testDependencies.SpellUpcastDialog = saved.SpellUpcastDialog as never;
+	vi.unstubAllGlobals();
 });
 
 function notices(): string[] {
@@ -232,6 +233,20 @@ describe('the options a spell dialog offers', () => {
 		expect(groups[0]).toMatchObject({ label: 'Spellshaper (1/turn)', used: false });
 		expect(groups[0].options.map((each: { key: string }) => each.key)).toEqual([stretch.key]);
 		expect(groups[0].options[0].cost).toMatchObject({ kind: 'mana', amount: 2 });
+	});
+
+	it('keep a pool named "spend" apart from the Spend group', () => {
+		const actor = hero();
+		givePool(actor, 'spend', 'Spend Pool');
+		giveOption(actor, 'Stretch Time', { pool: 'spend' });
+		giveOption(actor, 'Shadowfrost', { pool: '', more: { replacesSpellCost: true } });
+
+		const groups = spellUseOptionGroups(actor as never, spell(actor));
+
+		expect(groups.map((group) => [group.label, group.spend])).toEqual([
+			['Spend Pool', false],
+			['Spend', true],
+		]);
 	});
 
 	it('leave out an option for tiered spells on a cantrip', async () => {
@@ -553,22 +568,18 @@ describe('an option with a free copy', () => {
 
 	it('costs at least its minimum when the cast spent no mana', async () => {
 		// Foundry's Roll reads max(); the Roll mock reads it from the globals.
-		globals.max = Math.max;
-		try {
-			const actor = hero({ mana: 5 });
-			const echo = echoCasting(actor, 'max(1, 2 * @castManaSpent)');
-			const item = upcastable(actor, 1);
-			dialog.result = { rollMode: 0, lessMana: true, useOptions: [{ key: echo.key }] };
+		vi.stubGlobal('max', Math.max);
+		const actor = hero({ mana: 5 });
+		const echo = echoCasting(actor, 'max(1, 2 * @castManaSpent)');
+		const item = upcastable(actor, 1);
+		dialog.result = { rollMode: 0, lessMana: true, useOptions: [{ key: echo.key }] };
 
-			await item.activate();
+		await item.activate();
 
-			expect(actor.system.resources.mana.current).toBe(4);
-			expect(cardOf(item)?.system.costs).toEqual([
-				{ kind: 'mana', amount: 1, source: 'Echo Casting' },
-			]);
-		} finally {
-			delete globals.max;
-		}
+		expect(actor.system.resources.mana.current).toBe(4);
+		expect(cardOf(item)?.system.costs).toEqual([
+			{ kind: 'mana', amount: 1, source: 'Echo Casting' },
+		]);
 	});
 
 	it('is not offered for a spell with more than one target', async () => {
@@ -657,10 +668,7 @@ function shadowfrost(actor: Hero) {
 describe('a different spend in place of the spell cost', () => {
 	// Foundry's Roll reads floor(); the Roll mock reads it from the globals.
 	beforeEach(() => {
-		globals.floor = Math.floor;
-	});
-	afterEach(() => {
-		delete globals.floor;
+		vi.stubGlobal('floor', Math.floor);
 	});
 
 	it('spends exactly 10 temp HP in place of Pilfered Power, and shows it on the card', async () => {
@@ -719,6 +727,60 @@ describe('a different spend in place of the spell cost', () => {
 		expect(costs).toEqual([{ kind: 'hp', amount: 14, source: "Cryomancer's Reprisal" }]);
 		expect(costs.map(cardCostLine)).toEqual(["Cost: 14 HP (Cryomancer's Reprisal)"]);
 		expect(item.spellCardData[0]?.system.castManaSpent).toBe(0);
+	});
+
+	it('casts at a pinned tier with no mana when the sacrifice takes the place of the mana', async () => {
+		const actor = hero({ mana: 0 });
+		Object.assign(actor.system.attributes.hp, { value: 20, max: 29 });
+		actor.getRollData = () => ({ attributes: { hp: { value: 20, max: 29 } } });
+		actor.items.contents.push({
+			id: 'pinned-class',
+			name: 'Pinned',
+			type: 'class',
+			flags: {},
+			system: { identifier: 'pinned', spellcasting: { castAtHighestTier: true } },
+		});
+		const reprisal = cryomancersReprisal(actor);
+		const item = iceSpell(actor, 'Frost Lance', 1);
+		item.system.scaling = { mode: 'upcast', deltas: [] } as never;
+		choose(reprisal.key);
+
+		await item.activate();
+
+		expect(notices()).toEqual([]);
+		expect(actor.system.attributes.hp.value).toBe(6);
+		expect(item.spellCardData[0]?.system.castManaSpent).toBe(0);
+	});
+
+	it('keeps the chosen enhancement of a pinned cast with the sacrifice', async () => {
+		const actor = hero({ mana: 0 });
+		Object.assign(actor.system.attributes.hp, { value: 20, max: 29 });
+		actor.getRollData = () => ({ attributes: { hp: { value: 20, max: 29 } } });
+		actor.items.contents.push({
+			id: 'pinned-class',
+			name: 'Pinned',
+			type: 'class',
+			flags: {},
+			system: { identifier: 'pinned', spellcasting: { castAtHighestTier: true } },
+		});
+		const reprisal = cryomancersReprisal(actor);
+		const item = iceSpell(actor, 'Frost Lance', 1);
+		item.system.scaling = {
+			mode: 'upcastChoice',
+			choices: [
+				{ label: 'First', deltas: [] },
+				{ label: 'Second', deltas: [] },
+			],
+		} as never;
+		dialog.result = {
+			rollMode: 0,
+			upcast: { manaToSpend: 3, choiceIndex: 1 },
+			useOptions: [{ key: reprisal.key }],
+		};
+
+		await item.activate();
+
+		expect(item.spellCardData[0]?.system.upcast).toMatchObject({ choiceIndex: 1 });
 	});
 
 	it('refuses the sacrifice unless the caster has more HP than it takes', async () => {
@@ -978,6 +1040,7 @@ describe('the actions check of a cast in combat', () => {
 
 		expect(confirm()).not.toHaveBeenCalled();
 		expect(item._createActivationCard).toHaveBeenCalledTimes(1);
+		expect(actor.system.resources.mana.current).toBe(6);
 	});
 
 	it('counts an option that adds an action, asks once after the dialog, and a no casts nothing', async () => {

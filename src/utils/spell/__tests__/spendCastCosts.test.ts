@@ -141,6 +141,36 @@ describe('spendCastCosts', () => {
 		expect(flags.nimble.chargePools['pilfered-power'].current).toBe(2);
 	});
 
+	it('asks to confirm only the second of two HP costs that together go beyond the HP', async () => {
+		setResourceSpendingAutomation(true);
+		const actor = {
+			system: { resources: { mana: { current: 0 } }, attributes: { hp: { value: 10, max: 20 } } },
+			update: vi.fn(async () => ({})),
+		};
+		const hpCost = (source: string) => ({
+			kind: 'hp' as const,
+			amount: 5,
+			spend: { mode: 'fixed' as const },
+			beyond: 'allowed' as const,
+			source,
+		});
+		const first = hpCost('First');
+		const second = hpCost('Second');
+		const confirmBeyond = vi.fn(async () => true);
+
+		await spendCastCosts(
+			actor as unknown as CastCostPayer,
+			{ type: 'none' },
+			{
+				confirmOverdraft: () => true,
+				costs: [first, second],
+				confirmBeyond,
+			},
+		);
+
+		expect(confirmBeyond).toHaveBeenCalledWith([second]);
+	});
+
 	it('gives back the spell mana when a later cost throws', async () => {
 		setResourceSpendingAutomation(true);
 		const failure = new Error('update failed');

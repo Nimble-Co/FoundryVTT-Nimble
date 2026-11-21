@@ -1,5 +1,3 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-
 let createState: typeof import('../spellUpcastDialogState.svelte.ts').createSpellUpcastDialogState;
 
 const math = Math as unknown as { clamp?: (value: number, min: number, max: number) => number };
@@ -611,6 +609,35 @@ describe('the upcast dialog Spell or Attack Options', () => {
 		expect(state.castWarning).toBe('Not enough mana. You have 8, but need 9.');
 	});
 
+	it('work out a cost that reads the mana of the cast after the less mana tick', () => {
+		const echo = option('Echo Casting', 0, {
+			cost: { ...manaCost('Echo Casting', 0), amount: '2 * @castManaSpent' },
+			freeCopy: true,
+		});
+		const state = open(caster({ mana: 8, unlocked: 3 }), fireBolt({ tier: 2 }), {
+			useOptionGroups: [spellshaper(false, [echo])],
+		});
+
+		state.lessMana = true;
+		state.chooseOption('spellshaper', echo.key);
+
+		expect(state.optionGroups[0].entries[1].label).toBe('Echo Casting (2 mana)');
+		expect(state.spendLine).toBe('When you roll, it spends 3 Mana.');
+	});
+
+	it('leave a short mana option that may go beyond to the confirm at the spend', () => {
+		const surge = option('Surge', 4, {
+			cost: { ...manaCost('Surge', 4), beyond: 'allowed' as const },
+		});
+		const state = open(caster({ mana: 3, unlocked: 3 }), fireBolt(), {
+			useOptionGroups: [spellshaper(false, [surge])],
+		});
+
+		state.chooseOption('spellshaper', surge.key);
+
+		expect(state.castWarning).toBe('');
+	});
+
 	it('name what the amount does in its label', () => {
 		const state = open(caster({ mana: 5, unlocked: 3 }), fireBolt(), {
 			useOptionGroups: [spellshaper()],
@@ -679,6 +706,10 @@ describe('the upcast dialog Spend buttons', () => {
 			key: 'spend',
 			label: 'Spend',
 			chosen: '',
+			amount: null,
+			amountLabel: '',
+			picks: [],
+			pick: '',
 			buttons: [
 				{ key: '', label: '1 Pilfered Power', disabled: false },
 				{ key: shadowfrost.key, label: '10 temp HP (Shadowfrost)', disabled: false },
@@ -686,6 +717,48 @@ describe('the upcast dialog Spend buttons', () => {
 		});
 		expect(state.optionGroups).toEqual([]);
 		expect(state.spendLine).toBe('When you roll, it spends 1 Pilfered Power.');
+	});
+
+	it('give a chosen spend its amount and its damage type picks', () => {
+		const surge = option('Surge', 1, {
+			cost: { ...manaCost('Surge', 1, { min: 1, max: 3 }), kind: 'hp' as const },
+			chargePoolIdentifier: '',
+			replacesSpellCost: true,
+			damageTypes: ['cold', 'fire'],
+		});
+		const state = open(
+			{ ...caster(), system: { ...caster().system, attributes: { hp: { value: 20 } } } },
+			fireBolt(),
+			{ useOptionGroups: [spendGroup(surge)] },
+		);
+
+		state.chooseOption('spend', surge.key);
+
+		expect(state.spendChoice?.amount).toMatchObject({ minimum: 1, limit: 3, amount: 1 });
+		expect(state.spendChoice?.picks.map((pick) => pick.key)).toEqual(['cold', 'fire']);
+	});
+
+	it('keep the enhancement choice of a pinned cast with a different spend', () => {
+		const state = open(
+			caster(),
+			fireBolt({
+				scaling: {
+					mode: 'upcastChoice',
+					deltas: [],
+					choices: [
+						{ label: 'Hotter', deltas: [] },
+						{ label: 'Wider', deltas: [] },
+					],
+				},
+			}),
+			{ spellCost: pilferedPower, pinnedCastTier: 3, useOptionGroups: [spendGroup(shadowfrost)] },
+		);
+
+		state.chooseOption('spend', shadowfrost.key);
+		state.choiceIndex = 1;
+
+		expect(state.canUpcast).toBe(true);
+		expect(state.castData.upcast).toEqual({ manaToSpend: 3, choiceIndex: 1 });
 	});
 
 	it('change the spend line to the chosen spend and put it in the cast', () => {

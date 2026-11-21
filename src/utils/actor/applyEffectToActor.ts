@@ -115,6 +115,19 @@ function resolveRuleFormulas(
 	}
 }
 
+/** A rule that reads the holder keeps its references, but `@cost` is the cost of this use. */
+function resolveCostReferences(rules: unknown, useData: Record<string, unknown> = {}): void {
+	if (!Array.isArray(rules)) return;
+	const cost = (useData.cost ?? {}) as Record<string, unknown>;
+	for (const rule of rules as Record<string, unknown>[]) {
+		if (!rule || typeof rule !== 'object') continue;
+		for (const [key, value] of Object.entries(rule)) {
+			if (NOT_FORMULAS.has(key) || typeof value !== 'string' || !value.includes('@cost.')) continue;
+			rule[key] = value.replace(/@cost\.(\w+)/g, (_, kind: string) => String(cost[kind] ?? 0));
+		}
+	}
+}
+
 /** What an upcast adds to the copy: to fields of its rules, and to numbers of its Lasts Until. */
 export interface EffectRaises {
 	rules?: readonly RuleRaise[];
@@ -169,7 +182,8 @@ export function payloadFromEffect(
 	if (source.raises?.moments?.length && Array.isArray(system?.lastsUntil)) {
 		system.lastsUntil = raiseMoments(system.lastsUntil, source.raises.moments);
 	}
-	if (!system?.readsHolder) resolveRuleFormulas(system?.rules, source.user, source.useData);
+	if (system?.readsHolder) resolveCostReferences(system.rules, source.useData);
+	else resolveRuleFormulas(system?.rules, source.user, source.useData);
 	return {
 		data,
 		sourceItemUuid: source.itemUuid,
