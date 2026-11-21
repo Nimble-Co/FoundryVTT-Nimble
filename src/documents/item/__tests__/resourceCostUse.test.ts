@@ -298,19 +298,6 @@ describe('using a feature with a Spend or Sacrifice cost', () => {
 		expect(actor.system.attributes.hp.value).toBe(12);
 	});
 
-	it('gives the costs back when the payment of the item kind throws', async () => {
-		const actor = hero({ mana: 5 });
-		const item = feature(actor, 'Storm Pact', [['mana', '2']]);
-		const failure = new Error('kind failed');
-		item._payForUse = vi.fn(async () => {
-			throw failure;
-		});
-
-		await expect(item.activate()).rejects.toBe(failure);
-
-		expect(actor.system.resources.mana.current).toBe(5);
-	});
-
 	it('with Resource Spending off, checks and spends nothing but still shows the cost', async () => {
 		setResourceSpending(false);
 		const actor = hero({ mana: 0 });
@@ -642,6 +629,21 @@ describe('using a cost beyond what the creature has', () => {
 		);
 		expect(actor.system.resources.mana.current).toBe(0);
 		expect(actor.applyDamage).toHaveBeenCalledWith(10);
+	});
+
+	it('gives the cost back when the consequence throws', async () => {
+		answer(true);
+		const failure = new Error('damage failed');
+		const actor = Object.assign(hero({ mana: 1 }), {
+			applyDamage: vi.fn(async () => {
+				throw failure;
+			}),
+		});
+		const item = beyond(feature(actor, 'Stretch Time', [['mana', '2']]), 'mana', 'halfMaxHpDamage');
+
+		await expect(item.activate()).rejects.toBe(failure);
+
+		expect(actor.system.resources.mana.current).toBe(1);
 	});
 
 	it('applies no consequence when the player cancels, or when the use stops after the cost', async () => {

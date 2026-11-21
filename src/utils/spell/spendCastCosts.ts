@@ -151,49 +151,54 @@ export async function spendCastCosts(
 		return result;
 	};
 
-	if (spellMana + otherMana > 0) {
-		if (!(await spendMana(actor, spellMana + otherMana))) {
-			return fail({ paid: false, ...castRefusal(actor, cost, costs, pools) });
+	try {
+		if (spellMana + otherMana > 0) {
+			if (!(await spendMana(actor, spellMana + otherMana))) {
+				return fail({ paid: false, ...castRefusal(actor, cost, costs, pools) });
+			}
 		}
-	}
-	const receipt = receiptOf({ mana: spellMana });
-	receipts.push(receipt, receiptOf({ mana: otherMana }));
+		const receipt = receiptOf({ mana: spellMana });
+		receipts.push(receipt, receiptOf({ mana: otherMana }));
 
-	let overdrawn = false;
-	if (cost.type === 'pool') {
-		const outcome = await spendSpellCost(actor, cost);
-		if (!outcome.ok) return fail({ paid: false, failure: outcome.failure });
-		overdrawn = outcome.overdrawn;
-		Object.assign(
-			receipt,
-			receiptOf({ charges: outcome.spent ?? 0, chargePoolIdentifier: cost.poolIdentifier }),
-		);
-	}
-
-	const taken: ResourceCost[] = [];
-	for (const [index, each] of costs.entries()) {
-		const share = shares[index];
-		if (share) {
-			taken.push({ ...each, amount: share.take });
-			continue;
+		let overdrawn = false;
+		if (cost.type === 'pool') {
+			const outcome = await spendSpellCost(actor, cost);
+			if (!outcome.ok) return fail({ paid: false, failure: outcome.failure });
+			overdrawn = outcome.overdrawn;
+			Object.assign(
+				receipt,
+				receiptOf({ charges: outcome.spent ?? 0, chargePoolIdentifier: cost.poolIdentifier }),
+			);
 		}
-		const amount = await spendResource(actor, each);
-		if (amount === null) {
-			return fail({ paid: false, notice: resourceCostRefusal(actor, [each]) ?? '' });
+
+		const taken: ResourceCost[] = [];
+		for (const [index, each] of costs.entries()) {
+			const share = shares[index];
+			if (share) {
+				taken.push({ ...each, amount: share.take });
+				continue;
+			}
+			const amount = await spendResource(actor, each);
+			if (amount === null) {
+				return fail({ paid: false, notice: resourceCostRefusal(actor, [each]) ?? '' });
+			}
+			const part = receiptOf();
+			recordTaken(part.paid, each.kind, amount);
+			receipts.push(part);
+			taken.push({ ...each, amount });
 		}
-		const part = receiptOf();
-		recordTaken(part.paid, each.kind, amount);
-		receipts.push(part);
-		taken.push({ ...each, amount });
+
+		const poolUses = await spendPoolUses(actor, pools);
+		if ('notice' in poolUses) return fail({ paid: false, notice: poolUses.notice });
+		receipts.push(...poolUses.receipts);
+
+		const others = receipts.filter((each) => each !== receipt);
+		const result = { paid: true, receipt, receipts: others, taken, beyond: otherBeyond };
+		if (!overdrawn) return result;
+		const damage = await applyOverdraftConsequence(actor, cost);
+		return { ...result, overdrawn: true, damage };
+	} catch (error) {
+		await fail({ paid: false });
+		throw error;
 	}
-
-	const poolUses = await spendPoolUses(actor, pools);
-	if ('notice' in poolUses) return fail({ paid: false, notice: poolUses.notice });
-	receipts.push(...poolUses.receipts);
-
-	const others = receipts.filter((each) => each !== receipt);
-	const result = { paid: true, receipt, receipts: others, taken, beyond: otherBeyond };
-	if (!overdrawn) return result;
-	const damage = await applyOverdraftConsequence(actor, cost);
-	return { ...result, overdrawn: true, damage };
 }

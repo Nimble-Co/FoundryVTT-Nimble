@@ -141,6 +141,39 @@ describe('spendCastCosts', () => {
 		expect(flags.nimble.chargePools['pilfered-power'].current).toBe(2);
 	});
 
+	it('gives back the spell mana when a later cost throws', async () => {
+		setResourceSpendingAutomation(true);
+		const failure = new Error('update failed');
+		const actor = {
+			system: { resources: { mana: { current: 5 } }, attributes: { hp: { value: 10, max: 20 } } },
+			update: vi.fn(async (changes: Record<string, unknown>) => {
+				if ('system.attributes.hp.value' in changes) throw failure;
+				for (const [path, value] of Object.entries(changes)) {
+					foundry.utils.setProperty(actor, path, value);
+				}
+			}),
+		};
+		const hpCost = {
+			kind: 'hp' as const,
+			amount: 2,
+			spend: { mode: 'fixed' as const },
+			beyond: 'notAllowed' as const,
+		};
+
+		await expect(
+			spendCastCosts(
+				actor as unknown as CastCostPayer,
+				{ type: 'mana', amount: 3 },
+				{
+					confirmOverdraft: () => true,
+					costs: [hpCost],
+				},
+			),
+		).rejects.toBe(failure);
+
+		expect(actor.system.resources.mana.current).toBe(5);
+	});
+
 	it('pays without touching anything when spending automation is off', async () => {
 		setResourceSpendingAutomation(false);
 		const { actor, item } = createActor(0);

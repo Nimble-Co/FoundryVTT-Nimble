@@ -24,9 +24,16 @@ async function spendPoolUses(
 	pools: readonly PoolUse[],
 ): Promise<{ receipts: CostReceipt[] } | { notice: string }> {
 	const receipts: CostReceipt[] = [];
+	const giveBackAll = async () => {
+		for (const receipt of receipts) await giveBack(actor, receipt);
+	};
 	for (const pool of pools) {
-		if (!(await spendRuleCharge(actor, pool.identifier))) {
-			for (const receipt of receipts) await giveBack(actor, receipt);
+		const spent = await spendRuleCharge(actor, pool.identifier).catch(async (error) => {
+			await giveBackAll();
+			throw error;
+		});
+		if (!spent) {
+			await giveBackAll();
 			return { notice: noUseLeft(pool) };
 		}
 		receipts.push(receiptOf({ charges: 1, chargePoolIdentifier: pool.identifier }));
