@@ -32,6 +32,10 @@ describe('placeOf', () => {
 		expect(placeOf(feature({}, [rule('diceConsumer', { mode: 'manual' })]))).toBe('action');
 	});
 
+	it('puts a feature with a Spend or Sacrifice cost on Actions', () => {
+		expect(placeOf(feature({}, [rule('resourceCost')]))).toBe('action');
+	});
+
 	it('keeps a feature whose dice consumer spends by itself passive', () => {
 		expect(placeOf(feature({}, [rule('diceConsumer', { mode: 'autoBonus' })]))).toBe('passive');
 	});

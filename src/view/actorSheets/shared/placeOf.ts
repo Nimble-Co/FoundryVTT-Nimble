@@ -6,7 +6,7 @@ import type { ItemLike } from './sheetSource.ts';
 /** Where a feature shows: on Actions, in Reactions, or only on Features (passive). */
 export type ItemPlace = 'action' | 'reaction' | 'passive';
 
-const ACT_RULES = new Set(['chargeConsumer', 'markTarget']);
+const ACT_RULES = new Set(['chargeConsumer', 'markTarget', 'resourceCost']);
 
 /** A step of the item's activation gives the user an effect. */
 function givesSelfEffect(item: ItemLike): boolean {
