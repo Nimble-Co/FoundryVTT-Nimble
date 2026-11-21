@@ -2290,6 +2290,7 @@
 					"label": "Effect after the cast",
 					"hint": "An effect of this item that the caster gains after a cast with the option. Its rule formulas can read @cost, what the cast spent and sacrificed, such as floor(@cost.hp / 2). Empty is no effect."
 				},
+				"meleeNeedsPick": "An option for melee weapons needs at least one pick.",
 				"picks": {
 					"label": "Picks",
 					"hint": "Melee weapons. Named picks that share the amount the player chooses, one stepper each. Each unit put in a pick adds that pick's change. Needs Spend mode Variable; the maximum is the most for all the picks together.",

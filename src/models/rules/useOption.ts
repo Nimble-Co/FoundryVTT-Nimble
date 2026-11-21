@@ -3,6 +3,7 @@ import { ruleKey } from '#utils/actor/actorRules.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { readsCastMana } from '#utils/cost/castManaCost.js';
 import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
+import localize from '#utils/localize.js';
 import { isTieredSpell } from '#utils/spell/isTieredSpell.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -31,6 +32,51 @@ function schema() {
 					USE_OPTION_TARGETS.map((target) => [target, `${WORDS}.target.choices.${target}`]),
 				),
 		}),
+		...resourceCostFields(),
+		chargePoolIdentifier: new fields.StringField(
+			withWidget({
+				// Not required, so the picker lists an empty choice for no pool.
+				required: false,
+				nullable: false,
+				initial: '',
+				label: `${WORDS}.chargePoolIdentifier.label`,
+				hint: `${WORDS}.chargePoolIdentifier.hint`,
+				widget: 'chargePoolPicker',
+			}),
+		),
+		actionDelta: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			integer: true,
+			label: `${WORDS}.actionDelta.label`,
+			hint: `${WORDS}.actionDelta.hint`,
+		}),
+		actionMinimum: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				min: 0,
+				integer: true,
+				label: `${WORDS}.actionMinimum.label`,
+				hint: `${WORDS}.actionMinimum.hint`,
+				showWhen: (data: Record<string, unknown>) => Number(data.actionDelta ?? 0) < 0,
+			}),
+		),
+		effectId: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: `${WORDS}.effectId.label`,
+				hint: `${WORDS}.effectId.hint`,
+				widget: 'itemEffectPicker',
+				recipient: () => 'self' as const,
+			}),
+		),
+		// Spell only.
 		tieredOnly: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -77,76 +123,54 @@ function schema() {
 				showWhen: forSpells,
 			}),
 		),
-		...resourceCostFields(),
-		chargePoolIdentifier: new fields.StringField(
-			withWidget({
-				// Not required, so the picker lists an empty choice for no pool.
-				required: false,
-				nullable: false,
-				initial: '',
-				label: `${WORDS}.chargePoolIdentifier.label`,
-				hint: `${WORDS}.chargePoolIdentifier.hint`,
-				widget: 'chargePoolPicker',
-			}),
-		),
-		actionDelta: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			integer: true,
-			label: `${WORDS}.actionDelta.label`,
-			hint: `${WORDS}.actionDelta.hint`,
-		}),
-		actionMinimum: new fields.NumberField(
+		rangePerMana: new fields.NumberField(
 			withWidget({
 				required: true,
 				nullable: false,
 				initial: 0,
 				min: 0,
 				integer: true,
-				label: `${WORDS}.actionMinimum.label`,
-				hint: `${WORDS}.actionMinimum.hint`,
-				showWhen: (data: Record<string, unknown>) => Number(data.actionDelta ?? 0) < 0,
+				label: `${WORDS}.rangePerMana.label`,
+				hint: `${WORDS}.rangePerMana.hint`,
+				showWhen: forSpells,
 			}),
 		),
-		rangePerMana: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			min: 0,
-			integer: true,
-			label: `${WORDS}.rangePerMana.label`,
-			hint: `${WORDS}.rangePerMana.hint`,
-		}),
-		cardNote: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '',
-			label: `${WORDS}.cardNote.label`,
-			hint: `${WORDS}.cardNote.hint`,
-		}),
+		cardNote: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: `${WORDS}.cardNote.label`,
+				hint: `${WORDS}.cardNote.hint`,
+				showWhen: forSpells,
+			}),
+		),
 		damageTypes: new fields.ArrayField(
 			new fields.StringField({
 				required: true,
 				nullable: false,
 				choices: () => CONFIG.NIMBLE.damageTypes,
 			}),
-			{
+			withWidget({
 				required: true,
 				nullable: false,
 				initial: [] as string[],
 				label: `${WORDS}.damageTypes.label`,
 				hint: `${WORDS}.damageTypes.hint`,
-			},
+				showWhen: forSpells,
+			}),
 		),
-		manaDelta: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 0,
-			integer: true,
-			label: `${WORDS}.manaDelta.label`,
-			hint: `${WORDS}.manaDelta.hint`,
-		}),
+		manaDelta: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				label: `${WORDS}.manaDelta.label`,
+				hint: `${WORDS}.manaDelta.hint`,
+				showWhen: forSpells,
+			}),
+		),
 		manaMinimum: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -156,44 +180,43 @@ function schema() {
 				integer: true,
 				label: `${WORDS}.manaMinimum.label`,
 				hint: `${WORDS}.manaMinimum.hint`,
-				showWhen: (data: Record<string, unknown>) => Number(data.manaDelta ?? 0) < 0,
+				showWhen: (data: Record<string, unknown>) =>
+					forSpells(data) && Number(data.manaDelta ?? 0) < 0,
 			}),
 		),
-		freeCopy: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: `${WORDS}.freeCopy.label`,
-			hint: `${WORDS}.freeCopy.hint`,
-		}),
-		replacesSpellCost: new fields.BooleanField({
-			required: true,
-			nullable: false,
-			initial: false,
-			label: `${WORDS}.replacesSpellCost.label`,
-			hint: `${WORDS}.replacesSpellCost.hint`,
-		}),
-		manaSet: new fields.NumberField({
-			required: false,
-			nullable: true,
-			initial: null,
-			min: 0,
-			integer: true,
-			label: `${WORDS}.manaSet.label`,
-			hint: `${WORDS}.manaSet.hint`,
-		}),
-		effectId: new fields.StringField(
+		freeCopy: new fields.BooleanField(
 			withWidget({
 				required: true,
 				nullable: false,
-				blank: true,
-				initial: '',
-				label: `${WORDS}.effectId.label`,
-				hint: `${WORDS}.effectId.hint`,
-				widget: 'itemEffectPicker',
-				recipient: () => 'self' as const,
+				initial: false,
+				label: `${WORDS}.freeCopy.label`,
+				hint: `${WORDS}.freeCopy.hint`,
+				showWhen: forSpells,
 			}),
 		),
+		replacesSpellCost: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.replacesSpellCost.label`,
+				hint: `${WORDS}.replacesSpellCost.hint`,
+				showWhen: forSpells,
+			}),
+		),
+		manaSet: new fields.NumberField(
+			withWidget({
+				required: false,
+				nullable: true,
+				initial: null,
+				min: 0,
+				integer: true,
+				label: `${WORDS}.manaSet.label`,
+				hint: `${WORDS}.manaSet.hint`,
+				showWhen: forSpells,
+			}),
+		),
+		// Melee weapons only.
 		picks: new fields.ArrayField(
 			new fields.SchemaField({
 				name: new fields.StringField({
@@ -286,6 +309,17 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 
 	declare target: UseOptionTarget;
 
+	declare chargePoolIdentifier: string;
+
+	declare actionDelta: number;
+
+	declare actionMinimum: number;
+
+	/** An effect of the item that the user gains after a use with the option. */
+	declare effectId: string;
+
+	// Spell only.
+
 	declare tieredOnly: boolean;
 
 	declare singleTargetOnly: boolean;
@@ -294,12 +328,6 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 
 	/** Identifiers of the spells the option applies to. Empty is every spell. */
 	declare spells: string[];
-
-	declare chargePoolIdentifier: string;
-
-	declare actionDelta: number;
-
-	declare actionMinimum: number;
 
 	/** Range added for each of the amount the option spends. */
 	declare rangePerMana: number;
@@ -321,8 +349,7 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	/** The mana the spell costs at its own tier, with no upcast, or null for no change. */
 	declare manaSet: number | null;
 
-	/** An effect of the item that the caster gains after a cast with the option. */
-	declare effectId: string;
+	// Melee weapons only.
 
 	// `picks` is inferred from the schema: named picks that share the chosen amount.
 
@@ -331,6 +358,15 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		} as UseOptionRule.Schema;
+	}
+
+	/** An option for melee weapons has no use without a pick: the rule does not build without one. */
+	static override validateJoint(data: Record<string, unknown>): void {
+		ResourceCostRule.validateJoint(data as never);
+		const picks = Array.isArray(data.picks) ? data.picks : [];
+		if (data.target === 'meleeWeapon' && picks.length === 0) {
+			throw new Error(localize(`${WORDS}.meleeNeedsPick`));
+		}
 	}
 
 	/** An amount that reads the mana the cast spends is worked out when the spell is cast. */
@@ -349,7 +385,7 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 	}
 
 	/** How the option changes the mana cost of the spell, or null when it does not. */
-	get manaCostChange(): CostChange | null {
+	get manaChange(): CostChange | null {
 		return costChangeOf(this.manaDelta, this.manaMinimum);
 	}
 
@@ -396,13 +432,14 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['target', '"spell" | "meleeWeapon"'],
+				['chargePoolIdentifier', 'string'],
+				['actionDelta', 'number'],
+				['actionMinimum', 'number'],
+				['effectId', 'string'],
 				['tieredOnly', 'boolean'],
 				['singleTargetOnly', 'boolean'],
 				['schools', 'string[]'],
 				['spells', 'string[]'],
-				['chargePoolIdentifier', 'string'],
-				['actionDelta', 'number'],
-				['actionMinimum', 'number'],
 				['rangePerMana', 'number'],
 				['cardNote', 'string'],
 				['damageTypes', 'string[]'],
@@ -411,7 +448,6 @@ class UseOptionRule extends ResourceCostRule<UseOptionRule.Schema> {
 				['freeCopy', 'boolean'],
 				['replacesSpellCost', 'boolean'],
 				['manaSet', 'number | null'],
-				['effectId', 'string'],
 				['picks', '{ name, damage, damageType, lowerArmorSteps }[]'],
 			]),
 		);

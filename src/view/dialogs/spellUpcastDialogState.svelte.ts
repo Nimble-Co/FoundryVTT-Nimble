@@ -5,7 +5,7 @@ import type { ResolvedSpellCost } from '#types/spellCost.d.ts';
 import type { ScalingDelta, SpellScaling } from '#types/spellScaling.d.ts';
 import type { ChosenUseOption, UseOption, UseOptionGroup } from '#types/useOption.d.ts';
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
-import { withActionCostChange } from '#utils/combat/withActionCostChange.js';
+import { withCostChange } from '#utils/combat/withCostChange.js';
 import { withCastMana } from '#utils/cost/castManaCost.js';
 import { variableRangeOf } from '#utils/cost/resourceCost.js';
 import {
@@ -28,7 +28,6 @@ import { effectMomentNumbers } from '#utils/spell/effectMomentNumbers.js';
 import { effectRuleNumbers } from '#utils/spell/effectRuleNumbers.js';
 import { formatSpellCostLabel, resolveEffectiveCastTier } from '#utils/spell/spellCost.js';
 import { spellManaWithOptions } from '#utils/spell/spellUseOptions.js';
-import { withManaCostChange } from '#utils/spell/spellManaCostChange.js';
 import { stepFormulaDieSize } from '#utils/spell/stepFormulaDieSize.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
@@ -266,7 +265,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	}
 
 	const pickedOptions = $derived(useOptionGroups.flatMap((group) => chosenOptionOf(group) ?? []));
-	const manaCostChanges = $derived(pickedOptions.flatMap((option) => option.manaCostChange ?? []));
+	const manaChanges = $derived(pickedOptions.flatMap((option) => option.manaChange ?? []));
 	/** An option's cost takes the place of the spell's own cost. */
 	const replacesSpellCost = $derived(pickedOptions.some((option) => option.replacesSpellCost));
 	const manaSet = $derived(
@@ -282,13 +281,10 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	);
 	const upcastSteps = $derived(castTier - baseMana);
 
-	/** The mana a tier costs: less mana first, then the spell's mana cost change and the chosen options, as the cast spends it. */
+	/** The mana a tier costs, as the cast spends it. */
 	function manaOfTier(tier: number): number {
 		if (baseMana <= 0 || isPoolCost) return 0;
-		const mana = lessMana && tier > 0 ? tier - 1 : tier;
-		return mana > 0
-			? spellManaWithOptions(withManaCostChange(mana, manaCostChange), { manaSet, manaCostChanges })
-			: 0;
+		return spellManaWithOptions(tier, { manaSet, manaChanges, manaCostChange, lessMana });
 	}
 
 	/** The mana of the spell at the chosen tier, which every other mana spend comes after. */
@@ -352,7 +348,7 @@ export function createSpellUpcastDialogState(options: CreateSpellUpcastDialogSta
 	const actionsSpent = $derived(
 		spendsActions > 0
 			? chosenOptions.reduce(
-					(actions, { option }) => withActionCostChange(actions, option.actionCostChange),
+					(actions, { option }) => withCostChange(actions, option.actionCostChange),
 					spendsActions,
 				)
 			: 0,

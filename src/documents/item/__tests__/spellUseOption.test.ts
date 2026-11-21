@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CardResourceCost } from '#types/resourceCost.d.ts';
 import { cardCostLine } from '#utils/cost/resourceCostWords.js';
 import { testDependencies } from '../../../managers/ItemActivationManager.js';
+import { useOptionGroupsOfItem } from '../../../managers/itemActivation/useOptionActivation.js';
 import { UseOptionRule } from '../../../models/rules/useOption.js';
-import { spellUseOptionGroups } from '../../../utils/spell/spellUseOptions.js';
 import { NimbleCharacter } from '../../actor/character.js';
 import { NimbleSpellItem } from '../spell.js';
 
@@ -263,8 +263,8 @@ describe('the options a spell dialog offers', () => {
 		actor.system.resources.highestUnlockedSpellTier = 1;
 		giveOption(actor, 'Frost Focus', { tieredOnly: false });
 
-		expect(spellUseOptionGroups(actor as never, spell(actor, 'Ice Lance', 2))).toEqual([]);
-		expect(spellUseOptionGroups(actor as never, spell(actor, 'Frost Bite', 0))).toHaveLength(1);
+		expect(useOptionGroupsOfItem(actor as never, spell(actor, 'Ice Lance', 2))).toEqual([]);
+		expect(useOptionGroupsOfItem(actor as never, spell(actor, 'Frost Bite', 0))).toHaveLength(1);
 	});
 
 	it('refuse a cast with an option above the unlocked tier, and spend nothing', async () => {

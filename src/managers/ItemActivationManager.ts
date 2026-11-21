@@ -111,21 +111,16 @@ import {
 	resolveSpellCost,
 	synthesizePinnedUpcast,
 } from '../utils/spell/spellCost.js';
-import { spellManaCostChange, withManaCostChange } from '../utils/spell/spellManaCostChange.js';
+import { spellManaCostChange } from '../utils/spell/spellManaCostChange.js';
 import {
 	type ChosenUseOptions,
 	chosenCastCostChange,
 	noChosenUseOptions,
-	settleChosenUseOptions,
-	spellManaWithOptions,
-	spellUseOptionGroups,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
-import { weaponUseOptionGroups } from '../utils/useOption/weaponUseOptions.js';
-import { applyUseOptionChanges } from './itemActivation/applyUseOptionChanges.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
@@ -145,7 +140,12 @@ import {
 	markOfferOnRollOptions,
 	offerSourceOf,
 } from './itemActivation/offerBonus.js';
-import { pickRidersOf, withPickAmounts } from './itemActivation/useOptionPicks.js';
+import {
+	addPickRiders,
+	settleUseOptions,
+	spellCostWithOptions,
+	useOptionGroupsOfItem,
+} from './itemActivation/useOptionActivation.js';
 
 /** One Primary Die Bonus as the card stores it, with the item of its rule. */
 interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
@@ -470,12 +470,7 @@ class ItemActivationManager {
 			return { activation: null, rolls: null };
 		}
 
-		if (this.#item.type === 'spell') {
-			this.useOptionGroups = spellUseOptionGroups(this.actor, this.#item as never);
-		}
-		if (this.#item.type === 'object') {
-			this.useOptionGroups = weaponUseOptionGroups(this.actor, this.#item as never);
-		}
+		this.useOptionGroups = useOptionGroupsOfItem(this.actor, this.#item);
 
 		const rollOptions = {
 			domain: this.#getItemDomain(),
@@ -511,16 +506,7 @@ class ItemActivationManager {
 			dialogData.upcast = undefined;
 		}
 
-		dialogData.useOptions = withPickAmounts(
-			this.actor,
-			this.useOptionGroups,
-			dialogData.useOptions,
-		);
-		const riders = pickRidersOf(this.useOptionGroups, dialogData.useOptions);
-		if (riders.damages.length > 0) {
-			dialogData.conditionalDamages = [...(dialogData.conditionalDamages ?? []), ...riders.damages];
-		}
-		this.#lowerArmorSteps = riders.lowerArmorSteps;
+		this.#lowerArmorSteps = addPickRiders(this.actor, this.useOptionGroups, dialogData);
 
 		// A pinned cast tier applies on every activation path, so the macro and
 		// skip-dialog routes synthesize the upcast the dialog would have chosen.
@@ -620,31 +606,28 @@ class ItemActivationManager {
 
 		this.freeUse = dialogData.freeUse === true && this.#offersFreeUse();
 
-		if (this.#wholeCastFree() && this.spellCost?.type === 'mana') {
-			this.spellCost = { type: 'none' };
-		} else if (this.spellCost?.type === 'mana' && this.manaCostChange !== 0) {
-			const amount = withManaCostChange(this.spellCost.amount, this.manaCostChange);
-			this.spellCost = amount > 0 ? { ...this.spellCost, amount } : { type: 'none' };
-		}
+		const lessMana =
+			dialogData.lessMana === true &&
+			!this.#wholeCastFree() &&
+			this.spellCost?.type === 'mana' &&
+			this.spellCost.amount > 0;
+		if (lessMana) this.invokesChaos = true;
+		this.spellCost = spellCostWithOptions(
+			this.spellCost,
+			{ ...castCostChange, manaCostChange: this.manaCostChange, lessMana },
+			this.#wholeCastFree(),
+		);
 
-		if (this.spellCost?.type === 'mana' && this.spellCost.amount > 0) {
-			const lessMana = dialogData.lessMana === true;
-			this.spellCost = {
-				...this.spellCost,
-				amount: spellManaWithOptions(this.spellCost.amount, { ...castCostChange, lessMana }),
-			};
-			if (lessMana) this.invokesChaos = true;
-		}
 		if (castCostChange.replacesSpellCost) this.spellCost = { type: 'none' };
-		const chosenOptions = await settleChosenUseOptions(
+		const chosenOptions = await settleUseOptions(
 			this.actor,
 			this.useOptionGroups,
 			dialogData.useOptions,
 			this.castManaSpent,
+			this.activationData,
 		);
 		if (!chosenOptions) return { activation: null, rolls: null };
 		this.chosenOptions = chosenOptions;
-		applyUseOptionChanges(this.activationData, this.chosenOptions);
 
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();

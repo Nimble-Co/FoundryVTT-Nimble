@@ -54,7 +54,7 @@ All of these open a roll window first. See [Dice Rolls & Chat Cards](../playing/
 
 ### Actions
 
-Everything you can do on your turn, in groups: your equipped weapons, the features and spells that you use, the heroic actions (for example Move, Assess and Unarmed Strike), and your reactions (Defend, Interpose, Help and Opportunity Attack). The arrow text of each heroic action holds its rules text. When a feature lets you split a spend between picks on a melee attack, the roll window shows one counter for each pick and a total line. The counters together stop at the maximum and at what you have.
+Everything you can do on your turn, in groups: your equipped weapons, the features and spells that you use, the heroic actions (for example Move, Assess and Unarmed Strike), and your reactions (Defend, Interpose, Help and Opportunity Attack). The arrow text of each heroic action holds its rules text.
 
 Some rows ask you to choose first. Then a choice step opens under the row: Assess shows its three options and then a skill list, and Opportunity Attack lists your equipped melee weapons and Unarmed Strike. The reactions show the name of your current target. This only tells you the target. It never stops you.
 

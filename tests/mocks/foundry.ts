@@ -551,7 +551,10 @@ export const foundryApiMocks = {
 	},
 	abstract: {
 		TypeDataModel: class TypeDataModel {},
-		DataModel: class DataModel {},
+		// biome-ignore lint/complexity/noStaticOnlyClass: rules extend it, as they extend Foundry's DataModel.
+		DataModel: class DataModel {
+			static validateJoint(_data: unknown): void {}
+		},
 		EmbeddedCollection: class EmbeddedCollection {},
 	},
 	applications: {

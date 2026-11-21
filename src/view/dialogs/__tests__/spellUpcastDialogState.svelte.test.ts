@@ -411,7 +411,7 @@ function option(name: string, amount: number, more: object = {}) {
 		rangePerMana: 0,
 		cardNote: '',
 		damageTypes: [] as string[],
-		manaCostChange: null,
+		manaChange: null,
 		freeCopy: false,
 		replacesSpellCost: false,
 		manaSet: null,
@@ -572,7 +572,7 @@ describe('the upcast dialog Spell or Attack Options', () => {
 	it('take a mana cut off the spell mana in the spend line, down to its minimum', () => {
 		const methodical = option('Methodical Spellweaver', 0, {
 			actionCostChange: { delta: 1, minimum: 0 },
-			manaCostChange: { delta: -2, minimum: 1 },
+			manaChange: { delta: -2, minimum: 1 },
 		});
 		const state = open(caster({ mana: 5, unlocked: 3 }), fireBolt(), {
 			useOptionGroups: [spellshaper(false, [methodical])],
@@ -843,7 +843,7 @@ describe('the upcast dialog option that sets the mana of the spell', () => {
 		const set = option('Set Mana', 0, { chargePoolIdentifier: 'set', manaSet: 2 });
 		const cut = option('Cut Mana', 0, {
 			chargePoolIdentifier: 'cut',
-			manaCostChange: { delta: -1, minimum: 0 },
+			manaChange: { delta: -1, minimum: 0 },
 		});
 		const state = open(caster({ mana: 9, unlocked: 5 }), fireBolt({ tier: 3 }), {
 			useOptionGroups: [

@@ -1,5 +1,4 @@
 import type { ResourceCost } from '#types/resourceCost.d.ts';
-import type { SpellCostActorLike, SpellLike } from '#types/spellCost.d.ts';
 import type {
 	ActionCostChange,
 	ChosenUseOption,
@@ -9,32 +8,11 @@ import type {
 	UseOptionEffect,
 	UseOptionGroup,
 } from '#types/useOption.d.ts';
-import type { UseOptionRule } from '../../models/rules/useOption.js';
-import { withActionCostChange } from '../combat/withActionCostChange.js';
+import { withCostChange } from '../combat/withCostChange.js';
 import { castManaCostOf } from '../cost/castManaCost.js';
 import { settleResourceCost } from '../cost/resourceCost.js';
-import { exceedsUnlockedSpellTier } from './spellCost.js';
-import { useOptionGroups } from '../useOption/useOptionGroups.js';
-
-type OptionSpell = Parameters<UseOptionRule['appliesToSpell']>[0];
-
-/** The Spell or Attack Options the caster can turn on for this spell. */
-export function spellUseOptionGroups(
-	actor: Actor | null | undefined,
-	spell: OptionSpell,
-): UseOptionGroup[] {
-	if (exceedsUnlockedSpellTier(actor as SpellCostActorLike, spell as SpellLike)) return [];
-	return useOptionGroups(actor, (rule) => rule.appliesToSpell(spell));
-}
-
-/** Whether an option the dialog of this item offers can change the actions the use costs. */
-export function offersActionCostChange(actor: Actor | null | undefined, item: unknown): boolean {
-	const spell = item as OptionSpell;
-	if (spell?.type !== 'spell') return false;
-	return spellUseOptionGroups(actor, spell).some((group) =>
-		group.options.some((option) => option.actionCostChange !== null),
-	);
-}
+import localize from '../localize.js';
+import { withManaCostChange } from './spellManaCostChange.js';
 
 /** What the options the player turned on cost and change, with their amounts settled. */
 export interface ChosenUseOptions {
@@ -87,22 +65,27 @@ export interface CastCostChange {
 	/** The mana the spell costs at its own tier, or null for no change. */
 	manaSet: number | null;
 	/** How the options change the mana cost of the spell. */
-	manaCostChanges: CostChange[];
+	manaChanges: CostChange[];
 }
 
 /**
  * The mana of the spell at its tier mana `mana`, in the order the cast spends it: less mana takes
- * 1 first, then a set mana is final, else each change of the chosen options applies. A cast that
- * costs no mana stays free.
+ * 1 first, then a set mana is final. Else the Spell Mana Cost change applies, then each change of
+ * the chosen options. A cast that costs no mana after less mana or the Spell Mana Cost change
+ * stays free.
  */
 export function spellManaWithOptions(
 	mana: number,
-	change: Pick<CastCostChange, 'manaSet' | 'manaCostChanges'> & { lessMana?: boolean },
+	change: Pick<CastCostChange, 'manaSet' | 'manaChanges'> & {
+		manaCostChange?: number;
+		lessMana?: boolean;
+	},
 ): number {
 	const left = change.lessMana && mana > 0 ? mana - 1 : mana;
 	if (left <= 0) return 0;
 	if (change.manaSet !== null) return change.manaSet;
-	return change.manaCostChanges.reduce(withActionCostChange, left);
+	const changed = withManaCostChange(left, change.manaCostChange ?? 0);
+	return changed > 0 ? change.manaChanges.reduce(withCostChange, changed) : 0;
 }
 
 export function chosenCastCostChange(
@@ -114,7 +97,7 @@ export function chosenCastCostChange(
 	return {
 		replacesSpellCost: picked.some((option) => option.replacesSpellCost),
 		manaSet: set?.manaSet ?? null,
-		manaCostChanges: picked.flatMap((option) => option.manaCostChange ?? []),
+		manaChanges: picked.flatMap((option) => option.manaChange ?? []),
 	};
 }
 

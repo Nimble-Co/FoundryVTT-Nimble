@@ -27,7 +27,7 @@ function useOptionOfRule(actor: Actor | null | undefined, rule: UseOptionRule): 
 		rangePerMana: Math.max(0, Math.trunc(Number(rule.rangePerMana) || 0)),
 		cardNote: String(rule.cardNote ?? '').trim(),
 		damageTypes: [...((rule.damageTypes as string[] | undefined) ?? [])],
-		manaCostChange: rule.manaCostChange ?? null,
+		manaChange: rule.manaChange ?? null,
 		freeCopy: rule.freeCopy === true,
 		replacesSpellCost: rule.replacesSpellCost === true,
 		manaSet: manaSetOf(rule.manaSet),

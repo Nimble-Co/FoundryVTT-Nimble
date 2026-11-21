@@ -35,6 +35,7 @@ import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.s
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
+import { offersActionCostChange } from '../../managers/itemActivation/useOptionActivation.js';
 import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
@@ -51,7 +52,7 @@ import {
 	usesCountAsAttack,
 } from '../../utils/combat/rushedAttacks.js';
 import showInsufficientActionsConfirmation from '../../utils/combat/showInsufficientActionsConfirmation.js';
-import { withActionCostChange } from '../../utils/combat/withActionCostChange.js';
+import { withCostChange } from '../../utils/combat/withCostChange.js';
 import { spendHeldIgnoreDisadvantage } from '../../utils/heldChange/heldChange.js';
 import {
 	type CheckCardRerollData,
@@ -63,7 +64,6 @@ import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
-import { offersActionCostChange } from '../../utils/spell/spellUseOptions.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelCorrectionDialog from '../../view/dialogs/CharacterLevelCorrectionDialog.svelte';
@@ -2507,7 +2507,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** The actions a use costs after the action cost changes of the options chosen for it. */
 	#actionCostWith(item: unknown, changes: readonly ActionCostChange[]): number {
 		return changes.reduce(
-			withActionCostChange,
+			withCostChange,
 			resolveCharacterItemActionCost(this, item as ActivatableItem),
 		);
 	}

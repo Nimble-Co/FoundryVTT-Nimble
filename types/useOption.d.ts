@@ -36,7 +36,7 @@ export interface UseOption {
 	/** The damage types the player picks one of. The spell deals the picked type. */
 	damageTypes: string[];
 	/** How the option changes the mana cost of the spell. */
-	manaCostChange: CostChange | null;
+	manaChange: CostChange | null;
 	/** After the cast, a free copy of the spell posts at the same tier. */
 	freeCopy: boolean;
 	/** The option's cost takes the place of the spell's own cost: a button under "Spend". */
