@@ -1,5 +1,5 @@
 import type { HeldChange } from '#types/heldChange.d.ts';
-import { cardRicochet } from '#utils/damage/cardRicochet.js';
+import { ricochetForCardWeapon } from '#utils/damage/ricochetForCardWeapon.js';
 import { spendHeldChanges } from '#utils/heldChange/heldChange.js';
 import type { Ricochet } from '../../models/rules/ricochet.js';
 import { clearBankedDamageReduction } from '../../utils/damage/bankedDamageReduction.js';
@@ -55,7 +55,7 @@ export class CardRicochet {
 	/** What a hit of this card ricochets with, or null. */
 	ricochet(): Ricochet | null {
 		if (!this.#host.isHit()) return null;
-		return cardRicochet(this.#host.attacker(), this.#host.flags() as never);
+		return ricochetForCardWeapon(this.#host.attacker(), this.#host.flags() as never);
 	}
 
 	/** The creature this card's ricochet goes to, and whether its damage is applied. */

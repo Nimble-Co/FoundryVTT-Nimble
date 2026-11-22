@@ -1,6 +1,6 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import { useTargetChanges } from '../utils/useTargetChanges.svelte.ts';
-import { ricochetLineOf } from './ricochetLine.ts';
+import { ricochetLineOf } from './ricochetViewerLine.ts';
 
 function tokenName(tokenUuid: string): string {
 	const token = fromUuidSync(tokenUuid as never) as { name?: string } | null;

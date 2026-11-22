@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ricochetLineOf } from '../ricochetLine.js';
+import { ricochetLineOf } from '../ricochetViewerLine.js';
 
 const KOBOLD = { uuid: 'Token.kobold', name: 'Kobold' };
 const GOBLIN = { uuid: 'Token.goblin', name: 'Goblin' };

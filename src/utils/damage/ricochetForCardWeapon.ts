@@ -24,7 +24,7 @@ function weaponOfCard(flags: RicochetCardFlags | null | undefined): CardItem | n
 }
 
 /** The ricochet the attacker's rules give a hit with the weapon of the card, or null. */
-export function cardRicochet(
+export function ricochetForCardWeapon(
 	attacker: { rules?: unknown } | null | undefined,
 	flags: RicochetCardFlags | null | undefined,
 ): Ricochet | null {
