@@ -409,6 +409,56 @@ describe('the activation dialog damage multiplier tick', () => {
 		expect(state.damageMultiplier).toEqual({ label: 'Sharpshooter', multiplier: 2 });
 		expect(state.usesDamageMultiplier).toBe(false);
 	});
+
+	it('is offered for the weapon a feature attacks with, while that weapon is chosen', () => {
+		user.targets = new Set();
+		const bow = (name: string, rules: unknown[]) => ({
+			uuid: `Item.${name}`,
+			name,
+			type: 'object',
+			flags: {},
+			rules,
+			system: {
+				objectType: 'weapon',
+				equipped: true,
+				activation: {
+					targets: { attackType: 'range' },
+					effects: [{ type: 'damage', formula: '1d8', damageType: 'piercing' }],
+				},
+			},
+		});
+		const items = [
+			bow('Slayer', [{ type: 'damageMultiplier', label: 'Giant Slayer', multiplier: 3 }]),
+			bow('Shortbow', []),
+		];
+		const state = createState({
+			actor: () =>
+				({
+					type: 'character',
+					rules: [],
+					system: {},
+					items: Object.assign([...items], { contents: items }),
+					getFlag: () => undefined,
+				}) as never,
+			item: () =>
+				({
+					type: 'feature',
+					rules: [],
+					system: {
+						activation: {
+							weaponAttack: 'ranged',
+							targets: {},
+							effects: [{ id: 'd', type: 'damage', formula: '0' }],
+						},
+					},
+				}) as never,
+			hideRollsDefault: false,
+		});
+
+		expect(state.damageMultiplier).toEqual({ label: 'Giant Slayer', multiplier: 3 });
+		state.weaponUuid = 'Item.Shortbow';
+		expect(state.damageMultiplier).toBeNull();
+	});
 });
 
 describe('the activation dialog condition ticks', () => {
@@ -747,6 +797,28 @@ describe('the activation dialog weapon pick', () => {
 			[null, ['Longbow']],
 		]);
 		expect(groupNames(open('melee', []))).toEqual([[null, ['Unarmed Strike']]]);
+	});
+
+	it('reads the conditional bonuses for the chosen weapon, and again when the player picks another', () => {
+		const state = open('any', [weapon('Shortbow', 'range', true), weapon('Dagger', 'reach', true)]);
+
+		const asked = () =>
+			conditionalBonuses.mock.calls.map((call) => {
+				const [, item, , chosen] = call as unknown as [
+					unknown,
+					{ system: { activation: { targets: { attackType: string } } } },
+					unknown,
+					{ name: string } | null,
+				];
+				return [item.system.activation.targets.attackType, chosen?.name];
+			});
+		expect(asked()).toEqual([['range', 'Shortbow']]);
+
+		state.weaponUuid = 'Item.Dagger';
+		expect(asked()).toEqual([
+			['range', 'Shortbow'],
+			['reach', 'Dagger'],
+		]);
 	});
 
 	it('cannot roll with no weapon that fits', () => {

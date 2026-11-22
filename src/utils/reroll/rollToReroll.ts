@@ -16,6 +16,8 @@ type RollToReroll =
 			kind: 'attack';
 			delivery: AttackDelivery;
 			itemUuid?: string | null;
+			/** The weapon an ability attacks with. */
+			weaponUuid?: string | null;
 			damageTypes?: readonly string[];
 			/** The stats the attack's formula has. */
 			stats?: readonly string[];

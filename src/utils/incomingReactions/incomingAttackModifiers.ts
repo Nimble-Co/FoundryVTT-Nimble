@@ -378,6 +378,7 @@ function computeIncomingAttackPlan(
 			kind: 'attack',
 			delivery: attackContext?.delivery ?? null,
 			...(attackContext?.itemUuid ? { itemUuid: attackContext.itemUuid } : {}),
+			...(attackContext?.weaponUuid ? { weaponUuid: attackContext.weaponUuid } : {}),
 			...(attackContext?.stats?.length ? { stats: attackContext.stats } : {}),
 			...(attackContext?.offerSource ? { offerSource: attackContext.offerSource } : {}),
 			...(attackContext?.upcastSteps ? { upcastSteps: attackContext.upcastSteps } : {}),

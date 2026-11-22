@@ -120,6 +120,20 @@ describe('damageCardRollTarget', () => {
 		});
 	});
 
+	it('gives the gate the weapon an ability attacked with, when the card has one', () => {
+		const card = {
+			...makeCard([damageNode(serializedRoll())]),
+			itemUuid: () => 'Actor.a.Item.shot',
+			weaponUuid: () => 'Actor.a.Item.bow',
+		};
+		expect(damageCardRollTarget(card).context().roll).toEqual({
+			kind: 'attack',
+			delivery: 'melee',
+			itemUuid: 'Actor.a.Item.shot',
+			weaponUuid: 'Actor.a.Item.bow',
+		});
+	});
+
 	it('tells the gate whether a die of the roll is at its max', () => {
 		const die = (result: number) => ({
 			class: 'Die',

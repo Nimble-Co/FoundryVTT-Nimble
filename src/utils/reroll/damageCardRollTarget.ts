@@ -80,6 +80,8 @@ interface DamageCard {
 	delivery(): AttackDelivery;
 	/** The item the attack was made with, when the card has one. */
 	itemUuid?(): string | null;
+	/** The weapon an ability attacked with, when the card records one. */
+	weaponUuid?(): string | null;
 	/** The card's Movement Offers once its outcome changes. */
 	movementOfferChanges(changes: Record<string, unknown>): Record<string, unknown>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
@@ -165,6 +167,7 @@ function damageRollContext(
 			: findPrimaryDamageRoll(card.system())?.damageNode.roll
 	) as RollOptionsView | undefined;
 	const itemUuid = card.itemUuid?.() ?? null;
+	const weaponUuid = card.weaponUuid?.() ?? null;
 	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
@@ -184,6 +187,7 @@ function damageRollContext(
 			kind: 'attack',
 			delivery: card.delivery(),
 			...(itemUuid ? { itemUuid } : {}),
+			...(weaponUuid ? { weaponUuid } : {}),
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
 			...(upcastSteps > 0 ? { upcastSteps } : {}),

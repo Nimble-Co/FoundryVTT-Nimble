@@ -9,6 +9,8 @@ export interface CardOfferContext {
 	delivery: AttackDelivery;
 	/** The item the attack is made with, when it has one. */
 	itemUuid?: string | null;
+	/** The weapon an ability attacks with. */
+	weaponUuid?: string | null;
 	/** The stats the attack's formula has. */
 	stats?: readonly string[];
 	/** The identifier of the item whose offer row made this attack. */

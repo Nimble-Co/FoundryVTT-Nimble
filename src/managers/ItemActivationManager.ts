@@ -74,6 +74,7 @@ import {
 	type WeaponOption,
 	weaponAttackOf,
 	weaponOptionsFor,
+	withWeaponEffects,
 } from '../utils/damage/weaponAttack.js';
 import {
 	emitDicePoolChanged,
@@ -347,18 +348,39 @@ class ItemActivationManager {
 	#applyChosenWeapon(): void {
 		const weapon = this.#chosenWeapon;
 		if (!weapon) return;
-		this.#weapon =
-			weapon.uuid === UNARMED_STRIKE ? null : (fromUuidSync(weapon.uuid as never) as never);
+		const item =
+			weapon.uuid === UNARMED_STRIKE
+				? null
+				: (fromUuidSync(weapon.uuid as never) as NimbleBaseItem | null);
+		this.#weapon = item;
 		this.activationData.targets = {
 			...this.activationData.targets,
 			attackType: weapon.attackType,
 			...(weapon.distance === undefined ? {} : { distance: weapon.distance }),
 		};
 		useWeaponDamage(this.activationData.effects ?? [], weapon);
+		const weaponEffects = (item?.system as { activation?: { effects?: unknown[] } } | undefined)
+			?.activation?.effects;
+		if (weaponEffects?.length) {
+			this.activationData.effects = withWeaponEffects(
+				this.activationData.effects ?? [],
+				weaponEffects,
+			);
+		}
 	}
 
 	/** The weapon the ability attacks with, for what a weapon decides of the roll. */
 	#weapon: NimbleBaseItem | null = null;
+
+	/** The identifiers of the items this attack is made with: the item, and the weapon it attacks with. */
+	#attackItemIdentifiers(): string[] {
+		return [this.#item.identifier, ...(this.#weapon ? [this.#weapon.identifier] : [])];
+	}
+
+	/** The uuid of the weapon an ability attacks with, or the Unarmed Strike choice. */
+	get weaponUuid(): string | null {
+		return this.#chosenWeapon?.uuid ?? null;
+	}
 
 	/** The identifier of the item whose offer row started this activation. */
 	#offerSource(): string | undefined {
@@ -667,6 +689,7 @@ class ItemActivationManager {
 			{
 				delivery: this.#getAttackDelivery(),
 				itemUuid: this.#item.uuid,
+				...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
 				...(this.#offerSource() ? { offerSource: this.#offerSource() } : {}),
@@ -689,7 +712,7 @@ class ItemActivationManager {
 		this.#damageMultiplier =
 			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
-				: (damageMultiplierOf(this.#item)?.multiplier ?? 1);
+				: ((damageMultiplierOf(this.#item) ?? damageMultiplierOf(this.#weapon))?.multiplier ?? 1);
 		if (this.#keptAmount) {
 			dialogData.maxDamage = null;
 			dialogData.dualWield = undefined;
@@ -886,7 +909,7 @@ class ItemActivationManager {
 							source,
 							node.damageType,
 							targetDomain,
-							this.#item.identifier,
+							this.#attackItemIdentifiers(),
 						);
 						if (numericBonus > 0) {
 							formula = `${formula} + ${numericBonus}`;
@@ -897,7 +920,7 @@ class ItemActivationManager {
 							source,
 							node.damageType,
 							targetDomain,
-							this.#item.identifier,
+							this.#attackItemIdentifiers(),
 						)) {
 							formula = `${formula} + ${diceFormula}`;
 						}
@@ -940,6 +963,7 @@ class ItemActivationManager {
 						target: (this.#getSoleTargetToken()?.actor ?? null) as { rules?: unknown } | null,
 						delivery,
 						itemUuid: this.#item.uuid,
+						...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
 						damageTypes: node.damageType ? [node.damageType] : [],

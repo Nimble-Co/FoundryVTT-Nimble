@@ -70,6 +70,17 @@ describe('conditionalBonuses', () => {
 			expect(option?.doubled).toBeUndefined();
 		});
 
+		it('doubles for the weapon in the list that a feature attacks with', () => {
+			const rule = damageRule([{ source: 'longbow', onlyNoArmor: false }]);
+			const [option] = getActiveConditionalBonuses(
+				createAttacker([rule]),
+				attack('incendiary-shot'),
+				undefined,
+				{ identifier: 'longbow' },
+			);
+			expect(option).toMatchObject({ damageValue: 8, doubled: true });
+		});
+
 		it.each([
 			['none', 8],
 			['medium', 4],

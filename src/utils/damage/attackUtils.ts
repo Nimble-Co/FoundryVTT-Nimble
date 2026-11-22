@@ -90,9 +90,13 @@ function matchesBonus(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
 ): boolean {
-	if (bonus.itemIdentifier && bonus.itemIdentifier !== itemIdentifier) return false;
+	if (bonus.itemIdentifier) {
+		const attackItems =
+			typeof itemIdentifier === 'string' ? [itemIdentifier] : (itemIdentifier ?? []);
+		if (!attackItems.includes(bonus.itemIdentifier)) return false;
+	}
 	if (bonus.delivery !== 'any' && bonus.delivery !== delivery) return false;
 	if (bonus.source !== 'any' && bonus.source !== source) return false;
 	if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) return false;
@@ -123,7 +127,7 @@ export function getDamageBonusTotal(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
 ): number {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -155,7 +159,7 @@ export function getDamageBonusFormulas(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
 ): string[] {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;

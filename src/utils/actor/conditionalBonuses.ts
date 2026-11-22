@@ -72,13 +72,18 @@ function buildTargetDomain(
 	return domain;
 }
 
-/** The attack's item asks to double the damage. Heroes and monsters with no armor have none. */
+/**
+ * The attack's item, or the weapon it attacks with, asks to double the damage. Heroes and
+ * monsters with no armor have none.
+ */
 function doublesDamage(
 	rule: ConditionalBonusRule,
 	item: ActivationItem,
 	targetActor: TargetActor | null | undefined,
+	weapon: { identifier?: string } | null | undefined,
 ): boolean {
-	const entry = rule.doubleFor?.find((each) => each.source === item.identifier);
+	const sources = [item.identifier, weapon?.identifier].filter(Boolean);
+	const entry = rule.doubleFor?.find((each) => sources.includes(each.source));
 	if (!entry) return false;
 	if (!entry.onlyNoArmor) return true;
 	const armor = foundry.utils.getProperty(targetActor ?? {}, 'system.attributes.armor');
@@ -89,12 +94,13 @@ function doublesDamage(
  * Returns the conditional bonuses currently offered to `attacker` for an attack with
  * `item` against `targetActor`. A bonus is offered when its self-predicate passes, its
  * delivery/source matches the attack, its target condition matches, and it grants at
- * least one of advantage or damage.
+ * least one of advantage or damage. `weapon` is the weapon an ability attacks with.
  */
 function getActiveConditionalBonuses(
 	attacker: AttackingActor | null | undefined,
 	item: ActivationItem | null | undefined,
 	targetActor: TargetActor | null | undefined,
+	weapon?: { identifier?: string } | null,
 ): ConditionalBonusOption[] {
 	if (!attacker || !item) return [];
 
@@ -116,7 +122,7 @@ function getActiveConditionalBonuses(
 		if (!rule.offersAdvantage() && !rule.offersDamage()) continue;
 
 		const damage = rule.resolveDamage();
-		const doubled = doublesDamage(rule, item, targetActor);
+		const doubled = doublesDamage(rule, item, targetActor, weapon);
 		options.push({
 			key: `${rule.parentDocument?.uuid ?? ''}:${rule.id}`,
 			label:
