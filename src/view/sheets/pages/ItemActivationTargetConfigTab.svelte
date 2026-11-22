@@ -135,6 +135,24 @@
 				{/each}
 			</select>
 		</label>
+
+		{#if activationData.weaponAttack}
+			<label
+				class="nimble-field"
+				style="display: flex; gap: 0.5rem; align-items: center; margin-block-start: 0.5rem;"
+				data-tooltip={game.i18n.localize('NIMBLE.itemConfig.halfRangeHint')}
+			>
+				<input
+					type="checkbox"
+					checked={activationData.halfRange === true}
+					onchange={({ target }) =>
+						document.update({
+							'system.activation.halfRange': target?.checked,
+						})}
+				/>
+				<span>{game.i18n.localize('NIMBLE.itemConfig.halfRange')}</span>
+			</label>
+		{/if}
 	{/if}
 
 	{#if isMonsterFeature}

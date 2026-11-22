@@ -1,6 +1,8 @@
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { UseOptionGroup } from '#types/useOption.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import type { DiceDivision } from '../../src/managers/itemActivation/diceDivision.js';
+import type { DiceShare } from '../../src/utils/damage/evenDiceShares.js';
 export type { AttackDelivery } from '#utils/damage/attackDelivery.js';
 
 export interface SpendablePool {
@@ -84,6 +86,8 @@ export interface ItemActivationConfigDialogSubmitData {
 	conditionRollModes?: ConditionRollMode[];
 	/** With Feature Effects off, the keys of the Held Changes the player ticked. */
 	heldChosen?: string[];
+	/** How the player divided the dice of the attack among its targets. */
+	diceShares?: DiceShare[];
 }
 
 export interface ItemActivationConfigDialogInstance {
@@ -111,4 +115,6 @@ export interface ItemActivationConfigDialogProps {
 	attackOrigin?: string;
 	/** The extra targets share one attack, so the first target decides. */
 	sharesOneAttack?: boolean;
+	/** The dice of the attack the player divides among its targets. */
+	diceDivision?: DiceDivision;
 }

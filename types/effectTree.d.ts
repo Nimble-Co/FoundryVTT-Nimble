@@ -176,6 +176,12 @@ export type DamageNode = {
 	fromItemIdentifier?: string | null;
 	/** The feature that made this damage box. */
 	source?: DamageNodeSource;
+	/** Damage for all the dice of the first damage roll: with the dice divided, each target takes its part. */
+	dividesWithDice?: boolean;
+	/** The token that alone takes this damage, when the dice of the attack are divided. */
+	forTarget?: string;
+	/** Dice of the attack roll that another target takes: a crit of the attack is a crit of them. */
+	sharesAttackRoll?: boolean;
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;
@@ -195,6 +201,10 @@ export type DamageOutcomeNode = {
 	/** Flat damage that armor treats as a damage modifier, not as dice. */
 	modifierOnly?: boolean;
 	ignoreAllies?: boolean;
+	/** The token that alone takes this damage, from the damage it is the outcome of. */
+	forTarget?: string;
+	/** From the damage it is the outcome of: dice of the attack roll that another target takes. */
+	sharesAttackRoll?: boolean;
 	outcome: 'fullDamage' | 'halfDamage';
 	roll?: Record<string, any>;
 	/** The feature that made the damage box, from its damage step. */

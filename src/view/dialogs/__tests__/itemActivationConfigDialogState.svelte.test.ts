@@ -776,10 +776,11 @@ describe('the activation dialog weapon pick', () => {
 			},
 		},
 	});
-	const feature = (weaponAttack: string) => ({
+	const feature = (weaponAttack: string, extra: object = {}) => ({
 		type: 'feature',
 		system: {
 			activation: {
+				...extra,
 				weaponAttack,
 				targets: {},
 				effects: [{ id: 'd', type: 'damage', formula: '0', canCrit: true, canMiss: true }],
@@ -787,7 +788,7 @@ describe('the activation dialog weapon pick', () => {
 		},
 	});
 
-	function open(weaponAttack: string, items: object[]) {
+	function open(weaponAttack: string, items: object[], extra: object = {}) {
 		user.targets = new Set();
 		return createState({
 			actor: () =>
@@ -798,7 +799,7 @@ describe('the activation dialog weapon pick', () => {
 					items: Object.assign([...items], { contents: items }),
 					getFlag: () => undefined,
 				}) as never,
-			item: () => feature(weaponAttack) as never,
+			item: () => feature(weaponAttack, extra) as never,
 			hideRollsDefault: false,
 		});
 	}
@@ -942,5 +943,30 @@ describe('the activation dialog weapon pick', () => {
 
 		expect(state.weaponGroups).toEqual([]);
 		expect(state.cannotRollReason).toBe('You have no weapon of this kind.');
+	});
+
+	describe('of a half range feature', () => {
+		const withRange = (item: ReturnType<typeof weapon>, max: number) => ({
+			...item,
+			system: { ...item.system, properties: { selected: ['range'], range: { min: 2, max } } },
+		});
+
+		it('shows half the range of the chosen weapon, rounded down', () => {
+			const items = [
+				withRange(weapon('Longbow', 'range', true), 16),
+				withRange(weapon('Sling', 'range', true), 9),
+			];
+			const state = open('ranged', items, { halfRange: true });
+
+			expect(state.rangeLine).toBe('Range 8 (half range)');
+			state.weaponUuid = 'Item.Sling';
+			expect(state.rangeLine).toBe('Range 4 (half range)');
+		});
+
+		it('shows no range line for a feature that is not half range', () => {
+			const state = open('ranged', [withRange(weapon('Longbow', 'range', true), 16)]);
+
+			expect(state.rangeLine).toBe('');
+		});
 	});
 });

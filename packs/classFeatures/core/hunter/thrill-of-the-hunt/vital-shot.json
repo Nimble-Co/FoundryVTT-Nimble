@@ -69,6 +69,7 @@
 				"shape": "",
 				"width": 1
 			},
+			"halfRange": true,
 			"weaponAttack": "ranged"
 		},
 		"description": "<p><em>(Half Range)</em> Action: Attack your Hampered quarry with a ranged weapon, ignoring their armor or doubling your Hunter's Mark damage bonus if they have none.</p>",

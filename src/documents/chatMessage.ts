@@ -85,6 +85,7 @@ import {
 	type DamageBackRecord,
 } from './chatMessage/cardDamageBack.js';
 import { CardRerolls } from './chatMessage/cardRerolls.js';
+import { CardRicochet, type CardRicochetFlags } from './chatMessage/cardRicochet.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -140,6 +141,8 @@ type DamageApplyOptions = {
 	isCritical?: boolean;
 	/** The attack the damage comes from is a crit. Absent: read `isCritical`. */
 	attackIsCritical?: boolean;
+	/** The token that alone takes this damage. Absent: every target takes it. */
+	forTarget?: string;
 };
 
 interface DamageApplicationTarget {
@@ -607,6 +610,11 @@ function calculateDefenseAdjustedDamage(params: {
 /** One damage packet of a card, as `#collectApplicableDamageRolls` reports it. */
 type DamagePacket = { value: number; options: DamageApplyOptions };
 
+/** The packets one target takes: those for every target, and those for it alone. */
+function packetsFor(packets: DamagePacket[], targetUuid: string): DamagePacket[] {
+	return packets.filter(({ options }) => !options.forTarget || options.forTarget === targetUuid);
+}
+
 interface ResolvedDamageForActor {
 	total: number;
 	components: TargetDamageComponent[];
@@ -826,7 +834,8 @@ function buildDamageApplicationPlan(params: {
 		// armor zeroing it leaves the bank in place.
 		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
 		const usedMaximize = params.areaMaximizeFor?.(actor) ?? null;
-		const packets = usedMaximize ? maximizedPackets(params.packets) : params.packets;
+		const ownPackets = packetsFor(params.packets, uuid);
+		const packets = usedMaximize ? maximizedPackets(ownPackets) : ownPackets;
 		const resolved = resolveDamageForActor(actor, packets, availableBank, defend);
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
@@ -949,6 +958,22 @@ class NimbleChatMessage extends ChatMessage {
 				[{ value: amount, options: { damageType, ...(roll ? { roll: roll as never } : {}) } }],
 				0,
 			).total,
+	});
+
+	/** The ricochet of a hit on this card. */
+	readonly cardRicochet = new CardRicochet({
+		id: () => this.id,
+		isHit: () => this.isActivationCard() && this.system.isMiss !== true,
+		attacker: () =>
+			(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker) as {
+				rules?: unknown;
+			} | null,
+		flags: () => (this.flags as Record<string, CardRicochetFlags | undefined>)?.[SYSTEM_ID],
+		damagePackets: () => this.#applicableDamagePackets(),
+		damageAfterDefenses: (actor, packets) =>
+			resolveDamageForActor(actor, packets as DamagePacket[]),
+		endedLines: () => this.#endedLines(),
+		setFlag: (key, value) => this.setFlag(SYSTEM_ID, key, value),
 	});
 
 	/** Rerolls, roll changes and kept results on this card. */
@@ -1717,6 +1742,10 @@ class NimbleChatMessage extends ChatMessage {
 							? 'noDamage'
 							: 'fullDamage';
 
+				const { forTarget, sharesAttackRoll } = node as {
+					forTarget?: string;
+					sharesAttackRoll?: boolean;
+				};
 				const nodeMultiplier = (node as { damageMultiplier?: number }).damageMultiplier ?? 1;
 				const multiplier = (outcome === 'halfDamage' ? 0.5 : 1) * nodeMultiplier;
 				const rollTotal = Number(roll.total ?? 0);
@@ -1731,9 +1760,17 @@ class NimbleChatMessage extends ChatMessage {
 						...((node as { modifierOnly?: boolean }).modifierOnly ? { modifierOnly: true } : {}),
 						outcome,
 						...(nodeMultiplier !== 1 ? { damageMultiplier: nodeMultiplier } : {}),
-						roll: roll as unknown as DamageRoll.SerializedData,
-						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
+						roll: (sharesAttackRoll
+							? { ...roll, isCritical: system.isCritical === true }
+							: roll) as unknown as DamageRoll.SerializedData,
+						isCritical:
+							typeof roll.isCritical === 'boolean'
+								? roll.isCritical
+								: sharesAttackRoll
+									? system.isCritical === true
+									: undefined,
 						attackIsCritical: system.isCritical === true,
+						...(forTarget ? { forTarget } : {}),
 					},
 				});
 			}
@@ -1752,7 +1789,7 @@ class NimbleChatMessage extends ChatMessage {
 	getDamageBreakdownForTarget(targetUuid: string): TargetDamageBreakdown | null {
 		if (!this.isActivationCard()) return null;
 
-		const damageRolls = this.#applicableDamagePackets();
+		const damageRolls = packetsFor(this.#applicableDamagePackets(), targetUuid);
 		if (damageRolls.length < 1) return null;
 
 		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
@@ -1788,7 +1825,7 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	previewDamageFor(tokenUuid: string, defend: DefendDamage = 0): number | null {
 		if (!this.isActivationCard()) return null;
-		const packets = this.#applicableDamagePackets();
+		const packets = packetsFor(this.#applicableDamagePackets(), tokenUuid);
 		if (packets.length < 1) return null;
 		const actor = (fromUuidSync(tokenUuid) as TokenDocument | null)?.actor as
 			| Actor.Implementation

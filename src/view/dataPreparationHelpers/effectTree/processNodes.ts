@@ -19,6 +19,8 @@ export function processNodes(effects: EffectNode[], relevantNodes: EffectNode[])
 				node.roll = parentNode.roll;
 				node.damageMultiplier = parentNode.damageMultiplier;
 				if (parentNode.source) node.source = parentNode.source;
+				if (parentNode.forTarget) node.forTarget = parentNode.forTarget;
+				if (parentNode.sharesAttackRoll) node.sharesAttackRoll = true;
 			}
 		}
 	}

@@ -29,7 +29,10 @@ import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
 import {
+	attackDistanceWith,
 	groupWeapons,
+	halfRangeOf,
+	halfRangeText,
 	type WeaponOption,
 	weaponAttackOf,
 	weaponOptionsFor,
@@ -149,6 +152,18 @@ export function createItemActivationConfigDialogState(
 	const weaponGroups = groupWeapons(weapons);
 	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
 	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
+	const halfRange = halfRangeOf(item);
+	const rangeLine = $derived(
+		chosenWeapon
+			? halfRangeText({
+					halfRange,
+					targets: {
+						attackType: chosenWeapon.attackType,
+						distance: attackDistanceWith(chosenWeapon, halfRange),
+					},
+				})
+			: '',
+	);
 	const weaponItemOf = (uuid: string | null | undefined) =>
 		uuid
 			? (Array.from((actor.items ?? []) as Iterable<{ uuid?: string; identifier?: string }>).find(
@@ -528,6 +543,9 @@ export function createItemActivationConfigDialogState(
 		},
 		set weaponUuid(value: string | null) {
 			chooseWeapon(value);
+		},
+		get rangeLine() {
+			return rangeLine;
 		},
 		chargeCosts,
 		get cannotRollReason() {

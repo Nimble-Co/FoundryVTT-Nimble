@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "ricochet",
+				"disabled": false,
+				"id": "Tr1ckSh0tR1c0chT",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"weapon": "dagger",
+				"weaponProperty": "thrown",
+				"reach": 2
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +33,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "trickshotNote0001",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "A dagger you throw returns to your hand at the end of your turn.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

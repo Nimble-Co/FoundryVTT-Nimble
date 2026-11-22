@@ -735,6 +735,30 @@ describe('the built Incendiary Shot with a weapon that has its own on-hit damage
 	});
 });
 
+describe('the built Incendiary Shot with a Longbow of Range 16', () => {
+	const PACK = 'packs/classFeatures/core/hunter/thrill-of-the-hunt/incendiary-shot.json';
+
+	it('records half the range, rounded down, on the card', async () => {
+		const actor = hero();
+		const bow = longbow(actor);
+		Object.assign(bow.system.properties, {
+			selected: ['range', 'twoHanded'],
+			range: { min: 2, max: 17 },
+		});
+		findItems(actor);
+		const feature = incendiaryShot(actor);
+		feature.system.activation = JSON.parse(readFileSync(resolve(PACK), 'utf8')).system.activation;
+
+		await feature.activate();
+
+		const card = cardOf(feature) as unknown as {
+			system: { activation: { halfRange?: boolean; targets: { distance?: number } } };
+		};
+		expect(card.system.activation.halfRange).toBe(true);
+		expect(card.system.activation.targets.distance).toBe(8);
+	});
+});
+
 describe('the origin of an attack', () => {
 	function attackOptions(feature: { _createActivationCard: ReturnType<typeof vi.fn> }) {
 		const attack = cardOf(feature).system.activation.effects[0] as Node & {

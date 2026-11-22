@@ -5,7 +5,7 @@
 	"img": "icons/weapons/sickles/scythe-bone-green-fire.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "bonescythe",
 		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
@@ -20,11 +20,65 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "bonescytheSlash0",
+					"type": "damage",
+					"damageType": "slashing",
+					"formula": "(2 + floor(@level / 5))d12",
+					"canCrit": true,
+					"canMiss": true,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "bonescytheSlash0Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "bonescytheSlash0"
+							}
+						]
+					}
+				},
+				{
+					"id": "bonescytheNecro0",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "(2 + floor(@level / 5)) * @dexterity",
+					"canCrit": false,
+					"canMiss": false,
+					"dividesWithDice": true,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "bonescytheNecro0Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "bonescytheNecro0"
+							}
+						]
+					}
+				},
+				{
+					"id": "bonescytheNote00",
+					"type": "note",
+					"noteType": "reminder",
+					"text": "Summoning the Bonescythe takes its own action. It shatters after you hit with it, or when combat ends.",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "reach",
+				"distance": 2
 			},
 			"template": {
 				"length": 1,

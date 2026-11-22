@@ -1,5 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { UNARMED_STRIKE, useWeaponDamage, weaponOptionsFor } from '../weaponAttack.js';
+import {
+	halfRangeTag,
+	halfRangeText,
+	UNARMED_STRIKE,
+	useWeaponDamage,
+	weaponOptionsFor,
+} from '../weaponAttack.js';
 
 const weapon = (name: string, attackType: string, overrides: Record<string, unknown> = {}) => ({
 	uuid: `Item.${name}`,
@@ -119,5 +127,49 @@ describe('useWeaponDamage', () => {
 		const inner = { type: 'damage', formula: '1d6', damageType: 'slashing' };
 		useWeaponDamage([{ type: 'savingThrow', on: { failedSave: [inner] } }], bow);
 		expect(inner.formula).toBe('1d8+@dexterity');
+	});
+});
+
+describe('halfRangeText', () => {
+	it('names the halved range of a half range attack', () => {
+		expect(halfRangeText({ halfRange: true, targets: { attackType: 'range', distance: 8 } })).toBe(
+			'Range 8 (half range)',
+		);
+	});
+
+	it('is empty for a melee attack or an attack that is not half range', () => {
+		expect(halfRangeText({ halfRange: true, targets: { attackType: 'reach', distance: 1 } })).toBe(
+			'',
+		);
+		expect(halfRangeText({ targets: { attackType: 'range', distance: 16 } })).toBe('');
+	});
+});
+
+describe('halfRangeTag', () => {
+	it('names only the halved range, as the card description says half range', () => {
+		expect(halfRangeTag({ halfRange: true, targets: { attackType: 'range', distance: 8 } })).toBe(
+			'Range 8',
+		);
+		expect(halfRangeTag({ targets: { attackType: 'range', distance: 16 } })).toBe('');
+	});
+});
+
+describe('the Hunter shots marked "(Half range)" in the book', () => {
+	const DIR = 'packs/classFeatures/core/hunter/thrill-of-the-hunt';
+	const halfRange = (file: string) =>
+		JSON.parse(readFileSync(resolve(DIR, file), 'utf8')).system.activation.halfRange;
+
+	it.each([
+		'incendiary-shot.json',
+		'vital-shot.json',
+		'heavy-shot.json',
+		'multishot.json',
+		'hail-of-arrows.json',
+	])('%s attacks at half range', (file) => {
+		expect(halfRange(file)).toBe(true);
+	});
+
+	it('leaves the other shots at full range', () => {
+		expect(halfRange('pinning-shot.json')).toBeFalsy();
 	});
 });

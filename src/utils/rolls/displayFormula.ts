@@ -210,15 +210,29 @@ function withRollData(formula: string, rollData: Record<string, unknown> | null 
 	});
 }
 
+function shownOf(formula: string | null | undefined, rollData?: Record<string, unknown> | null) {
+	const plain = withRollData(String(formula ?? ''), rollData)
+		.replace(/\[[^\]]*\]/g, '')
+		.trim();
+	const tokens = plain ? tokenize(plain) : null;
+	const shown = tokens && tokens.length > 0 ? new Parser(tokens).parse() : null;
+	return { plain, shown };
+}
+
 export function displayFormula(
 	formula: string | null | undefined,
 	rollData?: Record<string, unknown> | null,
 ): string {
-	const plain = withRollData(String(formula ?? ''), rollData)
-		.replace(/\[[^\]]*\]/g, '')
-		.trim();
+	const { plain, shown } = shownOf(formula, rollData);
 	if (!plain) return '';
-	const tokens = tokenize(plain);
-	const shown = tokens && tokens.length > 0 ? new Parser(tokens).parse() : null;
 	return shown ? shown.text : plain.replace(/\s+/g, ' ');
+}
+
+/** The number a formula with no dice works out to, or null. */
+export function formulaValue(
+	formula: string | null | undefined,
+	rollData?: Record<string, unknown> | null,
+): number | null {
+	const value = shownOf(formula, rollData).shown?.value;
+	return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }

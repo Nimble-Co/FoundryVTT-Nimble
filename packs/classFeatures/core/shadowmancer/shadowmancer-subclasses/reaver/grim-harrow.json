@@ -6,7 +6,18 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "divideDice",
+				"disabled": false,
+				"id": "gr1mHarr0wD1v1d",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"attackOrigin": "bonescythe"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

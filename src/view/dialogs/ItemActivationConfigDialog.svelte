@@ -5,6 +5,7 @@
 	import localize from '#utils/localize.js';
 	import { displayFormula } from '#utils/rolls/displayFormula.ts';
 	import { SYSTEM_ID } from '#system';
+	import { createDiceDivisionState } from './diceDivisionState.svelte.ts';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import AmountStepper from './components/AmountStepper.svelte';
 	import DualWieldField from './components/DualWieldField.svelte';
@@ -33,6 +34,7 @@
 		useOptionGroups,
 		attackOrigin,
 		sharesOneAttack,
+		diceDivision,
 	}: ItemActivationConfigDialogProps = $props();
 
 	const state = createItemActivationConfigDialogState({
@@ -47,6 +49,7 @@
 		attackOrigin: untrack(() => attackOrigin),
 		sharesOneAttack: untrack(() => sharesOneAttack),
 	});
+	const division = createDiceDivisionState(untrack(() => diceDivision));
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
 	const rollData = $derived(
@@ -104,6 +107,7 @@
 						},
 					}
 				: {}),
+			...(division.shares ? { diceShares: division.shares } : {}),
 			consumedPoolDice,
 			consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
@@ -120,7 +124,7 @@
 	title={item.name}
 	img={item.img}
 	rollLabel={localize('NIMBLE.rollWindow.roll')}
-	rollDisabledReason={state.cannotRollReason}
+	rollDisabledReason={state.cannotRollReason || division.cannotRollReason}
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
@@ -154,6 +158,7 @@
 					{/if}
 				{/each}
 			</select>
+			{#if state.rangeLine}<p class="range">{state.rangeLine}</p>{/if}
 		</div>
 	{/if}
 
@@ -451,6 +456,29 @@
 		</div>
 	{/if}
 
+	{#if division.rows.length > 0}
+		<div class="nimble-pool-spend">
+			<h5 class="lb">{division.heading}</h5>
+			{#each division.rows as row (row.uuid)}
+				<AmountStepper
+					label={row.name}
+					value={row.dice}
+					minimum={0}
+					limit={row.limit}
+					shown={division.dice}
+					words={{
+						decrement: localize('NIMBLE.rollWindow.divideDice.decrement', { name: row.name }),
+						increment: localize('NIMBLE.rollWindow.divideDice.increment', { name: row.name }),
+						amount: row.name,
+					}}
+					onadjust={(delta) => division.adjust(row.uuid, delta)}
+					onset={(value) => division.set(row.uuid, value)}
+				/>
+			{/each}
+			<p class="nimble-pool-spend__total">{division.totalLine}</p>
+		</div>
+	{/if}
+
 	{#each state.damagePreviews as damageEffect}
 		<div class="frm">
 			{#if damageEffect.damageType}
@@ -492,7 +520,8 @@
 </RollWindow>
 
 <style lang="scss">
-	.spends {
+	.spends,
+	.range {
 		margin: 0;
 		font-size: 0.781rem;
 		font-weight: 600;

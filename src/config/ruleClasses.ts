@@ -28,6 +28,7 @@ import { DefendOptionRule } from '../models/rules/defendOption.js';
 import { DiceConsumerRule } from '../models/rules/diceConsumer.js';
 import { DicePoolRule } from '../models/rules/dicePool.js';
 import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
+import { DivideDiceRule } from '../models/rules/divideDice.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { EmptyPoolsAtEndRule } from '../models/rules/emptyPoolsAtEnd.js';
 import { EscapeDamageRule } from '../models/rules/escapeDamage.js';
@@ -77,6 +78,7 @@ import { PoolMaxBonusRule } from '../models/rules/poolMaxBonus.js';
 import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { ResourceCostRule } from '../models/rules/resourceCost.js';
+import { RicochetRule } from '../models/rules/ricochet.js';
 import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -154,6 +156,8 @@ export const RULE_CLASSES = {
 	saveOnEvent: SaveOnEventRule,
 	escapeDamage: EscapeDamageRule,
 	extraTargets: ExtraTargetsRule,
+	divideDice: DivideDiceRule,
+	ricochet: RicochetRule,
 	critBack: CritBackRule,
 	freeAssess: FreeAssessRule,
 	hitCondition: HitConditionRule,

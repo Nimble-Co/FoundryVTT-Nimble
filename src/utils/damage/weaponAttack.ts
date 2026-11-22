@@ -78,6 +78,47 @@ export function weaponAttackOf(item: unknown): WeaponAttack {
 	return value ?? '';
 }
 
+/** The ability attacks at half the weapon's range. */
+export function halfRangeOf(item: unknown): boolean {
+	return (
+		(item as { system?: { activation?: { halfRange?: boolean } } } | null)?.system?.activation
+			?.halfRange === true
+	);
+}
+
+/** The distance the ability attacks at with the weapon: half a range, rounded down, at half range. */
+export function attackDistanceWith(weapon: WeaponOption, halfRange: boolean): number | undefined {
+	if (!halfRange || weapon.attackType !== 'range' || weapon.distance === undefined) {
+		return weapon.distance;
+	}
+	return Math.floor(weapon.distance / 2);
+}
+
+interface RangedActivation {
+	halfRange?: boolean;
+	targets?: { attackType?: string; distance?: number };
+}
+
+/** The halved range of a half range attack at range, or undefined. */
+function halfRangeDistance(activation: RangedActivation | null | undefined): number | undefined {
+	if (!activation?.halfRange || activation.targets?.attackType !== 'range') return undefined;
+	return activation.targets.distance;
+}
+
+/** "Range 8 (half range)" for a half range attack at range, else an empty string. */
+export function halfRangeText(activation: RangedActivation | null | undefined): string {
+	const distance = halfRangeDistance(activation);
+	if (distance === undefined) return '';
+	return localize('NIMBLE.rollWindow.halfRange', { distance: String(distance) });
+}
+
+/** "Range 8" for a half range attack at range, else an empty string: the card's description says half range. */
+export function halfRangeTag(activation: RangedActivation | null | undefined): string {
+	const distance = halfRangeDistance(activation);
+	if (distance === undefined) return '';
+	return localize('NIMBLE.npcSheet.range', { distance: String(distance) });
+}
+
 interface WeaponOwner {
 	type?: string | null;
 	system?: unknown;

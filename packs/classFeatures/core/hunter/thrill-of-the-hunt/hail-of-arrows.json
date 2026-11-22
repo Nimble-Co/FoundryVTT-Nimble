@@ -77,6 +77,7 @@
 				"shape": "square",
 				"width": 3
 			},
+			"halfRange": true,
 			"weaponAttack": "ranged"
 		},
 		"description": "<p><em>(Half range)</em> 2 actions: Shoot all creatures within a 3×3 area. Their speed is halved until the end of their next turn.</p>",

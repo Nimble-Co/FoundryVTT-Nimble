@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import type { Ricochet } from '../../../../models/rules/ricochet.js';
 import { getRelevantNodes } from '../../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
 import ItemCardEffectsTestHarness from './ItemCardEffects.testHarness.svelte';
 
@@ -61,6 +62,11 @@ function createMessage(groups: unknown[][], effects: unknown[] = []) {
 		canRollDeferredDamage: () => true,
 		applyAllDamage: () => undefined,
 		applyDamage: () => undefined,
+		cardRicochet: {
+			ricochet: (): Ricochet | null => null,
+			record: {},
+			damage: (_tokenUuid: string): number | null => null,
+		},
 		reactive: null as unknown,
 	};
 	message.reactive = message;
@@ -100,6 +106,26 @@ afterEach(() => {
 function applyButtons() {
 	return screen.queryAllByRole('button', { name: /apply damage/i });
 }
+
+describe('the ricochet line', () => {
+	it('sits below Apply Damage', () => {
+		const message = createMessage([[damageNode('a', 'piercing', 7)]]);
+		message.cardRicochet = {
+			ricochet: () => ({ source: 'Trickshot', reach: 2 }),
+			record: {},
+			damage: () => 3,
+		};
+		gameStub().user = {
+			isGM: true,
+			targets: new Set([{ document: { uuid: 'Token.kobold', name: 'Kobold' } }]),
+		};
+		render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
+
+		const [apply] = applyButtons();
+		const ricochet = screen.getByRole('button', { name: 'Apply 3 Damage to Kobold' });
+		expect(apply?.compareDocumentPosition(ricochet)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+	});
+});
 
 describe('ItemCardEffects apply-damage controls', () => {
 	it('renders one control for a card with a single damage packet', () => {

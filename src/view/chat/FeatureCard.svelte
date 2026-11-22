@@ -18,6 +18,7 @@
 	import TemplateSection from './components/TemplateSection.svelte';
 	import { cardPrimaryRoll } from './components/attackOutcomeTags.ts';
 	import { cardMeta } from './cardMeta.ts';
+	import { halfRangeTag } from '#utils/damage/weaponAttack.js';
 	import { setTargetsSectionShown } from './targetsSection.ts';
 
 	function getAttackTypeLabel(attackType, distance) {
@@ -29,13 +30,15 @@
 
 	const { messageDocument } = $props();
 
-	let { name, description, featureType, image, attackType, attackDistance } = $derived(
+	let { activation, name, description, featureType, image, attackType, attackDistance } = $derived(
 		messageDocument.reactive.system,
 	);
 
 	let subheading = $derived(cardMeta(messageDocument.reactive));
 	let itemUuid = $derived(messageDocument.reactive.flags?.[SYSTEM_ID]?.itemUuid ?? null);
-	let attackTypeLabel = $derived(getAttackTypeLabel(attackType, attackDistance));
+	let attackTypeLabel = $derived(
+		halfRangeTag(activation) || getAttackTypeLabel(attackType, attackDistance),
+	);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -115,6 +118,6 @@
 		padding: 0.125rem 0.5rem;
 		background: hsl(41, 18%, 54%, 15%);
 		border-radius: 3px;
-		color: var(--nimble-muted-text-color, hsl(41, 18%, 40%));
+		color: var(--nimble-medium-text-color);
 	}
 </style>

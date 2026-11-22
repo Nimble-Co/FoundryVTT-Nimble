@@ -30,6 +30,7 @@
 		nodeId = null,
 		damageMultiplier = 1,
 		source = null,
+		forTarget = null,
 	} = $props();
 	let rolling = $derived.by(() => {
 		const inAir = nodeId ? rollingRerollOf(messageDocument.id) : null;
@@ -37,7 +38,11 @@
 	});
 	let landed = $derived(!!nodeId && rerollJustLanded(messageDocument.id, nodeId));
 	let rollOptions = $derived(roll?.options ?? {});
-	let label = $derived(damageTypes[damageType] ?? '');
+	let label = $derived.by(() => {
+		const type = damageTypes[damageType] ?? '';
+		const name = forTarget ? (fromUuidSync(forTarget)?.name ?? '') : '';
+		return name ? localize('NIMBLE.chat.damageForTarget', { type, name }) : type;
+	});
 	let details = $derived(
 		damageRollDetails({
 			rollOptions,

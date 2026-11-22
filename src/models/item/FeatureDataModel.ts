@@ -116,6 +116,7 @@ class NimbleFeatureData extends NimbleBaseItemData<
 		duration: { details: string; quantity: number; type: string };
 		effects: Record<string, unknown>[];
 		weaponAttack: WeaponAttack;
+		halfRange: boolean;
 		targets: {
 			count: number;
 			singleTargetAttack: boolean;
