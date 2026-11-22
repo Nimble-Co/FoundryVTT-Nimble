@@ -103,6 +103,9 @@
 	oncancel={() => dialog.close()}
 	onroll={onCast}
 >
+	{#if data.attackNote}
+		<p class="note nimble-spell-cost">{data.attackNote}</p>
+	{/if}
 	{#if upcast.spendLine}
 		<p class="note nimble-spell-cost">{upcast.spendLine}</p>
 	{/if}

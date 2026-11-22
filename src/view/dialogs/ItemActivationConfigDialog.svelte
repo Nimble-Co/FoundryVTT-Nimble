@@ -27,6 +27,7 @@
 		rollMode,
 		rushedAttack,
 		spendsActions,
+		attackNote,
 		ignoreDisadvantage,
 		resourceCosts,
 		useOptionGroups,
@@ -123,6 +124,7 @@
 	oncancel={() => dialog.close()}
 	onroll={onSubmit}
 >
+	{#if attackNote}<p class="spends">{attackNote}</p>{/if}
 	{#if state.spendLine}<p class="spends">{state.spendLine}</p>{/if}
 	{#each state.chargeCosts as cost (cost.label)}
 		<p class="spends">

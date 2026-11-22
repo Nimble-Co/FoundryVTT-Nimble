@@ -114,6 +114,7 @@ async function attack(
 	const card = await actor.activateItem(item.id, {
 		...options,
 		...(free ? { skipActionDeduction: true } : {}),
+		...(free && !line.spendsReaction ? { grantedFree: true } : {}),
 	});
 	return Boolean(card);
 }

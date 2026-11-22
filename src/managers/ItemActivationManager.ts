@@ -140,6 +140,7 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
+import { freeAttackNote } from '../view/dialogs/components/rollSpendLine.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
@@ -365,6 +366,15 @@ class ItemActivationManager {
 		return attackOriginOf(this.#item, this.#options.originUuid);
 	}
 
+	/** The name of the feature this attack was made through, as the player knows it. */
+	#originName(): string {
+		const uuid = this.origin.uuid;
+		const source = uuid
+			? (fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]) as { name?: string } | null)
+			: null;
+		return source?.name ?? '';
+	}
+
 	/** What the attacker's rules add to this attack because of the feature it was made through. */
 	#offerBonuses: OfferBonus[] = [];
 
@@ -523,6 +533,9 @@ class ItemActivationManager {
 			ignoreDisadvantage: this.#ignoresDisadvantage || undefined,
 			attackOrigin: this.origin.identifier,
 			sharesOneAttack: this.#isSingleTargetAttack(),
+			attackNote: options.grantedFree
+				? freeAttackNote(this.#originName(), options.ignoresRushed === true)
+				: undefined,
 		};
 
 		if (!this.#hasFittingWeapon()) return { activation: null, rolls: null };
@@ -2058,6 +2071,8 @@ namespace ItemActivationManager {
 		lessMana?: boolean;
 		/** The item this attack is made through, such as the feature that grants it. */
 		originUuid?: string;
+		/** A free attack from a card line: the roll window says so. */
+		grantedFree?: boolean;
 		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */

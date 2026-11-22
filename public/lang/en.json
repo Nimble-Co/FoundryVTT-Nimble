@@ -5882,6 +5882,8 @@
 				"straight": "Each advantage cancels one disadvantage."
 			},
 			"rushedAttack": "Rushed Attack: this is attack {attack} of your turn, so the roll starts with Disadvantage × {count}. You can change it.",
+			"freeAttack": "A free attack ({source}): it spends no action.",
+			"freeAttackNoRushed": "A free attack ({source}): it spends no action and has no Rushed Attack disadvantage.",
 			"spendAction": "{count} action",
 			"spendActions": "{count} actions",
 			"spendBoth": "{first} and {second}",

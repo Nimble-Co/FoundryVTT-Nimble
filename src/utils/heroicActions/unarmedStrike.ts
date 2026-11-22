@@ -51,6 +51,7 @@ import {
 	rollTypedOfferDamage,
 } from '../../managers/itemActivation/offerBonus.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { freeAttackNote } from '../../view/dialogs/components/rollSpendLine.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
 /**
@@ -73,6 +74,14 @@ export interface RollUnarmedStrikeOptions {
 	ignoresRushed?: boolean;
 	/** Up to this many targets share one attack: one roll, each target's armor, miss and crit as normal. */
 	sharedTargets?: number;
+}
+
+function originName(uuid: string | undefined): string {
+	if (!uuid) return '';
+	return (
+		(fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]) as { name?: string } | null)?.name ??
+		''
+	);
 }
 
 function buildRollFormula(
@@ -173,6 +182,9 @@ export async function rollUnarmedStrike(
 		rushedAttack: rushed > 0 ? rushed + 1 : undefined,
 		...(rollModeChange.ignoreDisadvantage ? { ignoreDisadvantage: true } : {}),
 		...(origin ? { attackOrigin: origin.identifier } : {}),
+		...(options.free && origin
+			? { attackNote: freeAttackNote(originName(origin.uuid), options.ignoresRushed === true) }
+			: {}),
 		spendsActions:
 			options.rollMode === undefined &&
 			!options.free &&

@@ -305,6 +305,7 @@ describe('GrantedActionOffers', () => {
 		expect(activateItem).toHaveBeenCalledWith('sword', {
 			originUuid: 'Item.source',
 			skipActionDeduction: true,
+			grantedFree: true,
 			ignoresRushed: true,
 		});
 	});

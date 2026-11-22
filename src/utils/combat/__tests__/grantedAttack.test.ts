@@ -142,6 +142,7 @@ describe('an attack from a granted attack line', () => {
 		expect(activateItem).toHaveBeenCalledWith('Longsword', {
 			originUuid: 'Item.granting',
 			skipActionDeduction: true,
+			grantedFree: true,
 			ignoresRushed: true,
 		});
 	});
@@ -159,6 +160,7 @@ describe('an attack from a granted attack line', () => {
 		expect(activateItem).toHaveBeenCalledWith('Fire Bolt', {
 			originUuid: 'Item.granting',
 			skipActionDeduction: true,
+			grantedFree: true,
 		});
 	});
 
@@ -262,6 +264,7 @@ describe('an attack from a granted attack line', () => {
 				originUuid: 'Item.granting',
 				sharedTargets: 3,
 				skipActionDeduction: true,
+				grantedFree: true,
 			});
 		});
 

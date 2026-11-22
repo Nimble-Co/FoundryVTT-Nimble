@@ -33,3 +33,11 @@ export function rollSpendLine(
 	if (sacrifice) return localize('NIMBLE.rollWindow.sacrifices', { cost: sacrifice });
 	return spent ? localize('NIMBLE.rollWindow.spends', { cost: spent }) : '';
 }
+
+/** "A free attack (Swiftstrike): it spends no action.", with the Rushed Attack note when it ignores them. */
+export function freeAttackNote(source: string, ignoresRushed: boolean): string {
+	if (!source) return '';
+	return localize(`NIMBLE.rollWindow.${ignoresRushed ? 'freeAttackNoRushed' : 'freeAttack'}`, {
+		source,
+	});
+}
