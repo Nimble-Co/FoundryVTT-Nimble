@@ -409,6 +409,45 @@ describe('the card of a feature attack with a weapon', () => {
 		expect(cardOf(feature).flags[SYSTEM_ID].weaponUuid).toBe('unarmedStrike');
 	});
 
+	describe('of a melee feature that can use any weapon, with a Longbow', () => {
+		function activateWithLongbow() {
+			const actor = hero();
+			const bow = longbow(actor);
+			bow.system.activation.targets.distance = 1;
+			Object.assign(bow.system.properties, {
+				selected: ['range', 'twoHanded'],
+				range: { min: 2, max: 16 },
+				reach: { min: 1, max: 2 },
+			});
+			findItems(actor);
+			const feature = incendiaryShot(actor, 'any');
+			feature.system.activation.targets = { attackType: 'reach', distance: 1, count: 1 };
+			return feature;
+		}
+
+		it('gives the use hooks the ranged attack of the Longbow', async () => {
+			const feature = activateWithLongbow();
+
+			await feature.activate();
+
+			const hookContext = feature._createActivationCard.mock.calls[0]?.[3] as {
+				activation?: { targets?: { attackType?: string } };
+			};
+			expect(hookContext.activation?.targets?.attackType).toBe('range');
+		});
+
+		it('has the range of the Longbow on the card', async () => {
+			const feature = activateWithLongbow();
+
+			await feature.activate();
+
+			const card = cardOf(feature) as unknown as {
+				system: { activation: { targets: { attackType?: string; distance?: number } } };
+			};
+			expect(card.system.activation.targets).toMatchObject({ attackType: 'range', distance: 16 });
+		});
+	});
+
 	it('records no weapon for a feature with its own damage', async () => {
 		const actor = hero();
 		longbow(actor);

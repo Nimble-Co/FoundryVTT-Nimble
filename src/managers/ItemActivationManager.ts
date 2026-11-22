@@ -326,21 +326,26 @@ class ItemActivationManager {
 	/** The weapon choice of an ability that attacks with a weapon. */
 	#chosenWeapon: WeaponOption | null = null;
 
-	/**
-	 * The weapon the player chose, else the first fitting one (equipped first). False, with a
-	 * warning, when no weapon fits.
-	 */
-	#pickWeapon(dialogData: ItemActivationManager.DialogData): boolean {
+	/** The weapons an ability that attacks with a weapon can use. */
+	#weaponOptions: WeaponOption[] = [];
+
+	/** False, with a warning, when the ability attacks with a weapon and no weapon fits. */
+	#hasFittingWeapon(): boolean {
 		const attack = weaponAttackOf(this.#item);
 		if (!attack) return true;
-		const weapons = weaponOptionsFor(this.actor, attack);
-		this.#chosenWeapon =
-			weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0] ?? null;
-		if (this.#chosenWeapon) return true;
+		this.#weaponOptions = weaponOptionsFor(this.actor, attack);
+		if (this.#weaponOptions.length > 0) return true;
 		ui.notifications?.warn(
 			localize('NIMBLE.rollWindow.noWeaponFor', { item: this.#item.name ?? '' }),
 		);
 		return false;
+	}
+
+	/** The weapon the player chose, else the first fitting one (equipped first). */
+	#pickWeapon(dialogData: ItemActivationManager.DialogData): void {
+		const weapons = this.#weaponOptions;
+		this.#chosenWeapon =
+			weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0] ?? null;
 	}
 
 	/**
@@ -534,11 +539,13 @@ class ItemActivationManager {
 			attackOrigin: this.origin.identifier,
 		};
 
+		if (!this.#hasFittingWeapon()) return { activation: null, rolls: null };
+
 		const dialogData = await this.#resolveDialogData(rollOptions);
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
-		if (!this.#pickWeapon(dialogData)) return { activation: null, rolls: null };
+		this.#pickWeapon(dialogData);
 
 		this.resourceCosts = await settleResourceCosts(
 			this.actor,

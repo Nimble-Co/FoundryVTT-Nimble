@@ -386,6 +386,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
 			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
 			 * @param {Token[]} context.targets   The targets of the item use
+			 * @param {Object} context.activation The activation the use was made with, after the weapon pick
 			 * @param {Object} [context.eventHost] With no card: where the lines of the use went
 			 */
 			// @ts-expect-error - nimble.useItem is custom
@@ -444,6 +445,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 		const useContext = {
+			activation,
 			freeUse: manager.freeUse,
 			...(manager.free ? { free: manager.free } : {}),
 			...this._useContext(manager),
@@ -459,6 +461,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
 		 * @param {boolean} [context.isMiss] Whether the item use resulted in a miss
 		 * @param {Token[]} context.targets The targets of the item use
+		 * @param {Object} context.activation The activation the use is made with, after the weapon pick
 		 * @returns {boolean}  Explicitly return `false` to prevent the item from being used.
 		 */
 		// @ts-expect-error - nimble.preUseItem is a custom hook

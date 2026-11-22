@@ -3466,6 +3466,18 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			);
 		});
 
+		it('does not open the window, and says why, when no weapon fits', async () => {
+			dialogState.result = { rollMode: 0 };
+
+			const result = await attackWith('ranged', [weapon('Dagger', '1d4', 'reach', true)]);
+
+			expect(result).toEqual({ activation: null, rolls: null });
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(ui.notifications?.warn).toHaveBeenCalledWith(
+				'Test Item: you have no weapon of this kind.',
+			);
+		});
+
 		it('rolls the first equipped weapon on a fast forward', async () => {
 			await attackWith(
 				'ranged',

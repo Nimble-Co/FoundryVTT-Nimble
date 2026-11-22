@@ -1,5 +1,4 @@
 import type {
-	AttackDelivery,
 	AutoBonusSummary,
 	SpendableChargePool,
 	SpendablePool,
@@ -8,21 +7,8 @@ import type {
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import { getChargeConsumers, getFixedChargeCostsByPool } from '#utils/chargePool/helpers.js';
 import type { CharacterActorLike, RuleBackedItem } from '#utils/chargePool/types.js';
-import { type AttackActivation, deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
-
-/**
- * Read the activation's attack delivery (melee / ranged / null) from the
- * item's activation targets. The manager reads the same shape off its
- * post-upcast activation data instead of off the item.
- */
-export function getAttackDeliveryFromActivation(item: Item): AttackDelivery {
-	return deliveryOfAttack(
-		(item.system as { activation?: AttackActivation } | undefined)?.activation,
-		item.actor,
-	);
-}
 
 /**
  * Snapshot the actor's rolled dice pools that currently have rolled faces.

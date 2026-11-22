@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js';
 
 const conditionalBonuses = vi.fn(() => []);
+const dicePools = vi.fn((): unknown[] => []);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let createState: typeof import('../itemActivationConfigDialogState.svelte.ts').createItemActivationConfigDialogState;
@@ -14,6 +15,10 @@ beforeAll(async () => {
 	vi.resetModules();
 	vi.doMock('#utils/actor/conditionalBonuses.js', () => ({
 		getActiveConditionalBonuses: conditionalBonuses,
+	}));
+	vi.doMock('#utils/dicePool/dicePoolSync.js', async (importOriginal) => ({
+		...(await importOriginal<object>()),
+		getPools: dicePools,
 	}));
 	({ createItemActivationConfigDialogState: createState } = await import(
 		'../itemActivationConfigDialogState.svelte.ts'
@@ -830,6 +835,93 @@ describe('the activation dialog weapon pick', () => {
 			['range', 'Shortbow'],
 			['reach', 'Dagger'],
 		]);
+	});
+
+	it('adds a ranged-only bonus pool while a ranged weapon is chosen, and not for a melee one', () => {
+		dicePools.mockReturnValue([
+			{
+				id: 'volley',
+				identifier: 'volley',
+				label: 'Volley',
+				dieSize: 'd6',
+				faces: [4],
+				consumption: 'autoBonus',
+				bonusOnAttackDelivery: 'ranged',
+			},
+		]);
+		const state = open('any', [weapon('Shortbow', 'range', true), weapon('Dagger', 'reach', true)]);
+		dicePools.mockReturnValue([]);
+
+		expect(state.autoBonusSummaries.map((pool) => pool.label)).toEqual(['Volley']);
+		state.weaponUuid = 'Item.Dagger';
+		expect(state.autoBonusSummaries).toEqual([]);
+	});
+
+	describe('and a melee-only Held Change, with Feature Effects off', () => {
+		const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+		let realSettings: unknown;
+		const KEY = 'Actor.hero.opening.opening-rule';
+
+		afterEach(() => {
+			gameGlobal.game.settings = realSettings;
+		});
+
+		function openWithOpening() {
+			realSettings = gameGlobal.game.settings;
+			gameGlobal.game.settings = {
+				get: (_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+			};
+			user.targets = new Set();
+			const items = [weapon('Shortbow', 'range', true), weapon('Dagger', 'reach', true)];
+			return createState({
+				actor: () =>
+					({
+						uuid: 'Actor.hero',
+						type: 'character',
+						rules: [],
+						system: {},
+						items: Object.assign([...items], { contents: items }),
+						getFlag: () => undefined,
+						effects: [
+							{
+								id: 'opening',
+								name: 'Create an Opening',
+								origin: null,
+								flags: {},
+								system: {
+									rules: [
+										{
+											id: 'opening-rule',
+											type: 'heldRoll',
+											heldKind: 'advantage',
+											value: 1,
+											whichRoll: 'holderAttacks',
+											meleeOnly: true,
+										},
+									],
+								},
+							},
+						],
+					}) as never,
+				item: () => feature('any') as never,
+				hideRollsDefault: false,
+			});
+		}
+
+		it('lists the change only while a melee weapon is chosen, and takes back its tick', () => {
+			const state = openWithOpening();
+			expect(state.heldLines).toEqual([]);
+
+			state.weaponUuid = 'Item.Dagger';
+			expect(state.heldLines.map((line) => line.key)).toEqual([KEY]);
+			state.chosenHeldChanges = [KEY];
+			expect(state.selectedRollMode).toBe(1);
+
+			state.weaponUuid = 'Item.Shortbow';
+			expect(state.heldLines).toEqual([]);
+			expect(state.chosenHeldChanges).toEqual([]);
+			expect(state.selectedRollMode).toBe(0);
+		});
 	});
 
 	it('cannot roll with no weapon that fits', () => {

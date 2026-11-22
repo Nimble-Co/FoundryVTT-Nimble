@@ -20,7 +20,11 @@ import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
-import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import {
+	type AttackActivation,
+	deliveryOfAttack,
+	matchesAttackDelivery,
+} from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
@@ -45,7 +49,6 @@ import {
 	extractRolledPools,
 	extractSpendableChargePools,
 	extractVariableChargeSpends,
-	getAttackDeliveryFromActivation,
 } from './itemActivationConfigDialogHelpers.js';
 import { resourceAmounts } from './resourceAmounts.svelte.ts';
 import { useOptionSplits } from './useOptionSplits.svelte.ts';
@@ -105,21 +108,12 @@ export function createItemActivationConfigDialogState(
 		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
 	});
 
-	const attackDelivery: AttackDelivery = getAttackDeliveryFromActivation(item);
-
 	const allRolledPools = extractRolledPools(actor);
 	const spendablePools: SpendablePool[] = allRolledPools.filter(
 		(pool) => pool.consumption !== 'autoBonus',
 	);
-	const autoBonusPools: SpendablePool[] = allRolledPools.filter(
-		(pool) =>
-			pool.consumption === 'autoBonus' &&
-			matchesAttackDelivery(pool.bonusOnAttackDelivery, attackDelivery),
-	);
 	const spendableChargePools: SpendableChargePool[] = extractSpendableChargePools(actor);
 	const variableChargeSpends: VariableChargeSpend[] = extractVariableChargeSpends(actor, item);
-	const autoBonusSummaries: AutoBonusSummary[] = buildAutoBonusSummaries(autoBonusPools);
-	const autoBonusFormula: string = buildAutoBonusFormula(autoBonusPools);
 
 	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
 	// advantage and bonus damage. Snapshot what applies against the target at
@@ -191,6 +185,23 @@ export function createItemActivationConfigDialogState(
 					targets: { ...itemSystem.activation?.targets, attackType: weapon.attackType },
 				}
 			: itemSystem.activation;
+	const heldItemWith = (weapon: { attackType: string } | null) =>
+		({ system: { activation: activationWith(weapon) } }) as Parameters<typeof held.reread>[0];
+	if (weapons[0]) held.reread(heldItemWith(weapons[0]));
+
+	const attackDelivery: AttackDelivery = $derived(
+		deliveryOfAttack(activationWith(chosenWeapon) as AttackActivation | undefined, actor),
+	);
+	const autoBonusPools: SpendablePool[] = $derived(
+		allRolledPools.filter(
+			(pool) =>
+				pool.consumption === 'autoBonus' &&
+				matchesAttackDelivery(pool.bonusOnAttackDelivery, attackDelivery),
+		),
+	);
+	const autoBonusSummaries: AutoBonusSummary[] = $derived(buildAutoBonusSummaries(autoBonusPools));
+	const autoBonusFormula: string = $derived(buildAutoBonusFormula(autoBonusPools));
+
 	const conditionLinesFor = (weapon: { attackType: string } | null) =>
 		attackConditionLines(
 			actor,
@@ -233,6 +244,7 @@ export function createItemActivationConfigDialogState(
 	function chooseWeapon(uuid: string | null) {
 		weaponUuid = uuid;
 		const weapon = weapons.find((each) => each.uuid === uuid) ?? null;
+		held.reread(heldItemWith(weapon));
 		const own = selectedRollMode - Object.values(appliedTicks).reduce((sum, step) => sum + step, 0);
 		conditionLines = conditionLinesFor(weapon);
 		const reopened = openRollModeTicks(own, conditionRollModeOptions(conditionLines));
@@ -537,7 +549,9 @@ export function createItemActivationConfigDialogState(
 			return unpaid ? localize('NIMBLE.rollWindow.noCharge', { pool: unpaid.label }) : '';
 		},
 		keptAmount,
-		heldLines: held.lines,
+		get heldLines() {
+			return held.lines;
+		},
 		choosesHeldChanges: held.choosing,
 		get chosenHeldChanges() {
 			return held.chosen;
@@ -617,7 +631,9 @@ export function createItemActivationConfigDialogState(
 		spendablePools,
 		spendableChargePools,
 		variableChargeSpends,
-		autoBonusSummaries,
+		get autoBonusSummaries() {
+			return autoBonusSummaries;
+		},
 		get conditionalBonusOptions() {
 			return conditionalBonusOptions;
 		},

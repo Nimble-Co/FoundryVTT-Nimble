@@ -17,24 +17,39 @@ export function heldChangeChoice(
 	slider: { get(): number; set(mode: number): void },
 ) {
 	const choosing = !isRuleAutomationEnabled();
-	const lines = heldLinesForItem(actor, item, { ignoresDisadvantage, choosing });
-	const rollModeTicks = lines.flatMap((line) =>
-		line.rollMode ? [{ key: line.key, value: line.rollMode }] : [],
+	const linesFor = (each: ActivatedItem) =>
+		heldLinesForItem(actor, each, { ignoresDisadvantage, choosing });
+	let lines = $state(linesFor(item));
+	const rollModeTicks = $derived(
+		lines.flatMap((line) => (line.rollMode ? [{ key: line.key, value: line.rollMode }] : [])),
 	);
 	let chosen = $state<string[]>([]);
 	let ticks = $state<AppliedTicks>({});
 
+	function choose(keys: string[]) {
+		const moved = tickChosen(slider.get(), ticks, rollModeTicks, keys);
+		slider.set(moved.mode);
+		ticks = moved.applied;
+		chosen = keys;
+	}
+
 	return {
 		choosing,
-		lines,
+		get lines() {
+			return lines;
+		},
 		get chosen() {
 			return chosen;
 		},
 		set chosen(keys: string[]) {
-			const moved = tickChosen(slider.get(), ticks, rollModeTicks, keys);
-			slider.set(moved.mode);
-			ticks = moved.applied;
-			chosen = keys;
+			choose(keys);
+		},
+		/** The lines of the item as it now attacks. A ticked change that leaves the lines is unticked. */
+		reread(next: ActivatedItem) {
+			const nextLines = linesFor(next);
+			const staying = chosen.filter((key) => nextLines.some((line) => line.key === key));
+			if (staying.length < chosen.length) choose(staying);
+			lines = nextLines;
 		},
 		/** The roll mode steps that the ticked changes add to the roll. */
 		get rollMode() {

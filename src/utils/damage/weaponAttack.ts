@@ -22,6 +22,11 @@ interface WeaponEffect {
 	damageType?: string;
 }
 
+interface Span {
+	min?: number | null;
+	max?: number | null;
+}
+
 interface WeaponItem {
 	id?: string | null;
 	uuid?: string;
@@ -30,6 +35,7 @@ interface WeaponItem {
 	system?: {
 		objectType?: string;
 		equipped?: boolean;
+		properties?: { selected?: string[]; range?: Span; reach?: Span };
 		activation?: {
 			effects?: WeaponEffect[];
 			targets?: { attackType?: string; distance?: number };
@@ -49,6 +55,20 @@ export interface WeaponOption {
 
 const firstDamage = (item: WeaponItem) =>
 	item.system?.activation?.effects?.find((effect) => effect.type === 'damage');
+
+/** The weapon's Range or Reach property for its attack type, else the distance of its targets. */
+function weaponDistanceOf(item: WeaponItem): number | undefined {
+	const targets = item.system?.activation?.targets;
+	const properties = item.system?.properties;
+	const key =
+		targets?.attackType === 'range' ? 'range' : targets?.attackType === 'reach' ? 'reach' : null;
+	if (key && properties?.selected?.includes(key)) {
+		const span = properties[key];
+		const distance = span?.max || span?.min;
+		if (distance) return distance;
+	}
+	return targets?.distance;
+}
 
 /** The ability's kind of weapon, or empty for an ability with its own damage. */
 export function weaponAttackOf(item: unknown): WeaponAttack {
@@ -91,6 +111,7 @@ export function weaponOptionsFor(
 		if (item.type !== 'object' || item.system?.objectType !== 'weapon') continue;
 		const damage = firstDamage(item);
 		const targets = item.system.activation?.targets;
+		const distance = weaponDistanceOf(item);
 		const delivery = deliveryOfAttack(item.system.activation, actor);
 		if (!damage?.formula || (attack !== 'any' && delivery !== attack)) continue;
 		options.push({
@@ -99,7 +120,7 @@ export function weaponOptionsFor(
 			formula: damage.formula,
 			damageType: damage.damageType ?? '',
 			attackType: targets?.attackType ?? '',
-			...(targets?.distance === undefined ? {} : { distance: targets.distance }),
+			...(distance === undefined ? {} : { distance }),
 			equipped: item.system.equipped === true,
 		});
 	}
