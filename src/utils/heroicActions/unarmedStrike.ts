@@ -21,6 +21,7 @@ import {
 import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDice.js';
 import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
+import { UNARMED_STRIKE_ATTACK } from '#utils/damage/weaponAttack.js';
 import { attackHeldPlanOf } from '#utils/heldChange/attackHeldPlan.js';
 import { firstTargetActor } from '#utils/heldChange/heldChange.js';
 import { heldChosenOf, keptAmountOfRoll } from '#utils/heldChange/heldChoice.js';
@@ -39,11 +40,10 @@ import { isActionTrackingAutomationEnabled } from '../../settings/automationSett
 import { statsInFormula } from '../reroll/rollStat.js';
 
 /**
- * An unarmed strike is a melee attack at reach 1. The posted card declares it
- * so anything reading the card back (the GM-side spend re-validation) agrees
- * with the card's own top-level attack type.
+ * The posted card declares the attack type so anything reading the card back (the GM-side spend
+ * re-validation) agrees with the card's own top-level attack type.
  */
-const UNARMED_STRIKE_ATTACK_TYPE = 'reach';
+const UNARMED_STRIKE_ATTACK_TYPE = UNARMED_STRIKE_ATTACK.attackType;
 const UNARMED_STRIKE_IMG = 'icons/skills/melee/unarmed-punch-fist.webp';
 
 export interface RollUnarmedStrikeOptions {

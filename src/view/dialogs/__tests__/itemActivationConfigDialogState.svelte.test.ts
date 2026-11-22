@@ -681,3 +681,78 @@ describe('the activation dialog amount of a variable cost', () => {
 		expect(open([rolled as never]).spendLine).toBe('When you roll, you sacrifice 1d4 Wounds.');
 	});
 });
+
+describe('the activation dialog weapon pick', () => {
+	const weapon = (name: string, attackType: string, equipped: boolean) => ({
+		uuid: `Item.${name}`,
+		name,
+		type: 'object',
+		flags: {},
+		system: {
+			objectType: 'weapon',
+			equipped,
+			activation: {
+				targets: { attackType },
+				effects: [{ type: 'damage', formula: '1d6', damageType: 'piercing' }],
+			},
+		},
+	});
+	const feature = (weaponAttack: string) => ({
+		type: 'feature',
+		system: {
+			activation: {
+				weaponAttack,
+				targets: {},
+				effects: [{ id: 'd', type: 'damage', formula: '0', canCrit: true, canMiss: true }],
+			},
+		},
+	});
+
+	function open(weaponAttack: string, items: object[]) {
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({
+					type: 'character',
+					rules: [],
+					system: {},
+					items: Object.assign([...items], { contents: items }),
+					getFlag: () => undefined,
+				}) as never,
+			item: () => feature(weaponAttack) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	const groupNames = (state: ReturnType<typeof open>) =>
+		state.weaponGroups.map((group) => [group.label, group.weapons.map((each) => each.name)]);
+
+	it('groups the equipped and the not equipped weapons, and starts on the first equipped one', () => {
+		const state = open('any', [
+			weapon('Longbow', 'range', false),
+			weapon('Shortbow', 'range', true),
+			weapon('Greataxe', 'reach', false),
+			weapon('Dagger', 'reach', true),
+		]);
+
+		expect(groupNames(state)).toEqual([
+			['Equipped', ['Shortbow', 'Dagger', 'Unarmed Strike']],
+			['Not equipped', ['Longbow', 'Greataxe']],
+		]);
+		expect(state.weaponUuid).toBe('Item.Shortbow');
+	});
+
+	it('has no headings when only one group has a weapon', () => {
+		expect(groupNames(open('ranged', [weapon('Longbow', 'range', false)]))).toEqual([
+			[null, ['Longbow']],
+		]);
+		expect(groupNames(open('melee', []))).toEqual([[null, ['Unarmed Strike']]]);
+	});
+
+	it('cannot roll with no weapon that fits', () => {
+		const state = open('ranged', [weapon('Dagger', 'reach', true)]);
+
+		expect(state.weaponGroups).toEqual([]);
+		expect(state.cannotRollReason).toBe('You have no weapon of this kind.');
+	});
+});

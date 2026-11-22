@@ -54,6 +54,7 @@ import {
 	getDamageBonusFormulas,
 	getDamageBonusParts,
 	getDamageBonusTotal,
+	hasUnarmedProficiency,
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
 import {
@@ -67,7 +68,13 @@ import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
-import { useWeaponDamage, weaponAttackOf, weaponOptionsFor } from '../utils/damage/weaponAttack.js';
+import {
+	UNARMED_STRIKE,
+	useWeaponDamage,
+	type WeaponOption,
+	weaponAttackOf,
+	weaponOptionsFor,
+} from '../utils/damage/weaponAttack.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -313,17 +320,35 @@ class ItemActivationManager {
 	/** The Max Damage rule the player ticked, and the choice that came with it. */
 	#maxDamage: ActiveMaxDamage | null = null;
 
+	/** The weapon choice of an ability that attacks with a weapon. */
+	#chosenWeapon: WeaponOption | null = null;
+
+	/**
+	 * The weapon the player chose, else the first fitting one (equipped first). False, with a
+	 * warning, when no weapon fits.
+	 */
+	#pickWeapon(dialogData: ItemActivationManager.DialogData): boolean {
+		const attack = weaponAttackOf(this.#item);
+		if (!attack) return true;
+		const weapons = weaponOptionsFor(this.actor, attack);
+		this.#chosenWeapon =
+			weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0] ?? null;
+		if (this.#chosenWeapon) return true;
+		ui.notifications?.warn(
+			localize('NIMBLE.rollWindow.noWeaponFor', { item: this.#item.name ?? '' }),
+		);
+		return false;
+	}
+
 	/**
 	 * An ability that attacks with a weapon rolls that weapon's damage, and the
 	 * attack has its reach or range and its kind of damage.
 	 */
-	#applyChosenWeapon(dialogData: ItemActivationManager.DialogData): void {
-		const attack = weaponAttackOf(this.#item);
-		if (!attack) return;
-		const weapons = weaponOptionsFor(this.actor, attack);
-		const weapon = weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0];
+	#applyChosenWeapon(): void {
+		const weapon = this.#chosenWeapon;
 		if (!weapon) return;
-		this.#weapon = fromUuidSync(weapon.uuid as never) as never;
+		this.#weapon =
+			weapon.uuid === UNARMED_STRIKE ? null : (fromUuidSync(weapon.uuid as never) as never);
 		this.activationData.targets = {
 			...this.activationData.targets,
 			attackType: weapon.attackType,
@@ -487,6 +512,7 @@ class ItemActivationManager {
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
+		if (!this.#pickWeapon(dialogData)) return { activation: null, rolls: null };
 
 		this.resourceCosts = await settleResourceCosts(
 			this.actor,
@@ -633,7 +659,7 @@ class ItemActivationManager {
 
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
-		this.#applyChosenWeapon(dialogData);
+		this.#applyChosenWeapon();
 
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getSoleTargetToken(),
@@ -815,10 +841,10 @@ class ItemActivationManager {
 					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
-					const lacksProficiency = !hasWeaponProficiency(
-						this.actor as any,
-						(this.#weapon ?? this.#item) as any,
-					);
+					const lacksProficiency =
+						this.#chosenWeapon?.uuid === UNARMED_STRIKE
+							? !hasUnarmedProficiency(this.actor as any)
+							: !hasWeaponProficiency(this.actor as any, (this.#weapon ?? this.#item) as any);
 
 					const resolvedCanCrit =
 						isAoE || multiTarget || isMinion || isFlunky || lacksProficiency

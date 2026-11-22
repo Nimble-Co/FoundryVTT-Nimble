@@ -5737,7 +5737,10 @@
 		},
 		"rollWindow": {
 			"weapon": "Weapon",
-			"noWeapon": "Equip a weapon of this kind first.",
+			"weaponsEquipped": "Equipped",
+			"weaponsNotEquipped": "Not equipped",
+			"noWeapon": "You have no weapon of this kind.",
+			"noWeaponFor": "{item}: you have no weapon of this kind.",
 			"noCharge": "{pool}: none left.",
 			"spendsCharge": "{pool}: this roll spends {count} ({left} left).",
 			"lessMana": "Spend 1 less mana",
@@ -5973,12 +5976,13 @@
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",
 			"weaponAttack": "Attack with a weapon",
-			"weaponAttackHint": "The roll window asks which equipped weapon. The damage node rolls the damage of that weapon, with its reach or range and its damage type.",
+			"weaponAttackHint": "The roll window asks which weapon, equipped or not. A melee or any weapon attack can also use an Unarmed Strike. The damage node rolls the damage of that weapon, with its reach or range and its damage type.",
 			"weaponAttacks": {
 				"none": "No, it has its own damage",
-				"any": "Any equipped weapon",
+				"any": "Any weapon",
 				"melee": "A melee weapon",
-				"ranged": "A ranged weapon"
+				"ranged": "A ranged weapon",
+				"unarmed": "An Unarmed Strike"
 			},
 			"singleTargetAttack": "Extra targets share one attack",
 			"singleTargetAttackHint": "The extra targets do not make this a Multi-target Attack: it can miss and crit, and the first target decides the rules that read the target.",

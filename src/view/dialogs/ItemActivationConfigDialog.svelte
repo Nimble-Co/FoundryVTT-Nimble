@@ -134,8 +134,18 @@
 		<div class="fld">
 			<span class="lb">{localize('NIMBLE.rollWindow.weapon')}</span>
 			<select bind:value={state.weaponUuid} aria-label={localize('NIMBLE.rollWindow.weapon')}>
-				{#each state.weapons as weapon (weapon.uuid)}
-					<option value={weapon.uuid}>{weapon.name}</option>
+				{#each state.weaponGroups as group (group.label)}
+					{#if group.label}
+						<optgroup label={group.label}>
+							{#each group.weapons as weapon (weapon.uuid)}
+								<option value={weapon.uuid}>{weapon.name}</option>
+							{/each}
+						</optgroup>
+					{:else}
+						{#each group.weapons as weapon (weapon.uuid)}
+							<option value={weapon.uuid}>{weapon.name}</option>
+						{/each}
+					{/if}
 				{/each}
 			</select>
 		</div>

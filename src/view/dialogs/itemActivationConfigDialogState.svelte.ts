@@ -24,7 +24,7 @@ import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
-import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
+import { type WeaponOption, weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
 import {
@@ -51,6 +51,24 @@ import { resourceAmounts } from './resourceAmounts.svelte.ts';
 import { useOptionSplits } from './useOptionSplits.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
+
+/** A group of the weapon dropdown. The label is null when the dropdown has one group only. */
+export interface WeaponGroup {
+	label: string | null;
+	weapons: WeaponOption[];
+}
+
+function groupWeapons(weapons: WeaponOption[]): WeaponGroup[] {
+	const equipped = weapons.filter((weapon) => weapon.equipped);
+	const notEquipped = weapons.filter((weapon) => !weapon.equipped);
+	if (equipped.length === 0 || notEquipped.length === 0) {
+		return weapons.length > 0 ? [{ label: null, weapons }] : [];
+	}
+	return [
+		{ label: localize('NIMBLE.rollWindow.weaponsEquipped'), weapons: equipped },
+		{ label: localize('NIMBLE.rollWindow.weaponsNotEquipped'), weapons: notEquipped },
+	];
+}
 
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
@@ -154,6 +172,7 @@ export function createItemActivationConfigDialogState(
 
 	const weaponAttack = weaponAttackOf(item);
 	const weapons = weaponOptionsFor(actor, weaponAttack);
+	const weaponGroups = groupWeapons(weapons);
 	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
 	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
 
@@ -470,6 +489,7 @@ export function createItemActivationConfigDialogState(
 			maxDamageChoice = value;
 		},
 		weapons,
+		weaponGroups,
 		needsWeapon: weaponAttack !== '',
 		get weaponUuid() {
 			return weaponUuid;

@@ -1,8 +1,20 @@
 import type { WeaponAttack } from '#types/weaponAttack.d.ts';
+import localize from '#utils/localize.js';
 import { deliveryOfAttack } from './attackDelivery.js';
+import { getUnarmedDamageFormula } from './attackUtils.js';
 
 /** Which weapons an ability attacks with. Empty: the ability has its own damage. */
-export const WEAPON_ATTACKS = ['', 'any', 'melee', 'ranged'] as const;
+export const WEAPON_ATTACKS = ['', 'any', 'melee', 'ranged', 'unarmed'] as const;
+
+/** The weapon choice that is the hero's Unarmed Strike, in place of a weapon uuid. */
+export const UNARMED_STRIKE = 'unarmedStrike';
+
+/** An Unarmed Strike is a melee attack at Reach 1 with bludgeoning damage. */
+export const UNARMED_STRIKE_ATTACK = {
+	attackType: 'reach',
+	distance: 1,
+	damageType: 'bludgeoning',
+} as const;
 
 interface WeaponEffect {
 	type?: string;
@@ -32,6 +44,7 @@ export interface WeaponOption {
 	damageType: string;
 	attackType: string;
 	distance?: number;
+	equipped: boolean;
 }
 
 const firstDamage = (item: WeaponItem) =>
@@ -44,16 +57,38 @@ export function weaponAttackOf(item: unknown): WeaponAttack {
 	return value ?? '';
 }
 
-/** The equipped weapons this ability can attack with. */
+interface WeaponOwner {
+	type?: string | null;
+	system?: unknown;
+	items?: Iterable<WeaponItem>;
+}
+
+/** The hero's Unarmed Strike as a weapon choice. Its damage bonuses come with the attack roll. */
+function unarmedStrikeOption(actor: WeaponOwner): WeaponOption {
+	return {
+		uuid: UNARMED_STRIKE,
+		name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
+		formula: getUnarmedDamageFormula(actor as Parameters<typeof getUnarmedDamageFormula>[0]),
+		...UNARMED_STRIKE_ATTACK,
+		equipped: true,
+	};
+}
+
+/**
+ * Every weapon this ability can attack with: the equipped ones, then a hero's Unarmed Strike for
+ * a melee, any or unarmed ability, then the weapons that are not equipped.
+ */
 export function weaponOptionsFor(
-	actor: { type?: string | null; items?: Iterable<WeaponItem> } | null | undefined,
+	actor: WeaponOwner | null | undefined,
 	attack: WeaponAttack,
 ): WeaponOption[] {
 	if (!attack) return [];
+	const unarmed =
+		actor?.type === 'character' && attack !== 'ranged' ? [unarmedStrikeOption(actor)] : [];
+	if (attack === 'unarmed') return unarmed;
 	const options: WeaponOption[] = [];
 	for (const item of actor?.items ?? []) {
 		if (item.type !== 'object' || item.system?.objectType !== 'weapon') continue;
-		if (item.system.equipped !== true) continue;
 		const damage = firstDamage(item);
 		const targets = item.system.activation?.targets;
 		const delivery = deliveryOfAttack(item.system.activation, actor);
@@ -65,9 +100,14 @@ export function weaponOptionsFor(
 			damageType: damage.damageType ?? '',
 			attackType: targets?.attackType ?? '',
 			...(targets?.distance === undefined ? {} : { distance: targets.distance }),
+			equipped: item.system.equipped === true,
 		});
 	}
-	return options;
+	return [
+		...options.filter((option) => option.equipped),
+		...unarmed,
+		...options.filter((option) => !option.equipped),
+	];
 }
 
 interface EffectTreeNode {
