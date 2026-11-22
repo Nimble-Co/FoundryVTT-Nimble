@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getPrimaryDieBreakdown } from '../../view/chat/components/RollSummary.svelte.ts';
+import { damageRollDetails } from '../../view/chat/components/damageRollDetails.ts';
 import { DamageRoll } from '../DamageRoll.js';
 import { changeOneDie, rerollOneDie } from '../oneDieReroll.js';
 import type { PrimaryDie } from '../terms/PrimaryDie.js';
@@ -33,7 +33,9 @@ function attack(
 }
 
 const breakdown = (roll: DamageRoll) =>
-	getPrimaryDieBreakdown({ rollOptions: { ...roll.options }, roll: roll as never })?.text ?? null;
+	damageRollDetails({ rollOptions: { ...roll.options }, roll: roll as never }).find(
+		(line) => line.id === 'primaryDie',
+	)?.text ?? null;
 
 const draws = (...values: number[]) => {
 	const queue = [...values];
@@ -56,7 +58,7 @@ describe('a Change a Die set on a Primary Die with a bonus', () => {
 			data.class === 'Roll' ? data : roll) as never);
 	}
 
-	it('makes a set 1 the final face: a miss, with no breakdown line', async () => {
+	it('makes a set 1 the final face: a miss, with the bonus shown as not added', async () => {
 		const roll = attack(4);
 		inPlace(roll);
 		expect(breakdown(roll)).toBe('Primary Die: 4 + 1 = 5');
@@ -66,7 +68,7 @@ describe('a Change a Die set on a Primary Die with a bonus', () => {
 		expect(roll.primaryDie?.results[0].result).toBe(1);
 		expect(roll.isMiss).toBe(true);
 		expect(roll.options.primaryDieBonusOff).toBe(true);
-		expect(breakdown(roll)).toBeNull();
+		expect(breakdown(roll)).toBe('Primary Die: 1, the set result replaces +1');
 	});
 
 	it('makes a set max a crit', async () => {
@@ -102,7 +104,7 @@ describe('a Change a Die set on a Primary Die with a bonus', () => {
 		expect(breakdown(roll)).toBe('Primary Die: 3 + 1 = 4');
 	});
 
-	it('moves the face an add finds, and still shows no breakdown line', async () => {
+	it('moves the face an add finds, and still shows the bonus as not added', async () => {
 		const roll = attack(4);
 		inPlace(roll);
 		await changeOneDie(roll, PRIMARY, { mode: 'set', value: 2 });
@@ -111,7 +113,7 @@ describe('a Change a Die set on a Primary Die with a bonus', () => {
 
 		expect(roll.primaryDie?.results[0].result).toBe(3);
 		expect(roll.options.primaryDieBonusOff).toBe(true);
-		expect(breakdown(roll)).toBeNull();
+		expect(breakdown(roll)).toBe('Primary Die: 3, the set result replaces +1');
 	});
 
 	it('puts the bonus back with a later set that adds it', async () => {

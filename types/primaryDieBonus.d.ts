@@ -2,4 +2,6 @@
 export interface PrimaryDieBonusLine {
 	label: string;
 	value: number;
+	/** The document that added the bonus, for a link. */
+	itemUuid?: string;
 }

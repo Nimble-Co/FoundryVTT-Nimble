@@ -95,8 +95,11 @@ function buildOffer(input: MovementOfferCardInput): BuiltOffer | null {
 }
 
 function offerEvent(input: MovementOfferCardInput, built: BuiltOffer): CardEvent {
-	const reason: CardEventText =
-		typeof input.reason === 'string'
+	// A cause that only repeats the name is left out, so the line names the feature once.
+	const repeatsName = typeof input.reason === 'string' && input.reason.trim() === input.name.trim();
+	const reason: CardEventText | null = repeatsName
+		? null
+		: typeof input.reason === 'string'
 			? { key: 'NIMBLE.chat.events.cause.source', data: { source: input.reason } }
 			: input.reason;
 	return {
@@ -104,7 +107,7 @@ function offerEvent(input: MovementOfferCardInput, built: BuiltOffer): CardEvent
 		kind: 'movementOffer',
 		...(input.image ? { img: input.image } : { icon: 'fa-solid fa-person-running' }),
 		text: { key: 'NIMBLE.chat.events.movementOffer.text', data: { name: input.name } },
-		cause: reason,
+		...(reason ? { cause: reason } : {}),
 		action: { kind: 'movementOffer', node: built.node, offers: built.offers },
 		at: Date.now(),
 	};

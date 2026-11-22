@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import type { DamagePart } from '#types/damagePart.d.ts';
 import { giveUnarmedHitRecovery } from '#utils/chargePool/itemUseRecovery.js';
 import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
@@ -8,6 +9,7 @@ import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.j
 import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
+	getDamageBonusParts,
 	getDamageBonusTotal,
 	getUnarmedDamageFormula,
 	hasUnarmedProficiency,
@@ -49,7 +51,7 @@ export interface RollUnarmedStrikeOptions {
 	rollMode?: number;
 }
 
-function buildRollFormula(actor: NimbleCharacter): string {
+function buildRollFormula(actor: NimbleCharacter): { formula: string; damageParts: DamagePart[] } {
 	let rollFormula = getUnarmedDamageFormula(actor);
 
 	// Unarmed strikes are melee + weapon + bludgeoning. No targetDomain is passed,
@@ -61,7 +63,10 @@ function buildRollFormula(actor: NimbleCharacter): string {
 	for (const diceFormula of getDamageBonusFormulas(actor, 'melee', 'weapon', 'bludgeoning')) {
 		rollFormula = `${rollFormula} + ${diceFormula}`;
 	}
-	return rollFormula;
+	return {
+		formula: rollFormula,
+		damageParts: getDamageBonusParts(actor, 'melee', 'weapon', 'bludgeoning'),
+	};
 }
 
 /**
@@ -74,7 +79,7 @@ export async function rollUnarmedStrike(
 ): Promise<boolean> {
 	const rushed = options.rollMode === undefined ? attacksMadeThisTurn(actor) : 0;
 	const startRollMode = options.rollMode ?? (rushed > 0 ? -rushed : 0);
-	const rollFormula = buildRollFormula(actor);
+	const { formula: rollFormula, damageParts } = buildRollFormula(actor);
 	// Only characters proficient with unarmed strikes can crit.
 	const canCrit = hasUnarmedProficiency(actor);
 	const name = localize('NIMBLE.ui.heroicActions.unarmedStrike');
@@ -162,6 +167,7 @@ export async function rollUnarmedStrike(
 		primaryDieModifier: (Number(result.primaryDieModifier) || 0) + held.primaryDieBonus,
 		damageType: 'bludgeoning',
 		primaryDieAsDamage: true,
+		...(damageParts.length > 0 ? { damageParts } : {}),
 		...(canCrit && !multiTarget
 			? { critDice: collectCritDice(actor as { rules?: unknown }, delivery) }
 			: {}),

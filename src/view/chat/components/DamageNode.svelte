@@ -51,6 +51,7 @@
 		{roll}
 		nodeId={node.id}
 		damageMultiplier={node.damageMultiplier ?? 1}
+		source={node.source ?? null}
 	/>
 {:else if canRollDamage}
 	<button

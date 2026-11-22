@@ -1,10 +1,9 @@
 <script lang="ts">
+	import LinkedText from '../../components/LinkedText.svelte';
 	import type { RollSummaryProps } from '#types/components/RollSummary.d.ts';
 
 	import { SYSTEM_ID } from '#system';
 	import DieFace from '#view/components/DieFace.svelte';
-
-	import { getPrimaryDieBreakdown } from './RollSummary.svelte.ts';
 
 	const {
 		label,
@@ -13,21 +12,12 @@
 		note = null,
 		tooltip,
 		total,
-		options,
-		showRollDetails,
+		details = [],
 		rolling = null,
 		landed = false,
 	}: RollSummaryProps = $props();
-	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get(SYSTEM_ID, 'autoExpandRolls');
 	let expanded = $state(autoExpand);
-
-	const rollOptions = $derived(options?.rollOptions ?? {});
-	const primaryDieValue = $derived(Number(rollOptions.primaryDieValue) || 0);
-	const primaryDieModifier = $derived(
-		rollOptions.primaryDieBonusOff ? 0 : Number(rollOptions.primaryDieModifier) || 0,
-	);
-	const primaryDieBreakdown = $derived(getPrimaryDieBreakdown(options));
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading && !checkResult && !note}>
@@ -92,16 +82,13 @@
 	{/if}
 </div>
 
-{#if showRollDetails}
+{#if details.length > 0}
 	<div class="roll-details">
-		{#if primaryDieValue}
-			<span>{hitDice.primaryDieValue}: {primaryDieValue}</span>
-		{/if}
-		{#if primaryDieBreakdown}
-			<span data-tooltip={primaryDieBreakdown.tooltip || null}>{primaryDieBreakdown.text}</span>
-		{:else if primaryDieModifier}
-			<span>{hitDice.primaryDieModifier}: {primaryDieModifier}</span>
-		{/if}
+		{#each details as line (line.id)}
+			<span data-tooltip={line.tooltip || null}
+				>{#if line.parts}<LinkedText parts={line.parts} />{:else}{line.text}{/if}</span
+			>
+		{/each}
 	</div>
 {/if}
 

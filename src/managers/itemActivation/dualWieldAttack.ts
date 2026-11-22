@@ -3,6 +3,7 @@ import type { DamageRoll } from '../../dice/DamageRoll.js';
 import type { AttackDelivery } from '../../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
+	getDamageBonusParts,
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../../utils/damage/attackUtils.js';
@@ -71,6 +72,16 @@ export async function rollOtherWeapon(input: {
 
 	const damageType = node.damageType ?? '';
 	let formula = normalizeDamageRollFormula(node.formula);
+	const damageParts = context.delivery
+		? getDamageBonusParts(
+				actor,
+				context.delivery,
+				context.source,
+				damageType,
+				context.targetDomain,
+				item.identifier,
+			)
+		: [];
 	if (context.delivery) {
 		const flat = getDamageBonusTotal(
 			actor,
@@ -108,8 +119,10 @@ export async function rollOtherWeapon(input: {
 		damageType: context.damageType,
 	};
 	const otherSelf = { itemUuid: item.uuid, label: item.name, damageType };
+	const { damageParts: _firstParts, ...sharedOptions } = firstOptions;
 	const otherOptions = {
-		...firstOptions,
+		...sharedOptions,
+		...(damageParts.length > 0 ? { damageParts } : {}),
 		rollMode,
 		...(sources ? { rollModeSources: sources } : {}),
 		canCrit:

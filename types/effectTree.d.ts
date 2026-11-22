@@ -1,3 +1,4 @@
+import type { DamageNodeSource } from './damagePart.d.ts';
 import type { HeldUsedUp } from './heldChange.d.ts';
 import type { MomentRaise, RuleRaise } from './spellScaling.d.ts';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
@@ -173,6 +174,8 @@ export type DamageNode = {
 	targetDisposition?: EffectNodeDisposition;
 	/** A bonus step that is the damage of another item of the attacker: that item's identifier. */
 	fromItemIdentifier?: string | null;
+	/** The feature that made this damage box. */
+	source?: DamageNodeSource;
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;
@@ -194,6 +197,8 @@ export type DamageOutcomeNode = {
 	ignoreAllies?: boolean;
 	outcome: 'fullDamage' | 'halfDamage';
 	roll?: Record<string, any>;
+	/** The feature that made the damage box, from its damage step. */
+	source?: DamageNodeSource;
 	parentContext: string;
 	parentNode: string;
 };

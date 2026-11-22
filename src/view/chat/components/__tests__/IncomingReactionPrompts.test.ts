@@ -78,6 +78,7 @@ interface EntryOptions {
 	usedFaces?: number[];
 	leftOut?: unknown;
 	use?: 'reroll' | 'change' | 'crit';
+	outcomeTrigger?: 'hit' | 'criticalHit';
 }
 
 function createEntry(options: EntryOptions = {}) {
@@ -97,6 +98,7 @@ function createEntry(options: EntryOptions = {}) {
 		...(options.usedFaces === undefined ? {} : { usedFaces: options.usedFaces }),
 		...(options.leftOut === undefined ? {} : { leftOut: options.leftOut }),
 		...(options.use === undefined ? {} : { use: options.use }),
+		...(options.outcomeTrigger === undefined ? {} : { outcomeTrigger: options.outcomeTrigger }),
 	};
 }
 
@@ -322,7 +324,7 @@ describe('IncomingReactionPrompts', () => {
 		expect(rollPlace().getByText('Crit')).toBeTruthy();
 	});
 
-	it('shows one line per Primary Die Bonus at the roll only', () => {
+	it('leaves the Primary Die Bonus to the damage box: no line of its own at the roll', () => {
 		const message = createMessage([]);
 		Object.assign(message.system, {
 			primaryDieBonuses: [
@@ -332,43 +334,9 @@ describe('IncomingReactionPrompts', () => {
 		});
 		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
-		expect(rollPlace().getByText('Unerring Judgment: +1 to the Primary Die')).toBeTruthy();
-		expect(rollPlace().getByText('Clumsy Grip: -1 to the Primary Die')).toBeTruthy();
-		expect(rollPlace().getByText('+1 to Primary Die')).toBeTruthy();
+		expect(screen.queryByText(/Unerring Judgment/)).toBeNull();
+		expect(screen.queryByText(/to Primary Die/)).toBeNull();
 		expect(screen.getByTestId('options-place').textContent?.trim()).toBe('');
-	});
-
-	it('marks the Primary Die Bonus lines "not added" after a set, and tells why', () => {
-		const message = createMessage(
-			[],
-			[
-				{
-					use: 'change',
-					itemUuid: '',
-					label: 'Judgment',
-					change: { mode: 'set', value: 0 },
-					next: { value: 8, outcome: 'crit' },
-					previous: { value: 3, outcome: null },
-				},
-			],
-		);
-		Object.assign(message.system, {
-			primaryDieBonuses: [{ label: 'Unerring Judgment', value: 1, itemUuid: 'Item.judgment' }],
-			activation: {
-				effects: [
-					{
-						id: 'damage',
-						type: 'damage',
-						roll: { class: 'DamageRoll', options: { primaryDieBonusOff: true }, terms: [] },
-					},
-				],
-			},
-		});
-		render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
-
-		expect(rollPlace().getByText('+1 bonus not added')).toBeTruthy();
-		expect(rollPlace().queryByText('+1 to Primary Die')).toBeNull();
-		expect(rollPlace().getByText(/Judgment changed the die to 8/)).toBeTruthy();
 	});
 
 	it('shows the outcome tags at the roll only', () => {
@@ -481,7 +449,10 @@ describe('IncomingReactionPrompts', () => {
 	});
 
 	describe('card-side spend offers', () => {
-		it('labels a spend offer with its feature name and no actor name', async () => {
+		const spendButton = (name: RegExp | string = /^Add Damage with Death Blow/) =>
+			rollPlace().queryByRole('button', { name });
+
+		it('shows a spend as a button on the card, not as a row of Change This Roll', () => {
 			// The card's speaker already attributes the attacker, and the rule label
 			// is written for the rules builder rather than for players
 			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
@@ -489,14 +460,48 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await openControl(rollPlace());
-
-			const row = rollPlace().getByRole('button', { name: 'Add Damage with Death Blow' });
-			expect(rowWords(row)).toBe('Add Damage with Death Blow');
-			expect(row.textContent).not.toContain('Sir Brannon');
+			const button = spendButton();
+			expect(button?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Add Damage with Death Blow');
+			expect(button?.textContent).not.toContain('Sir Brannon');
+			expect(rollPlace().queryByRole('button', { name: /^Change This Roll/ })).toBeNull();
 		});
 
-		it('attributes a used spend with its amount, pool and faces', () => {
+		it('takes the spend out of the count of Change This Roll', async () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			render(IncomingReactionPromptsTestHarness, {
+				props: {
+					messageDocument: createMessage([
+						spendEntry(),
+						createEntry({ id: 'redirect-1', kind: 'redirectToSelf', label: 'Interpose' }),
+					]),
+				},
+			});
+
+			await openControl(rollPlace());
+
+			expect(rowsOf(screen.getByTestId('roll-place'))).toHaveLength(1);
+			expect(spendButton()).toBeTruthy();
+		});
+
+		it('shows the button only when the outcome fits the offer', () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			const message = createMessage([spendEntry({ outcomeTrigger: 'criticalHit' })]);
+			Object.assign(message.system, { isCritical: false, isMiss: false });
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			expect(spendButton()).toBeNull();
+		});
+
+		it('shows the button after a hit that fits the offer', () => {
+			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
+			const message = createMessage([spendEntry({ outcomeTrigger: 'criticalHit' })]);
+			Object.assign(message.system, { isCritical: true, isMiss: false });
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			expect(spendButton()).toBeTruthy();
+		});
+
+		it('shows a used spend with no line of its own: the damage box shows its result', () => {
 			render(IncomingReactionPromptsTestHarness, {
 				props: {
 					messageDocument: createMessage([
@@ -510,15 +515,8 @@ describe('IncomingReactionPrompts', () => {
 				},
 			});
 
-			expect(screen.getByText('Death Blow: +18 damage (Fury Dice: 4, 5)')).toBeTruthy();
-		});
-
-		it('falls back to the feature name when a used spend recorded no amount', () => {
-			render(IncomingReactionPromptsTestHarness, {
-				props: { messageDocument: createMessage([spendEntry({ used: true })]) },
-			});
-
-			expect(screen.getByText('Death Blow')).toBeTruthy();
+			expect(screen.queryByText(/Death Blow/)).toBeNull();
+			expect(screen.queryByRole('button')).toBeNull();
 		});
 
 		it('opens the picker against the pool and item the live consumer resolves to', async () => {
@@ -527,7 +525,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(rollPlace(), /Add Damage with Death Blow/);
+			await fireEvent.click(spendButton() as HTMLElement);
 			await vi.waitFor(() => expect(spendDialogMock().instances).toHaveLength(1));
 
 			const [actor, poolId, ruleId, itemId] = spendDialogMock().instances[0].args;
@@ -546,7 +544,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(rollPlace(), /Add Damage with Death Blow/);
+			await fireEvent.click(spendButton() as HTMLElement);
 
 			await vi.waitFor(() =>
 				expect((globalThis as Record<string, any>).ui.notifications.warn).toHaveBeenCalledWith(
@@ -564,11 +562,11 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(rollPlace(), /Add Damage with Death Blow/);
+			await fireEvent.click(spendButton() as HTMLElement);
 			await vi.waitFor(() => expect(spendDialogMock().instances).toHaveLength(1));
 
 			expect(requestIncomingAttackReaction).not.toHaveBeenCalled();
-			expect(controlButton(rollPlace())).toBeTruthy();
+			await vi.waitFor(() => expect(spendButton()).toBeTruthy());
 		});
 
 		it('holds the button once a pick is handed off, so it cannot be spent twice', async () => {
@@ -581,7 +579,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(rollPlace(), /Add Damage with Death Blow/);
+			await fireEvent.click(spendButton() as HTMLElement);
 
 			await vi.waitFor(() =>
 				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
@@ -600,13 +598,13 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(rollPlace(), /Add Damage with Death Blow/);
+			await fireEvent.click(spendButton() as HTMLElement);
 			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
 
 			for (const listener of rejectionListeners)
 				listener({ messageId: 'message-1', entryId: 'spend-1' });
 
-			await vi.waitFor(() => expect(controlButton(rollPlace())).toBeTruthy());
+			await vi.waitFor(() => expect(spendButton()).toBeTruthy());
 		});
 
 		it('ignores a refusal aimed at a different card', async () => {
@@ -616,7 +614,7 @@ describe('IncomingReactionPrompts', () => {
 				props: { messageDocument: createMessage([spendEntry()]) },
 			});
 
-			await useFeature(rollPlace(), /Add Damage with Death Blow/);
+			await fireEvent.click(spendButton() as HTMLElement);
 			await vi.waitFor(() => expect(screen.queryByRole('button')).toBeNull());
 
 			for (const listener of rejectionListeners) {

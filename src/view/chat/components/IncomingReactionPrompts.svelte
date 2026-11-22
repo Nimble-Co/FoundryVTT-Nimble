@@ -23,9 +23,7 @@
 		lines={prompts.historyLines}
 		pendingKeep={prompts.pendingKeep}
 		pendingLine={prompts.pendingLine}
-		primaryDieBonuses={prompts.primaryDieBonuses}
 		keptAmount={prompts.keptAmount}
-		bonusNotAdded={prompts.bonusNotAdded}
 		outcomeTags={prompts.outcomeTags}
 		{held}
 	/>
@@ -71,7 +69,7 @@
 		</section>
 	{/if}
 {:else if place === 'roll'}
-	{#if prompts.outcomeTags.length > 0 || prompts.keptAmount || prompts.primaryDieBonuses.length > 0 || prompts.pendingGroups.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0 || prompts.resultLines.length > 0}
+	{#if prompts.outcomeTags.length > 0 || prompts.keptAmount || prompts.pendingGroups.length > 0 || prompts.historyLines.length > 0 || prompts.legacyRerollLines.length > 0 || prompts.pendingKeep || prompts.leftOutEntries.length > 0 || prompts.resultLines.length > 0}
 		<section class="nimble-roll-changes">
 			{@render rerollHistory()}
 			<ResultChangeLines lines={prompts.resultLines} {held} onremove={prompts.removeResultLine} />
@@ -81,6 +79,26 @@
 				<LeftOutRerolls entries={prompts.leftOutEntries} />
 			{/if}
 		</section>
+	{/if}
+
+	{#if prompts.spendOffers.length > 0}
+		<div class="nimble-card-spends">
+			{#each prompts.spendOffers as entry (entry.id)}
+				{@const button = prompts.spendButton(entry)}
+				<button
+					class="nimble-button"
+					data-button-variant="card-action"
+					style="--nimble-card-action-color: currentColor"
+					type="button"
+					data-tooltip={button.tooltip}
+					disabled={prompts.busy}
+					onclick={() => prompts.useSpend(entry)}
+				>
+					<i class={text.icon(entry)} aria-hidden="true"></i>
+					{button.label}
+				</button>
+			{/each}
+		</div>
 	{/if}
 {:else if prompts.pendingGroups.length > 0 || prompts.usedEntries.length > 0}
 	<section class="nimble-card-section nimble-card-section--incoming-reactions">
@@ -109,6 +127,13 @@
 		&--under-row {
 			padding: 0.5rem 0 0;
 		}
+	}
+
+	.nimble-card-spends {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		padding: 0.5rem 0.5rem 0;
 	}
 
 	.nimble-incoming-reaction-attribution {

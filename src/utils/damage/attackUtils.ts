@@ -1,3 +1,4 @@
+import type { DamagePart } from '#types/damagePart.d.ts';
 import { Predicate } from '../../etc/Predicate.js';
 import type {
 	DamageBonusDelivery,
@@ -167,4 +168,30 @@ export function getDamageBonusFormulas(
 		formulas.push(bonus.formula);
 	}
 	return formulas;
+}
+
+/**
+ * One damage part per damage bonus that matches the filters: what
+ * `getDamageBonusTotal` and `getDamageBonusFormulas` add, by the rule that adds it.
+ */
+export function getDamageBonusParts(
+	actor: { system?: unknown } | null | undefined,
+	delivery: DamageBonusDelivery,
+	source: DamageBonusSource,
+	damageType?: string,
+	targetDomain?: Set<string>,
+	itemIdentifier?: string,
+): DamagePart[] {
+	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
+		?.damageBonuses;
+	const parts: DamagePart[] = [];
+	for (const bonus of bonuses ?? []) {
+		if (!bonus.value && !bonus.formula) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
+		const named = { label: bonus.label ?? '', itemUuid: bonus.itemUuid ?? '' };
+		parts.push(
+			bonus.value ? { ...named, amount: bonus.value } : { ...named, formula: bonus.formula ?? '' },
+		);
+	}
+	return parts;
 }

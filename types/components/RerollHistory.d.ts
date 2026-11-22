@@ -1,4 +1,3 @@
-import type { PrimaryDieBonusLine } from '../primaryDieBonus.d.ts';
 import type { PendingKeep } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { rerollHistoryLines } from '../../src/view/chat/components/rerollHistoryLines.ts';
 import type { AttackOutcomeTag } from '../../src/view/chat/components/attackOutcomeTags.ts';
@@ -17,10 +16,6 @@ export interface RerollHistoryProps {
 	held: HeldIncomingReactions;
 	/** The amount this card kept for the next attack. */
 	keptAmount?: { label: string; amount: number } | null;
-	/** The Primary Die Bonus rules that added to the card's attack roll, one line each. */
-	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
-	/** Why the Primary Die Bonus lines are not on the die. Null when they are. */
-	bonusNotAdded?: LinkedPart[] | null;
 	/** What made the attack result differ from the die face. */
 	outcomeTags?: readonly AttackOutcomeTag[];
 }

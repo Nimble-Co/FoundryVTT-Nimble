@@ -786,11 +786,22 @@
 			},
 			"primaryDieBonus": {
 				"tag": "{value} to Primary Die",
-				"text": "{label}: {value} to the Primary Die",
 				"dialog": "Add to Primary Die Result {value}",
-				"notAdded": "{value} bonus not added",
 				"notAddedTooltip": "The die was set to a value. A set value is final, so this bonus is not added.",
 				"notAddedBySetTooltip": "{feature} changed the die to {face}. That value is final, so this bonus is not added."
+			},
+			"damageParts": {
+				"primaryDie": "Primary Die: {sum} = {result}",
+				"primaryDieMax": "Primary Die: {sum} = {result}, the max",
+				"primaryDieLowest": "Primary Die: {sum} = {result}, the lowest",
+				"primaryDieSet": "Primary Die: set to {value}",
+				"setTo": "set to {value},",
+				"primaryDieAdded": "Added to Primary Die: {sum}",
+				"primaryDieNoResult": "Primary Die: {sum}",
+				"primaryDieNotAdded": "Primary Die: {face}, the set result replaces {bonuses}",
+				"primaryDieNotAddedNoFace": "Primary Die: the set result replaces {bonuses}",
+				"part": "{label}: {amount}",
+				"source": "From {label}"
 			},
 			"cardActionNeedsGm": "A GM must be online to do this.",
 			"tempHpChoice": {
@@ -5156,9 +5167,6 @@
 			"configureHitDice": "Configure Hit Dice",
 			"primaryDieValue": "Primary Die Set To",
 			"primaryDieModifier": "Added to Primary Die",
-			"primaryDieModifierBreakdown": "Primary Die: {sum} = {result}",
-			"primaryDieModifierBreakdownMax": "Primary Die: {sum} = {result}, the max",
-			"primaryDieModifierBreakdownLowest": "Primary Die: {sum} = {result}, the lowest",
 			"setPrimaryDie": "Set Primary Die Result",
 			"setPrimaryDieModifier": "Add to Primary Die Result",
 			"situationalModifiers": "Add to Roll (number or dice)",

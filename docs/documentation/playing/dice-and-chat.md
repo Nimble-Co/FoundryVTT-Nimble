@@ -45,7 +45,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 ::: details More about the Primary Die fields
 - With advantage, the dice drop first. The set or added number then goes on the die that stays.
 - A reroll rolls the Primary Die again and loses **Set Primary Die Result**. It keeps **Add to Primary Die Result**.
-- Features that add to the Primary Die (for example +1 on melee attacks) work as **Add to Primary Die Result** and add up with it. The card shows a line for each, such as "Primary Die: 5 + 1 = 6".
+- Features that add to the Primary Die (for example +1 on melee attacks) work as **Add to Primary Die Result** and add up with it. The card shows one Primary Die line with each feature, such as "Primary Die: 5 + 1 (Juggernaut) = 6". A set value shows in the same line: "Primary Die: set to 4, + 1 (Juggernaut) = 5". When a change set the die and its value is final, the line says that the set result replaces the bonus. Hover the line to read why.
 - An area attack gets none of these.
 :::
 
@@ -55,7 +55,8 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 
 - **Header:** the item, and **Critical Hit** or **Miss** when the Primary Die decided one.
 - **Cost:** what the Spend or Sacrifice costs and the options of the use took, such as **Cost: 2 mana (Stretch Time)**. The mana of a spell's own tier is not on this line.
-- **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice.
+- **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice. Small lines under a damage box tell where its parts came from: the Primary Die line, a line for each feature that added damage, such as "Juggernaut: +14", and "From Withering Strike" on a box that a feature made.
+- **Add Damage buttons:** a feature that spends dice to add damage after a hit or a crit is a button over **Apply Damage**, such as **Add Damage with Death Blow**. The damage goes on the total of the attack, so armor counts one time, and shows as a line in the damage box. Spend before the GM clicks **Apply Damage**.
 - **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
 - **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
 - **Save:** a d20 button. Select the tokens that save and click it. With no token selected, it warns you and rolls nothing.
@@ -113,7 +114,6 @@ A **Make It a Crit** row makes a hit a crit after the roll. The Primary Die keep
 
 ### Other rows
 
-- **Add Damage:** a feature that spends dice to add damage. The dice go on the total of the attack, so armor counts one time. Spend before the GM clicks **Apply Damage**.
 - **No Damage:** the target of a hit takes no damage from this attack. The other targets do.
 - **Cost of 1 action:** on your turn, the action is spent at once. Off your turn, your next turn starts with 1 fewer action. Out of combat, nothing is spent.
 

@@ -3,6 +3,7 @@
 	import type { ItemActivationConfigDialogProps } from '#types/components/ItemActivationConfigDialog.d.ts';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
 	import localize from '#utils/localize.js';
+	import { displayFormula } from '#utils/rolls/displayFormula.ts';
 	import { SYSTEM_ID } from '#system';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import AmountStepper from './components/AmountStepper.svelte';
@@ -43,6 +44,11 @@
 	});
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);
+	const rollData = $derived(
+		(actor as unknown as { getRollData(item?: unknown): Record<string, unknown> }).getRollData(
+			item,
+		),
+	);
 
 	function onSubmit() {
 		if (state.situationalModifiers !== '') {
@@ -191,7 +197,10 @@
 
 				{#each state.conditionalBonusOptions as option (option.key)}
 					{@const choice = state.conditionalChoices[option.key]}
-					{@const damageLabel = option.damageFormula ?? `${option.damageValue ?? 0}`}
+					{@const damageLabel = displayFormula(
+						option.damageFormula ?? `${option.damageValue ?? 0}`,
+						rollData,
+					)}
 					<div class="nimble-conditional-bonus__row">
 						<span class="nimble-conditional-bonus__label">{option.label}</span>
 						<div class="nimble-conditional-bonus__choices">
@@ -431,7 +440,7 @@
 			{#if damageEffect.damageType}
 				{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
 			{/if}
-			{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
+			{displayFormula(damageEffect.formula, rollData)}
 		</div>
 	{/each}
 

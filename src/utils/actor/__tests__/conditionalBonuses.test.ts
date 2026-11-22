@@ -186,6 +186,7 @@ describe('conditionalBonuses', () => {
 			expect(option).toEqual({
 				key: 'Item.hm1:rule-id',
 				label: 'Quarry',
+				itemUuid: 'Item.hm1',
 				advantage: 1,
 				damageValue: 7,
 				damageFormula: null,

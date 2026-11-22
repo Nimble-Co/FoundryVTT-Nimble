@@ -6,24 +6,21 @@
 	import ChaosButton from './ChaosButton.svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
+	import { partsText } from '#utils/documents/docLink.ts';
 	import RollSummary from './RollSummary.svelte';
+
+	const bonusNotAddedText = (parts) => (parts ? partsText(parts) : null);
+	import { primaryDieBonusNotAdded } from './attackOutcomeTags.ts';
 	import { damageOutcomeMultiplier, damageRollCaption } from './damageRollCaption.ts';
-
-	// A roll written onto the card after the fact serializes `options: {}`, so a
-	// present-and-non-zero test is the only one that keeps the details block from
-	// drawing two empty labels.
-	function hasPrimaryDieDetails(rollOptions) {
-		if (rollOptions?.canCrit === false && rollOptions?.canMiss === false) return false;
-
-		const modifier = rollOptions?.primaryDieBonusOff ? null : rollOptions?.primaryDieModifier;
-		return [rollOptions?.primaryDieValue, modifier].some((value) => value != null && value != 0);
-	}
+	import { damageRollDetails } from './damageRollDetails.ts';
+	import { documentName } from './incomingReactionText.ts';
 
 	const { damageTypes } = CONFIG.NIMBLE;
 
 	const messageDocument = getContext('messageDocument');
 	const { actorType, permissions } = messageDocument.system;
 	let primaryDieBonuses = $derived(messageDocument.reactive?.system?.primaryDieBonuses ?? []);
+	let rerolls = $derived(messageDocument.reactive?.system?.rerolls ?? []);
 
 	let {
 		damageType,
@@ -32,6 +29,7 @@
 		roll,
 		nodeId = null,
 		damageMultiplier = 1,
+		source = null,
 	} = $props();
 	let rolling = $derived.by(() => {
 		const inAir = nodeId ? rollingRerollOf(messageDocument.id) : null;
@@ -40,6 +38,15 @@
 	let landed = $derived(!!nodeId && rerollJustLanded(messageDocument.id, nodeId));
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
+	let details = $derived(
+		damageRollDetails({
+			rollOptions,
+			roll,
+			primaryDieBonuses,
+			bonusNotAdded: bonusNotAddedText(primaryDieBonusNotAdded(rollOptions, rerolls, documentName)),
+			source,
+		}),
+	);
 	let critDiceLines = $derived(critDiceLinesOf(roll?.terms));
 	let shownMultiplier = $derived(outcome === 'noDamage' ? 1 : damageMultiplier);
 	let multiplier = $derived(damageOutcomeMultiplier(outcome) * shownMultiplier);
@@ -68,7 +75,7 @@
 			isCritical: roll?.isCritical,
 			primaryDieBonuses,
 		}}
-		showRollDetails={hasPrimaryDieDetails(rollOptions)}
+		{details}
 		{rolling}
 		{landed}
 	/>
@@ -87,7 +94,7 @@
 			isCritical: roll?.isCritical,
 			primaryDieBonuses,
 		}}
-		showRollDetails={false}
+		details={source ? details : []}
 	/>
 {/if}
 

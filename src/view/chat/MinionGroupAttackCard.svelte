@@ -6,6 +6,7 @@
 		conditionRollModeTags,
 	} from './components/attackOutcomeTags.ts';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
+	import { damageRollDetails } from './components/damageRollDetails.ts';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardEvents from './components/CardEvents.svelte';
@@ -90,6 +91,16 @@
 		} catch (_error) {
 			return null;
 		}
+	}
+
+	/** The Primary Die line and the damage parts of a member's roll, as under a damage box. */
+	function rowDetails(row: MinionGroupAttackRow) {
+		const roll = row.roll as { options?: Record<string, unknown>; terms?: unknown[] } | null;
+		return damageRollDetails({
+			rollOptions: roll?.options ?? null,
+			roll,
+			primaryDieBonuses: row.primaryDieBonuses ?? [],
+		});
 	}
 
 	function getCardImage(): string {
@@ -185,18 +196,13 @@
 						{getRowTotalDisplay(row)}
 					</span>
 
-					{#each row.primaryDieBonuses ?? [] as bonus, index (index)}
-						<p class="nimble-group-member-roll__bonus">
-							<i
-								class="fa-solid {bonus.value > 0 ? 'fa-arrow-up' : 'fa-arrow-down'}"
-								aria-hidden="true"
-							></i>
-							{i18nFormat('NIMBLE.chat.primaryDieBonus.text', {
-								label: bonus.label,
-								value: bonus.value > 0 ? `+${bonus.value}` : String(bonus.value),
-							})}
-						</p>
-					{/each}
+					{#if rowDetails(row).length > 0}
+						<div class="nimble-group-member-roll__details">
+							{#each rowDetails(row) as line (line.id)}
+								<span data-tooltip={line.tooltip || null}>{line.text}</span>
+							{/each}
+						</div>
+					{/if}
 					{#each conditionRollModeTags(row.roll) as tag (tag.label)}
 						<p class="nimble-group-member-roll__bonus" data-tooltip={tag.tooltip}>
 							<i class="fa-solid {ATTACK_OUTCOME_TAG_ICONS[tag.kind]}" aria-hidden="true"></i>
@@ -269,6 +275,14 @@
 			grid-column: 1 / -1;
 			margin: 0;
 			font-size: var(--nimble-xs-text);
+		}
+
+		&__details {
+			grid-column: 1 / -1;
+			display: flex;
+			flex-direction: column;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__member,

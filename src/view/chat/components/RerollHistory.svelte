@@ -5,12 +5,10 @@
 
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import { partsText } from '#utils/documents/docLink.ts';
 	import DieFace from '../../components/DieFace.svelte';
 	import DocumentLink from '../../components/DocumentLink.svelte';
 	import LinkedText from '../../components/LinkedText.svelte';
 	import { ATTACK_OUTCOME_TAG_ICONS } from './attackOutcomeTags.ts';
-	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { createRerollHistoryState } from './RerollHistory.svelte.ts';
 	import { createTagNotes } from './tagNotes.ts';
@@ -35,16 +33,13 @@
 		pendingKeep,
 		pendingLine,
 		held,
-		primaryDieBonuses = [],
 		keptAmount = null,
-		bonusNotAdded = null,
 		outcomeTags = [],
 	}: RerollHistoryProps = $props();
 
 	const message = getContext<NimbleChatMessage>('messageDocument');
 	const keepChoice = createRerollHistoryState(message, () => ({ pendingKeep, held }));
 	const tagNotes = createTagNotes(message?.id ?? '');
-	const bonusNotAddedText = $derived(bonusNotAdded ? partsText(bonusNotAdded) : null);
 </script>
 
 {#snippet tagButton(
@@ -104,51 +99,6 @@
 		</p>
 	</div>
 {/if}
-
-{#each primaryDieBonuses as bonus, index (index)}
-	{@const value = signed(bonus.value)}
-	{@const sentence =
-		bonusNotAddedText ??
-		localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
-	{@const row = `bonus-${index}`}
-	<div
-		class="nimble-roll-changes__history nimble-roll-changes__history--bonus"
-		data-tooltip={sentence}
-	>
-		<i
-			class="fa-solid {bonusNotAdded
-				? 'fa-ban'
-				: bonus.value > 0
-					? 'fa-arrow-up'
-					: 'fa-arrow-down'}"
-			aria-hidden="true"
-		></i>
-		<p class="nimble-roll-changes__text">
-			<span aria-hidden="true">{bonus.label}</span>
-			<span class="nimble-roll-changes__spoken">{sentence}</span>
-		</p>
-		{@render tagButton(
-			row,
-			'bonus',
-			{
-				label: localize(
-					bonusNotAdded
-						? 'NIMBLE.chat.primaryDieBonus.notAdded'
-						: 'NIMBLE.chat.primaryDieBonus.tag',
-					{ value },
-				),
-				tooltip: sentence,
-			},
-			bonusNotAdded ? 'fa-ban' : 'fa-dice-d6',
-			{ none: !!bonusNotAdded },
-		)}
-	</div>
-	{#if tagNotes.openTag(row)}
-		<p class="nimble-roll-changes__note nimble-roll-changes__note--line">
-			<LinkedText parts={bonusNotAdded ?? [sentence]} />
-		</p>
-	{/if}
-{/each}
 
 {#each legacyLines as line (line.id)}
 	<div class="nimble-roll-changes__history">

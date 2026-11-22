@@ -40,6 +40,13 @@ interface AttackHeldInput {
 	chosen?: ReadonlySet<string> | null;
 }
 
+/** The uuid of the effect that holds the change, or empty when its holder is not known. */
+function heldChangeUuid(change: HeldChange): string {
+	return change.holderUuid && change.effectId
+		? `${change.holderUuid}.ActiveEffect.${change.effectId}`
+		: '';
+}
+
 /** Each extra damage part as its own damage node with a hit outcome, so a miss deals none of it. */
 async function rollExtraDamage(changes: HeldChange[], rollData: Record<string, unknown>) {
 	const parts: { node: ReturnType<typeof createBonusDamageNode>; roll: Roll }[] = [];
@@ -53,6 +60,7 @@ async function rollExtraDamage(changes: HeldChange[], rollData: Record<string, u
 					damageType: change.damageType ?? '',
 					formula,
 					roll: roll.toJSON() as Record<string, unknown>,
+					source: { label: change.label, uuid: heldChangeUuid(change) },
 				}),
 				roll,
 			});

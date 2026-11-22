@@ -161,6 +161,7 @@ function outcomeTagsOfResult(roll: OutcomeRollView | null): AttackOutcomeTag[] {
 			tooltip: localize(`${TAG_TEXT}.grantedCastTooltip`, { feature }),
 		});
 	}
+	// Only cards from before the damage box named its parts have it.
 	for (const feature of new Set(options.outcomeSources?.offerDamage ?? [])) {
 		tags.push({
 			kind: 'critDice',

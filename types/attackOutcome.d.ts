@@ -12,6 +12,7 @@ export interface AttackOutcomeSources {
 	grantedCast?: string[];
 	critD20?: string[];
 	vicious?: string[];
+	/** Old cards only: new cards name the damage in `damageParts`. */
 	offerDamage?: string[];
 	mustAttackOther?: string[];
 }
@@ -42,6 +43,8 @@ export interface MultiTargetDetail {
 /** What an attack from the offer of another feature adds. */
 export interface OfferBonus {
 	label: string;
+	/** The document of the rule that adds it. */
+	itemUuid: string;
 	damage: number;
 	primaryDie: number;
 }

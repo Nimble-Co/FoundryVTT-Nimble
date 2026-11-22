@@ -105,7 +105,39 @@ describe('DamageNode', () => {
 		// Drawing the block then puts two empty labels under the total.
 		renderNode(createMessage(), deferredNode({ roll: rolledRoll() }));
 
-		expect(screen.queryByText(/primary die set to/i)).toBeNull();
+		expect(screen.queryByText(/primary die/i)).toBeNull();
+	});
+
+	it('lists the parts features added under the box', () => {
+		renderNode(
+			createMessage(),
+			deferredNode({
+				roll: {
+					...rolledRoll(),
+					options: { damageParts: [{ label: 'Juggernaut', itemUuid: 'Item.j', amount: 14 }] },
+					terms: [
+						{ class: 'Die', faces: 12, results: [{ result: 7 }] },
+						{ class: 'OperatorTerm', operator: '+' },
+						{ class: 'NumericTerm', number: 9, options: { flavor: 'Death Blow' } },
+					],
+				},
+			}),
+		);
+
+		expect(screen.getByText('Juggernaut: +14')).toBeTruthy();
+		expect(screen.getByText('Death Blow: +9')).toBeTruthy();
+	});
+
+	it('names the feature that made a damage box of its own', () => {
+		renderNode(
+			createMessage(),
+			deferredNode({
+				roll: rolledRoll(6),
+				source: { label: 'Withering Strike', uuid: 'Item.w' },
+			}),
+		);
+
+		expect(screen.getByText('From Withering Strike')).toBeTruthy();
 	});
 
 	it('shows the primary-die details when the roll actually has them', () => {
@@ -116,8 +148,7 @@ describe('DamageNode', () => {
 			}),
 		);
 
-		expect(screen.getByText(/primary die set to: 12/i)).toBeTruthy();
-		expect(screen.getByText(/added to primary die: 2/i)).toBeTruthy();
+		expect(screen.getByText('Primary Die: set to 12, + 2')).toBeTruthy();
 	});
 
 	it('shows the primary die roll before the modifier when the roll recorded it', () => {
@@ -132,7 +163,7 @@ describe('DamageNode', () => {
 		);
 
 		expect(screen.getByText(/primary die: 1 \+ 1 = 2/i)).toBeTruthy();
-		expect(screen.queryByText(/primary die set to/i)).toBeNull();
+		expect(screen.queryByText(/set to/i)).toBeNull();
 	});
 
 	it('leaves out the primary-die details for a roll that can neither crit nor miss', () => {
@@ -146,8 +177,7 @@ describe('DamageNode', () => {
 			}),
 		);
 
-		expect(screen.queryByText(/primary die set to/i)).toBeNull();
-		expect(screen.queryByText(/added to primary die/i)).toBeNull();
+		expect(screen.queryByText(/primary die/i)).toBeNull();
 	});
 
 	it('shows the total for ordinary damage that was never deferred', () => {

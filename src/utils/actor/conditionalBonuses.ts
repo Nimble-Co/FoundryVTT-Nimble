@@ -22,6 +22,8 @@ interface ConditionalBonusOption {
 	 */
 	key: string;
 	label: string;
+	/** The document of the rule, for a link on the card. */
+	itemUuid?: string;
 	advantage: number;
 	/** Resolved numeric damage (null when dice-based or no damage offered). */
 	damageValue: number | null;
@@ -119,6 +121,7 @@ function getActiveConditionalBonuses(
 			key: `${rule.parentDocument?.uuid ?? ''}:${rule.id}`,
 			label:
 				rule.label || rule.parentDocument?.name || localize('NIMBLE.ruleTypes.conditionalBonus'),
+			itemUuid: rule.parentDocument?.uuid ?? '',
 			advantage: rule.offersAdvantage() ? rule.advantage : 0,
 			damageValue: damage.value === null ? null : damage.value * (doubled ? 2 : 1),
 			damageFormula: damage.formula && doubled ? `(${damage.formula})*2` : damage.formula,

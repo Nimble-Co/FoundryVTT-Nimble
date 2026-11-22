@@ -1,3 +1,4 @@
+import type { DamageNodeSource } from '#types/damagePart.d.ts';
 import type { DamageNode } from '#types/effectTree.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
 
@@ -32,6 +33,8 @@ export function createBonusDamageNode(params: {
 	parentContext?: string | null;
 	/** The item whose damage this is, for a rule that reads its dice. */
 	fromItemIdentifier?: string | null;
+	/** The feature that made this damage, named on the card. */
+	source?: DamageNodeSource | null;
 }): DamageNode {
 	const id = foundry.utils.randomID();
 	const parentNode = params.parentNode ?? null;
@@ -49,6 +52,7 @@ export function createBonusDamageNode(params: {
 		roll: params.roll,
 	};
 	if (params.fromItemIdentifier) node.fromItemIdentifier = params.fromItemIdentifier;
+	if (params.source?.label) node.source = { label: params.source.label, uuid: params.source.uuid };
 
 	if (!parentNode) {
 		node.on = { hit: [createDamageOutcomeNode(id, 'hit')] };

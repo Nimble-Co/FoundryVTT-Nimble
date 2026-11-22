@@ -2,6 +2,7 @@ import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
 import type { FreeUseHost } from '#types/cardEvent.d.ts';
 import type { ConditionalDamage } from '#types/conditionalDamage.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import type { DamagePart } from '#types/damagePart.d.ts';
 import type { DualWieldChoice, DualWieldKeep } from '#types/dualWield.d.ts';
 import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
@@ -51,6 +52,7 @@ import {
 import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
 import {
 	getDamageBonusFormulas,
+	getDamageBonusParts,
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
@@ -839,8 +841,19 @@ class ItemActivationManager {
 					this.#checkNodeFormula(dialogData.rollFormula || node.formula, activationRollData);
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
+					const damageParts: DamagePart[] = [];
 					// Apply damage bonuses filtered by delivery, source, damage type, and target
 					if (delivery) {
+						damageParts.push(
+							...getDamageBonusParts(
+								this.actor,
+								delivery,
+								source,
+								node.damageType,
+								targetDomain,
+								this.#item.identifier,
+							),
+						);
 						const numericBonus = getDamageBonusTotal(
 							this.actor,
 							delivery,
@@ -893,6 +906,7 @@ class ItemActivationManager {
 					);
 					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
 					formula = offerAdded.formula;
+					damageParts.push(...offerAdded.damageParts);
 					this.#primaryDieBonuses.push(...offerAdded.primaryDieBonuses);
 					const ruleBonus = this.#primaryDieBonuses.reduce((sum, line) => sum + line.value, 0);
 					const attackOutcome = collectAttackOutcome({
@@ -928,7 +942,8 @@ class ItemActivationManager {
 						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
 						damageOptions.outcomeSources = sources;
 					}
-					markOfferOnRollOptions(damageOptions, offerSource, offerBonuses);
+					markOfferOnRollOptions(damageOptions, offerSource);
+					if (damageParts.length > 0) damageOptions.damageParts = damageParts;
 					const critDice = resolvedCanCrit
 						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
 						: [];
@@ -1096,6 +1111,7 @@ class ItemActivationManager {
 				formula,
 				roll: roll.toJSON() as Record<string, unknown>,
 				fromItemIdentifier: conditional.fromItemIdentifier,
+				source: { label: conditional.label, uuid: conditional.itemUuid ?? '' },
 			});
 			if (conditional.modifierOnly) bonusNode.modifierOnly = true;
 			updatedEffects.push(bonusNode);
