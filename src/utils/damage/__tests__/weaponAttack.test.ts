@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { useWeaponDamage, weaponOptionsFor } from '../weaponAttack.js';
+import { UNARMED_STRIKE, useWeaponDamage, weaponOptionsFor } from '../weaponAttack.js';
 
 const weapon = (name: string, attackType: string, overrides: Record<string, unknown> = {}) => ({
 	uuid: `Item.${name}`,
@@ -18,9 +18,9 @@ const weapon = (name: string, attackType: string, overrides: Record<string, unkn
 
 const actor = {
 	items: [
+		weapon('Stored Bow', 'range', { equipped: false }),
 		weapon('Longbow', 'range'),
 		weapon('Sword', 'reach'),
-		weapon('Stored Bow', 'range', { equipped: false }),
 		{ uuid: 'Item.Rope', name: 'Rope', type: 'object', system: { objectType: 'misc' } },
 	],
 };
@@ -29,10 +29,17 @@ const names = (attack: Parameters<typeof weaponOptionsFor>[1]) =>
 	weaponOptionsFor(actor, attack).map((option) => option.name);
 
 describe('weaponOptionsFor', () => {
-	it('lists the equipped weapons of the kind', () => {
-		expect(names('ranged')).toEqual(['Longbow']);
+	it('lists every weapon of the kind, the equipped ones first', () => {
+		expect(names('ranged')).toEqual(['Longbow', 'Stored Bow']);
 		expect(names('melee')).toEqual(['Sword']);
-		expect(names('any')).toEqual(['Longbow', 'Sword']);
+		expect(names('any')).toEqual(['Longbow', 'Sword', 'Stored Bow']);
+	});
+
+	it('says which weapons are equipped', () => {
+		expect(weaponOptionsFor(actor, 'ranged').map((option) => option.equipped)).toEqual([
+			true,
+			false,
+		]);
 	});
 
 	it('lists nothing for an ability with its own damage', () => {
@@ -47,7 +54,51 @@ describe('weaponOptionsFor', () => {
 			damageType: 'piercing',
 			attackType: 'range',
 			distance: 8,
+			equipped: true,
 		});
+	});
+});
+
+describe('weaponOptionsFor Unarmed Strike', () => {
+	const hero = {
+		type: 'character',
+		system: { unarmedDamage: '1d6 + @abilities.strength.mod' },
+		items: [
+			weapon('Club', 'reach', { equipped: false }),
+			weapon('Dagger', 'reach'),
+			weapon('Longbow', 'range'),
+		],
+	};
+	const heroNames = (attack: Parameters<typeof weaponOptionsFor>[1]) =>
+		weaponOptionsFor(hero, attack).map((option) => option.name);
+
+	it('comes after the equipped weapons of a melee or any ability', () => {
+		expect(heroNames('melee')).toEqual(['Dagger', 'Unarmed Strike', 'Club']);
+		expect(heroNames('any')).toEqual(['Dagger', 'Longbow', 'Unarmed Strike', 'Club']);
+	});
+
+	it('is the only choice of an unarmed ability', () => {
+		expect(heroNames('unarmed')).toEqual(['Unarmed Strike']);
+	});
+
+	it('is not a choice of a ranged ability', () => {
+		expect(heroNames('ranged')).toEqual(['Longbow']);
+	});
+
+	it("rolls the hero's unarmed damage at reach 1", () => {
+		expect(weaponOptionsFor(hero, 'unarmed')[0]).toEqual({
+			uuid: UNARMED_STRIKE,
+			name: 'Unarmed Strike',
+			formula: '1d6 + @abilities.strength.mod',
+			damageType: 'bludgeoning',
+			attackType: 'reach',
+			distance: 1,
+			equipped: true,
+		});
+	});
+
+	it('is a choice only for a hero', () => {
+		expect(weaponOptionsFor({ ...hero, type: 'npc' }, 'unarmed')).toEqual([]);
 	});
 });
 

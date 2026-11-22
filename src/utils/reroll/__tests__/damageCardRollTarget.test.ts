@@ -120,6 +120,37 @@ describe('damageCardRollTarget', () => {
 		});
 	});
 
+	it('gives the gate the weapon an ability attacked with, when the card has one', () => {
+		const card = {
+			...makeCard([damageNode(serializedRoll())]),
+			itemUuid: () => 'Actor.a.Item.shot',
+			weaponUuid: () => 'Actor.a.Item.bow',
+		};
+		expect(damageCardRollTarget(card).context().roll).toEqual({
+			kind: 'attack',
+			delivery: 'melee',
+			itemUuid: 'Actor.a.Item.shot',
+			weaponUuid: 'Actor.a.Item.bow',
+		});
+	});
+
+	it('gives the gate the feature the attack was made through', () => {
+		const roll = serializedRoll();
+		const withOrigin = {
+			...roll,
+			options: { ...roll.options, origin: { uuid: 'Item.granting', identifier: 'granting' } },
+		};
+		const card = makeCard([damageNode(withOrigin)]);
+		expect(damageCardRollTarget(card).context().roll).toMatchObject({ origin: 'granting' });
+	});
+
+	it('reads the origin of a card rolled before the origin was recorded', () => {
+		const roll = serializedRoll();
+		const legacy = { ...roll, options: { ...roll.options, offerSource: 'granting' } };
+		const card = makeCard([damageNode(legacy)]);
+		expect(damageCardRollTarget(card).context().roll).toMatchObject({ origin: 'granting' });
+	});
+
 	it('tells the gate whether a die of the roll is at its max', () => {
 		const die = (result: number) => ({
 			class: 'Die',

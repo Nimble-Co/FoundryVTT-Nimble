@@ -102,7 +102,7 @@
 			<input type="text" list="nimble-testbench-weapon-types" bind:value={state.weaponType} />
 		</label>
 		<datalist id="nimble-testbench-weapon-types">
-			<option value="">(none — permissive, anyone can crit)</option>
+			<option value="">(none: permissive, anyone can crit)</option>
 			<option value="Unarmed Strike"></option>
 			<option value="Battleaxe"></option>
 			<option value="Club/Mace"></option>
@@ -182,14 +182,14 @@
 				<span>canCrit:</span>
 				<strong class:is-off={!state.resolvedCanCrit}>{String(state.resolvedCanCrit)}</strong>
 				{#if state.critSuppressionReason}
-					<em>— {state.critSuppressionReason}</em>
+					<em>({state.critSuppressionReason})</em>
 				{/if}
 			</div>
 			<div class="nimble-testbench__resolved-row">
 				<span>canMiss:</span>
 				<strong class:is-off={!state.resolvedCanMiss}>{String(state.resolvedCanMiss)}</strong>
 				{#if state.missSuppressionReason}
-					<em>— {state.missSuppressionReason}</em>
+					<em>({state.missSuppressionReason})</em>
 				{/if}
 			</div>
 		</div>

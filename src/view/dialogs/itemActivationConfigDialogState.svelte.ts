@@ -20,11 +20,15 @@ import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
 import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
-import { matchesAttackDelivery } from '#utils/damage/attackDelivery.js';
+import {
+	type AttackActivation,
+	deliveryOfAttack,
+	matchesAttackDelivery,
+} from '#utils/damage/attackDelivery.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
-import { weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
+import { type WeaponOption, weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
 import {
@@ -45,12 +49,29 @@ import {
 	extractRolledPools,
 	extractSpendableChargePools,
 	extractVariableChargeSpends,
-	getAttackDeliveryFromActivation,
 } from './itemActivationConfigDialogHelpers.js';
 import { resourceAmounts } from './resourceAmounts.svelte.ts';
 import { useOptionSplits } from './useOptionSplits.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
+
+/** A group of the weapon dropdown. The label is null when the dropdown has one group only. */
+export interface WeaponGroup {
+	label: string | null;
+	weapons: WeaponOption[];
+}
+
+function groupWeapons(weapons: WeaponOption[]): WeaponGroup[] {
+	const equipped = weapons.filter((weapon) => weapon.equipped);
+	const notEquipped = weapons.filter((weapon) => !weapon.equipped);
+	if (equipped.length === 0 || notEquipped.length === 0) {
+		return weapons.length > 0 ? [{ label: null, weapons }] : [];
+	}
+	return [
+		{ label: localize('NIMBLE.rollWindow.weaponsEquipped'), weapons: equipped },
+		{ label: localize('NIMBLE.rollWindow.weaponsNotEquipped'), weapons: notEquipped },
+	];
+}
 
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
@@ -65,6 +86,8 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	resourceCosts?: readonly ResourceCost[];
 	/** The Spell or Attack Options the attacker can turn on for this weapon. */
 	useOptionGroups?: readonly UseOptionGroup[];
+	/** The identifier of the feature the attack is made through. */
+	attackOrigin?: string;
 }
 
 export function createItemActivationConfigDialogState(
@@ -85,27 +108,15 @@ export function createItemActivationConfigDialogState(
 		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
 	});
 
-	const attackDelivery: AttackDelivery = getAttackDeliveryFromActivation(item);
-
 	const allRolledPools = extractRolledPools(actor);
 	const spendablePools: SpendablePool[] = allRolledPools.filter(
 		(pool) => pool.consumption !== 'autoBonus',
 	);
-	const autoBonusPools: SpendablePool[] = allRolledPools.filter(
-		(pool) =>
-			pool.consumption === 'autoBonus' &&
-			matchesAttackDelivery(pool.bonusOnAttackDelivery, attackDelivery),
-	);
 	const spendableChargePools: SpendableChargePool[] = extractSpendableChargePools(actor);
 	const variableChargeSpends: VariableChargeSpend[] = extractVariableChargeSpends(actor, item);
-	const autoBonusSummaries: AutoBonusSummary[] = buildAutoBonusSummaries(autoBonusPools);
-	const autoBonusFormula: string = buildAutoBonusFormula(autoBonusPools);
 
-	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
-	// advantage and bonus damage. Snapshot what applies against the target at
-	// dialog-open time; with two or more targets, a bonus that tests the target is
-	// not offered. If the player retargets while the dialog is open, the choice is
-	// not checked again at submit.
+	// The actor that target tests read, taken when the dialog opens. None with two or more
+	// targets, unless the first target decides for a single-target attack.
 	const firstTargetActor = (
 		soleTarget(game.user?.targets, {
 			firstDecides:
@@ -113,14 +124,6 @@ export function createItemActivationConfigDialogState(
 					?.targets?.singleTargetAttack === true,
 		}) as Token | null
 	)?.actor as { uuid?: string; getTargetDomain?: () => Set<string> } | undefined;
-	const conditionalBonusOptions: ConditionalBonusOption[] = getActiveConditionalBonuses(
-		actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
-		item as unknown as {
-			type?: string;
-			system?: { activation?: { targets?: { attackType?: string } } };
-		},
-		firstTargetActor,
-	);
 	const defaultConditionalChoice = (option: ConditionalBonusOption): ConditionalChoice => {
 		if (option.startsChosen === false) return 'none';
 		if (option.doubled) return 'damage';
@@ -149,13 +152,22 @@ export function createItemActivationConfigDialogState(
 	});
 	const keptAmount = keptAmountFor(actor, item);
 	let usesKeptAmount = $state(keptAmount !== null && !held.choosing);
-	const damageMultiplier = damageMultiplierOf(item);
 	let usesDamageMultiplier = $state(false);
 
 	const weaponAttack = weaponAttackOf(item);
 	const weapons = weaponOptionsFor(actor, weaponAttack);
+	const weaponGroups = groupWeapons(weapons);
 	let weaponUuid = $state<string | null>(weapons[0]?.uuid ?? null);
 	const chosenWeapon = $derived(weapons.find((weapon) => weapon.uuid === weaponUuid) ?? null);
+	const weaponItemOf = (uuid: string | null | undefined) =>
+		uuid
+			? (Array.from((actor.items ?? []) as Iterable<{ uuid?: string; identifier?: string }>).find(
+					(each) => each.uuid === uuid,
+				) ?? null)
+			: null;
+	const damageMultiplier = $derived(
+		damageMultiplierOf(item) ?? damageMultiplierOf(weaponItemOf(weaponUuid)),
+	);
 
 	// A weapon ability attacks as the weapon does, so the weapon's attack type
 	// decides melee or ranged.
@@ -163,20 +175,58 @@ export function createItemActivationConfigDialogState(
 		activation?: Parameters<typeof attackConditionLines>[1];
 		properties?: { selected?: string[] };
 	};
+	const activationWith = (weapon: { attackType: string } | null) =>
+		weapon
+			? {
+					...itemSystem.activation,
+					targets: { ...itemSystem.activation?.targets, attackType: weapon.attackType },
+				}
+			: itemSystem.activation;
+	const heldItemWith = (weapon: { attackType: string } | null) =>
+		({ system: { activation: activationWith(weapon) } }) as Parameters<typeof held.reread>[0];
+	if (weapons[0]) held.reread(heldItemWith(weapons[0]));
+
+	const attackDelivery: AttackDelivery = $derived(
+		deliveryOfAttack(activationWith(chosenWeapon) as AttackActivation | undefined, actor),
+	);
+	const autoBonusPools: SpendablePool[] = $derived(
+		allRolledPools.filter(
+			(pool) =>
+				pool.consumption === 'autoBonus' &&
+				matchesAttackDelivery(pool.bonusOnAttackDelivery, attackDelivery),
+		),
+	);
+	const autoBonusSummaries: AutoBonusSummary[] = $derived(buildAutoBonusSummaries(autoBonusPools));
+	const autoBonusFormula: string = $derived(buildAutoBonusFormula(autoBonusPools));
+
 	const conditionLinesFor = (weapon: { attackType: string } | null) =>
 		attackConditionLines(
 			actor,
-			weapon
-				? {
-						...itemSystem.activation,
-						targets: { ...itemSystem.activation?.targets, attackType: weapon.attackType },
-					}
-				: itemSystem.activation,
+			activationWith(weapon),
 			firstTargetActor ?? null,
 			itemSystem.properties?.selected,
 		);
 	const initialConditionLines = conditionLinesFor(weapons[0] ?? null);
 	let conditionLines = $state(initialConditionLines);
+
+	// Conditional bonuses offer a per-attack choice between advantage and bonus damage.
+	// Snapshot what applies against the target at dialog-open time; with two or more
+	// targets, a bonus that tests the target is not offered. If the player retargets while
+	// the dialog is open, the choice is not checked again at submit.
+	const conditionalBonusesFor = (weapon: WeaponOption | null) =>
+		getActiveConditionalBonuses(
+			actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
+			{
+				type: item.type,
+				identifier: (item as { identifier?: string }).identifier,
+				system: { activation: activationWith(weapon) as { targets?: { attackType?: string } } },
+			},
+			firstTargetActor,
+			weaponItemOf(weapon?.uuid),
+			options.attackOrigin,
+		);
+	const initialConditionalBonusOptions = conditionalBonusesFor(weapons[0] ?? null);
+	let conditionalBonusOptions = $state<ConditionalBonusOption[]>(initialConditionalBonusOptions);
 	const conditionOptions = $derived(conditionRollModeOptions(conditionLines));
 	const opened = openRollModeTicks(
 		initialRollMode,
@@ -185,17 +235,28 @@ export function createItemActivationConfigDialogState(
 	let selectedRollMode = $state(opened.mode);
 	let appliedTicks = $state<AppliedTicks>(opened.applied);
 
-	// The condition ticks of the new weapon replace those of the old one.
+	// The condition ticks and conditional bonuses of the new weapon replace those of the old one.
 	function chooseWeapon(uuid: string | null) {
 		weaponUuid = uuid;
+		const weapon = weapons.find((each) => each.uuid === uuid) ?? null;
+		held.reread(heldItemWith(weapon));
 		const own = selectedRollMode - Object.values(appliedTicks).reduce((sum, step) => sum + step, 0);
-		conditionLines = conditionLinesFor(weapons.find((weapon) => weapon.uuid === uuid) ?? null);
+		conditionLines = conditionLinesFor(weapon);
 		const reopened = openRollModeTicks(own, conditionRollModeOptions(conditionLines));
 		selectedRollMode = reopened.mode;
 		appliedTicks = reopened.applied;
+		conditionalBonusOptions = conditionalBonusesFor(weapon);
+		conditionalChoices = Object.fromEntries(
+			conditionalBonusOptions.map((o) => [
+				o.key,
+				conditionalChoices[o.key] ?? defaultConditionalChoice(o),
+			]),
+		);
 	}
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
-		Object.fromEntries(conditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)])),
+		Object.fromEntries(
+			initialConditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)]),
+		),
 	);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state<number | null | undefined>();
@@ -470,6 +531,7 @@ export function createItemActivationConfigDialogState(
 			maxDamageChoice = value;
 		},
 		weapons,
+		weaponGroups,
 		needsWeapon: weaponAttack !== '',
 		get weaponUuid() {
 			return weaponUuid;
@@ -484,7 +546,9 @@ export function createItemActivationConfigDialogState(
 			return unpaid ? localize('NIMBLE.rollWindow.noCharge', { pool: unpaid.label }) : '';
 		},
 		keptAmount,
-		heldLines: held.lines,
+		get heldLines() {
+			return held.lines;
+		},
 		choosesHeldChanges: held.choosing,
 		get chosenHeldChanges() {
 			return held.chosen;
@@ -492,7 +556,9 @@ export function createItemActivationConfigDialogState(
 		set chosenHeldChanges(value: string[]) {
 			held.chosen = value;
 		},
-		damageMultiplier,
+		get damageMultiplier() {
+			return damageMultiplier;
+		},
 		get usesDamageMultiplier() {
 			return usesDamageMultiplier;
 		},
@@ -562,8 +628,12 @@ export function createItemActivationConfigDialogState(
 		spendablePools,
 		spendableChargePools,
 		variableChargeSpends,
-		autoBonusSummaries,
-		conditionalBonusOptions,
+		get autoBonusSummaries() {
+			return autoBonusSummaries;
+		},
+		get conditionalBonusOptions() {
+			return conditionalBonusOptions;
+		},
 
 		// Conditional-bonus choices.
 		get conditionalChoices() {

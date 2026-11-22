@@ -16,28 +16,17 @@
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { cardMeta } from './cardMeta.ts';
 	import { setTargetsSectionShown } from './targetsSection.ts';
-
-	function getCardSubheading(activation, isCritical, isMiss) {
-		if (!activation) return null;
-		if (!activation.effects?.length) return null;
-		if (!activation.effects.some((node) => node.type === 'damage')) return null;
-
-		if (isCritical) return 'Critical Hit';
-		if (isMiss) return 'Miss';
-		return 'Hit';
-	}
 
 	const { messageDocument } = $props();
 
 	let headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	let headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	let { activation, description, image, isCritical, isIdentified, isMiss, name } = $derived(
-		messageDocument.reactive.system,
-	);
+	let { description, image, isIdentified, name } = $derived(messageDocument.reactive.system);
 
-	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
+	let subheading = $derived(cardMeta(messageDocument.reactive));
 	// An object that is not identified never opens its item.
 	let itemUuid = $derived(
 		isIdentified ? (messageDocument.reactive.flags?.[SYSTEM_ID]?.itemUuid ?? null) : null,

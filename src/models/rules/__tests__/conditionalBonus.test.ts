@@ -21,6 +21,7 @@ function createRule(
 		damageType?: string;
 		delivery?: 'melee' | 'ranged' | 'any';
 		source?: 'weapon' | 'spell' | 'any';
+		attackOrigin?: string;
 		targetCondition?: FakePredicate;
 		disabled?: boolean;
 	},
@@ -53,6 +54,7 @@ function createRule(
 	rule.damageBonus = config.damageBonus ?? '@level';
 	rule.delivery = config.delivery ?? 'any';
 	rule.source = config.source ?? 'any';
+	rule.attackOrigin = config.attackOrigin ?? '';
 	(rule as unknown as { damageType: string }).damageType = config.damageType ?? '';
 	rule.disabled = config.disabled ?? false;
 
@@ -112,6 +114,19 @@ describe('ConditionalBonusRule', () => {
 			const rule = createRule({ source: 'spell' }, createMockActor());
 			expect(rule.matchesAttack('melee', 'spell')).toBe(true);
 			expect(rule.matchesAttack('melee', 'weapon')).toBe(false);
+		});
+
+		it('matches only attacks made through the feature it names', () => {
+			const rule = createRule({ attackOrigin: 'granting-feature' }, createMockActor());
+			expect(rule.matchesAttack('melee', 'weapon', 'granting-feature')).toBe(true);
+			expect(rule.matchesAttack('melee', 'weapon', 'longsword')).toBe(false);
+			expect(rule.matchesAttack('melee', 'weapon')).toBe(false);
+		});
+
+		it('matches every attack when the feature is blank', () => {
+			const rule = createRule({ attackOrigin: '' }, createMockActor());
+			expect(rule.matchesAttack('melee', 'weapon', 'longsword')).toBe(true);
+			expect(rule.matchesAttack('melee', 'weapon')).toBe(true);
 		});
 	});
 

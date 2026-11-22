@@ -57,6 +57,13 @@ describe('Juggernaut', () => {
 		expect(juggernaut().bonusFor('other-item')).toBeNull();
 	});
 
+	it('adds nothing when no item is named', () => {
+		const rule = juggernaut();
+		rule.offerSource = '';
+		expect(rule.bonusFor('coordinated-strike')).toBeNull();
+		expect(rule.bonusFor(undefined)).toBeNull();
+	});
+
 	it('collects nothing with Feature Effects off', () => {
 		vi.stubGlobal('game', { settings: { get: () => false } });
 		expect(collectOfferBonuses({ rules: [juggernaut()] }, 'coordinated-strike')).toEqual([]);
@@ -64,10 +71,10 @@ describe('Juggernaut', () => {
 
 	it('gives a row with Feature Effects off, only on the attack from the offer', () => {
 		vi.stubGlobal('game', { settings: { get: () => false } });
-		const attack = (offerSource?: string) => ({
+		const attack = (origin?: string) => ({
 			side: 'roller' as const,
 			other: null,
-			roll: { kind: 'attack' as const, delivery: null, ...(offerSource ? { offerSource } : {}) },
+			roll: { kind: 'attack' as const, delivery: null, ...(origin ? { origin } : {}) },
 		});
 
 		expect(juggernaut().offersUseOn(attack('coordinated-strike'))).toBe(true);

@@ -3407,4 +3407,154 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.rollHidden).toBe(true);
 		});
 	});
+
+	describe('a feature that attacks with a weapon', () => {
+		const weapon = (name: string, formula: string, attackType: string, equipped: boolean) => ({
+			uuid: `Item.${name}`,
+			name,
+			type: 'object',
+			update: vi.fn(),
+			system: {
+				objectType: 'weapon',
+				equipped,
+				activation: {
+					targets: { attackType, distance: 8 },
+					effects: [{ type: 'damage', formula, damageType: 'piercing' }],
+				},
+			},
+		});
+		const globals = globalThis as unknown as Record<string, any>;
+
+		function attackWith(kind: string, weapons: ReturnType<typeof weapon>[], options = {}) {
+			(mockActor as unknown as { items: unknown }).items = weapons;
+			globals.fromUuidSync = vi.fn((uuid: string) => weapons.find((each) => each.uuid === uuid));
+			mockItem.type = 'feature';
+			(mockItem.system.activation as Record<string, unknown>).weaponAttack = kind;
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				options,
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '0',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode], targets: {} } as never;
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			return manager.getData();
+		}
+
+		afterEach(() => {
+			delete globals.fromUuidSync;
+			dialogState.result = undefined;
+		});
+
+		it('does not start, and says why, when no weapon fits', async () => {
+			const result = await attackWith('ranged', [weapon('Dagger', '1d4', 'reach', true)], {
+				fastForward: true,
+			});
+
+			expect(result).toEqual({ activation: null, rolls: null });
+			expect(DamageRoll).not.toHaveBeenCalled();
+			expect(ui.notifications?.warn).toHaveBeenCalledWith(
+				'Test Item: you have no weapon of this kind.',
+			);
+		});
+
+		it('does not open the window, and says why, when no weapon fits', async () => {
+			dialogState.result = { rollMode: 0 };
+
+			const result = await attackWith('ranged', [weapon('Dagger', '1d4', 'reach', true)]);
+
+			expect(result).toEqual({ activation: null, rolls: null });
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(ui.notifications?.warn).toHaveBeenCalledWith(
+				'Test Item: you have no weapon of this kind.',
+			);
+		});
+
+		it('rolls the first equipped weapon on a fast forward', async () => {
+			await attackWith(
+				'ranged',
+				[weapon('Longbow', '1d8', 'range', false), weapon('Shortbow', '1d6', 'range', true)],
+				{ fastForward: true },
+			);
+
+			expect(DamageRoll).toHaveBeenCalledWith('1d6', expect.anything(), expect.anything());
+		});
+
+		it('attacks with a weapon that is not equipped, and leaves it not equipped', async () => {
+			const longbow = weapon('Longbow', '1d8', 'range', false);
+			dialogState.result = { rollMode: 0, weaponUuid: 'Item.Longbow' };
+
+			await attackWith('ranged', [longbow, weapon('Shortbow', '1d6', 'range', true)]);
+
+			expect(DamageRoll).toHaveBeenCalledWith('1d8', expect.anything(), expect.anything());
+			expect(longbow.update).not.toHaveBeenCalled();
+			expect(longbow.system.equipped).toBe(false);
+		});
+
+		describe('with an Unarmed Strike', () => {
+			beforeEach(() => {
+				mockActor.type = 'character';
+				Object.assign(mockActor.system, { unarmedDamage: '1d4' });
+			});
+
+			it("rolls the hero's unarmed damage at reach 1", async () => {
+				const result = await attackWith('unarmed', [], { fastForward: true });
+
+				expect(DamageRoll).toHaveBeenCalledWith('1d4', expect.anything(), expect.anything());
+				expect(result.activation?.effects?.[0]).toMatchObject({ damageType: 'bludgeoning' });
+				expect(result.activation?.targets).toMatchObject({ attackType: 'reach', distance: 1 });
+			});
+
+			it('adds the melee damage bonuses, and not the ranged ones', async () => {
+				const bonus = (delivery: string, value: number, formula = '') => ({
+					delivery,
+					source: 'any',
+					damageType: '',
+					value,
+					formula,
+				});
+				Object.assign(mockActor.system, {
+					damageBonuses: [bonus('melee', 2), bonus('melee', 0, '1d6'), bonus('ranged', 5)],
+				});
+
+				await attackWith('unarmed', [], { fastForward: true });
+
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d4 + 2 + 1d6',
+					expect.anything(),
+					expect.anything(),
+				);
+			});
+
+			it('cannot crit without the Unarmed Strike proficiency', async () => {
+				await attackWith('unarmed', [], { fastForward: true });
+
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d4',
+					expect.anything(),
+					expect.objectContaining({ canCrit: false }),
+				);
+			});
+
+			it('can crit with the Unarmed Strike proficiency', async () => {
+				Object.assign(mockActor.system, { proficiencies: { weapons: ['Unarmed Strike'] } });
+
+				await attackWith('unarmed', [], { fastForward: true });
+
+				expect(DamageRoll).toHaveBeenCalledWith(
+					'1d4',
+					expect.anything(),
+					expect.objectContaining({ canCrit: true }),
+				);
+			});
+		});
+	});
 });

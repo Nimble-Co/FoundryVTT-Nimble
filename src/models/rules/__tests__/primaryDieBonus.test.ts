@@ -91,4 +91,17 @@ describe('PrimaryDieBonusRule', () => {
 		expect(rule.bonusFor({ delivery: 'melee', other: ogre() })).toBe(0);
 		expect(rule.bonusFor({ delivery: 'melee', other: null })).toBe(0);
 	});
+
+	it('gives its value only to attacks made through the feature it names', () => {
+		const rule = makeRule({ attackOrigin: 'granting-feature' });
+		expect(rule.bonusFor({ delivery: 'melee', other: null, origin: 'granting-feature' })).toBe(1);
+		expect(rule.bonusFor({ delivery: 'melee', other: null, origin: 'longsword' })).toBe(0);
+		expect(rule.bonusFor({ delivery: 'melee', other: null })).toBe(0);
+	});
+
+	it('gives its value to every attack when the feature is blank', () => {
+		const rule = makeRule({ attackOrigin: '' });
+		expect(rule.bonusFor({ delivery: 'melee', other: null, origin: 'longsword' })).toBe(1);
+		expect(rule.bonusFor({ delivery: 'melee', other: null })).toBe(1);
+	});
 });

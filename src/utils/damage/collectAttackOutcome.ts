@@ -21,6 +21,8 @@ interface AttackOutcomeInput {
 	target: (RuleOwner & Parameters<typeof incapacitatedConditionOf>[0]) | null | undefined;
 	delivery: AttackDelivery | null;
 	itemUuid: string | null | undefined;
+	/** The weapon an ability attacks with. */
+	weaponUuid?: string | null;
 	canCrit: boolean;
 	canMiss: boolean;
 	/** The damage types of the attack. */
@@ -104,6 +106,7 @@ export function collectAttackOutcome(input: AttackOutcomeInput): AttackOutcome {
 				delivery: input.delivery,
 				other: other as OtherCreature | null | undefined,
 				itemUuid: input.itemUuid,
+				weaponUuid: input.weaponUuid,
 				damageTypes: input.damageTypes ?? [],
 			});
 			if (!change) continue;

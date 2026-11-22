@@ -6,6 +6,7 @@ import type { DamagePart } from '#types/damagePart.d.ts';
 import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
+import type { AttackOrigin } from '../utils/damage/attackOrigin.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { critDiceLinesOf, dieRoleOf } from './critDiceLines.js';
 import {
@@ -63,7 +64,9 @@ declare namespace DamageRoll {
 		/** This weapon and the other one, on a dual wield attack. */
 		dualWieldSelf?: DualWieldWeaponSelf;
 		dualWieldOther?: DualWieldWeapon;
-		/** The identifier of the item whose offer row made this attack. */
+		/** The feature the attack was made through. */
+		origin?: AttackOrigin;
+		/** @deprecated The origin identifier of an attack rolled before `origin`. */
 		offerSource?: string;
 		/** Any die of the roll at its max makes the roll a crit on a hit. */
 		anyDieCrits?: boolean;

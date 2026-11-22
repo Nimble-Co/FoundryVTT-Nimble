@@ -14,6 +14,7 @@ import {
 	matchesAttackDelivery,
 	matchesAttackSource,
 } from '../../utils/damage/attackDelivery.js';
+import { type AttackItems, attackItemUuids, isAttackWith } from '../../utils/damage/attackItems.js';
 import { attackTags } from '../../utils/damage/attackTags.js';
 import type {
 	RerollTrigger,
@@ -170,6 +171,8 @@ interface AttackOutcomeContext {
 	other: OtherCreature | null | undefined;
 	/** The item the attack is made with. */
 	itemUuid: string | null | undefined;
+	/** The weapon an ability attacks with. */
+	weaponUuid?: string | null;
 	/** The damage types of the attack, as `attack:damageType:<type>` tags for the predicate. */
 	damageTypes?: readonly string[];
 }
@@ -274,10 +277,8 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		if (!this.test(this.domainWith(attackTags(context.damageTypes)))) return null;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return null;
 		const ownAttack = context.side === 'yourAttacks';
-		if (ownAttack && this.thisItemOnly && (!this.item || context.itemUuid !== this.item.uuid)) {
-			return null;
-		}
-		if (!this.#matchesAttackItem(context.itemUuid)) return null;
+		if (ownAttack && this.thisItemOnly && !isAttackWith(context, this.item?.uuid)) return null;
+		if (!this.#matchesAttackItem(context)) return null;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return null;
 		const chargePoolIdentifier = ownAttack ? (this.chargePoolIdentifier ?? '').trim() : '';
 		if (!hasRuleCharge(this.actor as Actor | null, chargePoolIdentifier)) return null;
@@ -295,14 +296,15 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 		};
 	}
 
-	#matchesAttackItem(itemUuid: string | null | undefined): boolean {
+	#matchesAttackItem(context: AttackItems): boolean {
 		const except = (this.exceptItemIdentifier ?? '').trim();
 		if (this.attackSource === 'any' && !except) return true;
-		const item = (itemUuid ? fromUuidSync(itemUuid as never) : null) as {
-			type?: string;
-			identifier?: string;
-		} | null;
-		if (except && item?.identifier === except) return false;
+		const itemOf = (uuid: string) =>
+			fromUuidSync(uuid as never) as { type?: string; identifier?: string } | null;
+		if (except && attackItemUuids(context).some((uuid) => itemOf(uuid)?.identifier === except)) {
+			return false;
+		}
+		const item = context.itemUuid ? itemOf(context.itemUuid) : null;
 		if (this.attackSource === 'any') return true;
 		return matchesAttackSource(this.attackSource, item);
 	}
@@ -323,6 +325,7 @@ class AttackOutcomeRule extends NimbleBaseRule<AttackOutcomeRule.Schema> {
 			delivery: roll.delivery,
 			other: context.other,
 			itemUuid: roll.itemUuid,
+			weaponUuid: roll.weaponUuid,
 			damageTypes: roll.damageTypes,
 		});
 		if (!change) return false;

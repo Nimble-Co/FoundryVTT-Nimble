@@ -9,6 +9,8 @@ The Primary Die Bonus rule adds a number to the Primary Die of the owner's own a
 
 The `self:pool:judgment` tag is there while the Judgment Dice pool has at least 1 die, so the bonus stops when the pool is empty.
 
+**Only attacks made through** limits the bonus to attacks a feature causes, by the feature's identifier. Blank is every attack. See [Damage Bonus](#damage-bonus).
+
 **Only when the target is** tests the first target of the attack, with the same `target:` tags as on the Reroll rule, for example `target:distracted`. Empty means any target. With tags picked, an attack with no target gets no bonus.
 
 The card shows one line at the roll for each bonus, with the rule's **Label** (or the item name when the label is empty) and a tag such as **+1 to Primary Die**. Several bonuses add up.

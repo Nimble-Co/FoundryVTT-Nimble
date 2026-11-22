@@ -1,5 +1,7 @@
 <script lang="ts">
+	import type { LinkedPart } from '#utils/documents/docLink.ts';
 	import DocumentLink from '../../components/DocumentLink.svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
 
 	interface Props {
 		alt?: string;
@@ -8,7 +10,8 @@
 		/** The document the heading names: the heading opens it for a user who may see it. */
 		headingUuid?: string | null;
 		image?: string;
-		subheading?: string;
+		/** The meta line: text, or pieces from `linkedParts()` whose names are links. */
+		subheading?: string | readonly LinkedPart[] | null;
 	}
 
 	let { alt, fa, heading, headingUuid = null, subheading, image }: Props = $props();
@@ -27,7 +30,11 @@
 		</h3>
 
 		{#if subheading}
-			<h4 class="nimble-chat-card__meta">{subheading}</h4>
+			<h4 class="nimble-chat-card__meta">
+				{#if typeof subheading === 'string'}{subheading}{:else}<LinkedText
+						parts={subheading}
+					/>{/if}
+			</h4>
 		{/if}
 	</div>
 </header>

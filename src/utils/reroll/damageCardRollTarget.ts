@@ -7,6 +7,7 @@ import {
 } from '../chargePool/chargePoolReroll.js';
 import { clearTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
+import { originIdentifierOfRoll } from '../damage/attackOrigin.js';
 import { spendCritDiceUses } from '../damage/collectCritDice.js';
 import {
 	appendExtraDamageToRoll,
@@ -80,6 +81,8 @@ interface DamageCard {
 	delivery(): AttackDelivery;
 	/** The item the attack was made with, when the card has one. */
 	itemUuid?(): string | null;
+	/** The weapon an ability attacked with, when the card records one. */
+	weaponUuid?(): string | null;
 	/** The card's Movement Offers once its outcome changes. */
 	movementOfferChanges(changes: Record<string, unknown>): Record<string, unknown>;
 	update(changes: Record<string, unknown>): Promise<unknown>;
@@ -130,6 +133,7 @@ type RollOptionsView = {
 		maxDamage?: unknown;
 		explosionStyle?: unknown;
 		isVicious?: unknown;
+		origin?: { identifier?: string } | null;
 		offerSource?: string;
 		fixedAmount?: unknown;
 	} | null;
@@ -165,9 +169,11 @@ function damageRollContext(
 			: findPrimaryDamageRoll(card.system())?.damageNode.roll
 	) as RollOptionsView | undefined;
 	const itemUuid = card.itemUuid?.() ?? null;
+	const weaponUuid = card.weaponUuid?.() ?? null;
 	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
+	const origin = originIdentifierOfRoll(rolled?.options);
 	const upcastSteps =
 		(card.system() as { upcast?: { upcastSteps?: number } | null }).upcast?.upcastSteps ?? 0;
 	return {
@@ -184,10 +190,11 @@ function damageRollContext(
 			kind: 'attack',
 			delivery: card.delivery(),
 			...(itemUuid ? { itemUuid } : {}),
+			...(weaponUuid ? { weaponUuid } : {}),
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
 			...(upcastSteps > 0 ? { upcastSteps } : {}),
-			...(rolled?.options?.offerSource ? { offerSource: rolled.options.offerSource } : {}),
+			...(origin ? { origin } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,

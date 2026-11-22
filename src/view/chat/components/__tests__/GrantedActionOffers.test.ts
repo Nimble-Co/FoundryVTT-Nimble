@@ -77,9 +77,15 @@ describe('GrantedActionOffers', () => {
 		});
 
 		const button = screen.getByRole('button');
-		expect(button.textContent).toContain('Weapon Attack');
-		expect(button.textContent).toContain('Granting Feature');
-		expect(button.textContent).toContain('Sir Brannon');
+		expect(button.textContent?.trim()).toBe('Sir Brannon: Weapon Attack (Granting Feature)');
+	});
+
+	it('leaves the source out of the label when the offer has none', () => {
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([{ ...createOffer(), label: '' }]) },
+		});
+
+		expect(screen.getByRole('button').textContent?.trim()).toBe('Sir Brannon: Weapon Attack');
 	});
 
 	it('expands into the recipient item list on click, with an empty state when no items qualify', async () => {
@@ -167,7 +173,7 @@ describe('GrantedActionOffers', () => {
 		expect(itemButton).toBeTruthy();
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
-		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: '' });
+		expect(activateItem).toHaveBeenCalledWith('sword', { originUuid: '' });
 	});
 
 	it('gives the attack the item of the row', async () => {
@@ -183,7 +189,7 @@ describe('GrantedActionOffers', () => {
 		await fireEvent.click(screen.getByRole('button'));
 		await fireEvent.click(findItemButton('Longsword') as HTMLButtonElement);
 
-		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: 'Item.source' });
+		expect(activateItem).toHaveBeenCalledWith('sword', { originUuid: 'Item.source' });
 	});
 
 	it('names only the recipient as the one acting when other creatures are targeted too', async () => {
@@ -228,7 +234,7 @@ describe('GrantedActionOffers', () => {
 		expect(itemButton?.className).not.toMatch(/discouraged/);
 
 		await fireEvent.click(itemButton as HTMLButtonElement);
-		expect(activateItem).toHaveBeenCalledWith('sword', { offerSourceUuid: '' });
+		expect(activateItem).toHaveBeenCalledWith('sword', { originUuid: '' });
 	});
 
 	it('names the current target when it is not the recipient', async () => {

@@ -8,6 +8,7 @@ import { RECOVERY_DOMAIN_FLAG, RECOVERY_GIVEN_FLAG } from '#utils/chargePool/cha
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
 import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { itemUseRecoveryDomain } from '#utils/chargePool/itemUseRecovery.js';
+import type { AttackActivation } from '#utils/damage/attackDelivery.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import localize from '#utils/localize.js';
 import { critTriggerOutcome } from '#utils/reroll/firesCritTriggers.js';
@@ -175,9 +176,11 @@ function registerItemUseHooks(): void {
 		if (!isResourceSpendingAutomationEnabled()) return;
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return;
+		const used = context as { targets?: unknown[]; activation?: AttackActivation } | null;
 		const recoveryDomain = itemUseRecoveryDomain(
 			characterItem,
-			(context as { targets?: unknown[] } | null)?.targets as never,
+			used?.targets as never,
+			used?.activation,
 		);
 		const itemUseContext = { ...toItemUseContext(context), recoveryDomain };
 		const typedChatMessage = chatMessage as {

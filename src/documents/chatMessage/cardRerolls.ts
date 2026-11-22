@@ -298,6 +298,10 @@ export class CardRerolls {
 				const itemUuid = this.#host.flags()?.itemUuid;
 				return typeof itemUuid === 'string' ? itemUuid : null;
 			},
+			weaponUuid: () => {
+				const weaponUuid = this.#host.flags()?.weaponUuid;
+				return typeof weaponUuid === 'string' ? weaponUuid : null;
+			},
 			movementOfferChanges: (changes) => this.#host.movementOfferChanges(changes),
 			update: (changes) => this.#host.update(changes),
 			followChargeRecovery: (change) => this.followChargeRecovery(change),

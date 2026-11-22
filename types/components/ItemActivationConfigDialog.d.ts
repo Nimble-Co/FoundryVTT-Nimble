@@ -105,4 +105,6 @@ export interface ItemActivationConfigDialogProps {
 	resourceCosts?: ResourceCost[];
 	/** The Spell or Attack Options the attacker can turn on for this weapon. */
 	useOptionGroups?: UseOptionGroup[];
+	/** The identifier of the feature the attack is made through. */
+	attackOrigin?: string;
 }

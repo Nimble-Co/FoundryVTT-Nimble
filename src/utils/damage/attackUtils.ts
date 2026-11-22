@@ -5,6 +5,7 @@ import type {
 	DamageBonusEntry,
 	DamageBonusSource,
 } from '../../models/rules/damageBonus.js';
+import { isMadeThrough } from './attackOrigin.js';
 
 /** Default unarmed: 1d4 + STR damage, but cannot crit without proficiency (e.g., Swift Fists) */
 export const DEFAULT_UNARMED_DAMAGE = '1d4 + @abilities.strength.mod';
@@ -90,9 +91,15 @@ function matchesBonus(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
+	origin?: string,
 ): boolean {
-	if (bonus.itemIdentifier && bonus.itemIdentifier !== itemIdentifier) return false;
+	if (!isMadeThrough(bonus.attackOrigin, origin)) return false;
+	if (bonus.itemIdentifier) {
+		const attackItems =
+			typeof itemIdentifier === 'string' ? [itemIdentifier] : (itemIdentifier ?? []);
+		if (!attackItems.includes(bonus.itemIdentifier)) return false;
+	}
 	if (bonus.delivery !== 'any' && bonus.delivery !== delivery) return false;
 	if (bonus.source !== 'any' && bonus.source !== source) return false;
 	if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) return false;
@@ -115,6 +122,8 @@ function matchesBonus(
  * @param source - The source type ('weapon', 'spell', or 'any')
  * @param damageType - Optional damage type to filter by (e.g. 'lightning')
  * @param targetDomain - Optional target actor domain for targetCondition evaluation
+ * @param itemIdentifier - The identifiers of the items the attack is made with
+ * @param origin - The identifier of the feature the attack was made through
  * @returns The total numeric bonus value (0 if no matching bonuses)
  */
 export function getDamageBonusTotal(
@@ -123,7 +132,8 @@ export function getDamageBonusTotal(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
+	origin?: string,
 ): number {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -132,7 +142,9 @@ export function getDamageBonusTotal(
 	let total = 0;
 	for (const bonus of bonuses) {
 		if (!bonus.value) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier, origin)) {
+			continue;
+		}
 		total += bonus.value;
 	}
 	return total;
@@ -147,6 +159,8 @@ export function getDamageBonusTotal(
  * @param source - The source type ('weapon', 'spell', or 'any')
  * @param damageType - Optional damage type to filter by (e.g. 'lightning')
  * @param targetDomain - Optional target actor domain for targetCondition evaluation
+ * @param itemIdentifier - The identifiers of the items the attack is made with
+ * @param origin - The identifier of the feature the attack was made through
  * @returns Array of dice formula strings to append to the damage roll
  */
 export function getDamageBonusFormulas(
@@ -155,7 +169,8 @@ export function getDamageBonusFormulas(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
+	origin?: string,
 ): string[] {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -164,7 +179,9 @@ export function getDamageBonusFormulas(
 	const formulas: string[] = [];
 	for (const bonus of bonuses) {
 		if (!bonus.formula) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier, origin)) {
+			continue;
+		}
 		formulas.push(bonus.formula);
 	}
 	return formulas;
@@ -180,14 +197,17 @@ export function getDamageBonusParts(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
+	origin?: string,
 ): DamagePart[] {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
 	const parts: DamagePart[] = [];
 	for (const bonus of bonuses ?? []) {
 		if (!bonus.value && !bonus.formula) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier, origin)) {
+			continue;
+		}
 		const named = { label: bonus.label ?? '', itemUuid: bonus.itemUuid ?? '' };
 		parts.push(
 			bonus.value ? { ...named, amount: bonus.value } : { ...named, formula: bonus.formula ?? '' },

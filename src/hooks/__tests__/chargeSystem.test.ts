@@ -258,6 +258,28 @@ describe('registerChargeSystemHooks resource-spending automation gate', () => {
 		});
 	});
 
+	it('records the delivery of the activation the use was made with, not of the item', async () => {
+		const hooks = captureHooks();
+		setSpendingAutomation(true);
+		const registerChargeSystemHooks = (await import('../chargeSystem.js')).default;
+		registerChargeSystemHooks();
+
+		const item = {
+			name: 'Feature',
+			actor: { type: 'character', flags: {} },
+			system: { activation: { targets: { attackType: 'reach' } } },
+		};
+		const card = { flags: {}, update: vi.fn(async () => undefined) };
+		hooks.get('nimble.useItem')?.(item, card, {
+			activation: { targets: { attackType: 'range' } },
+		});
+
+		await vi.waitFor(() => expect(card.update).toHaveBeenCalledTimes(1));
+		expect(card.update).toHaveBeenCalledWith({
+			'flags.nimble.chargeRecoveryDomain': ['attack:ranged'],
+		});
+	});
+
 	it('a use with no charge validates and consumes with no charge', async () => {
 		const hooks = captureHooks();
 		setSpendingAutomation(true);

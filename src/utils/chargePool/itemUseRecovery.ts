@@ -37,11 +37,13 @@ export function recoveryDomainOf(
 	return delivery ? [...unique, `attack:${delivery}`] : unique;
 }
 
+/** `activation` is the one the use was made with, when it differs from the item's own. */
 export function itemUseRecoveryDomain(
 	item: UsedItem,
 	targets: readonly TargetToken[] | undefined,
+	activation?: AttackActivation,
 ): string[] {
-	return recoveryDomainOf(item.actor, item.system?.activation, targets);
+	return recoveryDomainOf(item.actor, activation ?? item.system?.activation, targets);
 }
 
 /** The pools a use of this item spends from. */

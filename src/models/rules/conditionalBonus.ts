@@ -1,7 +1,9 @@
 import type { DamageNode, EffectNode } from '#types/effectTree.js';
+import { isMadeThrough } from '#utils/damage/attackOrigin.js';
 import { identifierOf } from '#utils/documents/itemIdentifier.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { attackOriginField } from './_attackOriginField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -128,6 +130,7 @@ function schema() {
 			hint: 'NIMBLE.rules.conditionalBonus.source.hint',
 			choices: ['weapon', 'spell', 'any'],
 		}),
+		attackOrigin: attackOriginField(),
 		targetCondition: new PredicateField({
 			label: 'NIMBLE.rules.conditionalBonus.targetCondition.label',
 			hint: 'NIMBLE.rules.conditionalBonus.targetCondition.hint',
@@ -163,6 +166,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	// blank sentinel); re-declaring it as the wider `string` clashes with that type.
 	declare delivery: ConditionalBonusDelivery;
 	declare source: ConditionalBonusSource;
+	declare attackOrigin: string;
 
 	static override defineSchema(): ConditionalBonusRule.Schema {
 		return {
@@ -180,6 +184,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 				['damageOfItem', 'string'],
 				['delivery', 'string'],
 				['source', 'string'],
+				['attackOrigin', 'string'],
 				['targetCondition', 'object'],
 			]),
 		);
@@ -210,15 +215,16 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 		return node ?? null;
 	}
 
-	/** True when this bonus is relevant to an attack of the given delivery/source. */
+	/** True when this bonus is relevant to an attack of the given delivery, source and origin. */
 	matchesAttack(
 		delivery: ConditionalBonusDelivery | null,
 		source: ConditionalBonusSource,
+		origin?: string,
 	): boolean {
 		if (!delivery) return false;
 		if (this.delivery !== 'any' && this.delivery !== delivery) return false;
 		if (this.source !== 'any' && this.source !== source) return false;
-		return true;
+		return isMadeThrough(this.attackOrigin, origin);
 	}
 
 	/** Evaluates the targetCondition predicate against a target domain. Empty = always. */

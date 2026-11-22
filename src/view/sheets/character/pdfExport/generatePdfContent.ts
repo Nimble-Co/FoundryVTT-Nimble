@@ -141,6 +141,11 @@ function isSpellProgressionFeature(name: string): boolean {
 	);
 }
 
+function formatOriginName(ancestryName?: string, bonusName?: string): string {
+	if (ancestryName && bonusName) return `${ancestryName} (${bonusName})`;
+	return ancestryName || bonusName || '';
+}
+
 /**
  * Extract ancestry content as HTML.
  */
@@ -158,7 +163,7 @@ function extractAncestrySectionHtml(actor: NimbleCharacter): ContentSectionHtml 
 		.filter(Boolean)
 		.join(' ');
 
-	const originName = [ancestry?.name, ancestryBonus?.name].filter(Boolean).join(' — ');
+	const originName = formatOriginName(ancestry?.name, ancestryBonus?.name);
 	const label = ancestry ? 'ANCESTRY' : 'ANCESTRY BONUS';
 	const header = abilities
 		? `<strong>${label}:</strong> ${originName} - ${abilities}`
@@ -639,7 +644,7 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 
 		// The bonus name is the trait's own name ("Stout"), which the ancestry name no
 		// longer implies now that the two can be mixed and matched.
-		const originName = [ancestry?.name, ancestryBonus?.name].filter(Boolean).join(' — ');
+		const originName = formatOriginName(ancestry?.name, ancestryBonus?.name);
 		const heading = ancestry ? 'ANCESTRY' : 'ANCESTRY BONUS';
 		const content = abilities
 			? `${heading}: ${originName} - ${abilities}`

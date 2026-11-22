@@ -41,9 +41,14 @@
 
 	function getOfferLabel(offer: GrantedActionOffer): string {
 		const heading = getOfferHeading(offer);
-		const actorName = getRecipientActor(offer)?.name ?? '';
-		const source = offer.label ? `: ${offer.label}` : '';
-		return `${heading}${source} — ${actorName}`;
+		const name = getRecipientActor(offer)?.name ?? '';
+		return offer.label
+			? localize('NIMBLE.chat.grantedActionOffers.offerLabel', {
+					name,
+					heading,
+					source: offer.label,
+				})
+			: localize('NIMBLE.chat.grantedActionOffers.offerLabelNoSource', { name, heading });
 	}
 
 	function getOfferTooltip(offer: GrantedActionOffer): string | null {
@@ -110,7 +115,7 @@
 			if (!actor?.activateItem) return;
 
 			const activationCard = await actor.activateItem(itemId, {
-				offerSourceUuid: offer.sourceItemUuid,
+				originUuid: offer.sourceItemUuid,
 			});
 			if (!activationCard) return;
 

@@ -50,10 +50,12 @@ import {
 	settleResourceCosts,
 } from '../utils/cost/itemResourceCosts.js';
 import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
+import { type AttackOrigin, attackOriginOf } from '../utils/damage/attackOrigin.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusParts,
 	getDamageBonusTotal,
+	hasUnarmedProficiency,
 	hasWeaponProficiency,
 } from '../utils/damage/attackUtils.js';
 import {
@@ -67,7 +69,13 @@ import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
-import { useWeaponDamage, weaponAttackOf, weaponOptionsFor } from '../utils/damage/weaponAttack.js';
+import {
+	UNARMED_STRIKE,
+	useWeaponDamage,
+	type WeaponOption,
+	weaponAttackOf,
+	weaponOptionsFor,
+} from '../utils/damage/weaponAttack.js';
 import {
 	emitDicePoolChanged,
 	maximizePoolDie,
@@ -123,6 +131,7 @@ import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
@@ -137,11 +146,7 @@ import {
 	resolveMaxDamage,
 	spendMaxDamageCharge,
 } from './itemActivation/maxDamageActivation.js';
-import {
-	addOfferBonuses,
-	markOfferOnRollOptions,
-	offerSourceOf,
-} from './itemActivation/offerBonus.js';
+import { addOfferBonuses, markOfferOnRollOptions } from './itemActivation/offerBonus.js';
 import {
 	addPickRiders,
 	settleUseOptions,
@@ -159,7 +164,11 @@ interface PrimaryDieBonusRuleLike {
 	type?: string;
 	label?: string;
 	parentDocument?: { name?: string; uuid?: string | null } | null;
-	bonusFor?: (context: { delivery: AttackDelivery; other: OtherCreature | null }) => number;
+	bonusFor?: (context: {
+		delivery: AttackDelivery;
+		other: OtherCreature | null;
+		origin: string;
+	}) => number;
 }
 
 /**
@@ -170,11 +179,12 @@ function collectPrimaryDieBonuses(
 	attacker: { rules?: unknown[] } | null | undefined,
 	delivery: AttackDelivery,
 	target: OtherCreature | null,
+	origin: string,
 ): PrimaryDieBonusRecord[] {
 	const lines: PrimaryDieBonusRecord[] = [];
 	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
 		if (rule?.type !== 'primaryDieBonus') continue;
-		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
+		const value = rule.bonusFor?.({ delivery, other: target, origin }) ?? 0;
 		if (value === 0) continue;
 		lines.push({
 			label: ruleLabel(rule),
@@ -313,31 +323,75 @@ class ItemActivationManager {
 	/** The Max Damage rule the player ticked, and the choice that came with it. */
 	#maxDamage: ActiveMaxDamage | null = null;
 
+	/** The weapon choice of an ability that attacks with a weapon. */
+	#chosenWeapon: WeaponOption | null = null;
+
+	/** The weapons an ability that attacks with a weapon can use. */
+	#weaponOptions: WeaponOption[] = [];
+
+	/** False, with a warning, when the ability attacks with a weapon and no weapon fits. */
+	#hasFittingWeapon(): boolean {
+		const attack = weaponAttackOf(this.#item);
+		if (!attack) return true;
+		this.#weaponOptions = weaponOptionsFor(this.actor, attack);
+		if (this.#weaponOptions.length > 0) return true;
+		ui.notifications?.warn(
+			localize('NIMBLE.rollWindow.noWeaponFor', { item: this.#item.name ?? '' }),
+		);
+		return false;
+	}
+
+	/** The weapon the player chose, else the first fitting one (equipped first). */
+	#pickWeapon(dialogData: ItemActivationManager.DialogData): void {
+		const weapons = this.#weaponOptions;
+		this.#chosenWeapon =
+			weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0] ?? null;
+	}
+
 	/**
 	 * An ability that attacks with a weapon rolls that weapon's damage, and the
 	 * attack has its reach or range and its kind of damage.
 	 */
-	#applyChosenWeapon(dialogData: ItemActivationManager.DialogData): void {
-		const attack = weaponAttackOf(this.#item);
-		if (!attack) return;
-		const weapons = weaponOptionsFor(this.actor, attack);
-		const weapon = weapons.find((each) => each.uuid === dialogData.weaponUuid) ?? weapons[0];
+	#applyChosenWeapon(): void {
+		const weapon = this.#chosenWeapon;
 		if (!weapon) return;
-		this.#weapon = fromUuidSync(weapon.uuid as never) as never;
+		const item =
+			weapon.uuid === UNARMED_STRIKE
+				? null
+				: (fromUuidSync(weapon.uuid as never) as NimbleBaseItem | null);
+		this.#weapon = item;
 		this.activationData.targets = {
 			...this.activationData.targets,
 			attackType: weapon.attackType,
 			...(weapon.distance === undefined ? {} : { distance: weapon.distance }),
 		};
 		useWeaponDamage(this.activationData.effects ?? [], weapon);
+		const weaponEffects = (item?.system as { activation?: { effects?: unknown[] } } | undefined)
+			?.activation?.effects;
+		if (weaponEffects?.length) {
+			this.activationData.effects = withWeaponEffects(
+				this.activationData.effects ?? [],
+				weaponEffects,
+			);
+		}
 	}
 
 	/** The weapon the ability attacks with, for what a weapon decides of the roll. */
 	#weapon: NimbleBaseItem | null = null;
 
-	/** The identifier of the item whose offer row started this activation. */
-	#offerSource(): string | undefined {
-		return offerSourceOf(this.#options.offerSourceUuid);
+	/** The identifiers of the items this attack is made with: the item, and the weapon it attacks with. */
+	#attackItemIdentifiers(): string[] {
+		return [this.#item.identifier, ...(this.#weapon ? [this.#weapon.identifier] : [])];
+	}
+
+	/** The uuid of the weapon an ability attacks with, or the Unarmed Strike choice. */
+	get weaponUuid(): string | null {
+		return this.#chosenWeapon?.uuid ?? null;
+	}
+
+	/** The feature that caused this attack: the item it was made through, or the item itself. */
+	get origin(): AttackOrigin {
+		return attackOriginOf(this.#item, this.#options.originUuid);
 	}
 
 	/** The attack roll of this activation, for the uses its crit dice spend. */
@@ -481,12 +535,16 @@ class ItemActivationManager {
 			rushedAttack: options.rushedAttack,
 			spendsActions: options.spendsActions,
 			ignoreDisadvantage: options.ignoreDisadvantage,
+			attackOrigin: this.origin.identifier,
 		};
+
+		if (!this.#hasFittingWeapon()) return { activation: null, rolls: null };
 
 		const dialogData = await this.#resolveDialogData(rollOptions);
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
+		this.#pickWeapon(dialogData);
 
 		this.resourceCosts = await settleResourceCosts(
 			this.actor,
@@ -633,7 +691,7 @@ class ItemActivationManager {
 
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
-		this.#applyChosenWeapon(dialogData);
+		this.#applyChosenWeapon();
 
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getSoleTargetToken(),
@@ -641,9 +699,10 @@ class ItemActivationManager {
 			{
 				delivery: this.#getAttackDelivery(),
 				itemUuid: this.#item.uuid,
+				...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
-				...(this.#offerSource() ? { offerSource: this.#offerSource() } : {}),
+				origin: this.origin.identifier,
 			},
 		);
 
@@ -663,7 +722,7 @@ class ItemActivationManager {
 		this.#damageMultiplier =
 			this.#keptAmount || dialogData.damageMultiplier !== true
 				? 1
-				: (damageMultiplierOf(this.#item)?.multiplier ?? 1);
+				: ((damageMultiplierOf(this.#item) ?? damageMultiplierOf(this.#weapon))?.multiplier ?? 1);
 		if (this.#keptAmount) {
 			dialogData.maxDamage = null;
 			dialogData.dualWield = undefined;
@@ -815,10 +874,10 @@ class ItemActivationManager {
 					const multiTarget = !isAoE && targetCount > 1 && !this.#isSingleTargetAttack();
 
 					// A wielder lacking proficiency in this weapon's type cannot crit.
-					const lacksProficiency = !hasWeaponProficiency(
-						this.actor as any,
-						(this.#weapon ?? this.#item) as any,
-					);
+					const lacksProficiency =
+						this.#chosenWeapon?.uuid === UNARMED_STRIKE
+							? !hasUnarmedProficiency(this.actor as any)
+							: !hasWeaponProficiency(this.actor as any, (this.#weapon ?? this.#item) as any);
 
 					const resolvedCanCrit =
 						isAoE || multiTarget || isMinion || isFlunky || lacksProficiency
@@ -851,7 +910,8 @@ class ItemActivationManager {
 								source,
 								node.damageType,
 								targetDomain,
-								this.#item.identifier,
+								this.#attackItemIdentifiers(),
+								this.origin.identifier,
 							),
 						);
 						const numericBonus = getDamageBonusTotal(
@@ -860,7 +920,8 @@ class ItemActivationManager {
 							source,
 							node.damageType,
 							targetDomain,
-							this.#item.identifier,
+							this.#attackItemIdentifiers(),
+							this.origin.identifier,
 						);
 						if (numericBonus > 0) {
 							formula = `${formula} + ${numericBonus}`;
@@ -871,7 +932,8 @@ class ItemActivationManager {
 							source,
 							node.damageType,
 							targetDomain,
-							this.#item.identifier,
+							this.#attackItemIdentifiers(),
+							this.origin.identifier,
 						)) {
 							formula = `${formula} + ${diceFormula}`;
 						}
@@ -884,6 +946,7 @@ class ItemActivationManager {
 								this.actor as { rules?: unknown[] } | null,
 								delivery,
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
+								this.origin.identifier,
 							);
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
 					this.#heldPlan = attackHeldPlanOf({
@@ -899,10 +962,10 @@ class ItemActivationManager {
 						chosen: this.#heldChosen,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
-					const offerSource = this.#offerSource();
+					const origin = this.origin;
 					const offerBonuses = collectOfferBonuses(
 						this.actor as { rules?: unknown } | null,
-						offerSource,
+						origin.identifier,
 					);
 					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
 					formula = offerAdded.formula;
@@ -914,6 +977,7 @@ class ItemActivationManager {
 						target: (this.#getSoleTargetToken()?.actor ?? null) as { rules?: unknown } | null,
 						delivery,
 						itemUuid: this.#item.uuid,
+						...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
 						canCrit: resolvedCanCrit,
 						canMiss: resolvedCanMiss,
 						damageTypes: node.damageType ? [node.damageType] : [],
@@ -942,7 +1006,7 @@ class ItemActivationManager {
 						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
 						damageOptions.outcomeSources = sources;
 					}
-					markOfferOnRollOptions(damageOptions, offerSource);
+					markOfferOnRollOptions(damageOptions, origin);
 					if (damageParts.length > 0) damageOptions.damageParts = damageParts;
 					const critDice = resolvedCanCrit
 						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
@@ -1990,8 +2054,8 @@ namespace ItemActivationManager {
 		primaryDieValue?: number;
 		/** The tick for 1 less mana. */
 		lessMana?: boolean;
-		/** The item whose offer row started this activation. */
-		offerSourceUuid?: string;
+		/** The item this attack is made through, such as the feature that grants it. */
+		originUuid?: string;
 		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
@@ -2009,6 +2073,8 @@ namespace ItemActivationManager {
 		confirmActions?: (changes: readonly ActionCostChange[]) => Promise<boolean>;
 		/** The attack card this use answers, as a reaction from the Defend window does. */
 		answersCardId?: string;
+		/** The use is an opportunity attack; its card says so. */
+		opportunityAttack?: boolean;
 	}
 
 	/** What a free use does not spend or check. `action` is always part of it. */

@@ -883,6 +883,28 @@ describe('Reroll rules on the attack', () => {
 			});
 		});
 
+		it('gives the rules the item and the weapon of the attack', () => {
+			const rollerRule = rerollRule({ id: 'roller-rule', offersUseOn: vi.fn(() => false) });
+			setCanvasTokens([]);
+
+			computeIncomingAttackPlan(null, { uuid: 'Actor.attacker', rules: [rollerRule] } as never, {
+				delivery: 'ranged',
+				itemUuid: 'Item.shot',
+				weaponUuid: 'Item.bow',
+			});
+
+			expect(rollerRule.offersUseOn).toHaveBeenCalledWith(
+				expect.objectContaining({
+					roll: {
+						kind: 'attack',
+						delivery: 'ranged',
+						itemUuid: 'Item.shot',
+						weaponUuid: 'Item.bow',
+					},
+				}),
+			);
+		});
+
 		it("stamps the ally rules of creatures on the attacker's scene after the roller rules", () => {
 			const allyRule = rerollRule({
 				id: 'ally-rule',

@@ -341,6 +341,7 @@ describe('RuleCard with a form layout (primaryDieBonus)', () => {
 		expect(shownFields(container)).toEqual([
 			'value',
 			'attackDelivery',
+			'attackOrigin',
 			'predicate',
 			'otherCreature',
 		]);

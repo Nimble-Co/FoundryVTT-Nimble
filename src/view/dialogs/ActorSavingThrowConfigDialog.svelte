@@ -374,8 +374,6 @@
 												<i class="fa-regular fa-circle"></i>
 											{/if}
 										</button>
-									{:else}
-										<span class="nimble-save-config__ancestry-unavailable">—</span>
 									{/if}
 								</td>
 							{/each}
@@ -743,12 +741,6 @@
 			&--selected:hover {
 				color: var(--nimble-ui-highlight);
 			}
-		}
-
-		&__ancestry-unavailable {
-			display: inline-block;
-			font-size: 0.813rem;
-			color: var(--nimble-ui-ink-dim);
 		}
 
 		&__spacer-row td {

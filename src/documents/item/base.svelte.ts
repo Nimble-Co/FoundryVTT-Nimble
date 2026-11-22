@@ -386,6 +386,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
 			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
 			 * @param {Token[]} context.targets   The targets of the item use
+			 * @param {Object} context.activation The activation the use was made with, after the weapon pick
 			 * @param {Object} [context.eventHost] With no card: where the lines of the use went
 			 */
 			// @ts-expect-error - nimble.useItem is custom
@@ -444,6 +445,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 		const useContext = {
+			activation,
 			freeUse: manager.freeUse,
 			...(manager.free ? { free: manager.free } : {}),
 			...this._useContext(manager),
@@ -459,6 +461,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
 		 * @param {boolean} [context.isMiss] Whether the item use resulted in a miss
 		 * @param {Token[]} context.targets The targets of the item use
+		 * @param {Object} context.activation The activation the use is made with, after the weapon pick
 		 * @returns {boolean}  Explicitly return `false` to prevent the item from being used.
 		 */
 		// @ts-expect-error - nimble.preUseItem is a custom hook
@@ -516,6 +519,8 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 						[SYSTEM_ID]: {
 							itemId: this.id,
 							itemUuid: this.uuid,
+							...(manager.weaponUuid ? { weaponUuid: manager.weaponUuid } : {}),
+							...(manager.origin.uuid ? { origin: manager.origin } : {}),
 							actorId: this.actor?.id,
 							tokenUuid: this.actor?.token?.uuid,
 							...(manager.chargeConsumption.length > 0
@@ -524,6 +529,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 							...(manager.free ? { freeUseReason: manager.free.reason } : {}),
 							...(actionCostChanges.length > 0 ? { actionCostChanges } : {}),
 							...(options.answersCardId ? { [ANSWERS_CARD_FLAG]: options.answersCardId } : {}),
+							...(options.opportunityAttack ? { opportunityAttack: true } : {}),
 						},
 					},
 					system: {

@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js';
 
 const conditionalBonuses = vi.fn(() => []);
+const dicePools = vi.fn((): unknown[] => []);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let createState: typeof import('../itemActivationConfigDialogState.svelte.ts').createItemActivationConfigDialogState;
@@ -14,6 +15,10 @@ beforeAll(async () => {
 	vi.resetModules();
 	vi.doMock('#utils/actor/conditionalBonuses.js', () => ({
 		getActiveConditionalBonuses: conditionalBonuses,
+	}));
+	vi.doMock('#utils/dicePool/dicePoolSync.js', async (importOriginal) => ({
+		...(await importOriginal<object>()),
+		getPools: dicePools,
 	}));
 	({ createItemActivationConfigDialogState: createState } = await import(
 		'../itemActivationConfigDialogState.svelte.ts'
@@ -51,6 +56,17 @@ describe('the activation dialog conditional bonuses', () => {
 
 	it('have no target to test with two targets', () => {
 		expect(openWith([{ uuid: 'Actor.goblin' }, { uuid: 'Actor.kobold' }])).toBeUndefined();
+	});
+
+	it('are asked for the feature the attack is made through', () => {
+		user.targets = new Set();
+		createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'weapon', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+			attackOrigin: 'granting-feature',
+		});
+		expect((conditionalBonuses.mock.calls[0] as unknown[])[4]).toBe('granting-feature');
 	});
 });
 
@@ -409,6 +425,56 @@ describe('the activation dialog damage multiplier tick', () => {
 		expect(state.damageMultiplier).toEqual({ label: 'Sharpshooter', multiplier: 2 });
 		expect(state.usesDamageMultiplier).toBe(false);
 	});
+
+	it('is offered for the weapon a feature attacks with, while that weapon is chosen', () => {
+		user.targets = new Set();
+		const bow = (name: string, rules: unknown[]) => ({
+			uuid: `Item.${name}`,
+			name,
+			type: 'object',
+			flags: {},
+			rules,
+			system: {
+				objectType: 'weapon',
+				equipped: true,
+				activation: {
+					targets: { attackType: 'range' },
+					effects: [{ type: 'damage', formula: '1d8', damageType: 'piercing' }],
+				},
+			},
+		});
+		const items = [
+			bow('Slayer', [{ type: 'damageMultiplier', label: 'Giant Slayer', multiplier: 3 }]),
+			bow('Shortbow', []),
+		];
+		const state = createState({
+			actor: () =>
+				({
+					type: 'character',
+					rules: [],
+					system: {},
+					items: Object.assign([...items], { contents: items }),
+					getFlag: () => undefined,
+				}) as never,
+			item: () =>
+				({
+					type: 'feature',
+					rules: [],
+					system: {
+						activation: {
+							weaponAttack: 'ranged',
+							targets: {},
+							effects: [{ id: 'd', type: 'damage', formula: '0' }],
+						},
+					},
+				}) as never,
+			hideRollsDefault: false,
+		});
+
+		expect(state.damageMultiplier).toEqual({ label: 'Giant Slayer', multiplier: 3 });
+		state.weaponUuid = 'Item.Shortbow';
+		expect(state.damageMultiplier).toBeNull();
+	});
 });
 
 describe('the activation dialog condition ticks', () => {
@@ -679,5 +745,189 @@ describe('the activation dialog amount of a variable cost', () => {
 			source: 'Enveloped',
 		};
 		expect(open([rolled as never]).spendLine).toBe('When you roll, you sacrifice 1d4 Wounds.');
+	});
+});
+
+describe('the activation dialog weapon pick', () => {
+	const weapon = (name: string, attackType: string, equipped: boolean) => ({
+		uuid: `Item.${name}`,
+		name,
+		type: 'object',
+		flags: {},
+		system: {
+			objectType: 'weapon',
+			equipped,
+			activation: {
+				targets: { attackType },
+				effects: [{ type: 'damage', formula: '1d6', damageType: 'piercing' }],
+			},
+		},
+	});
+	const feature = (weaponAttack: string) => ({
+		type: 'feature',
+		system: {
+			activation: {
+				weaponAttack,
+				targets: {},
+				effects: [{ id: 'd', type: 'damage', formula: '0', canCrit: true, canMiss: true }],
+			},
+		},
+	});
+
+	function open(weaponAttack: string, items: object[]) {
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({
+					type: 'character',
+					rules: [],
+					system: {},
+					items: Object.assign([...items], { contents: items }),
+					getFlag: () => undefined,
+				}) as never,
+			item: () => feature(weaponAttack) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	const groupNames = (state: ReturnType<typeof open>) =>
+		state.weaponGroups.map((group) => [group.label, group.weapons.map((each) => each.name)]);
+
+	it('groups the equipped and the not equipped weapons, and starts on the first equipped one', () => {
+		const state = open('any', [
+			weapon('Longbow', 'range', false),
+			weapon('Shortbow', 'range', true),
+			weapon('Greataxe', 'reach', false),
+			weapon('Dagger', 'reach', true),
+		]);
+
+		expect(groupNames(state)).toEqual([
+			['Equipped', ['Shortbow', 'Dagger', 'Unarmed Strike']],
+			['Not equipped', ['Longbow', 'Greataxe']],
+		]);
+		expect(state.weaponUuid).toBe('Item.Shortbow');
+	});
+
+	it('has no headings when only one group has a weapon', () => {
+		expect(groupNames(open('ranged', [weapon('Longbow', 'range', false)]))).toEqual([
+			[null, ['Longbow']],
+		]);
+		expect(groupNames(open('melee', []))).toEqual([[null, ['Unarmed Strike']]]);
+	});
+
+	it('reads the conditional bonuses for the chosen weapon, and again when the player picks another', () => {
+		const state = open('any', [weapon('Shortbow', 'range', true), weapon('Dagger', 'reach', true)]);
+
+		const asked = () =>
+			conditionalBonuses.mock.calls.map((call) => {
+				const [, item, , chosen] = call as unknown as [
+					unknown,
+					{ system: { activation: { targets: { attackType: string } } } },
+					unknown,
+					{ name: string } | null,
+				];
+				return [item.system.activation.targets.attackType, chosen?.name];
+			});
+		expect(asked()).toEqual([['range', 'Shortbow']]);
+
+		state.weaponUuid = 'Item.Dagger';
+		expect(asked()).toEqual([
+			['range', 'Shortbow'],
+			['reach', 'Dagger'],
+		]);
+	});
+
+	it('adds a ranged-only bonus pool while a ranged weapon is chosen, and not for a melee one', () => {
+		dicePools.mockReturnValue([
+			{
+				id: 'volley',
+				identifier: 'volley',
+				label: 'Volley',
+				dieSize: 'd6',
+				faces: [4],
+				consumption: 'autoBonus',
+				bonusOnAttackDelivery: 'ranged',
+			},
+		]);
+		const state = open('any', [weapon('Shortbow', 'range', true), weapon('Dagger', 'reach', true)]);
+		dicePools.mockReturnValue([]);
+
+		expect(state.autoBonusSummaries.map((pool) => pool.label)).toEqual(['Volley']);
+		state.weaponUuid = 'Item.Dagger';
+		expect(state.autoBonusSummaries).toEqual([]);
+	});
+
+	describe('and a melee-only Held Change, with Feature Effects off', () => {
+		const gameGlobal = globalThis as unknown as { game: { settings?: unknown } };
+		let realSettings: unknown;
+		const KEY = 'Actor.hero.opening.opening-rule';
+
+		afterEach(() => {
+			gameGlobal.game.settings = realSettings;
+		});
+
+		function openWithOpening() {
+			realSettings = gameGlobal.game.settings;
+			gameGlobal.game.settings = {
+				get: (_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+			};
+			user.targets = new Set();
+			const items = [weapon('Shortbow', 'range', true), weapon('Dagger', 'reach', true)];
+			return createState({
+				actor: () =>
+					({
+						uuid: 'Actor.hero',
+						type: 'character',
+						rules: [],
+						system: {},
+						items: Object.assign([...items], { contents: items }),
+						getFlag: () => undefined,
+						effects: [
+							{
+								id: 'opening',
+								name: 'Create an Opening',
+								origin: null,
+								flags: {},
+								system: {
+									rules: [
+										{
+											id: 'opening-rule',
+											type: 'heldRoll',
+											heldKind: 'advantage',
+											value: 1,
+											whichRoll: 'holderAttacks',
+											meleeOnly: true,
+										},
+									],
+								},
+							},
+						],
+					}) as never,
+				item: () => feature('any') as never,
+				hideRollsDefault: false,
+			});
+		}
+
+		it('lists the change only while a melee weapon is chosen, and takes back its tick', () => {
+			const state = openWithOpening();
+			expect(state.heldLines).toEqual([]);
+
+			state.weaponUuid = 'Item.Dagger';
+			expect(state.heldLines.map((line) => line.key)).toEqual([KEY]);
+			state.chosenHeldChanges = [KEY];
+			expect(state.selectedRollMode).toBe(1);
+
+			state.weaponUuid = 'Item.Shortbow';
+			expect(state.heldLines).toEqual([]);
+			expect(state.chosenHeldChanges).toEqual([]);
+			expect(state.selectedRollMode).toBe(0);
+		});
+	});
+
+	it('cannot roll with no weapon that fits', () => {
+		const state = open('ranged', [weapon('Dagger', 'reach', true)]);
+
+		expect(state.weaponGroups).toEqual([]);
+		expect(state.cannotRollReason).toBe('You have no weapon of this kind.');
 	});
 });

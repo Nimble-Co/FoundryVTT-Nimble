@@ -200,6 +200,7 @@ describe('PlayerCharacterHeroicActionsTab opportunity macro handoff', () => {
 
 		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', {
 			rollMode: -1,
+			opportunityAttack: true,
 			skipActionDeduction: true,
 		});
 		await waitFor(() =>

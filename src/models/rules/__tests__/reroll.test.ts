@@ -339,6 +339,25 @@ describe('RerollRule', () => {
 			expect(rule.offersUseOn(TARGET_MELEE)).toBe(false);
 		});
 
+		it('offers as this item only on an attack an ability makes with its item as the weapon', () => {
+			const { rule } = makeRule({ usedBy: 'roller', thisItemOnly: true });
+			const attack = (roll: Record<string, unknown>) => ({
+				side: 'roller' as const,
+				roll: { kind: 'attack' as const, delivery: 'melee' as const, ...roll },
+			});
+
+			expect(
+				rule.offersUseOn(
+					attack({ itemUuid: 'Actor.hero.Item.shot', weaponUuid: 'Actor.hero.Item.sand' }),
+				),
+			).toBe(true);
+			expect(
+				rule.offersUseOn(
+					attack({ itemUuid: 'Actor.hero.Item.shot', weaponUuid: 'Actor.hero.Item.bow' }),
+				),
+			).toBe(false);
+		});
+
 		it('does not offer as this item only from an effect that has no item', () => {
 			const globals = globalThis as { fromUuidSync?: unknown };
 			const previous = globals.fromUuidSync;
