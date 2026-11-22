@@ -20,6 +20,7 @@ function card(
 	system: Record<string, unknown>,
 	flags: {
 		itemUuid?: string;
+		grantedFree?: boolean;
 		opportunityAttack?: boolean;
 		origin?: { uuid: string };
 		weaponUuid?: string;
@@ -124,6 +125,27 @@ describe('cardMeta', () => {
 
 	it('marks an opportunity attack on a card with no outcome', () => {
 		expect(cardMeta(card({}, { opportunityAttack: true }))).toEqual(['(opportunity attack)']);
+	});
+
+	it('marks a free attack from a card line with no outcome as Free, with the feature as a link', () => {
+		const parts = cardMeta(
+			card(
+				{ activation: { effects: [] } },
+				{ grantedFree: true, origin: { uuid: 'Actor.boss.Item.strike' } },
+			),
+		);
+		expect(parts).toEqual([
+			'Free (',
+			{ name: 'Coordinated Strike!', uuid: 'Actor.boss.Item.strike' },
+			')',
+		]);
+	});
+
+	it('gives the outcome, not Free, for a free attack that rolled', () => {
+		const parts = cardMeta(
+			card(DAMAGE, { grantedFree: true, origin: { uuid: 'Actor.boss.Item.strike' } }),
+		);
+		expect(partsText(parts ?? [])).toBe('Hit (Coordinated Strike!)');
 	});
 
 	it('leaves out a weapon or origin that is not found', () => {

@@ -530,6 +530,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 							...(actionCostChanges.length > 0 ? { actionCostChanges } : {}),
 							...(options.answersCardId ? { [ANSWERS_CARD_FLAG]: options.answersCardId } : {}),
 							...(options.opportunityAttack ? { opportunityAttack: true } : {}),
+							...(options.grantedFree ? { grantedFree: true } : {}),
 						},
 					},
 					system: {

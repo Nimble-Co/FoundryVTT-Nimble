@@ -553,6 +553,7 @@
 				"miss": "Miss",
 				"crit": "Critical Hit",
 				"healing": "Healing",
+				"free": "Free",
 				"withWeapon": "{outcome} with {weapon}",
 				"weaponOnly": "With {weapon}",
 				"withOrigin": "{meta} ({origin})",

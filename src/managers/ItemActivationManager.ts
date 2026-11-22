@@ -2077,7 +2077,7 @@ namespace ItemActivationManager {
 		lessMana?: boolean;
 		/** The item this attack is made through, such as the feature that grants it. */
 		originUuid?: string;
-		/** A free attack from a card line: the roll window says so. */
+		/** A free attack from a card line: the roll window and the card say so. */
 		grantedFree?: boolean;
 		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
