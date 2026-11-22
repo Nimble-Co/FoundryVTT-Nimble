@@ -57,7 +57,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 
 ![An attack chat card with a damage total, the Apply Damage button, the targets and an Effects part with Slowed](/images/documentation/apply-effect-chat-card.png)
 
-- **Header:** the item, and **Critical Hit** or **Miss** when the Primary Die decided one.
+- **Header:** the item, and under it **Hit**, **Critical Hit** or **Miss**. A feature that attacks with a weapon names the weapon, as in "Hit with Longsword". An attack made through another feature names that feature, as in "Hit (Coordinated Strike!)". Click a name to open its sheet.
 - **Cost:** what the Spend or Sacrifice costs and the options of the use took, such as **Cost: 2 mana (Stretch Time)**. The mana of a spell's own tier is not on this line.
 - **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice. Small lines under a damage box tell where its parts came from: the Primary Die line, a line for each feature that added damage, such as "Juggernaut: +14", and "From Withering Strike" on a box that a feature made.
 - **Add Damage buttons:** a feature that spends dice to add damage after a hit or a crit is a button over **Apply Damage**, such as **Add Damage with Death Blow**. The damage goes on the total of the attack, so armor counts one time, and shows as a line in the damage box. Spend before the GM clicks **Apply Damage**.

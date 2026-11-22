@@ -17,17 +17,8 @@
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
 	import { cardPrimaryRoll } from './components/attackOutcomeTags.ts';
+	import { cardMeta } from './cardMeta.ts';
 	import { setTargetsSectionShown } from './targetsSection.ts';
-
-	function getCardSubheading(activation, isCritical, isMiss) {
-		if (!activation) return null;
-		if (!activation.effects?.length) return null;
-		if (!activation.effects.some((node) => node.type === 'damage')) return null;
-
-		if (isCritical) return 'Critical Hit';
-		if (isMiss) return 'Miss';
-		return 'Hit';
-	}
 
 	function getAttackTypeLabel(attackType, distance) {
 		if (!attackType) return null;
@@ -38,19 +29,11 @@
 
 	const { messageDocument } = $props();
 
-	let {
-		activation,
-		name,
-		description,
-		featureType,
-		image,
-		isCritical,
-		isMiss,
-		attackType,
-		attackDistance,
-	} = $derived(messageDocument.reactive.system);
+	let { name, description, featureType, image, attackType, attackDistance } = $derived(
+		messageDocument.reactive.system,
+	);
 
-	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
+	let subheading = $derived(cardMeta(messageDocument.reactive));
 	let itemUuid = $derived(messageDocument.reactive.flags?.[SYSTEM_ID]?.itemUuid ?? null);
 	let attackTypeLabel = $derived(getAttackTypeLabel(attackType, attackDistance));
 

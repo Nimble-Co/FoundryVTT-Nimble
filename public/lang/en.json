@@ -548,6 +548,16 @@
 			"placementFailed": "Could not place the area of effect. See the console for details."
 		},
 		"chat": {
+			"cardMeta": {
+				"hit": "Hit",
+				"miss": "Miss",
+				"crit": "Critical Hit",
+				"healing": "Healing",
+				"withWeapon": "{outcome} with {weapon}",
+				"weaponOnly": "With {weapon}",
+				"withOrigin": "{meta} ({origin})",
+				"originOnly": "({origin})"
+			},
 			"tempHpGivenByEffect": "The effect below gives these temp HP, and takes back what is left when it ends.",
 			"applyEffect": {
 				"heading": "Effects",

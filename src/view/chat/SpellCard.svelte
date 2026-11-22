@@ -18,25 +18,8 @@
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 	import TemplateSection from './components/TemplateSection.svelte';
+	import { cardMeta } from './cardMeta.ts';
 	import { setTargetsSectionShown } from './targetsSection.ts';
-
-	function getCardSubheading(activation, isCritical, isMiss) {
-		if (!activation) return null;
-		if (!activation.effects?.length) return null;
-
-		const hasDamage = activation.effects.some((node) => node.type === 'damage');
-		const hasHealing = activation.effects.some((node) => node.type === 'healing');
-
-		if (!hasDamage && !hasHealing) return null;
-
-		if (hasDamage) {
-			if (isCritical) return 'Critical Hit';
-			if (isMiss) return 'Miss';
-			return 'Hit';
-		}
-
-		return 'Healing';
-	}
 
 	function getUpcastingDescriptionLabel(tier, content) {
 		if (!content) return null;
@@ -46,13 +29,11 @@
 
 	let { messageDocument } = $props();
 
-	let { activation, description, image, isCritical, isMiss, spellName, tier, upcast } = $derived(
-		messageDocument.reactive.system,
-	);
+	let { description, image, spellName, tier, upcast } = $derived(messageDocument.reactive.system);
 
 	let headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	let headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
-	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
+	let subheading = $derived(cardMeta(messageDocument.reactive, { showsHealing: true }));
 	let itemUuid = $derived(messageDocument.reactive.flags?.[SYSTEM_ID]?.itemUuid ?? null);
 
 	let higherLevelContent = $derived(description.higherLevelEffect);

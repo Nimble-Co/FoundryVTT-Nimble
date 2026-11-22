@@ -4,6 +4,7 @@ import type {
 	UsingBeyondWhatYouHave,
 } from '#types/resourceCost.d.ts';
 import { RESOURCE_COST_KINDS } from '../../utils/cost/resourceCost.js';
+import { shownItemName } from '../../utils/documents/shownItemName.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -117,15 +118,6 @@ declare namespace ResourceCostRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-/** The item's name as the table sees it: an unidentified object shows its unidentified name. */
-function shownName(item: { name?: string | null; type?: string; system?: unknown } | null): string {
-	const system = item?.system as { identified?: boolean; unidentifiedName?: string } | undefined;
-	if (item?.type === 'object' && system?.identified === false && system.unidentifiedName) {
-		return system.unidentifiedName;
-	}
-	return item?.name ?? '';
-}
-
 /** What one use of its item costs in mana, HP, temp HP or Wounds. */
 class ResourceCostRule<
 	TSchema extends ResourceCostRule.Schema = ResourceCostRule.Schema,
@@ -167,7 +159,7 @@ class ResourceCostRule<
 		const cost = {
 			kind: this.kind,
 			beyond: this.beyond ?? 'notAllowed',
-			source: shownName(this.parentItem),
+			source: shownItemName(this.parentItem),
 			id: this.id,
 		};
 		if (this.spendMode === 'variable') {
