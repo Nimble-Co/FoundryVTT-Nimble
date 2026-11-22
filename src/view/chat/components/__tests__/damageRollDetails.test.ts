@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { damageRollDetails, flavoredParts, primaryDieLine } from '../damageRollDetails.ts';
+import type { DamageRollDetailsInput } from '../damageRollDetails.ts';
+import { damageRollDetails } from '../damageRollDetails.ts';
 
 function options(
 	rollOptions: Record<string, unknown>,
@@ -10,13 +11,23 @@ function options(
 	return { rollOptions, roll: { terms: faces ? [{ faces }] : [] }, primaryDieBonuses };
 }
 
+/** The Primary Die line of a damage box, or null when the box has none. */
+function primaryDieLine(input: DamageRollDetailsInput) {
+	return damageRollDetails(input).find((line) => line.id === 'primaryDie') ?? null;
+}
+
+/** The lines a damage box shows for the flavored parts of its roll. */
+function flavoredParts(terms: unknown[]) {
+	return damageRollDetails({ roll: { terms } }).map(({ id, text }) => ({ id, text }));
+}
+
 const plus = { class: 'OperatorTerm', operator: '+' };
 const times = { class: 'OperatorTerm', operator: '*' };
 
-describe('primaryDieLine', () => {
+describe('damageRollDetails: the Primary Die line', () => {
 	it('returns null when nothing was set or added', () => {
-		expect(primaryDieLine(options({ primaryDieModifier: 0 }))).toBeNull();
-		expect(primaryDieLine({})).toBeNull();
+		expect(damageRollDetails(options({ primaryDieModifier: 0 }))).toEqual([]);
+		expect(damageRollDetails({})).toEqual([]);
 	});
 
 	it('folds the bonus and its source into one line', () => {
@@ -64,7 +75,7 @@ describe('primaryDieLine', () => {
 				bonusNotAdded: 'Lucky changed the die to 1.',
 			}),
 		).toMatchObject({
-			text: 'Primary Die: 1, +1 (Juggernaut) not added',
+			text: 'Primary Die: 1, the set result replaces +1 (Juggernaut)',
 			tooltip: 'Lucky changed the die to 1.',
 			notAdded: true,
 		});
@@ -88,14 +99,14 @@ describe('primaryDieLine', () => {
 
 	it('shows no line on a roll that can neither crit nor miss', () => {
 		expect(
-			primaryDieLine(
+			damageRollDetails(
 				options({ canCrit: false, canMiss: false, primaryDieModifier: 1, primaryDieBaseResult: 3 }),
 			),
-		).toBeNull();
+		).toEqual([]);
 	});
 });
 
-describe('flavoredParts', () => {
+describe('damageRollDetails: the flavored parts', () => {
 	it('reads a flavored term with its amount, and adds up the same flavor', () => {
 		expect(
 			flavoredParts([
@@ -107,7 +118,7 @@ describe('flavoredParts', () => {
 				plus,
 				{ class: 'NumericTerm', number: 14 },
 			]),
-		).toEqual([{ label: 'Fury Dice', amount: 8 }]);
+		).toEqual([{ id: 'flavor-Fury Dice', text: 'Fury Dice: +8' }]);
 	});
 
 	it('works out a flavored product as one part', () => {
@@ -119,7 +130,7 @@ describe('flavoredParts', () => {
 				times,
 				{ class: 'NumericTerm', number: 2, options: { flavor: 'Lunging Strike' } },
 			]),
-		).toEqual([{ label: 'Lunging Strike', amount: 10 }]);
+		).toEqual([{ id: 'flavor-Lunging Strike', text: 'Lunging Strike: +10' }]);
 	});
 
 	it('leaves out crit dice and the Primary Die', () => {

@@ -1,8 +1,14 @@
 import type { RollDetailLine } from '#types/components/RollSummary.d.ts';
 import type { DamageNodeSource, DamagePart } from '#types/damagePart.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
+import {
+	docLink,
+	type LinkedData,
+	type LinkedPart,
+	linkedParts,
+	partsText,
+} from '#utils/documents/docLink.ts';
 import { displayFormula } from '#utils/rolls/displayFormula.ts';
-import { docLink, type LinkedData, type LinkedPart, linkedParts, partsText } from '#utils/documents/docLink.ts';
 import localize from '../../../utils/localize.js';
 
 export interface DamageRollDetailOptions {
@@ -45,10 +51,7 @@ function signed(value: number): string {
 }
 
 /** Each part of a Primary Die bonus: a named line per feature, and the part no feature added. */
-function bonusParts(
-	modifier: number,
-	lines: readonly PrimaryDieBonusLine[],
-): BonusPart[] {
+function bonusParts(modifier: number, lines: readonly PrimaryDieBonusLine[]): BonusPart[] {
 	const named = lines.filter((line) => line.value);
 	const unnamed = modifier - named.reduce((sum, line) => sum + line.value, 0);
 	return [
@@ -95,10 +98,10 @@ function bonusTooltip(parts: readonly BonusPart[]): string {
 
 /**
  * The Primary Die line: the face, each bonus with who added it, and the
- * result, such as "Primary Die: 4 + 1 (Juggernaut) = 5". A value set in the
+ * result, such as "Primary Die: 4 + 1 (a feature) = 5". A value set in the
  * roll window and a bonus that a set value kept off show in the same line.
  */
-export function primaryDieLine(input: DamageRollDetailsInput): RollDetailLine | null {
+function primaryDieLine(input: DamageRollDetailsInput): RollDetailLine | null {
 	const options = input.rollOptions ?? {};
 	if (options.canCrit === false && options.canMiss === false) return null;
 
@@ -185,7 +188,7 @@ function termValue(term: SerializedTerm): number | null {
  * run of terms between a `+` and a `-` is one part. The Primary Die and the
  * dice a crit added are not parts. Parts with the same flavor add up.
  */
-export function flavoredParts(
+function flavoredParts(
 	terms: readonly unknown[] | null | undefined,
 ): Array<{ label: string; amount: number }> {
 	const chunks: Array<{ sign: number; terms: SerializedTerm[] }> = [{ sign: 1, terms: [] }];

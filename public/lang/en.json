@@ -798,8 +798,8 @@
 				"setTo": "set to {value},",
 				"primaryDieAdded": "Added to Primary Die: {sum}",
 				"primaryDieNoResult": "Primary Die: {sum}",
-				"primaryDieNotAdded": "Primary Die: {face}, {bonuses} not added",
-				"primaryDieNotAddedNoFace": "Primary Die: {bonuses} not added",
+				"primaryDieNotAdded": "Primary Die: {face}, the set result replaces {bonuses}",
+				"primaryDieNotAddedNoFace": "Primary Die: the set result replaces {bonuses}",
 				"part": "{label}: {amount}",
 				"source": "From {label}"
 			},

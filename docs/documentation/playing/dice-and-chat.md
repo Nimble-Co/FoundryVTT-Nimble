@@ -45,7 +45,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 ::: details More about the Primary Die fields
 - With advantage, the dice drop first. The set or added number then goes on the die that stays.
 - A reroll rolls the Primary Die again and loses **Set Primary Die Result**. It keeps **Add to Primary Die Result**.
-- Features that add to the Primary Die (for example +1 on melee attacks) work as **Add to Primary Die Result** and add up with it. The card shows one Primary Die line with each feature, such as "Primary Die: 5 + 1 (Juggernaut) = 6". A set value shows in the same line: "Primary Die: set to 4, + 1 (Juggernaut) = 5". When a change set the die and its value is final, the line says the bonus is not added. Hover the line to read why.
+- Features that add to the Primary Die (for example +1 on melee attacks) work as **Add to Primary Die Result** and add up with it. The card shows one Primary Die line with each feature, such as "Primary Die: 5 + 1 (Juggernaut) = 6". A set value shows in the same line: "Primary Die: set to 4, + 1 (Juggernaut) = 5". When a change set the die and its value is final, the line says that the set result replaces the bonus. Hover the line to read why.
 - An area attack gets none of these.
 :::
 
