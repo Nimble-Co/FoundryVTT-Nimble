@@ -85,7 +85,7 @@ import {
 	type DamageBackRecord,
 } from './chatMessage/cardDamageBack.js';
 import { CardRerolls } from './chatMessage/cardRerolls.js';
-import { CardRicochet } from './chatMessage/cardRicochet.js';
+import { CardRicochet, type CardRicochetFlags } from './chatMessage/cardRicochet.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -968,7 +968,7 @@ class NimbleChatMessage extends ChatMessage {
 			(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker) as {
 				rules?: unknown;
 			} | null,
-		flags: () => (this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID],
+		flags: () => (this.flags as Record<string, CardRicochetFlags | undefined>)?.[SYSTEM_ID],
 		damagePackets: () => this.#applicableDamagePackets(),
 		damageAfterDefenses: (actor, packets) =>
 			resolveDamageForActor(actor, packets as DamagePacket[]),

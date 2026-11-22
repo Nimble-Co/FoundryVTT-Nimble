@@ -3,7 +3,7 @@ import { useTargetChanges } from '../utils/useTargetChanges.svelte.ts';
 import { ricochetLineOf } from './ricochetViewerLine.ts';
 
 function tokenName(tokenUuid: string): string {
-	const token = fromUuidSync(tokenUuid as never) as { name?: string } | null;
+	const token = fromUuidSync(tokenUuid) as { name?: string } | null;
 	return token?.name ?? '';
 }
 
@@ -19,7 +19,7 @@ export function createRicochetLineState(getMessage: () => NimbleChatMessage | un
 			uuid: token.document.uuid ?? '',
 			name: token.document.name,
 		}));
-		return ricochetLineOf(card as never, {
+		return ricochetLineOf(card, {
 			targets,
 			isGM: game.user?.isGM === true,
 			names: tokenName,

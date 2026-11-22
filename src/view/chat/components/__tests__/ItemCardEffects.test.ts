@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import type { Ricochet } from '../../../../models/rules/ricochet.js';
 import { getRelevantNodes } from '../../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
 import ItemCardEffectsTestHarness from './ItemCardEffects.testHarness.svelte';
 
@@ -61,7 +62,11 @@ function createMessage(groups: unknown[][], effects: unknown[] = []) {
 		canRollDeferredDamage: () => true,
 		applyAllDamage: () => undefined,
 		applyDamage: () => undefined,
-		cardRicochet: { ricochet: () => null, record: {} },
+		cardRicochet: {
+			ricochet: (): Ricochet | null => null,
+			record: {},
+			damage: (_tokenUuid: string): number | null => null,
+		},
 		reactive: null as unknown,
 	};
 	message.reactive = message;
@@ -109,7 +114,7 @@ describe('the ricochet line', () => {
 			ricochet: () => ({ source: 'Trickshot', reach: 2 }),
 			record: {},
 			damage: () => 3,
-		} as never;
+		};
 		gameStub().user = {
 			isGM: true,
 			targets: new Set([{ document: { uuid: 'Token.kobold', name: 'Kobold' } }]),

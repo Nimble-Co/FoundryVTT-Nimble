@@ -1,5 +1,8 @@
 import type { HeldChange } from '#types/heldChange.d.ts';
-import { ricochetForCardWeapon } from '#utils/damage/ricochetForCardWeapon.js';
+import {
+	type RicochetCardFlags,
+	ricochetForCardWeapon,
+} from '#utils/damage/ricochetForCardWeapon.js';
 import { spendHeldChanges } from '#utils/heldChange/heldChange.js';
 import type { Ricochet } from '../../models/rules/ricochet.js';
 import { clearBankedDamageReduction } from '../../utils/damage/bankedDamageReduction.js';
@@ -13,6 +16,11 @@ export interface RicochetRecord {
 	applied?: boolean;
 	/** The damage the creature took. */
 	amount?: number;
+}
+
+/** The system flags of a card that the ricochet reads and writes. */
+export interface CardRicochetFlags extends RicochetCardFlags {
+	[RICOCHET_FLAG]?: RicochetRecord;
 }
 
 /** One damage packet of the card. */
@@ -36,7 +44,7 @@ export interface RicochetCard {
 	/** An activation card that did not miss. */
 	isHit(): boolean;
 	attacker(): { rules?: unknown } | null;
-	flags(): Record<string, unknown> | undefined;
+	flags(): CardRicochetFlags | undefined;
 	/** The card's damage packets that would remove HP. */
 	damagePackets(): RicochetPacket[];
 	damageAfterDefenses(actor: RicochetActor, packets: RicochetPacket[]): RicochetDamage;
@@ -55,12 +63,12 @@ export class CardRicochet {
 	/** What a hit of this card ricochets with, or null. */
 	ricochet(): Ricochet | null {
 		if (!this.#host.isHit()) return null;
-		return ricochetForCardWeapon(this.#host.attacker(), this.#host.flags() as never);
+		return ricochetForCardWeapon(this.#host.attacker(), this.#host.flags());
 	}
 
 	/** The creature this card's ricochet goes to, and whether its damage is applied. */
 	get record(): RicochetRecord {
-		return (this.#host.flags()?.[RICOCHET_FLAG] as RicochetRecord | undefined) ?? {};
+		return this.#host.flags()?.[RICOCHET_FLAG] ?? {};
 	}
 
 	/** Half of the hit, rounded down, after the defenses of the token's creature. */

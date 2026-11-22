@@ -2,7 +2,7 @@ import type { Ricochet, RicochetWeapon } from '../../models/rules/ricochet.js';
 import { rulesOfType } from '../actor/actorRules.js';
 import { UNARMED_STRIKE } from './weaponAttack.js';
 
-interface RicochetCardFlags {
+export interface RicochetCardFlags {
 	itemUuid?: string;
 	weaponUuid?: string;
 }
