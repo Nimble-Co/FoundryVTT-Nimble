@@ -14,7 +14,7 @@ function recoveryTriggerText(trigger: string): string {
 }
 
 /**
- * The card line of what a use did to a charge pool, such as "Combat Dice: spent 1, 2 of 3 left".
+ * The card line of what a use did to a charge pool, such as "Pool: spent 1, 2 of 3 left".
  * A note in brackets at the end of the pool label goes to the tooltip.
  */
 export function chargeConsumptionLine(entry: ChargeConsumptionDetail): {
