@@ -76,6 +76,12 @@ export type HeroIntent =
 			destination: { kind: 'stash' } | { kind: 'actor'; actorId: string };
 	  }
 	| { kind: 'setPartyCurrency'; coin: string; value: number }
+	| {
+			kind: 'giveCurrency';
+			source: 'actor' | 'stash';
+			sourceActorId: string;
+			destination: { kind: 'stash' } | { kind: 'actor'; actorId: string };
+	  }
 	| { kind: 'setDetail'; detail: HeroDetail; value: string }
 	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
 	| { kind: 'setInspiration'; value: boolean }

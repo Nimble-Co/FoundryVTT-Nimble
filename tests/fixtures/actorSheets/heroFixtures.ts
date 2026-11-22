@@ -178,6 +178,7 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 			characters: [],
 			canGive: true,
 			canTake: true,
+			canGiveAway: true,
 		},
 		...overrides,
 	};

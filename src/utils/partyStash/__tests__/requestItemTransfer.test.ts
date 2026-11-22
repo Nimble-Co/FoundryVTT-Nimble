@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	registerPartyStashSocketListener,
+	requestCurrencyTransfer,
 	requestItemTransfer,
 	requestPartyCurrency,
 } from '../requestItemTransfer.ts';
@@ -25,29 +26,46 @@ function doc(data: ItemData): HeldDoc {
 	};
 }
 
-function character(id: string, name: string, items: ItemData[], owns: boolean) {
+function character(
+	id: string,
+	name: string,
+	items: ItemData[],
+	owns: boolean,
+	coins: { gp: number; sp: number; cp: number } = { gp: 0, sp: 0, cp: 0 },
+) {
 	const docs = items.map(doc);
 	const byId = new Map(docs.map((item) => [item._id, item]));
+	const currency = { ...coins };
 	return {
 		id,
 		name,
 		type: 'character',
 		isOwner: owns,
+		system: { currency },
 		testUserPermission: (user: { id?: string }) => owns && user.id === id,
 		items: {
 			get: (itemId: string) => byId.get(itemId),
 			[Symbol.iterator]: () => byId.values(),
 		},
+		update: vi.fn(async (data: Record<string, number>) => {
+			if ('system.currency.gp' in data) currency.gp = data['system.currency.gp'] ?? 0;
+			if ('system.currency.sp' in data) currency.sp = data['system.currency.sp'] ?? 0;
+			if ('system.currency.cp' in data) currency.cp = data['system.currency.cp'] ?? 0;
+		}),
 		createEmbeddedDocuments: vi.fn(async () => undefined),
 		deleteEmbeddedDocuments: vi.fn(async () => undefined),
 		docs,
 	};
 }
 
-const users = new Map([
-	['gm', { id: 'gm', name: 'Guide', isGM: true }],
-	['ada', { id: 'ada', name: 'Ada', isGM: false }],
-	['spy', { id: 'spy', name: 'Spy', isGM: false }],
+const users = new Map<
+	string,
+	{ id: string; name: string; isGM: boolean; role?: number; active?: boolean }
+>([
+	['gm', { id: 'gm', name: 'Guide', isGM: true, role: 4 }],
+	['ada', { id: 'ada', name: 'Ada', isGM: false, role: 1 }],
+	['spy', { id: 'spy', name: 'Spy', isGM: false, role: 1 }],
+	['bob', { id: 'bob', name: 'Bob', isGM: false, role: 1, active: true }],
 ]);
 
 const socket = {
@@ -101,6 +119,7 @@ function useWorld(
 		users: {
 			get: (id: string) => users.get(id) ?? null,
 			activeGM: activeGmId ? { id: activeGmId } : null,
+			[Symbol.iterator]: () => users.values(),
 		},
 		actors: {
 			get: (id: string) => byId.get(id) ?? null,
@@ -304,8 +323,9 @@ describe('requestItemTransfer', () => {
 		expect(ada.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
-	it('sends the move to the active GM when this client is not one', async () => {
-		useWorld('ada', 'gm', []);
+	it('sends the move to someone who can write it when this client cannot', async () => {
+		const ada = character('ada', 'Ada', [], true);
+		useWorld('ada', 'gm', [ada]);
 
 		await expect(
 			requestItemTransfer({
@@ -323,8 +343,10 @@ describe('requestItemTransfer', () => {
 		);
 	});
 
-	it('warns when no GM is online', async () => {
-		useWorld('ada', null, []);
+	it('warns when the party inventory cannot be saved and nobody else is connected', async () => {
+		const torch = { _id: 'torch', name: 'Torch', type: 'object', system: { quantity: 1 } };
+		const ada = character('ada', 'Ada', [torch], true);
+		useWorld('ada', null, [ada]);
 
 		await expect(
 			requestItemTransfer({
@@ -338,6 +360,152 @@ describe('requestItemTransfer', () => {
 
 		expect(ui.notifications.warn).toHaveBeenCalled();
 		expect(socket.emit).not.toHaveBeenCalled();
+	});
+
+	it('lets a player move their own object into the party inventory with no GM connected', async () => {
+		const torch = { _id: 'torch', name: 'Torch', type: 'object', system: { quantity: 1 } };
+		const ada = character('ada', 'Ada', [torch], true);
+		const party = {
+			id: 'party',
+			name: 'Party Inventory',
+			type: 'npc',
+			testUserPermission: () => true,
+			getFlag: (_scope: string, key: string) => {
+				if (key === 'partyStashHolder') return true;
+				if (key === 'partyStash') return stash;
+				return undefined;
+			},
+			setFlag: vi.fn(async (_scope: string, key: string, value: typeof stash) => {
+				if (key === 'partyStash') stash = value;
+			}),
+			items: { get: () => undefined, [Symbol.iterator]: () => [].values() },
+			createEmbeddedDocuments: vi.fn(async () => undefined),
+			deleteEmbeddedDocuments: vi.fn(async () => undefined),
+		};
+		useWorld('ada', null, [ada, party as unknown as ReturnType<typeof character>]);
+
+		await expect(
+			requestItemTransfer({
+				source: 'actor',
+				sourceActorId: 'ada',
+				itemId: 'torch',
+				quantity: 1,
+				destination: { kind: 'stash' },
+			}),
+		).resolves.toBe(true);
+
+		expect(socket.emit).not.toHaveBeenCalled();
+		expect(ui.notifications.warn).not.toHaveBeenCalled();
+		expect(ada.deleteEmbeddedDocuments).toHaveBeenCalledWith('Item', ['torch']);
+		expect(stash.items.map((item) => item._id)).toEqual(['torch']);
+	});
+
+	it('asks the other character to receive an object when no GM is connected', async () => {
+		users.get('ada')!.role = 2;
+		const torch = { _id: 'torch', name: 'Torch', type: 'object', system: { quantity: 1 } };
+		const ada = character('ada', 'Ada', [torch], true);
+		const bob = character('bob', 'Bob', [], true);
+		useWorld('ada', null, [ada, bob]);
+
+		await requestItemTransfer({
+			source: 'actor',
+			sourceActorId: 'ada',
+			itemId: 'torch',
+			quantity: 1,
+			destination: { kind: 'actor', actorId: 'bob' },
+		});
+
+		const receive = socket.emit.mock.calls.at(-1)?.[1] as { op: string };
+		expect(receive.op).toBe('receive');
+
+		useWorld('bob', null, [ada, bob]);
+		listener?.(receive);
+		await vi.waitFor(() => expect(bob.createEmbeddedDocuments).toHaveBeenCalled());
+		const release = socket.emit.mock.calls.at(-1)?.[1] as { op: string; removeIds: string[] };
+		expect(release.op).toBe('release');
+		expect(release.removeIds).toEqual(['torch']);
+
+		useWorld('ada', null, [ada, bob]);
+		listener?.(release);
+		await vi.waitFor(() =>
+			expect(ada.deleteEmbeddedDocuments).toHaveBeenCalledWith('Item', ['torch']),
+		);
+		users.get('ada')!.role = 1;
+	});
+});
+
+describe('requestCurrencyTransfer', () => {
+	function partyHolder() {
+		return {
+			id: 'party',
+			name: 'Party Inventory',
+			type: 'npc',
+			testUserPermission: () => true,
+			getFlag: (_scope: string, key: string) => {
+				if (key === 'partyStashHolder') return true;
+				if (key === 'partyStash') return stash;
+				return undefined;
+			},
+			setFlag: vi.fn(async (_scope: string, key: string, value: typeof stash) => {
+				if (key === 'partyStash') stash = value;
+			}),
+			items: { get: () => undefined, [Symbol.iterator]: () => [].values() },
+			createEmbeddedDocuments: vi.fn(async () => undefined),
+			deleteEmbeddedDocuments: vi.fn(async () => undefined),
+		};
+	}
+
+	it('adds coins to the party inventory and subtracts them from the character', async () => {
+		const ada = character('ada', 'Ada', [], true, { gp: 10, sp: 1, cp: 0 });
+		const party = partyHolder();
+		useWorld('ada', null, [ada, party as unknown as ReturnType<typeof character>]);
+
+		await expect(
+			requestCurrencyTransfer({
+				source: 'actor',
+				sourceActorId: 'ada',
+				destination: { kind: 'stash' },
+				gp: 4,
+				sp: 0,
+				cp: 9,
+			}),
+		).resolves.toBe(true);
+
+		expect(socket.emit).not.toHaveBeenCalled();
+		expect(ada.system.currency).toEqual({ gp: 6, sp: 1, cp: 0 });
+		expect(stash.currency).toEqual({ gp: 4, sp: 0, cp: 0 });
+	});
+
+	it('spends coins here and asks the other character to add them when no GM is connected', async () => {
+		users.get('ada')!.role = 2;
+		const ada = character('ada', 'Ada', [], true, { gp: 12, sp: 0, cp: 3 });
+		const bob = character('bob', 'Bob', [], true, { gp: 1, sp: 0, cp: 0 });
+		useWorld('ada', null, [ada, bob]);
+
+		await requestCurrencyTransfer({
+			source: 'actor',
+			sourceActorId: 'ada',
+			destination: { kind: 'actor', actorId: 'bob' },
+			gp: 5,
+			sp: 0,
+			cp: 9,
+		});
+
+		expect(ada.system.currency).toEqual({ gp: 7, sp: 0, cp: 0 });
+		const received = socket.emit.mock.calls.at(-1)?.[1] as {
+			op: string;
+			gp: number;
+			cp: number;
+		};
+		expect(received.op).toBe('receiveCurrency');
+		expect(received.gp).toBe(5);
+		expect(received.cp).toBe(3);
+
+		useWorld('bob', null, [ada, bob]);
+		listener?.(received);
+		await vi.waitFor(() => expect(bob.system.currency.gp).toBe(6));
+		expect(bob.system.currency.cp).toBe(3);
+		users.get('ada')!.role = 1;
 	});
 });
 

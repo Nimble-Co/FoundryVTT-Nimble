@@ -150,21 +150,83 @@ describe('planItemTransfer', () => {
 });
 
 describe('mayTransferItem', () => {
-	it('lets a GM move anything, a player move their own objects and the stash, and nobody else', () => {
+	const player = {
+		isGM: false,
+		trusted: false,
+		ownsSource: false,
+		ownsDestination: false,
+	};
+
+	it('lets any player move their own objects into the party inventory and back onto a character they own', () => {
 		expect(
-			mayTransferItem({ isGM: true, source: 'actor', ownsSource: false, ownsACharacter: false }),
+			mayTransferItem({
+				...player,
+				source: 'actor',
+				destination: 'stash',
+				ownsSource: true,
+			}),
 		).toBe(true);
 		expect(
-			mayTransferItem({ isGM: false, source: 'actor', ownsSource: true, ownsACharacter: false }),
+			mayTransferItem({
+				...player,
+				source: 'stash',
+				destination: 'actor',
+				ownsDestination: true,
+			}),
 		).toBe(true);
 		expect(
-			mayTransferItem({ isGM: false, source: 'actor', ownsSource: false, ownsACharacter: true }),
+			mayTransferItem({
+				...player,
+				source: 'actor',
+				destination: 'stash',
+			}),
 		).toBe(false);
 		expect(
-			mayTransferItem({ isGM: false, source: 'stash', ownsSource: false, ownsACharacter: true }),
+			mayTransferItem({
+				...player,
+				source: 'actor',
+				destination: 'actor',
+				ownsSource: true,
+			}),
+		).toBe(false);
+	});
+
+	it('lets a trusted player send objects to any character, from their own inventory or the stash', () => {
+		expect(
+			mayTransferItem({
+				...player,
+				trusted: true,
+				source: 'actor',
+				destination: 'actor',
+				ownsSource: true,
+			}),
 		).toBe(true);
 		expect(
-			mayTransferItem({ isGM: false, source: 'stash', ownsSource: false, ownsACharacter: false }),
+			mayTransferItem({
+				...player,
+				trusted: true,
+				source: 'stash',
+				destination: 'actor',
+			}),
+		).toBe(true);
+		expect(
+			mayTransferItem({
+				...player,
+				trusted: true,
+				source: 'actor',
+				destination: 'actor',
+			}),
 		).toBe(false);
+	});
+
+	it('lets a GM move anything', () => {
+		expect(
+			mayTransferItem({
+				...player,
+				isGM: true,
+				source: 'actor',
+				destination: 'actor',
+			}),
+		).toBe(true);
 	});
 });

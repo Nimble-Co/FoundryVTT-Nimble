@@ -206,6 +206,7 @@ function partyContext(overrides: Partial<HeroSheetContext['party']> = {}): HeroS
 			],
 			canGive: true,
 			canTake: true,
+			canGiveAway: true,
 			...overrides,
 		},
 	});
@@ -216,7 +217,13 @@ describe('the party inventory', () => {
 		const view = heroInventoryTab(containerHero(), partyContext(), { party: true });
 
 		expect(view.party).toBe(true);
+		expect(view.mineLabel).toBe(`${INV}.mine`);
 		expect(view.partyLabel).toBe(`${INV}.party`);
+		expect(view.currencyGive?.entries.map((entry) => entry.id)).toEqual([
+			'containerHero0001',
+			'bob',
+			'cara',
+		]);
 		expect(view.coins.map((coin) => [coin.coin, coin.value])).toEqual([
 			['gp', 40],
 			['sp', 2],
@@ -240,10 +247,13 @@ describe('the party inventory', () => {
 		expect(empty.empty).toBe(`${INV}.partyEmpty`);
 		expect(empty.groups).toEqual([]);
 
-		const locked = heroInventoryTab(containerHero(), partyContext({ canTake: false }), {
-			party: true,
-		});
+		const locked = heroInventoryTab(
+			containerHero(),
+			partyContext({ canTake: false, canGiveAway: false }),
+			{ party: true },
+		);
 		expect(locked.coinsLocked).toBe(true);
+		expect(locked.currencyGive).toBeNull();
 		expect(rowOf(locked, 'torch').share).toBeUndefined();
 	});
 
@@ -335,6 +345,22 @@ describe('the party inventory', () => {
 		]);
 		expect(torch.share?.give?.entries.map((entry) => entry.id)).toEqual(['bob', 'cara']);
 		expect(torch.use).not.toBeNull();
+	});
+
+	it('keeps Move to party inventory when this player cannot give to other characters', () => {
+		const torch = rowOf(
+			heroInventoryTab(containerHero(), partyContext({ canGiveAway: false })),
+			'torch',
+		);
+
+		expect(torch.share?.entries.map((entry) => entry.id)).toEqual(['party']);
+		expect(torch.share?.give).toBeNull();
+		expect(
+			heroInventoryTab(
+				containerHero(),
+				partyContext({ canGiveAway: false }),
+			).currencyGive?.entries.map((entry) => entry.id),
+		).toEqual(['party']);
 	});
 
 	it('hides the menu when this user cannot move the object', () => {

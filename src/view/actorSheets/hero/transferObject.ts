@@ -43,10 +43,45 @@ function heldOf(
 	};
 }
 
+function clampQuantity(raw: string, have: number): number {
+	const value = Math.floor(Number(raw));
+	if (!Number.isFinite(value)) return 1;
+	return Math.min(have, Math.max(1, value));
+}
+
+/** The number and the slider show the same amount. Dragging jumps, typing sets the slider. */
+function bindQuantitySlider(root: ParentNode, have: number): void {
+	const amount = root.querySelector<HTMLInputElement>('input[name="quantity"]');
+	const slider = root.querySelector<HTMLInputElement>('input[data-quantity-slider]');
+	if (!amount || !slider) return;
+	slider.addEventListener('input', () => {
+		amount.value = String(clampQuantity(slider.value, have));
+	});
+	amount.addEventListener('input', () => {
+		const value = Math.floor(Number(amount.value));
+		if (!Number.isFinite(value)) return;
+		slider.value = String(Math.min(have, Math.max(1, value)));
+	});
+	amount.addEventListener('change', () => {
+		const next = clampQuantity(amount.value, have);
+		amount.value = String(next);
+		slider.value = String(next);
+	});
+}
+
+function quantityDialogContent(question: string, have: number): string {
+	return `<div class="nimble-how-many" style="display:flex;flex-direction:column;gap:10px;min-width:16rem">
+		<label id="nimble-how-many-label" for="nimble-how-many-amount">${question}</label>
+		<input type="range" data-quantity-slider min="1" max="${have}" step="1" value="${have}" aria-labelledby="nimble-how-many-label" style="width:100%">
+		<input id="nimble-how-many-amount" type="number" name="quantity" min="1" max="${have}" step="1" value="${have}" style="width:6rem">
+	</div>`;
+}
+
 async function askQuantity(name: string, have: number): Promise<number | null> {
+	const question = localize(`${INV}.howMany`, { name: escapeHtml(name) });
 	const chosen = (await foundry.applications.api.DialogV2.wait({
 		window: { title: localize(`${INV}.howManyTitle`) },
-		content: `<form><label>${localize(`${INV}.howMany`, { name: escapeHtml(name) })} <input type="number" name="quantity" min="1" max="${have}" value="${have}"></label></form>`,
+		content: quantityDialogContent(question, have),
 		buttons: [
 			{
 				action: 'move',
@@ -58,6 +93,9 @@ async function askQuantity(name: string, have: number): Promise<number | null> {
 				},
 			},
 		],
+		render: (_event: Event, dialog: { element: ParentNode }) => {
+			bindQuantitySlider(dialog.element, have);
+		},
 		rejectClose: false,
 		modal: true,
 	} as never)) as unknown;
@@ -77,7 +115,7 @@ async function confirmUnequip(name: string): Promise<boolean> {
 	);
 }
 
-/** Asks how many, and whether to unequip, then asks the active GM to move the object. */
+/** Asks how many, and whether to unequip, then moves the object. */
 export async function transferObject(
 	actor: NimbleCharacter,
 	intent: TransferIntent,

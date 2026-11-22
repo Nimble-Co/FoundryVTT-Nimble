@@ -48,6 +48,47 @@ describe('transferObject', () => {
 		expect(request).toHaveBeenCalledWith(expect.objectContaining({ quantity: 1, itemId: 'torch' }));
 	});
 
+	it('keeps the how-many slider and the number on the same amount', async () => {
+		dialog().wait = vi.fn(
+			async (config: {
+				content: string;
+				render: (event: Event, dialog: { element: ParentNode }) => void;
+			}) => {
+				expect(config.content).toContain('type="range"');
+				expect(config.content).toContain('max="3"');
+				const root = document.createElement('div');
+				root.innerHTML = config.content;
+				config.render(new Event('render'), { element: root });
+				const slider = root.querySelector<HTMLInputElement>('input[type="range"]');
+				const amount = root.querySelector<HTMLInputElement>('input[name="quantity"]');
+				if (!slider || !amount) throw new Error('quantity controls missing');
+				expect(slider.value).toBe('3');
+				expect(amount.value).toBe('3');
+				slider.value = '1';
+				slider.dispatchEvent(new Event('input'));
+				expect(amount.value).toBe('1');
+				amount.value = '2';
+				amount.dispatchEvent(new Event('input'));
+				expect(slider.value).toBe('2');
+				amount.value = '9';
+				amount.dispatchEvent(new Event('change'));
+				expect(amount.value).toBe('3');
+				expect(slider.value).toBe('3');
+				return 1;
+			},
+		);
+		const actor = actorWith({
+			id: 'torch',
+			name: 'Torch',
+			type: 'object',
+			system: { quantity: 3, equipped: false },
+		});
+
+		await transferObject(actor, move);
+
+		expect(request).toHaveBeenCalledWith(expect.objectContaining({ quantity: 1 }));
+	});
+
 	it('asks how many of a stack, and skips the unequip question for a partial split', async () => {
 		dialog().wait = vi.fn(async () => 2);
 		const actor = actorWith({

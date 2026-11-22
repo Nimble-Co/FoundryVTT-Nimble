@@ -20,7 +20,7 @@ import {
 	HEROIC_REACTIONS,
 } from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
-import type { TransferItem } from '#utils/partyStash/planItemTransfer.ts';
+import { isTrustedPlayer, type TransferItem } from '#utils/partyStash/planItemTransfer.ts';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import prepareActorConditions from '#view/dataPreparationHelpers/prepareActorConditions.js';
 import { PARTY_STASH_HOOK, readPartyStash } from '../../../settings/partyStashSetting.js';
@@ -240,8 +240,8 @@ function partyOf(actor: NimbleCharacter): HeroSheetContext['party'] {
 		items: stash.items.map(stashItem),
 		characters,
 		canGive: userIsGm || actor.isOwner === true,
-		canTake:
-			userIsGm || actors.some((entry) => entry.type === 'character' && entry.isOwner === true),
+		canTake: userIsGm || actor.isOwner === true,
+		canGiveAway: userIsGm || isTrustedPlayer(game.user),
 	};
 }
 

@@ -192,8 +192,10 @@ export interface HeroSheetContext {
 		characters: { id: string; name: string }[];
 		/** this user may move objects off the character whose sheet is open */
 		canGive: boolean;
-		/** this user may move objects that are in the party stash */
+		/** this user may move objects that are in the party stash onto this character */
 		canTake: boolean;
+		/** a trusted player may send objects and coins to any character */
+		canGiveAway: boolean;
 	};
 }
 

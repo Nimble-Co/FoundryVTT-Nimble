@@ -13,6 +13,7 @@ import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
+import { ensurePartyStashHolder } from '../settings/partyStashSetting.js';
 import { openWorldMigrationWindow } from '../settings/registerWorldMigrationMenu.js';
 import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffects.js';
 import { registerCardSocketListener } from '../utils/chat/cardOperations.js';
@@ -68,6 +69,7 @@ export default async function ready() {
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
 	registerPartyStashSocketListener();
+	void ensurePartyStashHolder();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');

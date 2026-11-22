@@ -120,14 +120,35 @@ export function planItemTransfer(
 	};
 }
 
-/** A player moves their own objects, and anything in the stash. A GM moves either. */
+export function isTrustedPlayer(
+	user: { isGM?: boolean; role?: number } | null | undefined,
+): boolean {
+	if (!user) return false;
+	if (user.isGM) return true;
+	const roles = (globalThis as { CONST?: { USER_ROLES?: { TRUSTED?: number } } }).CONST?.USER_ROLES;
+	const trusted = Number(roles?.TRUSTED ?? 2);
+	return Number(user.role ?? 0) >= trusted;
+}
+
+/**
+ * Any player can move their own objects into the party inventory, and onto a
+ * character they own. A trusted player can also send objects to any character.
+ * A GM can move either side.
+ */
 export function mayTransferItem(input: {
 	isGM: boolean;
+	trusted: boolean;
 	source: 'actor' | 'stash';
+	destination: 'actor' | 'stash';
 	ownsSource: boolean;
-	ownsACharacter: boolean;
+	ownsDestination: boolean;
 }): boolean {
 	if (input.isGM) return true;
-	if (input.source === 'actor') return input.ownsSource;
-	return input.ownsACharacter;
+	if (input.source === 'stash' && input.destination === 'stash') return false;
+	if (input.source === 'actor' && input.destination === 'stash') return input.ownsSource;
+	if (input.destination === 'actor' && input.ownsDestination && input.source === 'stash')
+		return true;
+	if (!input.trusted || input.destination !== 'actor') return false;
+	if (input.source === 'stash') return true;
+	return input.ownsSource;
 }

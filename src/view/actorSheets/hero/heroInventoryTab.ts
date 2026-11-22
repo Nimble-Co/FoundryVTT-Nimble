@@ -24,13 +24,24 @@ export interface HeroCoinView {
 	value: number;
 }
 
+export interface HeroCurrencyDestination {
+	id: string;
+	label: string;
+	intent: HeroIntent;
+}
+
 export interface HeroInventoryTabView {
 	/** the list is the party stash */
 	party: boolean;
+	/** accessible name of the My Inventory / Party Inventory tabs */
+	listsLabel: string;
+	mineLabel: string;
 	partyLabel: string;
 	coins: HeroCoinView[];
 	/** the coin fields do not edit: this user cannot move objects from the stash */
 	coinsLocked: boolean;
+	/** null: this user has nowhere to send the coins on this list */
+	currencyGive: { label: string; entries: HeroCurrencyDestination[] } | null;
 	/** null: the hero does not track inventory slots, or the list is the party stash */
 	slots: { text: string; label: string; over: string | null } | null;
 	createObject: { label: string; intent: HeroIntent };
@@ -75,6 +86,19 @@ function transferIntent(
 	};
 }
 
+function giveCurrencyIntent(
+	actor: HeroActorLike,
+	source: 'actor' | 'stash',
+	destination: { kind: 'stash' } | { kind: 'actor'; actorId: string },
+): HeroIntent {
+	return { kind: 'giveCurrency', source, sourceActorId: actor.id, destination };
+}
+
+/** A trusted player can send to any character. Anyone can send their own objects to the stash. */
+function canSendToOthers(context: HeroSheetContext, source: 'actor' | 'stash'): boolean {
+	return context.party.canGiveAway && (source === 'stash' || context.party.canGive);
+}
+
 /** Move to the stash, back onto this sheet, or straight to another character. */
 function shareMenu(
 	actor: HeroActorLike,
@@ -83,7 +107,6 @@ function shareMenu(
 	source: 'actor' | 'stash',
 ): HeroRowView['share'] {
 	const { localize, format } = context;
-	const canMove = source === 'actor' ? context.party.canGive : context.party.canTake;
 	const entries: { id: string; label: string; intent: HeroIntent }[] = [];
 	if (source === 'actor' && context.party.canGive) {
 		entries.push({
@@ -99,7 +122,7 @@ function shareMenu(
 			intent: transferIntent(actor, item.id, 'stash', { kind: 'actor', actorId: actor.id }),
 		});
 	}
-	const giveEntries = canMove
+	const giveEntries = canSendToOthers(context, source)
 		? context.party.characters.map((character) => ({
 				id: character.id,
 				label: character.name,
@@ -216,6 +239,41 @@ function objectRow(
 	};
 }
 
+/** Party inventory, this character, and the other characters this user may pay. */
+function currencyGive(
+	actor: HeroActorLike,
+	context: HeroSheetContext,
+	party: boolean,
+): HeroInventoryTabView['currencyGive'] {
+	const source: 'actor' | 'stash' = party ? 'stash' : 'actor';
+	const entries: HeroCurrencyDestination[] = [];
+	if (!party && context.party.canGive) {
+		entries.push({
+			id: 'party',
+			label: context.localize(`${INV}.party`),
+			intent: giveCurrencyIntent(actor, 'actor', { kind: 'stash' }),
+		});
+	}
+	if (party && (context.party.canTake || context.party.canGiveAway)) {
+		entries.push({
+			id: actor.id,
+			label: actor.name,
+			intent: giveCurrencyIntent(actor, 'stash', { kind: 'actor', actorId: actor.id }),
+		});
+	}
+	if (canSendToOthers(context, source)) {
+		for (const character of context.party.characters) {
+			entries.push({
+				id: character.id,
+				label: character.name,
+				intent: giveCurrencyIntent(actor, source, { kind: 'actor', actorId: character.id }),
+			});
+		}
+	}
+	if (!entries.length) return null;
+	return { label: context.localize(`${INV}.giveTo`), entries };
+}
+
 /** Groups by object type, A to Z; the objects in a container show under it. */
 export function heroInventoryTab(
 	actor: HeroActorLike,
@@ -258,7 +316,10 @@ export function heroInventoryTab(
 	const currency = party ? context.party.currency : actor.system.currency;
 	return {
 		party,
+		listsLabel: localize('NIMBLE.actorSheet.hero.tabs.inventory'),
+		mineLabel: localize(`${INV}.mine`),
 		partyLabel: localize(`${INV}.party`),
+		currencyGive: currencyGive(actor, context, party),
 		coins: COINS.map((coin) => {
 			const label = localize(`NIMBLE.currencyAbbreviations.${coin}`);
 			return {

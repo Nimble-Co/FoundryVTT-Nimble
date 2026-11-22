@@ -22,6 +22,7 @@ function partyContext(overrides: Partial<HeroSheetContext['party']> = {}): HeroS
 			characters: [{ id: 'bob', name: 'Bob' }],
 			canGive: true,
 			canTake: true,
+			canGiveAway: true,
 			...overrides,
 		},
 	});
@@ -223,14 +224,30 @@ describe('HeroInventoryTab', () => {
 	});
 
 	describe('the party inventory', () => {
-		it('switches the list when Party Inventory is pressed', async () => {
+		it('switches the list when the Party Inventory tab is chosen', async () => {
 			const { ui } = renderTab();
-			const party = screen.getByRole('button', { name: `${INV}.party` });
+			const mine = screen.getByRole('tab', { name: `${INV}.mine` });
+			const party = screen.getByRole('tab', { name: `${INV}.party` });
 
+			expect(mine).toHaveAttribute('aria-selected', 'true');
+			expect(party).toHaveAttribute('aria-selected', 'false');
 			await fireEvent.click(party);
 
 			expect(ui.partyInventory).toBe(true);
-			expect(party).toHaveAttribute('aria-pressed', 'false');
+		});
+
+		it('gives coins from the button beside the coins', async () => {
+			const { perform } = renderTab(containerHero(), false, { context: partyContext() });
+
+			await fireEvent.click(screen.getByRole('button', { name: `${INV}.giveTo` }));
+			await fireEvent.click(screen.getByRole('menuitem', { name: 'Bob' }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'giveCurrency',
+				source: 'actor',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'actor', actorId: 'bob' },
+			});
 		});
 
 		it('hides Create Object, edits the shared coins, and ignores a drop', async () => {
@@ -258,7 +275,7 @@ describe('HeroInventoryTab', () => {
 		it('locks the coin fields when this user cannot take from the stash', () => {
 			renderTab(containerHero(), false, {
 				party: true,
-				context: partyContext({ canTake: false }),
+				context: partyContext({ canTake: false, canGiveAway: false }),
 			});
 
 			const gold = screen.getByRole('spinbutton', { name: new RegExp(`${INV}.coin.*gp`) });

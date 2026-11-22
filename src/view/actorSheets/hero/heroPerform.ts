@@ -26,6 +26,7 @@ import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 import { isSheetIntent } from '../shared/sheetIntent.ts';
 import { performSheetIntent } from '../shared/sheetPerform.ts';
+import { giveCurrency } from './giveCurrency.ts';
 import { combatantOf, mayAddAction } from './heroActions.ts';
 import type {
 	HeroConfigureTarget,
@@ -357,6 +358,9 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				return;
 			case 'setPartyCurrency':
 				await requestPartyCurrency(intent.coin, intent.value);
+				return;
+			case 'giveCurrency':
+				await giveCurrency(actor, intent);
 				return;
 			default: {
 				const unknown: never = intent;
