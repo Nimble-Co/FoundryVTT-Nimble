@@ -30,6 +30,7 @@
 		ignoreDisadvantage,
 		resourceCosts,
 		useOptionGroups,
+		attackOrigin,
 	}: ItemActivationConfigDialogProps = $props();
 
 	const state = createItemActivationConfigDialogState({
@@ -41,6 +42,7 @@
 		spendsActions: untrack(() => spendsActions),
 		resourceCosts: untrack(() => resourceCosts),
 		useOptionGroups: untrack(() => useOptionGroups ?? []),
+		attackOrigin: untrack(() => attackOrigin),
 	});
 	const keptInUse = $derived(!!state.keptAmount && state.usesKeptAmount);
 	const rollsNoDice = $derived(keptInUse || !!state.maxDamageChoice);

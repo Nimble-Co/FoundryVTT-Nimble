@@ -52,6 +52,17 @@ describe('the activation dialog conditional bonuses', () => {
 	it('have no target to test with two targets', () => {
 		expect(openWith([{ uuid: 'Actor.goblin' }, { uuid: 'Actor.kobold' }])).toBeUndefined();
 	});
+
+	it('are asked for the feature the attack is made through', () => {
+		user.targets = new Set();
+		createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'weapon', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+			attackOrigin: 'granting-feature',
+		});
+		expect((conditionalBonuses.mock.calls[0] as unknown[])[4]).toBe('granting-feature');
+	});
 });
 
 describe('the activation dialog bonus of an item damage', () => {

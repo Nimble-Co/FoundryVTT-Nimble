@@ -6,7 +6,9 @@ import {
 	type AttackDeliveryFilter,
 	matchesAttackDelivery,
 } from '../../utils/damage/attackDelivery.js';
+import { isMadeThrough } from '../../utils/damage/attackOrigin.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { attackOriginField } from './_attackOriginField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { ruleOtherCreatureMatches } from './_otherCreatureMatches.js';
 import { choiceLabels } from './_rollUseRule.js';
@@ -35,6 +37,7 @@ function schema() {
 			label: 'NIMBLE.rules.reroll.attackDelivery.label',
 			hint: 'NIMBLE.rules.reroll.attackDelivery.hint',
 		}),
+		attackOrigin: attackOriginField(),
 		otherCreature: new PredicateField({
 			label: 'NIMBLE.rules.primaryDieBonus.otherCreature.label',
 			hint: 'NIMBLE.rules.primaryDieBonus.otherCreature.hint',
@@ -47,10 +50,11 @@ declare namespace PrimaryDieBonusRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-/** The attack a bonus is asked about: how it is delivered, and the target. */
+/** The attack a bonus is asked about: how it is delivered, the target, and the feature it was made through. */
 interface PrimaryDieBonusContext {
 	delivery: AttackDelivery;
 	other: OtherCreature | null | undefined;
+	origin?: string;
 }
 
 /**
@@ -63,7 +67,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 	static override description = 'NIMBLE.rules.primaryDieBonus.description';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['value'] },
-		{ fields: ['attackDelivery'] },
+		{ fields: ['attackDelivery', 'attackOrigin'] },
 		{
 			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
 			hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
@@ -74,6 +78,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 
 	declare value: string;
 	declare attackDelivery: AttackDeliveryFilter;
+	declare attackOrigin: string;
 	declare otherCreature: Predicate;
 
 	static override defineSchema(): PrimaryDieBonusRule.Schema {
@@ -88,6 +93,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 			new Map([
 				['value', 'string'],
 				['attackDelivery', 'string'],
+				['attackOrigin', 'string'],
 				['otherCreature', 'object'],
 			]),
 		);
@@ -98,6 +104,7 @@ class PrimaryDieBonusRule extends NimbleBaseRule<PrimaryDieBonusRule.Schema> {
 		if (!this.isOnActor) return 0;
 		if (!this.test()) return 0;
 		if (!matchesAttackDelivery(this.attackDelivery, context.delivery)) return 0;
+		if (!isMadeThrough(this.attackOrigin, context.origin)) return 0;
 		if (!ruleOtherCreatureMatches(this, this.otherCreature, context.other)) return 0;
 		return Math.trunc(Number(this.resolveFormula(this.value ?? '')) || 0);
 	}

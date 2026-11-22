@@ -100,21 +100,21 @@ describe('conditionalBonuses', () => {
 		it('maps a reach attack to melee delivery', () => {
 			const rule = createRule();
 			getActiveConditionalBonuses(createAttacker([rule]) as never, weaponItem, undefined);
-			expect(rule.matchesAttack).toHaveBeenCalledWith('melee', 'weapon');
+			expect(rule.matchesAttack).toHaveBeenCalledWith('melee', 'weapon', '');
 		});
 
 		it('maps a ranged attack to ranged delivery', () => {
 			const rule = createRule();
 			const item = { type: 'weapon', system: { activation: { targets: { attackType: 'range' } } } };
 			getActiveConditionalBonuses(createAttacker([rule]) as never, item, undefined);
-			expect(rule.matchesAttack).toHaveBeenCalledWith('ranged', 'weapon');
+			expect(rule.matchesAttack).toHaveBeenCalledWith('ranged', 'weapon', '');
 		});
 
 		it('maps an unrecognized attack type to a null delivery', () => {
 			const rule = createRule();
 			const item = { type: 'weapon', system: { activation: { targets: { attackType: 'other' } } } };
 			getActiveConditionalBonuses(createAttacker([rule]) as never, item, undefined);
-			expect(rule.matchesAttack).toHaveBeenCalledWith(null, 'weapon');
+			expect(rule.matchesAttack).toHaveBeenCalledWith(null, 'weapon', '');
 		});
 
 		it('maps a monster attack with no attack type to melee, and a hero one to null', () => {
@@ -135,7 +135,7 @@ describe('conditionalBonuses', () => {
 			const rule = createRule();
 			const item = { type: 'spell', system: { activation: { targets: { attackType: 'reach' } } } };
 			getActiveConditionalBonuses(createAttacker([rule]) as never, item, undefined);
-			expect(rule.matchesAttack).toHaveBeenCalledWith('melee', 'spell');
+			expect(rule.matchesAttack).toHaveBeenCalledWith('melee', 'spell', '');
 		});
 	});
 
@@ -302,6 +302,42 @@ describe('conditionalBonuses', () => {
 				'Item.a:hunters-mark-bonus',
 				'Item.b:hunters-mark-bonus',
 			]);
+		});
+	});
+
+	describe('getActiveConditionalBonuses with an attack origin', () => {
+		const throughGranting = () =>
+			createRule({
+				matchesAttack: vi.fn(
+					(_delivery: string, _source: string, origin?: string) => origin === 'granting-feature',
+				),
+			});
+		const sword = { ...weaponItem, identifier: 'longsword' };
+
+		it('offers a bonus for attacks made through a feature on an attack made through it', () => {
+			const options = getActiveConditionalBonuses(
+				createAttacker([throughGranting()]),
+				sword,
+				null,
+				null,
+				'granting-feature',
+			);
+			expect(options).toHaveLength(1);
+		});
+
+		it('does not offer it on another attack', () => {
+			expect(
+				getActiveConditionalBonuses(createAttacker([throughGranting()]), sword, null, null),
+			).toEqual([]);
+		});
+
+		it('reads an attack with no origin given as made through its own item', () => {
+			const ownItem = createRule({
+				matchesAttack: vi.fn(
+					(_delivery: string, _source: string, origin?: string) => origin === 'longsword',
+				),
+			});
+			expect(getActiveConditionalBonuses(createAttacker([ownItem]), sword, null)).toHaveLength(1);
 		});
 	});
 

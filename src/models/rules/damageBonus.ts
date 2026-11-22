@@ -1,6 +1,7 @@
 import type { RawPredicate } from '../../etc/Predicate.js';
 import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { PredicateField } from '../fields/PredicateField.js';
+import { attackOriginField } from './_attackOriginField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -17,6 +18,8 @@ interface DamageBonusEntry {
 	source: DamageBonusSource;
 	/** Only attacks with the item that has this identifier. Empty is every item. */
 	itemIdentifier?: string;
+	/** Only attacks made through the item that has this identifier. Empty is every attack. */
+	attackOrigin?: string;
 	/** Optional predicate evaluated against the target's domain at activation time */
 	targetCondition: RawPredicate | null;
 	/** The plain name of the rule, for the card's damage parts. */
@@ -76,6 +79,7 @@ function schema() {
 			label: 'NIMBLE.rules.damageBonus.itemIdentifier.label',
 			hint: 'NIMBLE.rules.damageBonus.itemIdentifier.hint',
 		}),
+		attackOrigin: attackOriginField(),
 		targetCondition: new PredicateField({
 			label: 'NIMBLE.rules.damageBonus.targetCondition.label',
 			hint: 'NIMBLE.rules.damageBonus.targetCondition.hint',
@@ -117,6 +121,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	declare delivery: DamageBonusDelivery;
 	declare source: DamageBonusSource;
 	declare itemIdentifier: string;
+	declare attackOrigin: string;
 
 	static override defineSchema(): DamageBonusRule.Schema {
 		return {
@@ -132,6 +137,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				['damageType', 'string'],
 				['delivery', 'string'],
 				['source', 'string'],
+				['attackOrigin', 'string'],
 				['targetCondition', 'object'],
 			]),
 		);
@@ -164,6 +170,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				delivery: this.delivery,
 				source: this.source,
 				itemIdentifier: this.itemIdentifier,
+				attackOrigin: this.attackOrigin,
 				targetCondition: targetConditionRaw,
 				...source,
 			});
@@ -179,6 +186,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				delivery: this.delivery,
 				source: this.source,
 				itemIdentifier: this.itemIdentifier,
+				attackOrigin: this.attackOrigin,
 				targetCondition: targetConditionRaw,
 				...source,
 			});

@@ -7,6 +7,7 @@ import {
 } from '../chargePool/chargePoolReroll.js';
 import { clearTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
+import { originIdentifierOfRoll } from '../damage/attackOrigin.js';
 import { spendCritDiceUses } from '../damage/collectCritDice.js';
 import {
 	appendExtraDamageToRoll,
@@ -132,6 +133,7 @@ type RollOptionsView = {
 		maxDamage?: unknown;
 		explosionStyle?: unknown;
 		isVicious?: unknown;
+		origin?: { identifier?: string } | null;
 		offerSource?: string;
 		fixedAmount?: unknown;
 	} | null;
@@ -171,6 +173,7 @@ function damageRollContext(
 	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
+	const origin = originIdentifierOfRoll(rolled?.options);
 	const upcastSteps =
 		(card.system() as { upcast?: { upcastSteps?: number } | null }).upcast?.upcastSteps ?? 0;
 	return {
@@ -191,7 +194,7 @@ function damageRollContext(
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
 			...(upcastSteps > 0 ? { upcastSteps } : {}),
-			...(rolled?.options?.offerSource ? { offerSource: rolled.options.offerSource } : {}),
+			...(origin ? { origin } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,

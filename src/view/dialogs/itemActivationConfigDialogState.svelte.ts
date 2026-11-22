@@ -83,6 +83,8 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	resourceCosts?: readonly ResourceCost[];
 	/** The Spell or Attack Options the attacker can turn on for this weapon. */
 	useOptionGroups?: readonly UseOptionGroup[];
+	/** The identifier of the feature the attack is made through. */
+	attackOrigin?: string;
 }
 
 export function createItemActivationConfigDialogState(
@@ -214,6 +216,7 @@ export function createItemActivationConfigDialogState(
 			},
 			firstTargetActor,
 			weaponItemOf(weapon?.uuid),
+			options.attackOrigin,
 		);
 	let conditionalBonusOptions = $state<ConditionalBonusOption[]>(
 		conditionalBonusesFor(weapons[0] ?? null),

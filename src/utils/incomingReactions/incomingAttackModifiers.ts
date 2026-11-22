@@ -380,7 +380,7 @@ function computeIncomingAttackPlan(
 			...(attackContext?.itemUuid ? { itemUuid: attackContext.itemUuid } : {}),
 			...(attackContext?.weaponUuid ? { weaponUuid: attackContext.weaponUuid } : {}),
 			...(attackContext?.stats?.length ? { stats: attackContext.stats } : {}),
-			...(attackContext?.offerSource ? { offerSource: attackContext.offerSource } : {}),
+			...(attackContext?.origin ? { origin: attackContext.origin } : {}),
 			...(attackContext?.upcastSteps ? { upcastSteps: attackContext.upcastSteps } : {}),
 		},
 		outcome: null,

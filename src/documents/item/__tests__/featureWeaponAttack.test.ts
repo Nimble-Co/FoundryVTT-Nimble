@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { testDependencies } from '../../../managers/ItemActivationManager.js';
 import { AttackOutcomeRule } from '../../../models/rules/attackOutcome.js';
+import { OfferAttackBonusRule } from '../../../models/rules/offerAttackBonus.js';
+import { PrimaryDieBonusRule } from '../../../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../../../models/rules/reroll.js';
 import { SYSTEM_ID } from '../../../utils/systemId.js';
 import { NimbleFeatureItem } from '../feature.js';
@@ -657,5 +659,212 @@ describe('the built Incendiary Shot with a weapon that has its own on-hit damage
 			['fire', '(@will)d8'],
 		]);
 		expect(effects[0].roll?.options.canMiss).toBe(false);
+	});
+});
+
+describe('the origin of an attack', () => {
+	function attackOptions(feature: { _createActivationCard: ReturnType<typeof vi.fn> }) {
+		const attack = cardOf(feature).system.activation.effects[0] as Node & {
+			roll: { options: Record<string, unknown> };
+		};
+		return attack.roll.options;
+	}
+
+	const incendiaryOrigin = { uuid: 'Actor.hunter.Item.incendiary', identifier: 'incendiary-shot' };
+
+	it('is the feature itself when the feature is the attack, on the card and on the roll', async () => {
+		const actor = hero();
+		longbow(actor);
+		findItems(actor);
+		const feature = incendiaryShot(actor);
+
+		await feature.activate();
+
+		expect(cardOf(feature).flags[SYSTEM_ID].origin).toEqual(incendiaryOrigin);
+		expect(attackOptions(feature).origin).toEqual(incendiaryOrigin);
+	});
+
+	function grantingFeature(actor: Hero) {
+		const granting = {
+			uuid: 'Actor.hunter.Item.granting',
+			name: 'Granting Feature',
+			identifier: 'granting-feature',
+			type: 'feature',
+			flags: {},
+		};
+		actor.items.push(granting);
+		return granting;
+	}
+
+	const grantingOrigin = { uuid: 'Actor.hunter.Item.granting', identifier: 'granting-feature' };
+
+	it('is the granting feature for an attack made through it', async () => {
+		const actor = hero();
+		longbow(actor);
+		const granting = grantingFeature(actor);
+		findItems(actor);
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ originUuid: granting.uuid });
+
+		expect(cardOf(feature).flags[SYSTEM_ID].origin).toEqual(grantingOrigin);
+		expect(attackOptions(feature).origin).toEqual(grantingOrigin);
+	});
+
+	it('takes the granting feature by its old option name too', async () => {
+		const actor = hero();
+		longbow(actor);
+		const granting = grantingFeature(actor);
+		findItems(actor);
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ offerSourceUuid: granting.uuid });
+
+		expect(attackOptions(feature).origin).toEqual(grantingOrigin);
+	});
+
+	describe('a damage bonus for attacks made through one feature', () => {
+		const bonus = (entry: Record<string, unknown>) => ({
+			value: null,
+			formula: null,
+			damageType: '',
+			delivery: 'any',
+			source: 'any',
+			itemIdentifier: '',
+			attackOrigin: '',
+			targetCondition: null,
+			...entry,
+		});
+
+		function attackFormula(feature: { _createActivationCard: ReturnType<typeof vi.fn> }) {
+			const attack = cardOf(feature).system.activation.effects[0] as Node & {
+				roll: { formula: string };
+			};
+			return attack.roll.formula;
+		}
+
+		function scopedHero() {
+			const actor = hero();
+			longbow(actor);
+			const granting = grantingFeature(actor);
+			actor.system.damageBonuses.push(
+				bonus({ value: 2, attackOrigin: 'granting-feature' }),
+				bonus({ formula: '1d6', attackOrigin: 'granting-feature' }),
+			);
+			findItems(actor);
+			return { actor, granting };
+		}
+
+		it('adds to an attack made through that feature', async () => {
+			const { actor, granting } = scopedHero();
+			const feature = incendiaryShot(actor);
+
+			await feature.activate({ originUuid: granting.uuid });
+
+			expect(attackFormula(feature)).toBe('1d8 + 2 + 1d6');
+		});
+
+		it('adds nothing to an attack made another way', async () => {
+			const { actor } = scopedHero();
+			const feature = incendiaryShot(actor);
+
+			await feature.activate();
+
+			expect(attackFormula(feature)).toBe('1d8');
+		});
+
+		it('adds to every attack when the field is blank', async () => {
+			const actor = hero();
+			longbow(actor);
+			actor.system.damageBonuses.push(bonus({ value: 3 }));
+			findItems(actor);
+			const feature = incendiaryShot(actor);
+
+			await feature.activate();
+
+			expect(attackFormula(feature)).toBe('1d8 + 3');
+		});
+	});
+
+	describe('a Primary Die bonus for attacks made through one feature', () => {
+		function primaryDieBonus(owner: object) {
+			const rule = new PrimaryDieBonusRule({ type: 'primaryDieBonus' } as never, { strict: false });
+			Object.assign(rule, {
+				type: 'primaryDieBonus',
+				id: 'steady',
+				disabled: false,
+				label: 'Steady',
+				value: '1',
+				attackDelivery: 'any',
+				attackOrigin: 'granting-feature',
+				otherCreature: new Predicate({}),
+				predicate: new Predicate({}),
+				resolveFormula: () => 1,
+			});
+			Object.defineProperty(rule, 'parent', { get: () => owner, configurable: true });
+			return rule;
+		}
+
+		it('adds to an attack made through that feature, and not to another attack', async () => {
+			const actor = hero();
+			longbow(actor);
+			const granting = grantingFeature(actor);
+			actor.rules.push(
+				primaryDieBonus({ ...granting, isEmbedded: true, actor, getDomain: () => new Set() }),
+			);
+			findItems(actor);
+			const through = incendiaryShot(actor);
+			const plain = incendiaryShot(actor);
+
+			await through.activate({ originUuid: granting.uuid });
+			await plain.activate();
+
+			expect(attackOptions(through).primaryDieModifier).toBe(1);
+			expect(attackOptions(plain).primaryDieModifier).toBe(0);
+		});
+	});
+
+	describe('an attack bonus for attacks made through one feature', () => {
+		function attackBonus(owner: object) {
+			const rule = new OfferAttackBonusRule({ type: 'offerAttackBonus' } as never, {
+				strict: false,
+			});
+			Object.assign(rule, {
+				type: 'offerAttackBonus',
+				id: 'heavy',
+				disabled: false,
+				label: 'Heavy Hand',
+				offerSource: 'granting-feature',
+				damage: '5',
+				primaryDie: 1,
+				predicate: new Predicate({}),
+				resolveFormula: () => 5,
+			});
+			Object.defineProperty(rule, 'parent', { get: () => owner, configurable: true });
+			return rule;
+		}
+
+		it('adds to an attack made through that feature, and not to another attack', async () => {
+			const actor = hero();
+			longbow(actor);
+			const granting = grantingFeature(actor);
+			actor.rules.push(
+				attackBonus({ ...granting, isEmbedded: true, actor, getDomain: () => new Set() }),
+			);
+			findItems(actor);
+			const through = incendiaryShot(actor);
+			const plain = incendiaryShot(actor);
+
+			await through.activate({ originUuid: granting.uuid });
+			await plain.activate();
+
+			const formulaOf = (feature: typeof through) =>
+				(cardOf(feature).system.activation.effects[0] as Node & { roll: { formula: string } }).roll
+					.formula;
+			expect(formulaOf(through)).toBe('1d8 + 5');
+			expect(attackOptions(through).primaryDieModifier).toBe(1);
+			expect(formulaOf(plain)).toBe('1d8');
+			expect(attackOptions(plain).primaryDieModifier).toBe(0);
+		});
 	});
 });

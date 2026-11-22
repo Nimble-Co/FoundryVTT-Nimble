@@ -4,6 +4,7 @@ import {
 	type AttackDelivery,
 	deliveryOfAttack,
 } from '../damage/attackDelivery.js';
+import { identifierOf } from '../documents/itemIdentifier.js';
 import localize from '../localize.js';
 import { countedMarkTags, getToggledTargetTags } from './toggledEffects.js';
 
@@ -52,7 +53,7 @@ interface TargetActor {
 interface ActivationItem {
 	type?: string;
 	identifier?: string;
-	system?: { activation?: AttackActivation };
+	system?: { identifier?: string; activation?: AttackActivation };
 }
 
 /**
@@ -95,12 +96,14 @@ function doublesDamage(
  * `item` against `targetActor`. A bonus is offered when its self-predicate passes, its
  * delivery/source matches the attack, its target condition matches, and it grants at
  * least one of advantage or damage. `weapon` is the weapon an ability attacks with.
+ * `origin` is the identifier of the feature the attack is made through; by default the item.
  */
 function getActiveConditionalBonuses(
 	attacker: AttackingActor | null | undefined,
 	item: ActivationItem | null | undefined,
 	targetActor: TargetActor | null | undefined,
 	weapon?: { identifier?: string } | null,
+	origin?: string,
 ): ConditionalBonusOption[] {
 	if (!attacker || !item) return [];
 
@@ -117,7 +120,7 @@ function getActiveConditionalBonuses(
 	for (const rule of rules) {
 		if (rule.type !== 'conditionalBonus') continue;
 		if (!rule.appliesTo()) continue;
-		if (!rule.matchesAttack(delivery, source)) continue;
+		if (!rule.matchesAttack(delivery, source, origin ?? identifierOf(item))) continue;
 		if (!rule.matchesTarget(targetDomain)) continue;
 		if (!rule.offersAdvantage() && !rule.offersDamage()) continue;
 

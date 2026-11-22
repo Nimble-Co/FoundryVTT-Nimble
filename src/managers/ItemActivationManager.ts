@@ -50,6 +50,7 @@ import {
 	settleResourceCosts,
 } from '../utils/cost/itemResourceCosts.js';
 import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
+import { type AttackOrigin, attackOriginOf } from '../utils/damage/attackOrigin.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusParts,
@@ -145,11 +146,7 @@ import {
 	resolveMaxDamage,
 	spendMaxDamageCharge,
 } from './itemActivation/maxDamageActivation.js';
-import {
-	addOfferBonuses,
-	markOfferOnRollOptions,
-	offerSourceOf,
-} from './itemActivation/offerBonus.js';
+import { addOfferBonuses, markOfferOnRollOptions } from './itemActivation/offerBonus.js';
 import {
 	addPickRiders,
 	settleUseOptions,
@@ -167,7 +164,11 @@ interface PrimaryDieBonusRuleLike {
 	type?: string;
 	label?: string;
 	parentDocument?: { name?: string; uuid?: string | null } | null;
-	bonusFor?: (context: { delivery: AttackDelivery; other: OtherCreature | null }) => number;
+	bonusFor?: (context: {
+		delivery: AttackDelivery;
+		other: OtherCreature | null;
+		origin: string;
+	}) => number;
 }
 
 /**
@@ -178,11 +179,12 @@ function collectPrimaryDieBonuses(
 	attacker: { rules?: unknown[] } | null | undefined,
 	delivery: AttackDelivery,
 	target: OtherCreature | null,
+	origin: string,
 ): PrimaryDieBonusRecord[] {
 	const lines: PrimaryDieBonusRecord[] = [];
 	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
 		if (rule?.type !== 'primaryDieBonus') continue;
-		const value = rule.bonusFor?.({ delivery, other: target }) ?? 0;
+		const value = rule.bonusFor?.({ delivery, other: target, origin }) ?? 0;
 		if (value === 0) continue;
 		lines.push({
 			label: ruleLabel(rule),
@@ -382,9 +384,10 @@ class ItemActivationManager {
 		return this.#chosenWeapon?.uuid ?? null;
 	}
 
-	/** The identifier of the item whose offer row started this activation. */
-	#offerSource(): string | undefined {
-		return offerSourceOf(this.#options.offerSourceUuid);
+	/** The feature that caused this attack: the item it was made through, or the item itself. */
+	get origin(): AttackOrigin {
+		const through = this.#options.originUuid || this.#options.offerSourceUuid;
+		return attackOriginOf(this.#item, through);
 	}
 
 	/** The attack roll of this activation, for the uses its crit dice spend. */
@@ -528,6 +531,7 @@ class ItemActivationManager {
 			rushedAttack: options.rushedAttack,
 			spendsActions: options.spendsActions,
 			ignoreDisadvantage: options.ignoreDisadvantage,
+			attackOrigin: this.origin.identifier,
 		};
 
 		const dialogData = await this.#resolveDialogData(rollOptions);
@@ -692,7 +696,7 @@ class ItemActivationManager {
 				...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
-				...(this.#offerSource() ? { offerSource: this.#offerSource() } : {}),
+				origin: this.origin.identifier,
 			},
 		);
 
@@ -910,6 +914,7 @@ class ItemActivationManager {
 							node.damageType,
 							targetDomain,
 							this.#attackItemIdentifiers(),
+							this.origin.identifier,
 						);
 						if (numericBonus > 0) {
 							formula = `${formula} + ${numericBonus}`;
@@ -921,6 +926,7 @@ class ItemActivationManager {
 							node.damageType,
 							targetDomain,
 							this.#attackItemIdentifiers(),
+							this.origin.identifier,
 						)) {
 							formula = `${formula} + ${diceFormula}`;
 						}
@@ -933,6 +939,7 @@ class ItemActivationManager {
 								this.actor as { rules?: unknown[] } | null,
 								delivery,
 								(this.#getSoleTargetToken()?.actor ?? null) as OtherCreature | null,
+								this.origin.identifier,
 							);
 					const isAttack = isAttackRoll(this.activationData?.targets?.attackType, node);
 					this.#heldPlan = attackHeldPlanOf({
@@ -948,10 +955,10 @@ class ItemActivationManager {
 						chosen: this.#heldChosen,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
-					const offerSource = this.#offerSource();
+					const origin = this.origin;
 					const offerBonuses = collectOfferBonuses(
 						this.actor as { rules?: unknown } | null,
-						offerSource,
+						origin.identifier,
 					);
 					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
 					formula = offerAdded.formula;
@@ -992,7 +999,7 @@ class ItemActivationManager {
 						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
 						damageOptions.outcomeSources = sources;
 					}
-					markOfferOnRollOptions(damageOptions, offerSource);
+					markOfferOnRollOptions(damageOptions, origin);
 					if (damageParts.length > 0) damageOptions.damageParts = damageParts;
 					const critDice = resolvedCanCrit
 						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)
@@ -2040,7 +2047,9 @@ namespace ItemActivationManager {
 		primaryDieValue?: number;
 		/** The tick for 1 less mana. */
 		lessMana?: boolean;
-		/** The item whose offer row started this activation. */
+		/** The item this attack is made through, such as the feature that grants it. */
+		originUuid?: string;
+		/** @deprecated The old name of `originUuid`. */
 		offerSourceUuid?: string;
 		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;

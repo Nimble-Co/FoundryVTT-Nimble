@@ -3215,6 +3215,10 @@
 					"hint": "Pick one or more skills. Use \"all\" to offer the option on every skill check."
 				}
 			},
+			"attackOrigin": {
+				"label": "Only attacks made through",
+				"hint": "The identifier of the feature, such as coordinated-strike. Leave blank for every attack."
+			},
 			"attackOutcome": {
 				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make It a Crit row in Change This Roll on the card.",
 				"form": {
@@ -3555,10 +3559,10 @@
 				}
 			},
 			"offerAttackBonus": {
-				"description": "Extra damage and a Primary Die bonus on an attack made from the row of one item. With Feature Effects off, a row in Change This Roll adds them.",
+				"description": "Extra damage and a Primary Die bonus on an attack made through one feature. With Feature Effects off, a row in Change This Roll adds them.",
 				"offerSource": {
-					"label": "Item with the row",
-					"hint": "The identifier of the item whose row makes the attack."
+					"label": "Only attacks made through",
+					"hint": "The identifier of the feature, such as coordinated-strike. Leave blank and the rule adds nothing."
 				},
 				"damage": {
 					"label": "Extra damage",

@@ -115,7 +115,7 @@
 			if (!actor?.activateItem) return;
 
 			const activationCard = await actor.activateItem(itemId, {
-				offerSourceUuid: offer.sourceItemUuid,
+				originUuid: offer.sourceItemUuid,
 			});
 			if (!activationCard) return;
 

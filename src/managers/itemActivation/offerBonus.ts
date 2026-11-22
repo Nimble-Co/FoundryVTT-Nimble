@@ -2,13 +2,7 @@ import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import type { DamagePart } from '#types/damagePart.d.ts';
 import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { DamageRoll } from '../../dice/DamageRoll.js';
-
-/** The identifier of the item whose offer row started this activation. */
-export function offerSourceOf(uuid: string | undefined): string | undefined {
-	if (!uuid) return undefined;
-	const source = fromUuidSync(uuid as `Item.${string}`) as { identifier?: string } | null;
-	return source?.identifier || undefined;
-}
+import type { AttackOrigin } from '../../utils/damage/attackOrigin.js';
 
 /**
  * The formula with the flat bonuses added, the lines each bonus adds to the
@@ -39,10 +33,7 @@ export function addOfferBonuses(
 	return { formula: next, primaryDieBonuses, damageParts };
 }
 
-/** Record the offer on the roll options. */
-export function markOfferOnRollOptions(
-	options: DamageRoll.Options,
-	offerSource: string | undefined,
-): void {
-	if (offerSource) options.offerSource = offerSource;
+/** Record the origin on the roll options. */
+export function markOfferOnRollOptions(options: DamageRoll.Options, origin: AttackOrigin): void {
+	if (origin.uuid) options.origin = origin;
 }

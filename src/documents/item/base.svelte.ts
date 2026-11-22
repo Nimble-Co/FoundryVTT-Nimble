@@ -517,6 +517,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 							itemId: this.id,
 							itemUuid: this.uuid,
 							...(manager.weaponUuid ? { weaponUuid: manager.weaponUuid } : {}),
+							...(manager.origin.uuid ? { origin: manager.origin } : {}),
 							actorId: this.actor?.id,
 							tokenUuid: this.actor?.token?.uuid,
 							...(manager.chargeConsumption.length > 0
