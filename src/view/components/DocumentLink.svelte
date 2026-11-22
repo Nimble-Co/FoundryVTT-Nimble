@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { type DocLink, linkedDocument } from '#utils/documents/docLink.ts';
+	import type { DocumentLinkProps } from '#types/components/DocumentLink.d.ts';
 
-	let { link }: { link: DocLink } = $props();
+	import { linkedDocument } from '#utils/documents/docLink.ts';
+
+	let { link }: DocumentLinkProps = $props();
 
 	const target = $derived(linkedDocument(link));
 

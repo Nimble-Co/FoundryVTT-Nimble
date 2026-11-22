@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { type LinkedData, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
+	import type { LinkedTextProps } from '#types/components/LinkedText.d.ts';
+
+	import { linkedParts } from '#utils/documents/docLink.ts';
 	import DocumentLink from './DocumentLink.svelte';
 
-	type Props =
-		| { parts: readonly LinkedPart[]; key?: never; data?: never }
-		| { key: string; data?: LinkedData; parts?: never };
-
-	let { parts, key, data }: Props = $props();
+	let { parts, key, data }: LinkedTextProps = $props();
 
 	const shown = $derived(parts ?? linkedParts(key ?? '', data));
 </script>
