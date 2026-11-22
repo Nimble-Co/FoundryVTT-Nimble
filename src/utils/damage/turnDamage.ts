@@ -1,11 +1,12 @@
 import type {
 	CardEvent,
+	CardEventLink,
 	CardEventMoment,
 	CardEventText,
 	TurnDamageAction,
 	TurnMomentType,
 } from '#types/cardEvent.d.ts';
-import { ruleKey, ruleLabel, rulesOfType } from '#utils/actor/actorRules.js';
+import { ruleKey, ruleSource, rulesOfType } from '#utils/actor/actorRules.js';
 import { addMomentEvents, momentCard, momentEventIds } from '#utils/chat/cardEvents.js';
 import { spacesBetween } from '#utils/movement/spacesBetween.js';
 import { rollAmount } from '#utils/rolls/rollAmount.js';
@@ -94,8 +95,8 @@ function sourcesFor(
 }
 
 function causeOf({ rule, near }: Source): CardEventText {
-	const label = ruleLabel(rule as never);
-	const source: CardEventText | string = near
+	const label: CardEventLink = { link: ruleSource(rule as never) };
+	const source: CardEventText | CardEventLink = near
 		? { key: `${WORDS}.nearSource`, data: { source: label, creature: near.name ?? '' } }
 		: label;
 	const formula = rule.formula.trim();

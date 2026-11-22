@@ -17,7 +17,7 @@ describe('the line of a pool roll', () => {
 	it('names the item as the cause when no die was raised', () => {
 		expect(poolRollEvent(rage, 'Fury Dice', [4]).cause).toEqual({
 			key: 'NIMBLE.chat.events.cause.source',
-			data: { source: 'Rage' },
+			data: { source: { link: { name: 'Rage' } } },
 		});
 	});
 

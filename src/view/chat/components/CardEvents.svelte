@@ -2,7 +2,8 @@
 	import type { CardEventsProps } from '#types/components/CardEvents.d.ts';
 
 	import MoveNode from './MoveNode.svelte';
-	import { cardEventText } from '#utils/chat/cardEvents.js';
+	import LinkedText from '../../components/LinkedText.svelte';
+	import { cardEventParts, cardEventText } from '#utils/chat/cardEvents.js';
 	import localize from '#utils/localize.js';
 	import { createCardEventsState } from './CardEvents.svelte.ts';
 
@@ -85,9 +86,11 @@
 					</span>
 
 					<span class="nimble-card-events__text">
-						<strong>{cardEventText(event.text)}</strong>
+						<strong><LinkedText parts={cardEventParts(event.text)} /></strong>
 						{#if event.cause}
-							<small class="nimble-card-events__cause">{cardEventText(event.cause)}</small>
+							<small class="nimble-card-events__cause"
+								><LinkedText parts={cardEventParts(event.cause)} /></small
+							>
 						{/if}
 					</span>
 

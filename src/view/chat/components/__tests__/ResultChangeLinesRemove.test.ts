@@ -9,7 +9,7 @@ function line(note: string | null): ResultChangeLine {
 	return {
 		id: 'line-1',
 		verb: 'Succeeded',
-		withFeature: 'with Elusive',
+		withFeature: ['with Elusive'],
 		sentence: 'Succeeded with Elusive',
 		detail: null,
 		retired: false,

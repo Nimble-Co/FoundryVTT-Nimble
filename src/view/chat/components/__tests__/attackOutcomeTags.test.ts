@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
+import { partsText } from '#utils/documents/docLink.ts';
 import {
 	attackOutcomeTags,
 	conditionRollModeTags,
@@ -210,9 +211,9 @@ describe('primaryDieBonusNotAdded', () => {
 	};
 
 	it('tells who set the die, and to what', () => {
-		const text = primaryDieBonusNotAdded({ primaryDieBonusOff: true }, [setRecord], documentName);
-		expect(text).toContain('Judgment');
-		expect(text).toContain('8');
+		const parts = primaryDieBonusNotAdded({ primaryDieBonusOff: true }, [setRecord], documentName);
+		expect(parts).toContainEqual({ name: 'Judgment', uuid: setRecord.itemUuid });
+		expect(partsText(parts ?? [])).toContain('8');
 	});
 
 	it('is null while the bonus is on the die', () => {

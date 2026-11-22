@@ -207,7 +207,10 @@ describe('a free use with nothing to click', () => {
 		expect(written.find((event) => event.kind === 'freeUse')).toMatchObject({
 			kind: 'freeUse',
 			img: 'rage.webp',
-			text: { key: 'NIMBLE.chat.events.freeUse.text', data: { name: 'Hero', item: 'Rage' } },
+			text: {
+				key: 'NIMBLE.chat.events.freeUse.text',
+				data: { name: 'Hero', item: { link: expect.objectContaining({ name: 'Rage' }) } },
+			},
 			cause: { key: 'NIMBLE.chat.events.freeUse.cause' },
 		});
 		expect(applyEffectFromCard).toHaveBeenCalledWith(
@@ -378,7 +381,7 @@ describe('a use whose card a rule holds back', () => {
 		expect(created[0].system.momentKey).toMatch(/^once:/);
 		expect(created[0].system.momentHeading).toEqual({
 			key: 'NIMBLE.chat.events.useHeading',
-			data: { name: 'Hero', item: 'Rage' },
+			data: { name: 'Hero', item: { link: expect.objectContaining({ name: 'Rage' }) } },
 		});
 		expect(created[0].flags[SYSTEM_ID].events).toEqual([line('pool')]);
 		expect(created[0]).not.toHaveProperty('whisper');

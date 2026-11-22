@@ -35,6 +35,7 @@ interface CardItem {
 
 interface CardEffect {
 	name: string;
+	uuid?: string | null;
 	img?: string | null;
 	system?: { lastsUntil?: Moment[]; escape?: { dc?: string; noDc?: boolean } };
 	toObject(): Record<string, unknown>;
@@ -92,6 +93,7 @@ export function applyEffectSource(
 	if (effect) {
 		return {
 			name: effect.name,
+			uuid: effect.uuid ?? null,
 			img: effect.img ?? 'icons/svg/aura.svg',
 			lastsUntil: raiseMoments(effect.system?.lastsUntil ?? [], node.momentRaises ?? []),
 			usedUp: usedUpOf(effect.system),

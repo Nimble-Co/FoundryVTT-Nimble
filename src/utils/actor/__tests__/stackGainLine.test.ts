@@ -66,7 +66,12 @@ describe('stackGainEvent', () => {
 			img: 'petrified.svg',
 			text: {
 				key: 'NIMBLE.chat.stackGain.gains',
-				data: { name: 'Tessa', effect: 'Petrified', count: 3, stacked: 'Dazed' },
+				data: {
+					name: 'Tessa',
+					effect: { link: { name: 'Petrified', uuid: 'Actor.tessa.ActiveEffect.stone' } },
+					count: 3,
+					stacked: 'Dazed',
+				},
 			},
 			action: { kind: 'stackGain', state: 'gained', gainedUuid: 'Actor.tessa.ActiveEffect.stone' },
 		});

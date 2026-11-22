@@ -5,6 +5,8 @@ export interface RerollDiePickerProps {
 	dice: PickableDie[];
 	/** The feature the reroll uses, named while the die rolls. */
 	feature: string;
+	/** The uuid of the feature's item: its name opens the item. */
+	featureUuid?: string | null;
 	/** The card outcome, shown on the Primary Die. */
 	primaryOutcome?: DieOutcome;
 	/** A change picks the die to change; the words say so. */

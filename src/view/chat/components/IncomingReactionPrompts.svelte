@@ -3,6 +3,7 @@
 	import type { IncomingReactionPromptsProps } from '#types/components/IncomingReactionPrompts.d.ts';
 
 	import { getContext } from 'svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import ChangeThisRoll from './ChangeThisRoll.svelte';
 	import { createIncomingReactionPromptsState } from './IncomingReactionPrompts.svelte.ts';
 	import LeftOutRerolls from './LeftOutRerolls.svelte';
@@ -88,7 +89,7 @@
 		{#each prompts.usedEntries as entry (entry.id)}
 			<p class="nimble-incoming-reaction-attribution">
 				<i class={text.icon(entry)} aria-hidden="true"></i>
-				{text.usedAttribution(entry)}
+				<LinkedText parts={text.usedAttribution(entry)} />
 			</p>
 		{/each}
 	</section>

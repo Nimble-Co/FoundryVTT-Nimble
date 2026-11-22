@@ -1,6 +1,7 @@
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, CardEventText, EscapeRulingAction } from '#types/cardEvent.d.ts';
 import { askActiveGm } from '#utils/askActiveGm.js';
+import { cardEventLink, effectUuidOn } from '#utils/chat/cardEventLink.ts';
 import {
 	addCardEvents,
 	cardEventsOf,
@@ -105,7 +106,10 @@ export function escapeRulingEvent(
 		state,
 		...(rollMessageId ? { rollMessageId } : {}),
 	};
-	const data = { name: link.holderName, effect: link.effectName };
+	const data = {
+		name: link.holderName,
+		effect: cardEventLink(link.effectName, effectUuidOn(link.holderUuid, link.effectId)),
+	};
 	return {
 		id: `escape.${link.holderUuid}.${link.effectId}.${at}`,
 		kind: 'escape',

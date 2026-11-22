@@ -4,6 +4,7 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.js';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { createLeftOutRerollsState } from './LeftOutRerolls.svelte.ts';
 
 	let { entries }: LeftOutRerollsProps = $props();
@@ -28,7 +29,7 @@
 		{#each entries as entry (entry.id)}
 			<li class="nimble-left-out__row">
 				<div class="nimble-left-out__text">
-					<span>{list.featureText(entry)}</span>
+					<span><LinkedText parts={list.featureText(entry)} /></span>
 					<small>{list.reason(entry)}</small>
 				</div>
 				<button

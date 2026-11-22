@@ -1618,7 +1618,7 @@ describe('IncomingReactionPrompts', () => {
 				...screen.getByTestId('roll-place').querySelectorAll('.nimble-roll-changes__history'),
 			];
 			expect(
-				lines.map((line) => line.querySelector('p > [aria-hidden="true"]')?.textContent),
+				lines.map((line) => line.querySelector('.nimble-roll-changes__title')?.textContent),
 			).toEqual(['Pocket Sand', 'Warding Bond']);
 			expect(
 				lines.map((line) => line.querySelector('.nimble-roll-changes__spoken')?.textContent),

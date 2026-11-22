@@ -1,3 +1,4 @@
+import type { LinkedPart } from '#utils/documents/docLink.ts';
 import type { HeldIncomingReactions } from './IncomingReactionPrompts.d.ts';
 
 /** One history line of Change a Result. Repeats of one add are one line. */
@@ -6,8 +7,8 @@ export interface ResultChangeLine {
 	id: string;
 	/** What it did: "Added +6 STR, Gained 2 Wounds". */
 	verb: string;
-	/** "with Mighty Soul". */
-	withFeature: string;
+	/** "with Mighty Soul", the name a link to the feature. */
+	withFeature: LinkedPart[];
 	/** The line as a sentence, for its Remove button. */
 	sentence: string;
 	/** Who used it, when not the one who rolled. */

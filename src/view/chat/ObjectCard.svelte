@@ -1,5 +1,6 @@
 <script>
 	import { setContext, untrack } from 'svelte';
+	import { SYSTEM_ID } from '#system';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
@@ -37,6 +38,10 @@
 	);
 
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
+	// An object that is not identified never opens its item.
+	let itemUuid = $derived(
+		isIdentified ? (messageDocument.reactive.flags?.[SYSTEM_ID]?.itemUuid ?? null) : null,
+	);
 
 	setContext(
 		'messageDocument',
@@ -55,6 +60,7 @@
 		image={image || 'icons/svg/item-bag.svg'}
 		alt={isIdentified ? name.public : name.unidentified}
 		heading={isIdentified ? name.public : name.unidentified}
+		headingUuid={itemUuid}
 		{subheading}
 	/>
 

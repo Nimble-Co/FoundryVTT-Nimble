@@ -39,9 +39,9 @@
 			{
 				id: 'countsAsNat20',
 				verb,
-				withFeature: localize('NIMBLE.chat.incomingReactions.changeThisRoll.withFeature', {
-					feature,
-				}),
+				withFeature: [
+					localize('NIMBLE.chat.incomingReactions.changeThisRoll.withFeature', { feature }),
+				],
 				sentence: localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', {
 					verb,
 					feature,

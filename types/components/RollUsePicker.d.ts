@@ -6,6 +6,8 @@ import type { IncomingReactionPicking } from './IncomingReactionPrompts.d.ts';
 export interface RollUsePickerProps {
 	picking: IncomingReactionPicking;
 	feature: string;
+	/** The uuid of the feature's item: its name opens the item. */
+	featureUuid?: string | null;
 	primaryOutcome?: DieOutcome;
 	primaryDieBonuses?: readonly PrimaryDieBonusLine[];
 	onpick: (die: PickableDie) => void;

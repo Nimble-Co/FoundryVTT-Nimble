@@ -1,9 +1,12 @@
 import type { DieValuePickerProps } from '#types/components/DieValuePicker.d.ts';
-import localize from '#utils/localize.js';
+import { docLink, linkedParts } from '#utils/documents/docLink.ts';
 import { claimEscape } from './claimEscape.ts';
 
 export function createDieValuePickerState(
-	getProps: () => Pick<DieValuePickerProps, 'die' | 'feature' | 'sending' | 'onpick' | 'oncancel'>,
+	getProps: () => Pick<
+		DieValuePickerProps,
+		'die' | 'feature' | 'featureUuid' | 'sending' | 'onpick' | 'oncancel'
+	>,
 ) {
 	const elements = $state<{ root?: HTMLElement; input?: HTMLInputElement }>({});
 	// Starts at the die's own value, so the player always picks one.
@@ -16,10 +19,10 @@ export function createDieValuePickerState(
 	const canSet = $derived(!getProps().sending && value !== null && value !== getProps().die.value);
 	const title = $derived(
 		getProps().sending
-			? localize('NIMBLE.chat.incomingReactions.pickValue.sending', {
-					feature: getProps().feature,
+			? linkedParts('NIMBLE.chat.incomingReactions.pickValue.sending', {
+					feature: docLink(getProps().feature, getProps().featureUuid),
 				})
-			: localize('NIMBLE.chat.incomingReactions.pickValue.title'),
+			: linkedParts('NIMBLE.chat.incomingReactions.pickValue.title'),
 	);
 
 	function set(next: number) {

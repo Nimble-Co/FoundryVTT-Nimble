@@ -8,6 +8,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { critFaceOf } from '../../../dice/critFace.js';
 import { findPrimaryDamageNode } from '../../../utils/damage/foldBonusIntoPrimaryDamage.js';
 import { DEFAULT_MISS_THRESHOLD } from '../../../utils/damage/missThreshold.js';
+import { docLink, type LinkedPart, linkedParts } from '../../../utils/documents/docLink.js';
 import { termsHaveDieAtMax } from '../../../utils/incomingReactions/incomingReactionEntry.js';
 import localize from '../../../utils/localize.js';
 import { conditionRollModeTag } from '../../../utils/rolls/conditionRollModeText.js';
@@ -214,20 +215,21 @@ interface DieSetRecord {
 
 /**
  * Why a Primary Die Bonus is not on the die, or null when it is: a die set to
- * a value keeps that face.
+ * a value keeps that face. The feature that set it opens its item.
  */
 function primaryDieBonusNotAdded(
 	options: { primaryDieBonusOff?: boolean } | null | undefined,
 	rerolls: readonly DieSetRecord[],
 	documentName: (uuid: string) => string | null | undefined,
-): string | null {
+): LinkedPart[] | null {
 	if (!options?.primaryDieBonusOff) return null;
 	const set = rerolls.findLast(
 		(record) => record.use === 'change' && record.change?.mode === 'set',
 	);
-	if (!set) return localize('NIMBLE.chat.primaryDieBonus.notAddedTooltip');
-	return localize('NIMBLE.chat.primaryDieBonus.notAddedBySetTooltip', {
-		feature: (documentName(set.itemUuid ?? '') ?? '').trim() || (set.label ?? ''),
+	if (!set) return linkedParts('NIMBLE.chat.primaryDieBonus.notAddedTooltip');
+	const name = (documentName(set.itemUuid ?? '') ?? '').trim() || (set.label ?? '');
+	return linkedParts('NIMBLE.chat.primaryDieBonus.notAddedBySetTooltip', {
+		feature: docLink(name, set.itemUuid),
 		face: String(set.next?.value ?? ''),
 	});
 }

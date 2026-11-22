@@ -1,9 +1,13 @@
 <script lang="ts">
 	import type { EffectStepRowProps } from '#types/components/EffectStepRow.d.ts';
 
+	import DocumentLink from '../../components/DocumentLink.svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
+
 	let {
 		img,
 		name,
+		uuid = null,
 		lasts = '',
 		appliedLines,
 		notes,
@@ -17,7 +21,7 @@
 	<img class="nimble-apply-effect__img" src={img} alt="" />
 
 	<div class="nimble-apply-effect__text">
-		<span class="nimble-apply-effect__name">{name}</span>
+		<span class="nimble-apply-effect__name"><DocumentLink link={{ name, uuid }} /></span>
 
 		{#if lasts}
 			<span class="nimble-apply-effect__lasts">
@@ -32,7 +36,7 @@
 			{#each appliedLines as line}
 				<span class="nimble-apply-effect__applied-line">
 					<i class="fa-solid fa-check" aria-hidden="true"></i>
-					<span>{line}</span>
+					<span><LinkedText parts={typeof line === 'string' ? [line] : line} /></span>
 				</span>
 			{/each}
 		</span>

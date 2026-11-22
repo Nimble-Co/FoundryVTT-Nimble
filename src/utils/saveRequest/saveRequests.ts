@@ -1,6 +1,7 @@
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type { CardEvent, SaveRequestAction } from '#types/cardEvent.d.ts';
+import { cardEventLink, effectUuidOn } from '#utils/chat/cardEventLink.ts';
 import {
 	addCardEvents,
 	cardEventsOf,
@@ -110,7 +111,13 @@ export function saveRequestEvents(
 				id: `saveRequest.${actor.uuid}.${effect.id}.${rule.id ?? lines.length}.${at}`,
 				kind: 'saveRequest',
 				...(effect.img ? { img: effect.img } : { icon: 'fa-solid fa-shield-heart' }),
-				text: { key: `${WORDS}.ask`, data: { name: action.holderName, effect: action.effectName } },
+				text: {
+					key: `${WORDS}.ask`,
+					data: {
+						name: action.holderName,
+						effect: cardEventLink(action.effectName, effectUuidOn(actor.uuid, effect.id)),
+					},
+				},
 				cause: {
 					key: `${WORDS}.cause.${event}`,
 					data: { dc, save: { key: saveWord(save) } },
@@ -266,7 +273,13 @@ async function follow(saveCard: SaveCard, link: SaveRequestLink, outcome: string
 					...link.event,
 					text: {
 						key: `${WORDS}.kept`,
-						data: { name: asked.holderName, effect: asked.effectName },
+						data: {
+							name: asked.holderName,
+							effect: cardEventLink(
+								asked.effectName,
+								effectUuidOn(asked.holderUuid, asked.effectId),
+							),
+						},
 					},
 					cause: { key: `${WORDS}.rolled`, data: rolled },
 					action: { ...action, state: 'kept', total },

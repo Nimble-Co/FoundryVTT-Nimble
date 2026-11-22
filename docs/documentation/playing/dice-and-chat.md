@@ -65,6 +65,8 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 
 A player sees only the rows of the characters they own. The GM sees all.
 
+**Names open their sheets.** The name of a feature, spell, item or effect on a card, such as the card title, a reroll line or a line in Events, is underlined when you may see that document. Click it to open its sheet and read it, or drag it like any content link. A name you may not see, an object that is not identified, or a document that is gone stays plain text.
+
 **Tags at the roll.** When the die does not explain the result, a tag tells why, for example **Crit: target Stunned** (a melee hit on an Incapacitated creature is a crit) or **Cannot miss**. Dice that a crit adds, such as Sneak Attack, show as their own line. Hover a tag or a line to read it as a sentence. On a touch screen, click it.
 
 ## The result of a save or check

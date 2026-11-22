@@ -1,13 +1,17 @@
 <script lang="ts">
+	import DocumentLink from '../../components/DocumentLink.svelte';
+
 	interface Props {
 		alt?: string;
 		fa?: boolean;
 		heading: string;
+		/** The document the heading names: the heading opens it for a user who may see it. */
+		headingUuid?: string | null;
 		image?: string;
 		subheading?: string;
 	}
 
-	let { alt, fa, heading, subheading, image }: Props = $props();
+	let { alt, fa, heading, headingUuid = null, subheading, image }: Props = $props();
 </script>
 
 <header class="nimble-chat-card__body-header">
@@ -18,7 +22,9 @@
 	{/if}
 
 	<div class="nimble-chat-card__title-wrapper">
-		<h3 class="nimble-chat-card__title">{heading}</h3>
+		<h3 class="nimble-chat-card__title">
+			<DocumentLink link={{ name: heading, uuid: headingUuid }} />
+		</h3>
 
 		{#if subheading}
 			<h4 class="nimble-chat-card__meta">{subheading}</h4>

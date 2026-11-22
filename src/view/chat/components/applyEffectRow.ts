@@ -1,5 +1,6 @@
 import type { ApplyEffectNode, ApplyEffectSource } from '#types/effectTree.js';
 import type { AppliedEffect } from '#utils/actor/applyEffectToActor.js';
+import { docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.js';
 import {
 	CARD_SELF_READER,
 	CARD_TARGETS_READER,
@@ -28,10 +29,12 @@ export interface ApplyEffectRowInput {
 
 export interface ApplyEffectRowView {
 	name: string;
+	/** the effect on its item, which the name opens; none for a condition */
+	uuid?: string | null;
 	img: string;
 	lasts: string;
 	/** after the click: "On Goblin, Kobold", and "Raging stays on Hero" for a holder that kept it */
-	appliedLines: string[];
+	appliedLines: (string | LinkedPart[])[];
 	button: StepButton | null;
 	/** a line in place of the button */
 	note: string | null;
@@ -74,11 +77,19 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 	if (on || stays) {
 		return {
 			name: source.name,
+			uuid: source.uuid ?? null,
 			img: source.img,
 			lasts,
 			appliedLines: [
 				...(on ? [format(`${WORDS}.on`, { names: on })] : []),
-				...(stays ? [format(`${WORDS}.stays`, { name: source.name, holder: stays })] : []),
+				...(stays
+					? [
+							linkedParts(`${WORDS}.stays`, {
+								name: docLink(source.name, source.uuid),
+								holder: stays,
+							}),
+						]
+					: []),
 			],
 			button: null,
 			note: null,
@@ -90,6 +101,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 		const passed = branch === 'passedSave';
 		return {
 			name: source.name,
+			uuid: source.uuid ?? null,
 			img: source.img,
 			lasts,
 			appliedLines: [],
@@ -99,6 +111,7 @@ export function applyEffectRow(input: ApplyEffectRowInput): ApplyEffectRowView {
 	}
 	return {
 		name: source.name,
+		uuid: source.uuid ?? null,
 		img: source.img,
 		lasts,
 		appliedLines: [],

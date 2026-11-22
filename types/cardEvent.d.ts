@@ -2,13 +2,19 @@ import type { MoveNode } from '#types/effectTree.js';
 import type { EffectPayload } from '#types/effectPayload.d.ts';
 import type { MovementOffer } from '#types/movement.js';
 import type { ActivationEvents } from '#utils/chat/activationEvents.js';
+import type { DocLink } from '#utils/documents/docLink.ts';
 import type { Moment } from '#utils/lastsUntil/momentReached.js';
 
 /**
- * A data value of a card text: plain text, a number, a lang text that each reader localizes, or
- * a Lasts Until moment that each reader reads as a sentence.
+ * A data value of a card text: plain text, a number, a lang text that each reader localizes, a
+ * Lasts Until moment that each reader reads as a sentence, or a document name that opens it.
  */
-export type CardEventValue = string | number | CardEventText | CardEventLastsUntil;
+export type CardEventValue = string | number | CardEventText | CardEventLastsUntil | CardEventLink;
+
+/** A document name that opens its sheet for a reader who may see it; else plain text. */
+export interface CardEventLink {
+	link: DocLink;
+}
 
 /** A Lasts Until moment, read by the holder of the effect: "Until your next attack". */
 export interface CardEventLastsUntil {

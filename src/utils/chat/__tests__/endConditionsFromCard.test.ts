@@ -63,6 +63,8 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
+const glacialLink = { link: { name: 'Glacial', uuid: 'Actor.tessa.Item.glacial' } };
+
 describe('endConditionsFromCard', () => {
 	it('ends the matching effects through the end path, with the card as host, and records them', async () => {
 		const used = card();
@@ -70,9 +72,9 @@ describe('endConditionsFromCard', () => {
 		await endConditionsFromCard(used, step('self'));
 
 		expect(endEffects).toHaveBeenCalledWith([hero.effects[0], hero.effects[1]], {
-			heading: { key: 'NIMBLE.chat.events.useHeading', data: { name: 'Tessa', item: 'Glacial' } },
+			heading: { key: 'NIMBLE.chat.events.useHeading', data: { name: 'Tessa', item: glacialLink } },
 			hostId: 'use-1',
-			reason: { key: 'NIMBLE.chat.endConditions.endedBy', data: { item: 'Glacial' } },
+			reason: { key: 'NIMBLE.chat.endConditions.endedBy', data: { item: glacialLink } },
 		});
 		expect(used.update).toHaveBeenCalledWith({
 			[`flags.${SYSTEM_ID}.endedConditions.e1.Actor_tessa`]: {

@@ -1,3 +1,11 @@
+import {
+	type DocLink,
+	docLink,
+	type LinkedData,
+	type LinkedPart,
+	linkedParts,
+	partsText,
+} from '#utils/documents/docLink.ts';
 import type {
 	DieOutcome,
 	IncomingReactionEntry,
@@ -5,7 +13,6 @@ import type {
 	RerollRecord,
 	RollUse,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
-
 import localize from '#utils/localize.js';
 import { rerollRuleKey } from '#utils/reroll/rerollEntries.ts';
 import { signed } from './primaryDieBonusText.ts';
@@ -33,6 +40,8 @@ interface RerollTag {
 	label: string;
 	/** The tag as a sentence: its tooltip, and the note a click on the tag opens. */
 	tooltip: string;
+	/** The note with the feature name as a link, when the sentence names the feature. */
+	note?: LinkedPart[];
 	/** Not applied, because Feature Effects is off: the GM gives it by hand. */
 	off: boolean;
 }
@@ -40,6 +49,8 @@ interface RerollTag {
 interface RerollHistoryLine {
 	/** The feature that rerolled. */
 	title: string;
+	/** The feature that rerolled, which opens its item. */
+	titleLink: DocLink;
 	/** The whole line as a sentence, for its tooltip. */
 	text: string;
 	tags: RerollTag[];
@@ -92,6 +103,18 @@ function dice(record: RerollRecord): RerollHistoryLine['dice'] {
 
 function fromSource(label: string, source: string): string {
 	return localize('NIMBLE.chat.incomingReactions.rerollTags.fromSource', { label, source });
+}
+
+/** A tag whose sentence names the feature: the note shows the name as a link. */
+function featureTag(
+	kind: RerollTag['kind'],
+	label: string,
+	key: string,
+	feature: DocLink,
+	data: LinkedData = {},
+): RerollTag {
+	const note = linkedParts(key, { ...data, feature });
+	return { kind, label, tooltip: partsText(note), note, off: false };
 }
 
 function buildRollChangeTags(record: RerollRecord): RerollTag[] {
@@ -235,16 +258,19 @@ function buildGrantTags(grants: readonly RerollGrant[]): {
 }
 
 /** What a reroll did to the new roll besides its dice: the stat it used, a hit it made sure of. */
-function buildNewRollTags(record: RerollRecord, feature: string): RerollTag[] {
+function buildNewRollTags(record: RerollRecord, feature: DocLink): RerollTag[] {
 	const tags: RerollTag[] = [];
 	if (record.stat) {
 		const stat = statAbbreviation(record.stat);
-		tags.push({
-			kind: 'stat',
-			label: localize('NIMBLE.chat.incomingReactions.rerollTags.stat', { stat }),
-			tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.statTooltip', { feature, stat }),
-			off: false,
-		});
+		tags.push(
+			featureTag(
+				'stat',
+				localize('NIMBLE.chat.incomingReactions.rerollTags.stat', { stat }),
+				'NIMBLE.chat.incomingReactions.rerollTags.statTooltip',
+				feature,
+				{ stat },
+			),
+		);
 	}
 	if (record.cannotMissBy) {
 		tags.push({
@@ -260,18 +286,17 @@ function buildNewRollTags(record: RerollRecord, feature: string): RerollTag[] {
 }
 
 /** The tags of a change: the outcome it made. */
-function buildChangeTags(record: RerollRecord, feature: string): RerollTag[] {
-	const tags: RerollTag[] = [];
+function buildChangeTags(record: RerollRecord, feature: DocLink): RerollTag[] {
 	const outcome = record.next?.outcome;
-	if (outcome) {
-		tags.push({
-			kind: outcome,
-			label: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}`),
-			tooltip: localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}Tooltip`, { feature }),
-			off: false,
-		});
-	}
-	return tags;
+	if (!outcome) return [];
+	return [
+		featureTag(
+			outcome,
+			localize(`NIMBLE.chat.incomingReactions.rerollTags.${outcome}`),
+			`NIMBLE.chat.incomingReactions.rerollTags.${outcome}Tooltip`,
+			feature,
+		),
+	];
 }
 
 function changeText(record: RerollRecord, feature: string): string {
@@ -297,6 +322,7 @@ function changeText(record: RerollRecord, feature: string): string {
 export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine[] {
 	return input.records.map((record) => {
 		const feature = (input.documentName(record.itemUuid) ?? '').trim() || record.label;
+		const featureLink = docLink(feature, record.itemUuid);
 		const rerollAgain = input.rerollAgain.has(record);
 
 		const details: string[] = [];
@@ -330,6 +356,7 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 		if (record.use === 'effect') {
 			return {
 				title: feature,
+				titleLink: featureLink,
 				tags: [],
 				offNote: null,
 				text: localize(
@@ -348,15 +375,14 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 		if (record.use === 'crit') {
 			return {
 				title: feature,
+				titleLink: featureLink,
 				tags: [
-					{
-						kind: 'crit',
-						label: localize('NIMBLE.chat.incomingReactions.rerollTags.crit'),
-						tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.critMadeTooltip', {
-							feature,
-						}),
-						off: false,
-					},
+					featureTag(
+						'crit',
+						localize('NIMBLE.chat.incomingReactions.rerollTags.crit'),
+						'NIMBLE.chat.incomingReactions.rerollTags.critMadeTooltip',
+						featureLink,
+					),
 				],
 				offNote: null,
 				text: localize('NIMBLE.chat.incomingReactions.critHistory', { feature }),
@@ -371,7 +397,8 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 			const mode = record.change?.mode ?? 'set';
 			return {
 				title: feature,
-				tags: buildChangeTags(record, feature),
+				titleLink: featureLink,
+				tags: buildChangeTags(record, featureLink),
 				offNote: null,
 				text: changeText(record, feature),
 				detail: details.length > 0 ? details.join(' - ') : null,
@@ -391,21 +418,20 @@ export function rerollHistoryLines(input: RerollHistoryInput): RerollHistoryLine
 		const given = buildGrantTags(record.grants ?? []);
 		const automatic: RerollTag[] = record.automatic
 			? [
-					{
-						kind: 'automatic',
-						label: localize('NIMBLE.chat.incomingReactions.rerollTags.automatic'),
-						tooltip: localize('NIMBLE.chat.incomingReactions.rerollTags.automaticTooltip', {
-							feature,
-						}),
-						off: false,
-					},
+					featureTag(
+						'automatic',
+						localize('NIMBLE.chat.incomingReactions.rerollTags.automatic'),
+						'NIMBLE.chat.incomingReactions.rerollTags.automaticTooltip',
+						featureLink,
+					),
 				]
 			: [];
 		return {
 			title: feature,
+			titleLink: featureLink,
 			tags: [
 				...automatic,
-				...buildNewRollTags(record, feature),
+				...buildNewRollTags(record, featureLink),
 				...buildRollChangeTags(record),
 				...given.tags,
 			],

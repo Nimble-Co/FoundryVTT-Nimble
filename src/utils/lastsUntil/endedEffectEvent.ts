@@ -5,6 +5,7 @@ import type {
 	EndedEffectRow,
 	WaitingEndAction,
 } from '#types/cardEvent.d.ts';
+import { cardEventLink, effectUuidOn } from '#utils/chat/cardEventLink.ts';
 
 const SOURCE = 'NIMBLE.chat.events.cause.source';
 const REASON_AND_SOURCE = 'NIMBLE.chat.events.cause.reasonAndSource';
@@ -48,7 +49,13 @@ export function endedEffectEvent(
 		id: `effectEnded.${row.holderUuid}.${row.effectId}.${at}`,
 		kind: 'effectEnded',
 		...(row.img ? { img: row.img } : { icon: 'fa-solid fa-hourglass-end' }),
-		text: { key: 'NIMBLE.lastsUntil.chat.ended', data: { effect: row.name, name: row.holderName } },
+		text: {
+			key: 'NIMBLE.lastsUntil.chat.ended',
+			data: {
+				effect: cardEventLink(row.name, effectUuidOn(row.holderUuid, row.effectId)),
+				name: row.holderName,
+			},
+		},
 		...(cause ? { cause } : {}),
 		action: { kind: 'undoEnd', row },
 		at,
@@ -68,7 +75,10 @@ export function waitingEndEvent(input: {
 }): CardEvent {
 	const { action } = input;
 	const cause = endCause(input.sourceName, action.end.reason, input.endedBy);
-	const data = { effect: action.effectName, name: action.holderName };
+	const data = {
+		effect: cardEventLink(action.effectName, effectUuidOn(action.holderUuid, action.effectId)),
+		name: action.holderName,
+	};
 	return {
 		id: `waitingEnd.${action.holderUuid}.${action.effectId}.${input.at}`,
 		kind: 'waitingEnd',

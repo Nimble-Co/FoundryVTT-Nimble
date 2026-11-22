@@ -1,9 +1,11 @@
 import type { CardEvent, CardEventText } from '#types/cardEvent.d.ts';
 import { cardEventId } from '../chat/activationEvents.js';
+import { cardEventLink } from '../chat/cardEventLink.ts';
 import type { RaisedFace } from './types.js';
 
 interface EventSource {
 	name?: string | null;
+	uuid?: string | null;
 	img?: string | null;
 }
 
@@ -33,7 +35,10 @@ function poolRollCause(
 		};
 	}
 	if (!item?.name) return undefined;
-	return { key: 'NIMBLE.chat.events.cause.source', data: { source: item.name } };
+	return {
+		key: 'NIMBLE.chat.events.cause.source',
+		data: { source: cardEventLink(item.name, item.uuid) },
+	};
 }
 
 /** The line for dice an item use rolled for a pool: the faces after any raise to its lowest face. */
@@ -57,7 +62,10 @@ export function poolRollEvent(
 /** The line of a pool gain notice, with the item of its rule as the source. */
 export function poolGainEvent(source: EventSource | null | undefined, message: string): CardEvent {
 	const cause: CardEventText | undefined = source?.name
-		? { key: 'NIMBLE.chat.events.cause.source', data: { source: source.name } }
+		? {
+				key: 'NIMBLE.chat.events.cause.source',
+				data: { source: cardEventLink(source.name, source.uuid) },
+			}
 		: undefined;
 	return {
 		id: cardEventId('poolGain'),

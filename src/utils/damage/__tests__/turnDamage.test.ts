@@ -191,7 +191,10 @@ describe('dealTurnDamage', () => {
 		});
 		expect(line.cause).toEqual({
 			key: 'NIMBLE.chat.turnDamage.cause',
-			data: { source: 'In the Cauldron', formula: '7' },
+			data: {
+				source: { link: { name: 'In the Cauldron', uuid: 'Actor.tessa.Item.cauldron' } },
+				formula: '7',
+			},
 		});
 		expect(actionOf(line)).toMatchObject({ state: 'dealt', hpLost: 7, tempLost: 0 });
 	});
@@ -318,7 +321,7 @@ describe('dealTurnDamage', () => {
 			data: {
 				source: {
 					key: 'NIMBLE.chat.turnDamage.nearSource',
-					data: { source: 'Burning Aura', creature: 'Imp' },
+					data: { source: { link: { name: 'Burning Aura' } }, creature: 'Imp' },
 				},
 				formula: '3',
 			},
@@ -413,7 +416,10 @@ describe('dealTurnDamage', () => {
 				},
 				cause: {
 					key: 'NIMBLE.chat.turnDamage.cause',
-					data: { source: 'Swallowed', formula: '20' },
+					data: {
+						source: { link: { name: 'Swallowed', uuid: 'Actor.tessa.ActiveEffect.swallowed' } },
+						formula: '20',
+					},
 				},
 			});
 			expect(actionOf(line)).toMatchObject({ state: 'dealt', amount: 20, hpLost: 20 });
