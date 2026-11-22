@@ -45,7 +45,7 @@
 				"recipient": "self",
 				"within": 12,
 				"direction": "any",
-				"ignoresDifficultTerrain": false,
+				"ignoresDifficultTerrain": true,
 				"chargePoolIdentifier": "",
 				"whisper": false
 			}

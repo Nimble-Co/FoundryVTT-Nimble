@@ -409,6 +409,7 @@ describe("How'd YOU get here?! crit", () => {
 				trigger: 'onCritThrough',
 				distance: '4',
 				recipient: 'self',
+				ignoresDifficultTerrain: true,
 			}),
 		);
 	});
