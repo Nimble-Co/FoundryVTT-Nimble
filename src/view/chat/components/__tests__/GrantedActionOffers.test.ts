@@ -125,7 +125,9 @@ describe('GrantedActionOffers', () => {
 	it('names a ranged opportunity attack in its heading', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: {
-				messageDocument: createMessage([createOffer({ spendsReaction: true, weaponKind: 'ranged' })]),
+				messageDocument: createMessage([
+					createOffer({ spendsReaction: true, weaponKind: 'ranged' }),
+				]),
 			},
 		});
 
