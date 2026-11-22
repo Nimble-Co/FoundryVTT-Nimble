@@ -108,8 +108,9 @@ function sectionsOf(
 	}
 	for (const section of sections.values()) {
 		if (!section.offers.some((offer) => !offer.used)) continue;
-		const ofKind = offers.filter((offer) => grantedAttackKind(offer) === section.kind);
-		section.warning = [overCountWarning(ofKind)].find((warning) => warning !== null) ?? null;
+		section.warning = overCountWarning(
+			offers.filter((offer) => grantedAttackKind(offer) === section.kind),
+		);
 	}
 	return [...sections.values()];
 }
