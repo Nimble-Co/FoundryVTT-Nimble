@@ -6,7 +6,32 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "roll-and-strike-attack",
+				"identifier": "",
+				"label": "Roll & Strike",
+				"predicate": {},
+				"priority": 1,
+				"activationType": "weaponAttack",
+				"trigger": "afterMove",
+				"includesUser": true,
+				"includesTargets": false,
+				"weaponKind": "melee",
+				"allowsCantrips": false,
+				"free": true,
+				"spendsReaction": false,
+				"ignoresRushed": false,
+				"condition": "If you end adjacent to your quarry, make a melee attack against them for free.",
+				"afterMoveCheck": "adjacentToMarked",
+				"afterMoveFlagKey": "quarry",
+				"afterMoveMinEnemies": 1,
+				"afterMoveStatus": "",
+				"emptyPoolIdentifier": "thrill-of-the-hunt"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +45,20 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "A8uKaIpwODNZ4iQL",
+					"type": "move",
+					"kind": "free",
+					"recipient": "self",
+					"distance": "@speed",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": false,
+					"direction": "any",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

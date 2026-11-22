@@ -6,7 +6,26 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "unparalleled-survivalist-move",
+				"identifier": "",
+				"label": "Unparalleled Survivalist",
+				"predicate": {},
+				"priority": 1,
+				"trigger": "onRangedWeaponAttack",
+				"poolIdentifier": "",
+				"distance": "floor(@speed / 2)",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": "",
+				"whisper": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

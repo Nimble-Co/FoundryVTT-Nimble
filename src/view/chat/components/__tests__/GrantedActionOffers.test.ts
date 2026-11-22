@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import GrantedActionOffersTestHarness from './GrantedActionOffers.testHarness.svelte';
 
 interface OfferOptions {
@@ -441,5 +442,125 @@ describe('GrantedActionOffers', () => {
 		expect(screen.queryByRole('button')).toBeNull();
 		expect(screen.queryByRole('combobox')).toBeNull();
 		expect(screen.queryByRole('heading')).toBeNull();
+	});
+
+	describe('a line that waits for the move', () => {
+		const SPEAKER_TOKEN = 'Scene.s.Token.hero';
+
+		function moveCard(state: string, mover: unknown) {
+			const g = globalThis as Record<string, any>;
+			g.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === SPEAKER_TOKEN ? mover : createRecipient(),
+			);
+			const message = createMessage([
+				{
+					...createOffer({ free: true, condition: 'If you land adjacent to at least 2 enemies.' }),
+					afterMove: true,
+					afterMoveCheck: 'adjacentEnemies',
+					afterMoveMinEnemies: 2,
+					afterMoveStatus: '',
+				} as never,
+			]) as Record<string, any>;
+			message.speaker = { scene: 's', token: 'hero', actor: 'ally' };
+			message.system.activation = {
+				effects: [{ id: 'leap', type: 'move', kind: 'free', recipient: 'self' }],
+			};
+			message.system.movementOffers = [
+				{ id: 'leap.hero', nodeId: 'leap', tokenUuid: SPEAKER_TOKEN, spaces: 6, state },
+			];
+			return message;
+		}
+
+		const loneMover = { id: 'hero', actor: { uuid: 'Actor.ally' }, parent: { tokens: [] } };
+
+		it('is hidden until the move from the card ends', () => {
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('open', loneMover) },
+			});
+
+			expect(screen.queryByRole('button')).toBeNull();
+			expect(screen.queryByText('If you land adjacent to at least 2 enemies.')).toBeNull();
+		});
+
+		it('shows one warning once the move ended, and the Attack button stays', () => {
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('taken', loneMover) },
+			});
+
+			expect(screen.queryByText('If you land adjacent to at least 2 enemies.')).toBeNull();
+			expect(screen.getByText('Sir Brannon is not next to 2 enemies.')).toBeTruthy();
+			expect(attackButton().disabled).toBe(false);
+		});
+
+		it('checks again where the token stopped when a token moves while the card shows', async () => {
+			const g = globalThis as Record<string, any>;
+			const scene = { grid: { isGridless: true, size: 100 }, tokens: [] as unknown[] };
+			const token = (id: string, x: number, y: number, disposition: number) => ({
+				id,
+				x,
+				y,
+				width: 1,
+				height: 1,
+				disposition,
+				actor: { uuid: `Actor.${id}` },
+				parent: scene,
+			});
+			const mover = token('hero', 0, 0, 1);
+			scene.tokens.push(mover, token('g2', 500, 0, -1), token('g3', 500, 100, -1));
+
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('taken', mover) },
+			});
+			const warning = 'Sir Brannon is not next to 2 enemies.';
+			expect(screen.getByText(warning)).toBeTruthy();
+
+			mover.x = 400;
+			for (const [hook, listener] of (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls) {
+				if (hook === 'updateToken') (listener as (document: unknown) => void)(mover);
+			}
+			await tick();
+
+			expect(screen.queryByText(warning)).toBeNull();
+			expect(attackButton().disabled).toBe(false);
+		});
+
+		it('checks again when the movement animation of a token ends', async () => {
+			const g = globalThis as Record<string, any>;
+			const scene = { grid: { isGridless: true, size: 100 }, tokens: [] as unknown[] };
+			const token = (id: string, x: number, y: number, disposition: number) => ({
+				id,
+				x,
+				y,
+				width: 1,
+				height: 1,
+				disposition,
+				actor: { uuid: `Actor.${id}` },
+				parent: scene,
+			});
+			let endAnimation = () => {};
+			const movementAnimationPromise = new Promise<void>((resolve) => {
+				endAnimation = resolve;
+			});
+			const mover = Object.assign(token('hero', 0, 0, 1), { object: { movementAnimationPromise } });
+			scene.tokens.push(mover, token('g2', 500, 0, -1), token('g3', 500, 100, -1));
+
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('taken', mover) },
+			});
+			const warning = 'Sir Brannon is not next to 2 enemies.';
+
+			for (const [hook, listener] of (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls) {
+				if (hook === 'updateToken') (listener as (document: unknown) => void)(mover);
+			}
+			await tick();
+			expect(screen.getByText(warning)).toBeTruthy();
+
+			mover.x = 400;
+			endAnimation();
+			await movementAnimationPromise;
+			await tick();
+
+			expect(screen.queryByText(warning)).toBeNull();
+		});
 	});
 });

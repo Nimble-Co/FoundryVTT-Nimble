@@ -42,6 +42,11 @@ function createOffer(overrides: Partial<GrantedActionOffer> = {}): GrantedAction
 		condition: '',
 		targetCount: 0,
 		targetedCount: 0,
+		afterMove: false,
+		afterMoveCheck: 'none',
+		afterMoveFlagKey: 'quarry',
+		afterMoveMinEnemies: 1,
+		afterMoveStatus: '',
 		used: false,
 		usedBy: null,
 		...overrides,
@@ -293,6 +298,41 @@ describe('collectGrantedActionOffers', () => {
 		]);
 	});
 
+	it('gives the user alone a line that waits for their move, with its check', async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([
+			{
+				type: 'grantActivation',
+				id: 'rule-1',
+				trigger: 'afterMove',
+				afterMoveCheck: 'adjacentEnemies',
+				afterMoveMinEnemies: 2,
+			} as never,
+		]);
+
+		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.enemy' } }]);
+
+		expect(offers).toEqual([
+			expect.objectContaining({
+				targetActorUuid: 'Actor.commander',
+				afterMove: true,
+				afterMoveCheck: 'adjacentEnemies',
+				afterMoveFlagKey: '',
+				afterMoveMinEnemies: 2,
+				afterMoveStatus: '',
+			}),
+		]);
+	});
+
+	it('gives a line on use no move to wait for and no check', async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([{ type: 'grantActivation', id: 'rule-1' }]);
+
+		const [offer] = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
+
+		expect(offer).toMatchObject({ afterMove: false, afterMoveCheck: 'none' });
+	});
+
 	it('gives no line on use for a rule that waits for an Interpose', async () => {
 		const { collectGrantedActionOffers } = await loadModule();
 		const item = createGrantingItem([
@@ -307,6 +347,39 @@ describe('collectGrantedActionOffers', () => {
 		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
 
 		expect(offers).toHaveLength(0);
+	});
+});
+
+describe('emptyPoolWarnings', () => {
+	const item = (rules: Record<string, unknown>[]) => ({
+		uuid: 'Item.roll',
+		name: 'Roll & Strike',
+		actor: { uuid: 'Actor.hunter' },
+		rules: new Map(rules.map((rule, index) => [String(index), { appliesTo: () => true, ...rule }])),
+	});
+	const pools = (current: number) => (identifier: string) =>
+		identifier === 'thrill' ? { label: 'Thrill of the Hunt', current } : null;
+
+	it('warns at use while the pool the rule needs empty has charges', async () => {
+		const { emptyPoolWarnings } = await loadModule();
+		const rules = [{ type: 'grantActivation', id: 'r', emptyPoolIdentifier: 'thrill' }];
+
+		expect(emptyPoolWarnings(item(rules), pools(2))).toEqual([
+			'Roll & Strike is for when Thrill of the Hunt has no charges. You still have some.',
+		]);
+		expect(emptyPoolWarnings(item(rules), pools(0))).toEqual([]);
+	});
+
+	it('says nothing for a rule that needs no empty pool, or a pool the actor lacks', async () => {
+		const { emptyPoolWarnings } = await loadModule();
+
+		expect(emptyPoolWarnings(item([{ type: 'grantActivation', id: 'r' }]), pools(2))).toEqual([]);
+		expect(
+			emptyPoolWarnings(
+				item([{ type: 'grantActivation', id: 'r', emptyPoolIdentifier: 'fury' }]),
+				pools(2),
+			),
+		).toEqual([]);
 	});
 });
 

@@ -11,7 +11,7 @@ import { spacesBetween } from './spacesBetween.js';
 
 type Relation = 'enemy' | 'ally' | 'neither';
 
-function relationOf(a: TokenDocument, b: TokenDocument): Relation {
+export function relationOf(a: TokenDocument, b: TokenDocument): Relation {
 	const { FRIENDLY, HOSTILE } = CONST.TOKEN_DISPOSITIONS;
 	const dispA = a.disposition;
 	const dispB = b.disposition;

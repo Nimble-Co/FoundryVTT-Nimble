@@ -25,7 +25,11 @@ describe('GrantActivationRule', () => {
 				{ options: { initial: unknown }; choices?: Record<string, string> }
 			>;
 			expect(schema.trigger?.options.initial).toBe('onActivation');
-			expect(Object.keys(schema.trigger?.choices ?? {})).toEqual(['onActivation', 'onInterpose']);
+			expect(Object.keys(schema.trigger?.choices ?? {})).toEqual([
+				'onActivation',
+				'afterMove',
+				'onInterpose',
+			]);
 			expect(schema.free?.options.initial).toBe(false);
 			expect(schema.spendsReaction?.options.initial).toBe(false);
 			expect(schema.weaponKind?.options.initial).toBe('any');
@@ -40,6 +44,40 @@ describe('GrantActivationRule', () => {
 			expect(schema.condition?.options.initial).toBe('');
 			expect(schema.includesTargets?.options.initial).toBe(true);
 			expect(schema.targetCount?.options.initial).toBe(0);
+			expect(schema.afterMoveCheck?.options.initial).toBe('none');
+			expect(schema.afterMoveFlagKey?.options.initial).toBe('');
+			expect(schema.emptyPoolIdentifier?.options.initial).toBe('');
+		});
+
+		it('offers the named checks a card can make at the Stop', () => {
+			const schema = GrantActivationRule.defineSchema() as unknown as Record<
+				string,
+				{ choices?: Record<string, string>; options: Record<string, unknown> }
+			>;
+			expect(Object.keys(schema.afterMoveCheck?.choices ?? {})).toEqual([
+				'none',
+				'adjacentToMarked',
+				'adjacentEnemies',
+				'adjacentToCondition',
+			]);
+			const shows = (field: string, data: Record<string, unknown>) =>
+				(schema[field]?.options.showWhen as (d: object) => boolean)(data);
+			expect(shows('afterMoveCheck', { trigger: 'onActivation' })).toBe(false);
+			expect(shows('afterMoveCheck', { trigger: 'afterMove' })).toBe(true);
+			expect(
+				shows('afterMoveFlagKey', { trigger: 'afterMove', afterMoveCheck: 'adjacentToMarked' }),
+			).toBe(true);
+			expect(
+				shows('afterMoveFlagKey', { trigger: 'afterMove', afterMoveCheck: 'adjacentEnemies' }),
+			).toBe(false);
+			expect(
+				shows('afterMoveMinEnemies', { trigger: 'afterMove', afterMoveCheck: 'adjacentEnemies' }),
+			).toBe(true);
+			expect(
+				shows('afterMoveStatus', { trigger: 'afterMove', afterMoveCheck: 'adjacentEnemies' }),
+			).toBe(false);
+			expect(shows('includesUser', { trigger: 'afterMove' })).toBe(false);
+			expect(shows('includesTargets', { trigger: 'afterMove' })).toBe(false);
 		});
 	});
 
