@@ -54,7 +54,11 @@ import {
 	resolvePreviewBeforeState,
 	trackDependency,
 } from './ctTopTracker/layout.utils.js';
-import { resolveMinimizedTrackerSummary } from './ctTopTracker/minimized.utils.js';
+import {
+	resolveMinimizedBarControls,
+	resolveMinimizedTrackerSummary,
+	shouldConfirmEndTurnEarly,
+} from './ctTopTracker/minimized.utils.js';
 import { CtTopTrackerStore } from './ctTopTracker/topTrackerStore.svelte.js';
 import type {
 	CanvasTokenLike,
@@ -314,7 +318,12 @@ export function createCtTopTrackerState() {
 		if (!canCurrentUserEndTurn) return;
 
 		const activeCombatant = trackerStore.activeCombatant;
-		if (!activeAllActionsUsed && activeCombatant && isPlayerCombatant(activeCombatant)) {
+		if (
+			shouldConfirmEndTurnEarly({
+				allActionsUsed: activeAllActionsUsed,
+				combatant: activeCombatant,
+			})
+		) {
 			const confirmed = await confirmEndTurnEarly();
 			if (!confirmed) return;
 		}
@@ -1437,13 +1446,21 @@ export function createCtTopTrackerState() {
 	const combatStarted = $derived(trackerStore.combatStarted);
 	const currentRoundLabel = $derived(trackerStore.currentRoundLabel);
 	const minimizedSummary = $derived.by(() => {
-		// Foundry mutates combatant documents in place, so the strip has to follow
-		// renderVersion the way the combatant cards do.
 		trackDependency(trackerStore.renderVersion);
 		return resolveMinimizedTrackerSummary({
 			combatStarted: trackerStore.combatStarted,
-			roundLabel: trackerStore.currentRoundLabel,
+			round: trackerStore.currentRoundLabel,
+			sceneId: canvas.scene?.id,
 			activeCombatant: trackerStore.activeCombatant,
+		});
+	});
+	const minimizedBarControls = $derived.by(() => {
+		const activeCombatant = trackerStore.activeCombatant;
+		return resolveMinimizedBarControls({
+			isGM: Boolean(game.user?.isGM),
+			isOwner: Boolean(activeCombatant?.actor?.isOwner),
+			combatStarted: minimizedSummary.combatStarted,
+			combatantShown: minimizedSummary.combatantName !== null,
 		});
 	});
 	const ctTrackMaxWidth = $derived(trackerStore.ctTrackMaxWidth);
@@ -1659,6 +1676,9 @@ export function createCtTopTrackerState() {
 		},
 		get minimizedSummary() {
 			return minimizedSummary;
+		},
+		get minimizedBarControls() {
+			return minimizedBarControls;
 		},
 		toggleCtMinimized,
 		get activeDragSourceKey() {

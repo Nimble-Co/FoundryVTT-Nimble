@@ -6230,10 +6230,9 @@
 			"minimizeTracker": "Minimize Combat Tracker",
 			"expandTracker": "Expand Combat Tracker",
 			"currentRound": "Current Round",
-			"roundBadge": "R{round}",
+			"roundBadge": "Round {round}",
 			"combatNotStarted": "Combat Not Started",
 			"noActiveCombatant": "No Active Combatant",
-			"endTurn": "End Turn",
 			"startCombat": "Start Combat",
 			"availableActions": "Available actions: {current} / {max}"
 		},

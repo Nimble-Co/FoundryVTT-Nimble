@@ -4,6 +4,7 @@
 	import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 	import { signedNumber } from '#utils/signedNumber.ts';
 	import { createCtTopTrackerState } from './CtTopTracker.state.svelte.js';
+	import CtMinimizedBar from './ctTopTracker/CtMinimizedBar.svelte';
 	import { CT_SHELL_EXTRA_WIDTH_REM } from './ctTopTracker/constants.js';
 	import {
 		canCurrentUserAdjustCombatantActions,
@@ -38,6 +39,7 @@
 	let ctEnabled = $derived(trackerViewState.ctEnabled);
 	let ctMinimized = $derived(trackerViewState.ctMinimized);
 	let minimizedSummary = $derived(trackerViewState.minimizedSummary);
+	let minimizedBarControls = $derived(trackerViewState.minimizedBarControls);
 	let activeDragSourceKey = $derived(trackerViewState.activeDragSourceKey);
 	let activeDragSourceCombatantIds = $derived(trackerViewState.activeDragSourceCombatantIds);
 	let dragPreview = $derived(trackerViewState.dragPreview);
@@ -248,6 +250,23 @@
 	</li>
 {/snippet}
 
+{#snippet ctIconButton(
+	labelKey: string,
+	iconClass: string,
+	tooltipDirection: 'DOWN' | 'LEFT' | 'RIGHT',
+	onclick: (event: MouseEvent) => void,
+	ready: boolean,
+)}
+	<button
+		class="nimble-ct__icon-button"
+		class:nimble-ct__minimized-end-turn--ready={ready}
+		aria-label={localize(labelKey)}
+		data-tooltip={localize(labelKey)}
+		data-tooltip-direction={tooltipDirection}
+		{onclick}><i class={`fa-solid ${iconClass}`}></i></button
+	>
+{/snippet}
+
 <svelte:window
 	onkeydown={(event) => {
 		if (combatantContextMenu && event.key === 'Escape') closeCombatantContextMenu();
@@ -256,110 +275,18 @@
 
 {#if ctEnabled && currentCombat && ctMinimized}
 	<section class="nimble-ct-shell nimble-ct-shell--minimized" in:fade={{ duration: 120 }}>
-		<div class="nimble-ct__minimized faded-ui">
-			{#if game.user?.isGM}
-				<button
-					class="nimble-ct__icon-button"
-					aria-label={localize('NIMBLE.combatControls.previousTurn')}
-					data-tooltip={localize('NIMBLE.combatControls.previousTurn')}
-					data-tooltip-direction="DOWN"
-					onclick={(event) => handleControlAction(event, 'previous-turn')}
-					><i class="fa-solid fa-chevron-left"></i></button
-				>
-			{/if}
-			<span
-				class="nimble-ct__minimized-round"
-				data-tooltip={minimizedSummary.combatStarted
-					? localize('NIMBLE.combatControls.currentRound')
-					: undefined}
-				data-tooltip-direction="DOWN"
-				>{minimizedSummary.combatStarted
-					? localize('NIMBLE.combatControls.roundBadge', {
-							round: String(minimizedSummary.roundLabel),
-						})
-					: ''}</span
-			>
-			<span class="nimble-ct__minimized-portrait-slot">
-				{#if minimizedSummary.portraitSrc}
-					<img
-						class="nimble-ct__minimized-portrait"
-						src={minimizedSummary.portraitSrc}
-						alt=""
-						draggable="false"
-						data-portrait-fallback={getPortraitFallbackForCombatant()}
-						onerror={handleCombatantPortraitImageError}
-					/>
-				{/if}
-			</span>
-			{#if minimizedSummary.combatantName}
-				<span
-					class="nimble-ct__minimized-name"
-					data-tooltip={minimizedSummary.combatantName}
-					data-tooltip-direction="DOWN">{minimizedSummary.combatantName}</span
-				>
-			{:else}
-				<span class="nimble-ct__minimized-name nimble-ct__minimized-name--idle"
-					>{localize(
-						minimizedSummary.combatStarted
-							? 'NIMBLE.combatControls.noActiveCombatant'
-							: 'NIMBLE.combatControls.combatNotStarted',
-					)}</span
-				>
-			{/if}
-			<span class="nimble-ct__minimized-actions-slot">
-				{#if minimizedSummary.actions}
-					<span
-						class="nimble-ct__minimized-actions"
-						data-tooltip={localize('NIMBLE.combatControls.availableActions', {
-							current: String(minimizedSummary.actions.current),
-							max: String(minimizedSummary.actions.max),
-						})}
-						data-tooltip-direction="DOWN"
-						>{minimizedSummary.actions.current}/{minimizedSummary.actions.max}</span
-					>
-				{/if}
-			</span>
-			<span class="nimble-ct__minimized-turn-slot">
-				{#if !minimizedSummary.combatStarted && game.user?.isGM}
-					<button
-						class="nimble-ct__icon-button"
-						aria-label={localize('NIMBLE.combatControls.startCombat')}
-						data-tooltip={localize('NIMBLE.combatControls.startCombat')}
-						data-tooltip-direction="DOWN"
-						onclick={(event) => handleControlAction(event, 'start-combat')}
-						><i class="fa-solid fa-play"></i></button
-					>
-				{:else if minimizedSummary.combatantName && canCurrentUserEndTurn}
-					<button
-						class="nimble-ct__icon-button nimble-ct__minimized-end-turn"
-						class:nimble-ct__minimized-end-turn--ready={activeAllActionsUsed}
-						aria-label={localize('NIMBLE.combatControls.endTurn')}
-						data-tooltip={localize('NIMBLE.combatControls.endTurn')}
-						data-tooltip-direction="DOWN"
-						onclick={handleEndTurnFromCard}><i class="fa-solid fa-hourglass-end"></i></button
-					>
-				{/if}
-			</span>
-			{#if game.user?.isGM}
-				<button
-					class="nimble-ct__icon-button"
-					aria-label={localize('NIMBLE.combatControls.nextTurn')}
-					data-tooltip={localize('NIMBLE.combatControls.nextTurn')}
-					data-tooltip-direction="DOWN"
-					onclick={(event) => handleControlAction(event, 'next-turn')}
-					><i class="fa-solid fa-chevron-right"></i></button
-				>
-			{/if}
-			<button
-				class="nimble-ct__icon-button"
-				aria-label={localize('NIMBLE.combatControls.expandTracker')}
-				data-tooltip={localize('NIMBLE.combatControls.expandTracker')}
-				data-tooltip-direction="DOWN"
-				onclick={() => {
-					void toggleCtMinimized();
-				}}><i class="fa-solid fa-chevron-down"></i></button
-			>
-		</div>
+		<CtMinimizedBar
+			summary={minimizedSummary}
+			controls={minimizedBarControls}
+			endTurnReady={activeAllActionsUsed}
+			iconButton={ctIconButton}
+			onControl={handleControlAction}
+			onEndTurn={handleEndTurnFromCard}
+			onExpand={() => {
+				void toggleCtMinimized();
+			}}
+			onPortraitError={handleCombatantPortraitImageError}
+		/>
 	</section>
 {/if}
 
@@ -428,14 +355,13 @@
 							onclick={(event) => handleControlAction(event, 'roll-all')}
 							><i class="fa-solid fa-users"></i></button
 						>
-						<button
-							class="nimble-ct__icon-button"
-							aria-label="Previous Turn"
-							data-tooltip="Previous Turn"
-							data-tooltip-direction="LEFT"
-							onclick={(event) => handleControlAction(event, 'previous-turn')}
-							><i class="fa-solid fa-chevron-left"></i></button
-						>
+						{@render ctIconButton(
+							'NIMBLE.combatControls.previousTurn',
+							'fa-chevron-left',
+							'LEFT',
+							(event) => handleControlAction(event, 'previous-turn'),
+							false,
+						)}
 						<button
 							class="nimble-ct__icon-button"
 							aria-label="Previous Round"
@@ -938,15 +864,15 @@
 			{#if game.user}
 				<div class="nimble-ct__controls faded-ui" aria-label="Combat controls right">
 					{#if game.user?.isGM}
-						<button
-							class="nimble-ct__icon-button"
-							aria-label="Start Combat"
-							data-tooltip="Start Combat"
-							data-tooltip-direction="RIGHT"
-							style={combatStarted ? 'display: none;' : ''}
-							onclick={(event) => handleControlAction(event, 'start-combat')}
-							><i class="fa-solid fa-play"></i></button
-						>
+						{#if !combatStarted}
+							{@render ctIconButton(
+								'NIMBLE.combatControls.startCombat',
+								'fa-play',
+								'RIGHT',
+								(event) => handleControlAction(event, 'start-combat'),
+								false,
+							)}
+						{/if}
 						<button
 							class="nimble-ct__icon-button"
 							aria-label="End Combat"
@@ -956,15 +882,15 @@
 							><i class="fa-solid fa-ban"></i></button
 						>
 					{/if}
-					<button
-						class="nimble-ct__icon-button"
-						aria-label={localize('NIMBLE.combatControls.minimizeTracker')}
-						data-tooltip={localize('NIMBLE.combatControls.minimizeTracker')}
-						data-tooltip-direction="RIGHT"
-						onclick={() => {
+					{@render ctIconButton(
+						'NIMBLE.combatControls.minimizeTracker',
+						'fa-chevron-up',
+						'RIGHT',
+						() => {
 							void toggleCtMinimized();
-						}}><i class="fa-solid fa-chevron-up"></i></button
-					>
+						},
+						false,
+					)}
 					<button
 						class="nimble-ct__icon-button"
 						aria-label="Combat Settings"
@@ -974,14 +900,13 @@
 						><i class="fa-solid fa-gear"></i></button
 					>
 					{#if game.user?.isGM}
-						<button
-							class="nimble-ct__icon-button"
-							aria-label="Next Turn"
-							data-tooltip="Next Turn"
-							data-tooltip-direction="RIGHT"
-							onclick={(event) => handleControlAction(event, 'next-turn')}
-							><i class="fa-solid fa-chevron-right"></i></button
-						>
+						{@render ctIconButton(
+							'NIMBLE.combatControls.nextTurn',
+							'fa-chevron-right',
+							'RIGHT',
+							(event) => handleControlAction(event, 'next-turn'),
+							false,
+						)}
 						<button
 							class="nimble-ct__icon-button"
 							aria-label="Next Round"
@@ -1103,6 +1028,10 @@
 		--nimble-ct-chrome-bg: color-mix(in srgb, hsl(226 17% 16%) 92%, transparent);
 		--nimble-ct-chrome-border: color-mix(in srgb, hsl(38 24% 58%) 62%, transparent);
 		--nimble-ct-chrome-color: hsl(0 0% 93%);
+		--nimble-ct-chrome-accent: hsl(36 92% 86%);
+		--nimble-ct-end-turn-ready-color: hsl(124 56% 78%);
+		--nimble-ct-end-turn-ready-border: color-mix(in srgb, hsl(124 56% 66%) 78%, white 12%);
+		--nimble-ct-end-turn-ready-bg: color-mix(in srgb, hsl(138 48% 28%) 92%, black 14%);
 		--nimble-ct-action-color: var(--nimble-ct-action-die-color, #ffffff);
 		--nimble-ct-action-color-resolved: var(--nimble-ct-action-color);
 		--nimble-ct-reaction-color-resolved: var(--nimble-ct-reaction-color, #4fc3f7);
@@ -1134,102 +1063,6 @@
 		z-index: 30;
 		pointer-events: none;
 		overflow: visible;
-	}
-	.nimble-ct__minimized {
-		pointer-events: auto;
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		max-width: min(32rem, 90vw);
-		padding: 0.22rem 0.5rem;
-		border: 1px solid var(--nimble-ct-chrome-border);
-		border-top: 0;
-		border-radius: 0 0 0.35rem 0.35rem;
-		background: var(--nimble-ct-chrome-bg);
-		opacity: var(--ui-fade-opacity, 1);
-		transition: opacity var(--ui-fade-delay, 0s) var(--ui-fade-duration, 100ms);
-	}
-	.nimble-ct__minimized:hover,
-	.nimble-ct__minimized:focus-within {
-		opacity: 1;
-		transition: opacity var(--ui-fade-duration, 100ms);
-	}
-	.nimble-ct__minimized-round {
-		flex: none;
-		min-width: 2rem;
-		font-size: 0.78rem;
-		font-weight: 700;
-		font-variant-numeric: tabular-nums;
-		color: hsl(36 92% 86%);
-	}
-	.nimble-ct__minimized-portrait-slot,
-	.nimble-ct__minimized-actions-slot,
-	.nimble-ct__minimized-turn-slot {
-		flex: none;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.nimble-ct__minimized-portrait-slot {
-		width: 1.55rem;
-	}
-	.nimble-ct__minimized-actions-slot,
-	.nimble-ct__minimized-turn-slot {
-		width: 2.75rem;
-	}
-	.nimble-ct__minimized-actions-slot .nimble-ct__minimized-actions {
-		width: 100%;
-	}
-	.nimble-ct__minimized-end-turn--ready {
-		color: hsl(124 56% 78%);
-		border-color: color-mix(in srgb, hsl(124 56% 66%) 78%, white 12%);
-		background: color-mix(in srgb, hsl(138 48% 28%) 92%, black 14%);
-	}
-	.nimble-ct__minimized-portrait {
-		flex: none;
-		width: 1.55rem;
-		height: 1.55rem;
-		border: 1px solid var(--nimble-ct-chrome-border);
-		border-radius: 50%;
-		object-fit: cover;
-	}
-	/* Fixed width, not content width: the strip is centre-anchored, so a longer name would
-	   slide the turn arrows out from under the pointer. */
-	.nimble-ct__minimized-name {
-		flex: none;
-		width: 11rem;
-		overflow: hidden;
-		font-size: 0.8rem;
-		color: var(--nimble-ct-chrome-color);
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.nimble-ct__minimized-name--idle {
-		color: color-mix(in srgb, var(--nimble-ct-chrome-color) 62%, transparent);
-		font-style: italic;
-	}
-	.nimble-ct__minimized-actions {
-		flex: none;
-		min-width: 2.75rem;
-		padding: 0.05rem 0.3rem;
-		font-size: 0.78rem;
-		font-weight: 700;
-		font-variant-numeric: tabular-nums;
-		text-align: center;
-		color: var(--nimble-ct-action-color-resolved);
-		background: var(--nimble-ct-action-box-bg);
-		border: 1px solid var(--nimble-ct-action-box-border);
-		border-radius: 0.2rem;
-		text-shadow: var(--nimble-ct-action-text-shadow);
-	}
-	:global(.theme-light) .nimble-ct__minimized {
-		background: color-mix(in srgb, white 86%, hsl(219 28% 42%) 14%);
-	}
-	:global(.theme-light) .nimble-ct__minimized-name {
-		color: hsl(220 36% 22%);
-	}
-	:global(.theme-light) .nimble-ct__minimized-round {
-		color: hsl(220 36% 22%);
 	}
 	.nimble-ct__width-preview {
 		position: absolute;
@@ -1274,7 +1107,12 @@
 		right: 0;
 	}
 	:global(.theme-light) .nimble-ct-shell {
-		--nimble-ct-action-color-resolved: hsl(220 36% 22%);
+		--nimble-ct-chrome-color: hsl(220 36% 22%);
+		--nimble-ct-chrome-bg: color-mix(in srgb, white 86%, hsl(219 28% 42%) 14%);
+		--nimble-ct-end-turn-ready-color: hsl(146 50% 16%);
+		--nimble-ct-end-turn-ready-border: hsl(146 36% 30%);
+		--nimble-ct-end-turn-ready-bg: hsl(146 42% 80%);
+		--nimble-ct-action-color-resolved: var(--nimble-ct-chrome-color);
 		--nimble-ct-action-box-bg: color-mix(in srgb, white 78%, var(--nimble-ct-action-color) 22%);
 		--nimble-ct-action-box-border: color-mix(
 			in srgb,
@@ -1417,8 +1255,8 @@
 	}
 	.nimble-ct__icon-button:hover,
 	.nimble-ct__icon-button:focus-visible {
-		color: hsl(36 92% 86%);
-		border-color: color-mix(in srgb, hsl(36 90% 84%) 75%, white);
+		color: var(--nimble-ct-chrome-accent);
+		border-color: color-mix(in srgb, var(--nimble-ct-chrome-accent) 75%, white);
 		background: color-mix(in srgb, hsl(225 16% 23%) 90%, transparent);
 	}
 	.nimble-ct__icon-button:disabled {
@@ -2432,8 +2270,8 @@
 	}
 	.nimble-ct__remove-combatant:hover,
 	.nimble-ct__remove-combatant:focus-visible {
-		color: hsl(36 92% 86%);
-		border-color: color-mix(in srgb, hsl(36 90% 84%) 75%, white);
+		color: var(--nimble-ct-chrome-accent);
+		border-color: color-mix(in srgb, var(--nimble-ct-chrome-accent) 75%, white);
 		background: color-mix(in srgb, hsl(225 16% 23%) 90%, transparent);
 	}
 	.nimble-ct__pips {
@@ -2564,7 +2402,7 @@
 		box-shadow: none;
 	}
 	:global(.theme-light) .nimble-ct__icon-button {
-		color: hsl(220 36% 22%);
+		color: var(--nimble-ct-chrome-color);
 		background: linear-gradient(
 			180deg,
 			color-mix(in srgb, white 94%, hsl(42 24% 88%) 6%) 0%,
@@ -2580,6 +2418,16 @@
 		color: hsl(34 84% 24%);
 		border-color: color-mix(in srgb, hsl(38 76% 56%) 58%, hsl(217 26% 54%) 42%);
 		background: color-mix(in srgb, white 92%, hsl(42 26% 88%) 8%);
+	}
+	.nimble-ct__icon-button.nimble-ct__minimized-end-turn--ready,
+	.nimble-ct__icon-button.nimble-ct__minimized-end-turn--ready:hover,
+	.nimble-ct__icon-button.nimble-ct__minimized-end-turn--ready:focus-visible,
+	:global(.theme-light) .nimble-ct__icon-button.nimble-ct__minimized-end-turn--ready,
+	:global(.theme-light) .nimble-ct__icon-button.nimble-ct__minimized-end-turn--ready:hover,
+	:global(.theme-light) .nimble-ct__icon-button.nimble-ct__minimized-end-turn--ready:focus-visible {
+		color: var(--nimble-ct-end-turn-ready-color);
+		border-color: var(--nimble-ct-end-turn-ready-border);
+		background: var(--nimble-ct-end-turn-ready-bg);
 	}
 	:global(.theme-light) .nimble-ct__initiative-roll {
 		color: hsl(36 82% 28%);

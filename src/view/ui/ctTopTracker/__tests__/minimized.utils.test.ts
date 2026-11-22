@@ -3,13 +3,27 @@ import {
 	createCombatActorFixture,
 	createCombatantFixture,
 } from '../../../../../tests/fixtures/combat.js';
-import { resolveMinimizedTrackerSummary } from '../minimized.utils.js';
+import {
+	resolveMinimizedBarControls,
+	resolveMinimizedTrackerSummary,
+	shouldConfirmEndTurnEarly,
+} from '../minimized.utils.js';
 
-function createCharacterCombatant(options: { visible?: boolean } = {}) {
+const VIEWED_SCENE_ID = 'scene-1';
+
+function createCharacterCombatant(
+	options: { visible?: boolean; sceneId?: string; woundsValue?: number; woundsMax?: number } = {},
+) {
 	const combatant = createCombatantFixture({
 		id: 'grak',
 		type: 'character',
-		actor: createCombatActorFixture({ type: 'character' }),
+		sceneId: options.sceneId ?? VIEWED_SCENE_ID,
+		actor: createCombatActorFixture({
+			type: 'character',
+			isOwner: true,
+			woundsValue: options.woundsValue,
+			woundsMax: options.woundsMax,
+		}),
 		actionsCurrent: 2,
 		actionsMax: 3,
 	});
@@ -17,17 +31,25 @@ function createCharacterCombatant(options: { visible?: boolean } = {}) {
 	return combatant;
 }
 
+function summarize(
+	activeCombatant: Combatant.Implementation | null,
+	overrides: { combatStarted?: boolean; round?: number; sceneId?: string | undefined } = {},
+) {
+	return resolveMinimizedTrackerSummary({
+		combatStarted: overrides.combatStarted ?? true,
+		round: overrides.round ?? 1,
+		sceneId: 'sceneId' in overrides ? overrides.sceneId : VIEWED_SCENE_ID,
+		activeCombatant,
+	});
+}
+
 describe('resolveMinimizedTrackerSummary', () => {
 	it('reports the round and the combatant taking its turn', () => {
-		const summary = resolveMinimizedTrackerSummary({
-			combatStarted: true,
-			roundLabel: 3,
-			activeCombatant: createCharacterCombatant(),
-		});
+		const summary = summarize(createCharacterCombatant(), { round: 3 });
 
 		expect(summary).toMatchObject({
 			combatStarted: true,
-			roundLabel: 3,
+			round: 3,
 			actions: { current: 2, max: 3 },
 		});
 		expect(summary.portraitSrc).toBeTruthy();
@@ -35,15 +57,11 @@ describe('resolveMinimizedTrackerSummary', () => {
 	});
 
 	it('reports no active combatant before combat starts', () => {
-		const summary = resolveMinimizedTrackerSummary({
-			combatStarted: false,
-			roundLabel: 1,
-			activeCombatant: createCharacterCombatant(),
-		});
+		const summary = summarize(createCharacterCombatant(), { combatStarted: false, round: 1 });
 
 		expect(summary).toMatchObject({
 			combatStarted: false,
-			roundLabel: 1,
+			round: 1,
 			combatantName: null,
 			portraitSrc: null,
 			actions: null,
@@ -51,11 +69,7 @@ describe('resolveMinimizedTrackerSummary', () => {
 	});
 
 	it('reports no active combatant when the combat has none', () => {
-		const summary = resolveMinimizedTrackerSummary({
-			combatStarted: true,
-			roundLabel: 2,
-			activeCombatant: null,
-		});
+		const summary = summarize(null, { round: 2 });
 
 		expect(summary).toMatchObject({
 			combatantName: null,
@@ -64,20 +78,51 @@ describe('resolveMinimizedTrackerSummary', () => {
 		});
 	});
 
-	it('reports no active combatant when the active one is hidden from this user', () => {
-		const summary = resolveMinimizedTrackerSummary({
-			combatStarted: true,
-			roundLabel: 2,
-			activeCombatant: createCharacterCombatant({ visible: false }),
-		});
+	it('hides a combatant while visible is false and shows them once it is true', () => {
+		const combatant = createCharacterCombatant();
+		let viewerIsGm = false;
+		Object.defineProperty(combatant, 'visible', { get: () => viewerIsGm });
 
-		expect(summary).toMatchObject({
-			combatStarted: true,
-			roundLabel: 2,
+		expect(summarize(combatant).combatantName).toBeNull();
+
+		viewerIsGm = true;
+
+		expect(summarize(combatant).combatantName).toBeTruthy();
+	});
+
+	it('reports no active combatant when the active one is defeated', () => {
+		const combatant = createCombatantFixture({
+			type: 'npc',
+			defeated: true,
+			actor: createCombatActorFixture({ type: 'npc', hp: 12 }),
+		});
+		(combatant as unknown as { visible: boolean }).visible = true;
+
+		expect(summarize(combatant)).toMatchObject({
 			combatantName: null,
 			portraitSrc: null,
 			actions: null,
 		});
+	});
+
+	it('reports no active combatant when a character is out of wounds', () => {
+		const summary = summarize(createCharacterCombatant({ woundsValue: 3, woundsMax: 3 }));
+
+		expect(summary.combatantName).toBeNull();
+		expect(summary.actions).toBeNull();
+	});
+
+	it('reports no active combatant when they are on another scene', () => {
+		const summary = summarize(createCharacterCombatant({ sceneId: 'scene-2' }));
+
+		expect(summary.combatantName).toBeNull();
+		expect(summary.actions).toBeNull();
+	});
+
+	it('reports no active combatant when the viewed scene is unknown', () => {
+		const summary = summarize(createCharacterCombatant(), { sceneId: undefined });
+
+		expect(summary.combatantName).toBeNull();
 	});
 
 	it('floors fractional action counts so the strip never shows a partial action', () => {
@@ -89,12 +134,108 @@ describe('resolveMinimizedTrackerSummary', () => {
 		});
 		(combatant as unknown as { visible: boolean }).visible = true;
 
-		const summary = resolveMinimizedTrackerSummary({
-			combatStarted: true,
-			roundLabel: 1,
-			activeCombatant: combatant,
+		expect(summarize(combatant).actions).toEqual({ current: 1, max: 3 });
+	});
+});
+
+describe('resolveMinimizedBarControls', () => {
+	it('gives the GM the turn arrows and Start Combat before combat starts', () => {
+		expect(
+			resolveMinimizedBarControls({
+				isGM: true,
+				isOwner: false,
+				combatStarted: false,
+				combatantShown: false,
+			}),
+		).toEqual({
+			showTurnArrows: true,
+			showStartCombat: true,
+			showEndTurn: false,
+		});
+	});
+
+	it('gives the GM End Turn once a combatant is on the bar', () => {
+		expect(
+			resolveMinimizedBarControls({
+				isGM: true,
+				isOwner: false,
+				combatStarted: true,
+				combatantShown: true,
+			}),
+		).toEqual({
+			showTurnArrows: true,
+			showStartCombat: false,
+			showEndTurn: true,
+		});
+	});
+
+	it('gives the owner End Turn and hides the GM controls', () => {
+		expect(
+			resolveMinimizedBarControls({
+				isGM: false,
+				isOwner: true,
+				combatStarted: true,
+				combatantShown: true,
+			}),
+		).toEqual({
+			showTurnArrows: false,
+			showStartCombat: false,
+			showEndTurn: true,
+		});
+	});
+
+	it('hides every turn control from a player who does not own the combatant', () => {
+		expect(
+			resolveMinimizedBarControls({
+				isGM: false,
+				isOwner: false,
+				combatStarted: true,
+				combatantShown: true,
+			}),
+		).toEqual({
+			showTurnArrows: false,
+			showStartCombat: false,
+			showEndTurn: false,
+		});
+	});
+
+	it('hides End Turn when the bar is not showing the combatant', () => {
+		expect(
+			resolveMinimizedBarControls({
+				isGM: true,
+				isOwner: true,
+				combatStarted: true,
+				combatantShown: false,
+			}).showEndTurn,
+		).toBe(false);
+	});
+});
+
+describe('shouldConfirmEndTurnEarly', () => {
+	it('asks a player to confirm while they still have actions', () => {
+		expect(
+			shouldConfirmEndTurnEarly({
+				allActionsUsed: false,
+				combatant: createCharacterCombatant(),
+			}),
+		).toBe(true);
+	});
+
+	it('does not ask once every action is spent', () => {
+		expect(
+			shouldConfirmEndTurnEarly({
+				allActionsUsed: true,
+				combatant: createCharacterCombatant(),
+			}),
+		).toBe(false);
+	});
+
+	it('does not ask for a monster', () => {
+		const combatant = createCombatantFixture({
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
 		});
 
-		expect(summary.actions).toEqual({ current: 1, max: 3 });
+		expect(shouldConfirmEndTurnEarly({ allActionsUsed: false, combatant })).toBe(false);
 	});
 });
