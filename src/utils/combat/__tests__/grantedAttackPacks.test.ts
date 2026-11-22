@@ -130,6 +130,15 @@ describe('Quickstrike', () => {
 		expect(collectGrantedActionOffers(feature, [{ actor: { uuid: 'Actor.ally' } }])).toEqual([]);
 		expect(feature.ruleTypes).not.toContain('actionDelta');
 	});
+
+	it('has no limit of its own and posts no reminder card', () => {
+		const item = readItem(
+			'packs/classFeatures/core/zephyr/martial-arts-ability/quickstrike.json',
+		) as { system: { rules: { type: string }[]; activation: { effects: unknown[] } } };
+
+		expect(item.system.rules.map((rule) => rule.type)).toEqual(['grantActivation']);
+		expect(item.system.activation.effects).toEqual([]);
+	});
 });
 
 const ZEPHYR = 'classFeatures/core/zephyr';

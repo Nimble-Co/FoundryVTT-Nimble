@@ -209,7 +209,7 @@ describe('Zephyr selection pools per level', () => {
 });
 
 describe('Zephyr - pack data', () => {
-	const { feature, rulesOf, effectsOf, costOf } = packFeatureHelpers(CLASS_ID);
+	const { feature, rulesOf, costOf } = packFeatureHelpers(CLASS_ID);
 
 	describe('Swift Fists', () => {
 		it('ships one unarmed damage rule of 1d4 plus STR', () => {
@@ -243,45 +243,6 @@ describe('Zephyr - pack data', () => {
 			expect(grant.free).toBe(true);
 			expect(grant.spendsReaction).toBe(false);
 			expect(grant.ignoresRushed).toBe(false);
-		});
-
-		it('ships one hidden pool that gates it until the next turn ends', () => {
-			const pools = rulesOf('Quickstrike', 'chargePool');
-			expect(pools).toHaveLength(1);
-			const [pool] = pools;
-			expect(pool.disabled).toBe(false);
-			expect(pool.priority).toBe(1);
-			expect(pool.identifier).toBe('quickstrike-round');
-			expect(pool.label).toBe('Quickstrike (once per round)');
-			expect(pool.scope).toBe('item');
-			expect(pool.max).toBe('1');
-			expect(pool.initial).toBe('max');
-			expect(pool.dieSize).toBeNull();
-			expect(pool.hidden).toBe(true);
-			expect(pool.showAsResource).toBe(false);
-			expect(pool.recoveries).toEqual([
-				{ trigger: 'onTurnEnd', mode: 'refresh', value: '1' },
-				{ trigger: 'encounterEnd', mode: 'refresh', value: '1' },
-			]);
-		});
-
-		it('ships a consumer that spends one charge from that pool', () => {
-			const consumers = rulesOf('Quickstrike', 'chargeConsumer');
-			expect(consumers).toHaveLength(1);
-			const [consumer] = consumers;
-			expect(consumer.disabled).toBe(false);
-			expect(consumer.priority).toBe(2);
-			expect(consumer.maxCost).toBe('');
-			expect(consumer.poolIdentifier).toBe('quickstrike-round');
-			expect(consumer.poolScope).toBe('item');
-			expect(consumer.costMode).toBe('fixed');
-			expect(consumer.cost).toBe('1');
-		});
-
-		it('ships a reminder that the action buys the unarmed strike', () => {
-			expect(effectsOf('Quickstrike', 'note').map((note) => [note.noteType, note.text])).toEqual([
-				['reminder', 'When you Interpose, make an unarmed strike against that enemy for free.'],
-			]);
 		});
 
 		it('has no activation cost of its own', () => {
