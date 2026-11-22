@@ -16,7 +16,8 @@
 				"priority": 1,
 				"advantage": 1,
 				"ignoreDisadvantage": true,
-				"attackOrigin": "coordinated-strike"
+				"attackOrigin": "coordinated-strike",
+				"originAttacker": "anyone"
 			}
 		],
 		"activation": {

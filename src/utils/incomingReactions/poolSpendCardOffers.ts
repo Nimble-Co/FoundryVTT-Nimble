@@ -15,6 +15,8 @@ export interface CardOfferContext {
 	stats?: readonly string[];
 	/** The identifier of the feature the attack was made through. */
 	origin?: string;
+	/** The uuid of the feature the attack was made through. */
+	originUuid?: string;
 	/** The upcast steps of the spell. */
 	upcastSteps?: number;
 }

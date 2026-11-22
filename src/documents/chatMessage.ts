@@ -14,13 +14,17 @@ import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
-import { originIdentifierOfCard } from '#utils/damage/attackOrigin.js';
 import {
 	type AttackActivation,
 	type AttackDelivery,
 	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
+import {
+	originIdentifierOfCard,
+	originOfCard,
+	originOwnerRules,
+} from '#utils/damage/attackOrigin.js';
 import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
@@ -1126,14 +1130,14 @@ class NimbleChatMessage extends ChatMessage {
 		sourceItem: { type?: string } | null;
 		origin: string | undefined;
 	}): EffectNode[] {
+		type CardNodeRule = { getActivationCardNodes?: (ctx: typeof context) => EffectNode[] };
 		const actorId = this.speaker?.actor;
 		const actor = actorId ? game.actors?.get(actorId) : null;
-		const rules = (
-			actor as unknown as {
-				rules?: Array<{ getActivationCardNodes?: (ctx: typeof context) => EffectNode[] }>;
-			} | null
-		)?.rules;
-		if (!rules || rules.length === 0) return [];
+		const rules = [
+			...((actor as unknown as { rules?: CardNodeRule[] } | null)?.rules ?? []),
+			...originOwnerRules<CardNodeRule>(actor, originOfCard(this)),
+		];
+		if (rules.length === 0) return [];
 
 		const contributed: EffectNode[] = [];
 		for (const rule of rules) {

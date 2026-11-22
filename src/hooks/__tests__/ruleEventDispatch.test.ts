@@ -40,6 +40,7 @@ vi.mock('../../utils/actor/actorHealthState.js', () => ({
 	getActorHealthState: vi.fn(() => 'normal'),
 }));
 
+import { SYSTEM_ID } from '#system';
 import { getActorHealthState } from '../../utils/actor/actorHealthState.js';
 import registerRuleEventDispatch from '../ruleEventDispatch.js';
 
@@ -250,6 +251,36 @@ describe('ruleEventDispatch', () => {
 
 			const ctx = targetRule.onAttackReceived.mock.calls[0]?.[0];
 			expect(ctx).toMatchObject({ isCritical: false, discardedCritTriggers: true });
+		});
+
+		it('also calls onItemUsed on the opted-in rules of the owner of the item an ally attacked through', async () => {
+			const anyone = { ...createMockRule(), originAttacker: 'anyone', originScope: 'rally' };
+			const self = { ...createMockRule(), originAttacker: 'self', originScope: 'rally' };
+			const owner = { uuid: 'Actor.owner', rules: [anyone, self] };
+			const sourceActor = { uuid: 'Actor.ally', rules: [] };
+			const globals = globalThis as Record<string, unknown>;
+			const saved = globals.fromUuidSync;
+			globals.fromUuidSync = (uuid: string) =>
+				uuid === 'Actor.owner.Item.rally' ? { actor: owner } : null;
+			const origin = { uuid: 'Actor.owner.Item.rally', identifier: 'rally' };
+
+			try {
+				handlers.get('nimble.damageApplied')?.({
+					sourceItem: { name: 'Club' },
+					sourceActor,
+					targetActor: { rules: [] },
+					card: { flags: { [SYSTEM_ID]: { origin } } },
+					isCritical: false,
+					isMiss: false,
+				});
+				await Promise.resolve();
+				await Promise.resolve();
+			} finally {
+				globals.fromUuidSync = saved;
+			}
+
+			expect(anyone.onItemUsed).toHaveBeenCalledWith(expect.objectContaining({ sourceActor }));
+			expect(self.onItemUsed).not.toHaveBeenCalled();
 		});
 
 		it('no-ops when sourceActor or targetActor is missing', async () => {

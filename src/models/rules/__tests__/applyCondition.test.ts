@@ -1092,6 +1092,57 @@ describe('ApplyConditionRule', () => {
 			await rule.onItemUsed({ ...buildItemUsedContext(attacker, target), card: cardFrom('rally') });
 			expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
 		});
+
+		describe("an ally's attack made through the owner's feature", () => {
+			const allyCard = {
+				flags: { [SYSTEM_ID]: { origin: { uuid: 'Actor.owner.Item.rally', identifier: 'rally' } } },
+			} as never;
+
+			const globals = globalThis as Record<string, unknown>;
+			const savedFromUuidSync = globals.fromUuidSync;
+
+			afterEach(() => {
+				globals.fromUuidSync = savedFromUuidSync;
+			});
+
+			function setup(originAttacker: 'self' | 'anyone') {
+				const owner = createMockActor();
+				const ally = createMockActor();
+				const target = createMockActor();
+				const rule = scopedRule(owner);
+				(rule as unknown as { originAttacker: string }).originAttacker = originAttacker;
+				globals.fromUuidSync = (uuid: string) =>
+					uuid === 'Actor.owner.Item.rally' ? { actor: owner } : null;
+				return { ally, target, rule };
+			}
+
+			it('applies with You and allies', async () => {
+				const { ally, target, rule } = setup('anyone');
+
+				await rule.onItemUsed({ ...buildItemUsedContext(ally, target), card: allyCard });
+
+				expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+			});
+
+			it('does not apply with You only', async () => {
+				const { ally, target, rule } = setup('self');
+
+				await rule.onItemUsed({ ...buildItemUsedContext(ally, target), card: allyCard });
+
+				expect(conditionsAppliedTo(target)).toEqual([]);
+			});
+
+			it("does not apply to the ally's attack through another feature", async () => {
+				const { ally, target, rule } = setup('anyone');
+				const otherCard = {
+					flags: { [SYSTEM_ID]: { origin: { uuid: 'Actor.ally.Item.x', identifier: 'rally' } } },
+				} as never;
+
+				await rule.onItemUsed({ ...buildItemUsedContext(ally, target), card: otherCard });
+
+				expect(conditionsAppliedTo(target)).toEqual([]);
+			});
+		});
 	});
 
 	describe('getActivationCardNodes', () => {

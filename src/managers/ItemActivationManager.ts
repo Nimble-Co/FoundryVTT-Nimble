@@ -366,6 +366,12 @@ class ItemActivationManager {
 		return attackOriginOf(this.#item, this.#options.originUuid);
 	}
 
+	/** The origin to find other creatures' rules with: it has a uuid only for an attack made through another item. */
+	get #ruleOrigin(): Partial<AttackOrigin> {
+		const origin = this.origin;
+		return this.#options.originUuid ? origin : { identifier: origin.identifier };
+	}
+
 	/** The name of the feature this attack was made through, as the player knows it. */
 	#originName(): string {
 		const uuid = this.origin.uuid;
@@ -375,10 +381,10 @@ class ItemActivationManager {
 		return source?.name ?? '';
 	}
 
-	/** What the attacker's rules add to this attack because of the feature it was made through. */
+	/** What the rules that reach this attack add because of the feature it was made through. */
 	#offerBonuses: OfferBonus[] = [];
 
-	/** What the attacker's Attack Roll Mode rules do to this attack. */
+	/** What the Attack Roll Mode rules that reach this attack do to it. */
 	#rollModeChange: AttackRollModeTotal = { advantage: 0, ignoreDisadvantage: false };
 
 	/** The attack takes no disadvantage: the caller or a rule says so. */
@@ -522,7 +528,7 @@ class ItemActivationManager {
 
 		this.#rollModeChange = attackRollModeOf(
 			this.actor as { rules?: unknown } | null,
-			this.origin.identifier,
+			this.#ruleOrigin,
 		);
 		const rollOptions = {
 			domain: this.#getItemDomain(),
@@ -703,6 +709,7 @@ class ItemActivationManager {
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
 				origin: this.origin.identifier,
+				originUuid: this.#ruleOrigin.uuid,
 			},
 		);
 
@@ -965,10 +972,9 @@ class ItemActivationManager {
 						chosen: this.#heldChosen,
 					});
 					this.#primaryDieBonuses.push(...this.#heldPlan.bonusLines());
-					const origin = this.origin;
 					const offerBonuses = collectOfferBonuses(
 						this.actor as { rules?: unknown } | null,
-						origin.identifier,
+						this.#ruleOrigin,
 					);
 					this.#offerBonuses = offerBonuses;
 					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
@@ -1010,7 +1016,7 @@ class ItemActivationManager {
 						const { vicious: _named, ...sources } = damageOptions.outcomeSources;
 						damageOptions.outcomeSources = sources;
 					}
-					markOfferOnRollOptions(damageOptions, origin);
+					markOfferOnRollOptions(damageOptions, this.origin);
 					if (damageParts.length > 0) damageOptions.damageParts = damageParts;
 					const critDice = resolvedCanCrit
 						? collectCritDice(this.actor as { rules?: unknown } | null, delivery)

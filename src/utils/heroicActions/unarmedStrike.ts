@@ -138,7 +138,7 @@ export async function rollUnarmedStrike(
 	options: RollUnarmedStrikeOptions = {},
 ): Promise<boolean> {
 	const origin = options.originUuid ? attackOriginOf({}, options.originUuid) : null;
-	const rollModeChange = attackRollModeOf(actor, origin?.identifier);
+	const rollModeChange = attackRollModeOf(actor, origin);
 	const rushed =
 		options.rollMode === undefined && !options.ignoresRushed && !rollModeChange.ignoreDisadvantage
 			? attacksMadeThisTurn(actor)
@@ -147,7 +147,7 @@ export async function rollUnarmedStrike(
 		options.rollMode ?? (rushed > 0 ? -rushed : 0),
 		rollModeChange,
 	);
-	const offerBonuses = origin ? collectOfferBonuses(actor, origin.identifier) : [];
+	const offerBonuses = collectOfferBonuses(actor, origin);
 	const built = buildRollFormula(actor, origin?.identifier);
 	const offerAdded = addOfferBonuses(built.formula, offerBonuses, false);
 	const rollFormula = offerAdded.formula;
@@ -207,6 +207,7 @@ export async function rollUnarmedStrike(
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
 		stats: statsInFormula(rollFormula),
+		...(origin ? { origin: origin.identifier, originUuid: origin.uuid } : {}),
 	});
 	const attackOutcome = collectAttackOutcome({
 		attacker: actor as { rules?: unknown },

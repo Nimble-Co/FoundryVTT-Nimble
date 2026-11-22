@@ -1,19 +1,19 @@
-import { rulesOfType } from '../actor/actorRules.js';
+import { type AttackOrigin, rulesReachingAttack } from '../damage/attackOrigin.js';
 
-/** What the attacker's Attack Roll Mode rules do to one attack, all of them together. */
+/** What the Attack Roll Mode rules that reach an attack do to one attack, all of them together. */
 export interface AttackRollModeTotal {
 	advantage: number;
 	ignoreDisadvantage: boolean;
 }
 
-/** The roll mode change of the attacker's rules for an attack made through the item with this identifier. */
+/** The roll mode change of the rules that reach an attack made through the item of `origin`. */
 export function attackRollModeOf(
 	attacker: { rules?: unknown } | null | undefined,
-	origin: string | null | undefined,
+	origin: Partial<AttackOrigin> | null | undefined,
 ): AttackRollModeTotal {
 	const total: AttackRollModeTotal = { advantage: 0, ignoreDisadvantage: false };
-	for (const rule of rulesOfType(attacker, 'attackRollMode')) {
-		const change = rule.changeFor(origin);
+	for (const rule of rulesReachingAttack(attacker, 'attackRollMode', origin)) {
+		const change = rule.changeFor(origin?.identifier);
 		if (!change) continue;
 		total.advantage += change.advantage;
 		total.ignoreDisadvantage ||= change.ignoreDisadvantage;

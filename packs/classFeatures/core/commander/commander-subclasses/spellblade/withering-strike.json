@@ -16,6 +16,7 @@
 				"predicate": {},
 				"priority": 1,
 				"offerSource": "coordinated-strike",
+				"originAttacker": "anyone",
 				"damage": "@pools.combat-dice.faces",
 				"damageType": "necrotic",
 				"primaryDie": 0
@@ -34,6 +35,7 @@
 				"wounds": 0,
 				"attackSource": "any",
 				"attackOrigin": "coordinated-strike",
+				"originAttacker": "anyone",
 				"manaAtLeast": 0
 			},
 			{
@@ -50,6 +52,7 @@
 				"wounds": 0,
 				"attackSource": "any",
 				"attackOrigin": "coordinated-strike",
+				"originAttacker": "anyone",
 				"manaAtLeast": 0
 			}
 		],

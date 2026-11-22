@@ -3164,3 +3164,81 @@ describe('NimbleChatMessage.effectNodes — a hit step scoped to one feature', (
 		expect(stepIds(message)).toEqual([]);
 	});
 });
+
+describe("NimbleChatMessage.effectNodes — an ally's attack made through another creature's feature", () => {
+	const ORIGIN = 'Actor.owner.Item.rally';
+	const weaponDamage = {
+		id: 'dmg',
+		type: 'damage',
+		formula: '1d8',
+		damageType: 'slashing',
+		canCrit: true,
+		canMiss: true,
+		parentNode: null,
+		parentContext: null,
+		on: {},
+	};
+
+	function ownerRule(id: string, trigger: string, originAttacker: string, owner: object) {
+		const item = { actor: owner, isEmbedded: true, name: 'Rally', uuid: ORIGIN };
+		const rule = new ApplyConditionRule(
+			{ type: 'applyCondition', id, condition: 'smoldering', trigger } as never,
+			{ parent: item as never, strict: false },
+		);
+		Object.assign(rule, {
+			id,
+			condition: 'smoldering',
+			trigger,
+			attackOrigin: 'rally',
+			originAttacker,
+		});
+		return rule;
+	}
+
+	function allyCard(isCritical: boolean) {
+		return new NimbleChatMessage({
+			type: 'object',
+			speaker: { actor: 'ally' },
+			flags: { [SYSTEM_ID]: { origin: { uuid: ORIGIN, identifier: 'rally' } } },
+			system: {
+				targets: [],
+				isCritical,
+				isMiss: false,
+				activation: { effects: [weaponDamage], targets: { count: 1, attackType: 'reach' } },
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	function stepIds(message: NimbleChatMessage): string[] {
+		return message.effectNodes
+			.flat()
+			.filter((node) => node.type === 'applyEffect')
+			.map((node) => node.id);
+	}
+
+	beforeEach(() => {
+		const owner: { uuid: string; rules: unknown[] } = { uuid: 'Actor.owner', rules: [] };
+		owner.rules.push(
+			ownerRule('hit-anyone', 'onHit', 'anyone', owner),
+			ownerRule('crit-anyone', 'onCrit', 'anyone', owner),
+			ownerRule('hit-self', 'onHit', 'self', owner),
+		);
+		const ally = { uuid: 'Actor.ally', rules: [] };
+		(globalThis as unknown as { game: Record<string, unknown> }).game.actors = {
+			get: (id: string) => (id === 'ally' ? ally : null),
+		};
+		globals().fromUuidSync = vi.fn((uuid: string) => (uuid === ORIGIN ? { actor: owner } : null));
+	});
+
+	afterEach(() => {
+		delete (globalThis as unknown as { game: Record<string, unknown> }).game.actors;
+	});
+
+	it('gets the hit step of the rule set to You and allies, and not the one set to You only', () => {
+		expect(stepIds(allyCard(false))).toEqual(['apply-condition-hit-anyone']);
+	});
+
+	it('gets the crit step of the rule set to You and allies on a crit', () => {
+		expect(stepIds(allyCard(true))).toEqual(['apply-condition-crit-anyone']);
+	});
+});

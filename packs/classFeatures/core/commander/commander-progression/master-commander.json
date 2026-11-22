@@ -38,7 +38,8 @@
 				"priority": 1,
 				"advantage": 0,
 				"ignoreDisadvantage": true,
-				"attackOrigin": "coordinated-strike"
+				"attackOrigin": "coordinated-strike",
+				"originAttacker": "anyone"
 			},
 			{
 				"type": "modifyPool",

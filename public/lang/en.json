@@ -3292,6 +3292,14 @@
 				"label": "Only attacks made through",
 				"hint": "The identifier of the feature, such as coordinated-strike. Leave blank for every attack."
 			},
+			"originAttacker": {
+				"label": "Attacks by",
+				"hint": "You and allies: an attack that another creature makes through the feature in Only attacks made through also gets this, for example an attack that the feature gives to an ally.",
+				"choices": {
+					"self": "You only",
+					"anyone": "You and allies"
+				}
+			},
 			"attackOutcome": {
 				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make It a Crit row in Change This Roll on the card.",
 				"form": {

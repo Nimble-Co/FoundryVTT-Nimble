@@ -355,6 +355,7 @@ describe('RuleCard with a form layout (attackRollMode)', () => {
 			'advantage',
 			'ignoreDisadvantage',
 			'attackOrigin',
+			'originAttacker',
 			'predicate',
 		]);
 	});

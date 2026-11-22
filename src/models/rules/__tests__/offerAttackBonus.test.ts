@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { collectGrantedActionOffers } from '#utils/combat/grantedActionOffers.js';
 import { collectOfferBonuses } from '#utils/damage/collectOfferBonuses.js';
+import { attackRollModeOf } from '#utils/rolls/attackRollMode.js';
 import { Predicate } from '../../../etc/Predicate.js';
 import { AttackRollModeRule } from '../attackRollMode.js';
 import { OfferAttackBonusRule } from '../offerAttackBonus.js';
@@ -73,7 +74,9 @@ describe('Juggernaut', () => {
 
 	it('collects nothing with Feature Effects off', () => {
 		vi.stubGlobal('game', { settings: { get: () => false } });
-		expect(collectOfferBonuses({ rules: [juggernaut()] }, 'coordinated-strike')).toEqual([]);
+		expect(
+			collectOfferBonuses({ rules: [juggernaut()] }, { identifier: 'coordinated-strike' }),
+		).toEqual([]);
 	});
 
 	it('gives a row with Feature Effects off, only on the attack from the offer', () => {
@@ -210,5 +213,93 @@ describe('Master Commander and As One!', () => {
 			label: 'As One!',
 		});
 		expect(rule.changeFor('other-feature')).toBeNull();
+	});
+});
+
+describe("the Coordinated Strike! riders on an ally's attack", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	function rollModeRuleOf(file: string, name: string) {
+		const data = readItem(file).system.rules.find(
+			(rule: { type: string }) => rule.type === 'attackRollMode',
+		);
+		const parent = {
+			isEmbedded: true,
+			actor: { uuid: 'Actor.hero', getDomain: () => new Set<string>() },
+			name,
+			uuid: `Item.${name}`,
+			getDomain: () => new Set<string>(),
+		};
+		const rule = new AttackRollModeRule(
+			{ type: 'attackRollMode' } as never,
+			{ parent, strict: false } as never,
+		);
+		Object.assign(rule, { ...data, predicate: new Predicate({}) });
+		Object.defineProperty(rule, 'parent', { get: () => parent, configurable: true });
+		return rule;
+	}
+
+	const withering = () =>
+		offerRuleOf(readItem(WITHERING_STRIKE).system.rules[0], 'Withering Strike', 8);
+	const through = { uuid: 'Actor.hero.Item.cs', identifier: 'coordinated-strike' };
+	const ally = { uuid: 'Actor.ally', rules: [] };
+
+	function commander(rules: unknown[]) {
+		const hero = { uuid: 'Actor.hero', rules };
+		vi.stubGlobal('game', { settings: { get: () => true } });
+		vi.stubGlobal('fromUuidSync', (uuid: string) =>
+			uuid === through.uuid ? { actor: hero } : null,
+		);
+		return hero;
+	}
+
+	it('Withering Strike and its undead marks reach the ally; Juggernaut does not', () => {
+		const rules = readItem(WITHERING_STRIKE).system.rules;
+		expect(rules.map((rule: { originAttacker?: string }) => rule.originAttacker)).toEqual([
+			'anyone',
+			'anyone',
+			'anyone',
+		]);
+		expect(readItem(JUGGERNAUT).system.rules[0].originAttacker ?? 'self').toBe('self');
+
+		commander([withering(), juggernaut()]);
+		expect(collectOfferBonuses(ally, through)).toEqual([
+			{
+				label: 'Withering Strike',
+				itemUuid: 'Item.j',
+				damage: 8,
+				primaryDie: 0,
+				damageType: 'necrotic',
+			},
+		]);
+	});
+
+	it("the Commander's own Coordinated Strike attack still gets Withering Strike and Juggernaut", () => {
+		const hero = commander([withering(), juggernaut()]);
+		expect(collectOfferBonuses(hero, through).map((bonus) => bonus.label)).toEqual([
+			'Withering Strike',
+			'Juggernaut',
+		]);
+	});
+
+	it("Master Commander and As One! change the ally's roll mode", () => {
+		commander([
+			rollModeRuleOf(MASTER_COMMANDER, 'Master Commander'),
+			rollModeRuleOf(AS_ONE, 'As One!'),
+		]);
+		expect(attackRollModeOf(ally, through)).toEqual({ advantage: 1, ignoreDisadvantage: true });
+		expect(attackRollModeOf(ally, { uuid: 'Actor.ally.Item.x', identifier: 'other' })).toEqual({
+			advantage: 0,
+			ignoreDisadvantage: false,
+		});
+	});
+
+	it('a roll mode rule set to You only does not reach the ally', () => {
+		const rule = rollModeRuleOf(AS_ONE, 'As One!');
+		rule.originAttacker = 'self';
+		commander([rule]);
+		expect(attackRollModeOf(ally, through)).toEqual({ advantage: 0, ignoreDisadvantage: false });
 	});
 });

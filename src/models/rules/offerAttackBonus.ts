@@ -1,8 +1,9 @@
 import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { ruleLabel } from '../../utils/actor/actorRules.js';
-import { isMadeThrough } from '../../utils/damage/attackOrigin.js';
+import { isMadeThrough, type OriginAttacker } from '../../utils/damage/attackOrigin.js';
 import type { RollEffect } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import { originAttackerField } from './_attackOriginField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import type { RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -18,6 +19,7 @@ function schema() {
 			label: 'NIMBLE.rules.offerAttackBonus.offerSource.label',
 			hint: 'NIMBLE.rules.offerAttackBonus.offerSource.hint',
 		}),
+		originAttacker: originAttackerField(),
 		damage: new fields.StringField(
 			withWidget({
 				required: true,
@@ -59,6 +61,7 @@ declare namespace OfferAttackBonusRule {
  */
 class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	declare offerSource: string;
+	declare originAttacker: OriginAttacker;
 	declare damage: string;
 	declare primaryDie: number;
 	// `damageType` is inferred from the schema's `choices`.
@@ -67,7 +70,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	static override description = 'NIMBLE.rules.offerAttackBonus.description';
 	static override icon = 'fa-solid fa-handshake-angle';
 	static override formLayout: readonly RuleFormGroup[] = [
-		{ fields: ['offerSource', 'damage', 'damageType', 'primaryDie'] },
+		{ fields: ['offerSource', 'originAttacker', 'damage', 'damageType', 'primaryDie'] },
 	];
 
 	static override defineSchema(): OfferAttackBonusRule.Schema {
@@ -81,11 +84,16 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['offerSource', 'string'],
+				['originAttacker', '"self" | "anyone"'],
 				['damage', 'string'],
 				['damageType', 'string'],
 				['primaryDie', 'number'],
 			]),
 		);
+	}
+
+	get originScope(): string {
+		return this.offerSource ?? '';
 	}
 
 	/** What the rule adds to an attack made through its item. Null for another attack, or with no item. */

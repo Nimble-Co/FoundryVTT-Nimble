@@ -5,8 +5,9 @@ The Attack Roll Mode rule changes the roll mode of the owner's attacks. **Advant
 - **Advantage** → `1`
 - **Ignore all disadvantage** → on
 - **Only attacks made through** → `coordinated-strike`
+- **Attacks by** → You and allies
 
-On your second attack of the turn, the window opens at advantage, with no Rushed Attack line. Your other attacks do not change.
+On your second attack of the turn, the window opens at advantage, with no Rushed Attack line. Your other attacks do not change. With **Attacks by** set to **You and allies**, the attack Coordinated Strike! gives an ally changes too. **You only** changes only your own attacks.
 
 ::: details Edge cases
 - Disadvantage goes out first, then the advantage goes on. A window that starts at 1 disadvantage opens at 1 advantage.

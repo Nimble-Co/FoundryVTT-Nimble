@@ -1086,3 +1086,108 @@ describe('an attack roll mode for attacks made through one feature', () => {
 		expect(rollOptions(feature).rollMode).toBe(-1);
 	});
 });
+
+describe("an ally's attack made through another creature's feature", () => {
+	function commanderWith(rules: (owner: object) => unknown[]) {
+		const commander = hero();
+		Object.assign(commander, { id: 'commander', uuid: 'Actor.commander', name: 'Commander' });
+		const granting = {
+			uuid: 'Actor.commander.Item.granting',
+			name: 'Granting Feature',
+			identifier: 'granting-feature',
+			type: 'feature',
+			flags: {},
+			isEmbedded: true,
+			actor: commander,
+			getDomain: () => new Set(),
+		};
+		commander.items.push(granting);
+		commander.rules.push(...rules(granting));
+		return { commander, granting };
+	}
+
+	function offerRule(owner: object, id: string, originAttacker: string, damage: number) {
+		const rule = new OfferAttackBonusRule({ type: 'offerAttackBonus' } as never, {
+			strict: false,
+		});
+		Object.assign(rule, {
+			type: 'offerAttackBonus',
+			id,
+			disabled: false,
+			label: id,
+			offerSource: 'granting-feature',
+			originAttacker,
+			damage: String(damage),
+			damageType: 'necrotic',
+			primaryDie: 0,
+			predicate: new Predicate({}),
+			resolveFormula: () => damage,
+		});
+		Object.defineProperty(rule, 'parent', { get: () => owner, configurable: true });
+		return rule;
+	}
+
+	function rollModeRule(owner: object, id: string, originAttacker: string, advantage: number) {
+		const rule = new AttackRollModeRule({ type: 'attackRollMode' } as never, { strict: false });
+		Object.assign(rule, {
+			type: 'attackRollMode',
+			id,
+			disabled: false,
+			label: id,
+			advantage,
+			ignoreDisadvantage: originAttacker === 'anyone',
+			attackOrigin: 'granting-feature',
+			originAttacker,
+			predicate: new Predicate({}),
+		});
+		Object.defineProperty(rule, 'parent', { get: () => owner, configurable: true });
+		return rule;
+	}
+
+	function setup() {
+		const { commander, granting } = commanderWith((owner) => [
+			offerRule(owner, 'for-anyone', 'anyone', 4),
+			offerRule(owner, 'for-self', 'self', 9),
+			rollModeRule(owner, 'mode-anyone', 'anyone', 1),
+			rollModeRule(owner, 'mode-self', 'self', 2),
+		]);
+		const ally = hero();
+		longbow(ally);
+		const items = [...ally.items, ...commander.items] as Array<{ uuid: string }>;
+		vi.stubGlobal('fromUuidSync', (uuid: string) => items.find((item) => item.uuid === uuid));
+		return { ally, granting };
+	}
+
+	it('gets the rules set to You and allies, and not the rules set to You only', async () => {
+		const { ally, granting } = setup();
+		const feature = incendiaryShot(ally);
+
+		await feature.activate({ originUuid: granting.uuid, rollMode: -1, rushedAttack: 1 });
+
+		expect(dialog.opened).toMatchObject({ rollMode: 1, ignoreDisadvantage: true });
+		const damage = everyNode(cardOf(feature).system.activation.effects)
+			.filter((node) => node.type === 'damage')
+			.map((node) => [
+				node.damageType,
+				(node as Node & { roll?: { formula: string } }).roll?.formula ?? node.formula,
+			]);
+		expect(damage).toEqual([
+			['piercing', '1d8'],
+			['fire', '2d8'],
+			['necrotic', '4'],
+		]);
+	});
+
+	it('gets none of them on an attack made another way', async () => {
+		const { ally } = setup();
+		const feature = incendiaryShot(ally);
+
+		await feature.activate({ rollMode: -1 });
+
+		expect(dialog.opened).toMatchObject({ rollMode: -1 });
+		const types = everyNode(cardOf(feature).system.activation.effects)
+			.filter((node) => node.type === 'damage')
+			.map((node) => node.damageType);
+		expect(types).toEqual(['piercing', 'fire']);
+	});
+});

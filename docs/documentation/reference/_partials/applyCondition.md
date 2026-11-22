@@ -7,7 +7,7 @@
 
 When the GM applies the damage of a crit, the attack's target gains the condition. With a trigger about the owner, such as `onTurnStart` or `onRest`, the character that carries the item gains the condition instead. With no **Effect**, the condition stays until someone removes it.
 
-**Source** limits an attack trigger to weapon or spell attacks. An attack with no item counts as a weapon attack. **Only attacks made through** limits it to attacks a feature causes, by the feature's identifier, such as `coordinated-strike`. Blank is every attack.
+**Source** limits an attack trigger to weapon or spell attacks. An attack with no item counts as a weapon attack. **Only attacks made through** limits it to attacks a feature causes, by the feature's identifier, such as `coordinated-strike`. Blank is every attack. Set **Attacks by** to **You and allies** and an attack that an ally makes through that feature also gives the condition, such as the attack Coordinated Strike! gives the ally.
 
 **Example: Doom.** A monster whose attacks also Wound the target.
 

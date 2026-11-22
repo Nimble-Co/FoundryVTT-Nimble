@@ -28,6 +28,7 @@ import {
 	hpGained,
 } from '../utils/actor/actorHpChangePaths.js';
 import { getActorWoundsValueAndMax } from '../utils/actor/actorResources.js';
+import { originOfCard, originOwnerRules } from '../utils/damage/attackOrigin.js';
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { keyedQueue } from '../utils/keyedQueue.js';
@@ -104,11 +105,19 @@ async function dispatch<TContext>(
 	context: TContext,
 ): Promise<void> {
 	if (!actor?.rules) return;
+	await dispatchToRules(actor.rules, methodName, context);
+}
+
+async function dispatchToRules<TContext>(
+	rules: readonly NimbleBaseRule[],
+	methodName: keyof NimbleBaseRule,
+	context: TContext,
+): Promise<void> {
 	// With rule automation toggled off, only lifecycle events a rule class
 	// declares in `alwaysDispatchedEvents` (core plumbing with no manual
 	// fallback) still go through; everything else is skipped.
 	const automationEnabled = isRuleAutomationEnabled();
-	for (const rule of actor.rules) {
+	for (const rule of rules) {
 		if (!automationEnabled) {
 			const alwaysDispatched = (
 				rule?.constructor as
@@ -140,6 +149,11 @@ function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
 		discardedCritTriggers: payload.discardedCritTriggers === true,
 	};
 	void dispatch(payload.sourceActor, 'onItemUsed', context);
+	void dispatchToRules(
+		originOwnerRules<NimbleBaseRule>(payload.sourceActor, originOfCard(payload.card)),
+		'onItemUsed',
+		context,
+	);
 	void dispatch(payload.targetActor, 'onAttackReceived', {
 		...context,
 		discardedCritTriggers:

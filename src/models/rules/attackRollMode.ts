@@ -1,6 +1,6 @@
 import { ruleLabel } from '../../utils/actor/actorRules.js';
-import { isMadeThrough } from '../../utils/damage/attackOrigin.js';
-import { attackOriginField } from './_attackOriginField.js';
+import { isMadeThrough, type OriginAttacker } from '../../utils/damage/attackOrigin.js';
+import { attackOriginField, originAttackerField } from './_attackOriginField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { NimbleBaseRule } from './base.js';
 
@@ -25,6 +25,7 @@ function schema() {
 			hint: 'NIMBLE.rules.attackRollMode.ignoreDisadvantage.hint',
 		}),
 		attackOrigin: attackOriginField(),
+		originAttacker: originAttackerField(),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'attackRollMode' }),
 	};
 }
@@ -51,7 +52,7 @@ class AttackRollModeRule extends NimbleBaseRule<AttackRollModeRule.Schema> {
 	static override icon = 'fa-solid fa-arrows-up-down';
 	static override formLayout: readonly RuleFormGroup[] = [
 		{ fields: ['advantage', 'ignoreDisadvantage'] },
-		{ fields: ['attackOrigin'] },
+		{ fields: ['attackOrigin', 'originAttacker'] },
 		{
 			label: 'NIMBLE.rules.reroll.form.onlyWhile.label',
 			hint: 'NIMBLE.rules.reroll.form.onlyWhile.hint',
@@ -62,6 +63,7 @@ class AttackRollModeRule extends NimbleBaseRule<AttackRollModeRule.Schema> {
 	declare advantage: number;
 	declare ignoreDisadvantage: boolean;
 	declare attackOrigin: string;
+	declare originAttacker: OriginAttacker;
 
 	static override defineSchema(): AttackRollModeRule.Schema {
 		return {
@@ -76,8 +78,13 @@ class AttackRollModeRule extends NimbleBaseRule<AttackRollModeRule.Schema> {
 				['advantage', 'number'],
 				['ignoreDisadvantage', 'boolean'],
 				['attackOrigin', 'string'],
+				['originAttacker', '"self" | "anyone"'],
 			]),
 		);
+	}
+
+	get originScope(): string {
+		return this.attackOrigin ?? '';
 	}
 
 	/** The change to an attack made through the item with this identifier. Null when there is none. */

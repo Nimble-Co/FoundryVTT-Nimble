@@ -596,6 +596,45 @@ describe('rollUnarmedStrike', () => {
 					expect.objectContaining({ primaryDieModifier: 0 }),
 				);
 			});
+
+			it("an ally's strike through the feature gets the owner's rules set to You and allies only", async () => {
+				dialogResult({ rollMode: 0 });
+				const rider = (originAttacker: string, damage: number, advantage: number) => [
+					{
+						type: 'offerAttackBonus',
+						originAttacker,
+						originScope: 'rally',
+						bonusFor: (origin: string) =>
+							origin === 'rally' ? { label: originAttacker, damage, primaryDie: 0 } : null,
+					},
+					{
+						type: 'attackRollMode',
+						originAttacker,
+						originScope: 'rally',
+						changeFor: (origin: string) =>
+							origin === 'rally'
+								? { advantage, ignoreDisadvantage: false, label: originAttacker }
+								: null,
+					},
+				];
+				const owner = {
+					uuid: 'Actor.owner',
+					rules: [...rider('anyone', 3, 1), ...rider('self', 7, 2)],
+				};
+				globals.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Item.rally' ? { system: { identifier: 'rally' }, actor: owner } : null,
+				);
+
+				await rollUnarmedStrike(createHeroicCharacter(), { originUuid: 'Item.rally' });
+
+				expect(dialogMock).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.anything(),
+					expect.any(String),
+					expect.objectContaining({ rollMode: 1 }),
+				);
+				expect(damageRollMock).toHaveBeenCalledWith('1 + 2 + 1d4 + 3', {}, expect.anything());
+			});
 		});
 	});
 

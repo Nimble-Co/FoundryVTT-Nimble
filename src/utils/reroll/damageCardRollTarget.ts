@@ -133,7 +133,7 @@ type RollOptionsView = {
 		maxDamage?: unknown;
 		explosionStyle?: unknown;
 		isVicious?: unknown;
-		origin?: { identifier?: string } | null;
+		origin?: { identifier?: string; uuid?: string } | null;
 		offerSource?: string;
 		fixedAmount?: unknown;
 	} | null;
@@ -174,6 +174,7 @@ function damageRollContext(
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
 	const origin = originIdentifierOfRoll(rolled?.options);
+	const originUuid = rolled?.options?.origin?.uuid;
 	const upcastSteps =
 		(card.system() as { upcast?: { upcastSteps?: number } | null }).upcast?.upcastSteps ?? 0;
 	return {
@@ -195,6 +196,7 @@ function damageRollContext(
 			...(stats.length > 0 ? { stats } : {}),
 			...(upcastSteps > 0 ? { upcastSteps } : {}),
 			...(origin ? { origin } : {}),
+			...(originUuid ? { originUuid } : {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,

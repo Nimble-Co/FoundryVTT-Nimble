@@ -5,6 +5,7 @@ import type { UseCost } from '#types/useCost.d.ts';
 import { ruleLabel, runningRule } from '#utils/actor/actorRules.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { useCostCharges } from '../cost/useCost.js';
+import { originOwnerRules } from '../damage/attackOrigin.js';
 import { incapacitatedConditionOf, incapacitatedFeature } from '../damage/incapacitatedTarget.js';
 import {
 	type AttackOutcomeView,
@@ -353,6 +354,12 @@ function otherCreature(side: RerollSide, context: RerollRollContext): RerollingA
 	return soleTarget(context.targets, { firstDecides: context.firstTargetDecides })?.actor ?? null;
 }
 
+/** The opted-in rules of the creature whose item an attack was made through, when it is not the roller. */
+function originOwnerRulesOf(roller: RerollingActor, context: RerollRollContext): RerollRuleLike[] {
+	if (context.roll.kind !== 'attack' || !context.roll.originUuid) return [];
+	return originOwnerRules<RerollRuleLike>(roller, { uuid: context.roll.originUuid });
+}
+
 /** Who can use a rule on each side of this roll. */
 function rerollUsers(side: RerollSide, context: RerollRollContext): RerollUser[] {
 	if (side === 'roller')
@@ -410,7 +417,9 @@ function collectRerollEntries(context: RerollRollContext): {
 			if (!actor || !actorUuid || !Array.isArray(actor.rules)) continue;
 
 			const rules =
-				side === 'roller' ? [...actor.rules, incapacitatedTargetRule(other)] : actor.rules;
+				side === 'roller'
+					? [...actor.rules, ...originOwnerRulesOf(actor, context), incapacitatedTargetRule(other)]
+					: actor.rules;
 			for (const rule of rules) {
 				if (!isRollUseRule(rule?.type)) continue;
 				if (!fitsTargetCount(rule, side, context, targetTokenUuid)) continue;
