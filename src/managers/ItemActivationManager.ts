@@ -49,7 +49,11 @@ import {
 	settleResourceCosts,
 } from '../utils/cost/itemResourceCosts.js';
 import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
-import { type AttackOrigin, attackOriginOf } from '../utils/damage/attackOrigin.js';
+import {
+	type AttackOrigin,
+	attackOriginName,
+	attackOriginOf,
+} from '../utils/damage/attackOrigin.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusParts,
@@ -372,15 +376,6 @@ class ItemActivationManager {
 		return this.#options.originUuid ? origin : { identifier: origin.identifier };
 	}
 
-	/** The name of the feature this attack was made through, as the player knows it. */
-	#originName(): string {
-		const uuid = this.origin.uuid;
-		const source = uuid
-			? (fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]) as { name?: string } | null)
-			: null;
-		return source?.name ?? '';
-	}
-
 	/** What the rules that reach this attack add because of the feature it was made through. */
 	#offerBonuses: OfferBonus[] = [];
 
@@ -540,7 +535,7 @@ class ItemActivationManager {
 			attackOrigin: this.origin.identifier,
 			sharesOneAttack: this.#isSingleTargetAttack(),
 			attackNote: options.grantedFree
-				? freeAttackNote(this.#originName(), options.ignoresRushed === true)
+				? freeAttackNote(attackOriginName(this.origin.uuid), options.ignoresRushed === true)
 				: undefined,
 		};
 

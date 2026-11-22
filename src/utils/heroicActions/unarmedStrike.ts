@@ -9,7 +9,7 @@ import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
 import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
-import { attackOriginOf } from '#utils/damage/attackOrigin.js';
+import { attackOriginName, attackOriginOf } from '#utils/damage/attackOrigin.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusParts,
@@ -74,14 +74,6 @@ export interface RollUnarmedStrikeOptions {
 	ignoresRushed?: boolean;
 	/** Up to this many targets share one attack: one roll, each target's armor, miss and crit as normal. */
 	sharedTargets?: number;
-}
-
-function originName(uuid: string | undefined): string {
-	if (!uuid) return '';
-	return (
-		(fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0]) as { name?: string } | null)?.name ??
-		''
-	);
 }
 
 function buildRollFormula(
@@ -183,7 +175,9 @@ export async function rollUnarmedStrike(
 		...(rollModeChange.ignoreDisadvantage ? { ignoreDisadvantage: true } : {}),
 		...(origin ? { attackOrigin: origin.identifier } : {}),
 		...(options.free && origin
-			? { attackNote: freeAttackNote(originName(origin.uuid), options.ignoresRushed === true) }
+			? {
+					attackNote: freeAttackNote(attackOriginName(origin.uuid), options.ignoresRushed === true),
+				}
 			: {}),
 		spendsActions:
 			options.rollMode === undefined &&

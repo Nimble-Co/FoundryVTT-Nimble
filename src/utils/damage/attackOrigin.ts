@@ -27,6 +27,12 @@ export function attackOriginOf(item: OriginItem, throughUuid?: string | null): A
 	return { uuid: item.uuid ?? '', identifier: identifierOf(item) };
 }
 
+/** The name of the feature an attack was made through, as the player knows it. Empty when not found. */
+export function attackOriginName(uuid: string | null | undefined): string {
+	if (!uuid) return '';
+	return (fromUuidSync(uuid as `Item.${string}`) as { name?: string } | null)?.name ?? '';
+}
+
 /**
  * Whether an attack with this origin identifier is in the scope of a rule's
  * "Only attacks made through" field. A blank scope takes every attack.

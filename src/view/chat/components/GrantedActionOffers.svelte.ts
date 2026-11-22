@@ -10,6 +10,7 @@ import {
 	makeGrantedAttack,
 } from '#utils/combat/grantedAttack.js';
 import { type GrantedAttackKind, grantedAttackKind } from '#utils/combat/grantedAttackKind.js';
+import { attackOriginName } from '#utils/damage/attackOrigin.js';
 import { UNARMED_STRIKE } from '#utils/damage/weaponAttack.js';
 import { type DocLink, docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 import localize from '#utils/localize.js';
@@ -48,12 +49,7 @@ function canUseOffer(offer: GrantedActionOffer): boolean {
 
 /** The granting feature: its real name when it resolves, else the rule's label. */
 function sourceOf(offer: GrantedActionOffer): DocLink {
-	const item = offer.sourceItemUuid
-		? (fromUuidSync(offer.sourceItemUuid as Parameters<typeof fromUuidSync>[0]) as {
-				name?: string;
-			} | null)
-		: null;
-	return docLink(item?.name || offer.label, offer.sourceItemUuid);
+	return docLink(attackOriginName(offer.sourceItemUuid) || offer.label, offer.sourceItemUuid);
 }
 
 /** The creature that used the feature gets a line only when the rule includes it; it is not a target. */
