@@ -137,6 +137,10 @@
 			i {
 				color: var(--nimble-warning-icon-color);
 			}
+
+			&--warning i {
+				color: var(--nimble-warning-icon-color);
+			}
 		}
 
 		&__empty {

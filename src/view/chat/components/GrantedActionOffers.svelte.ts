@@ -1,4 +1,6 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+import type { OfferCard } from '#types/movement.js';
+import { afterMoveLineShown, afterMoveWarning } from '#utils/combat/afterMoveLine.js';
 import {
 	type GrantedActionOffer,
 	type GrantedActionOfferUsedWith,
@@ -14,6 +16,8 @@ import { attackOriginName } from '#utils/damage/attackOrigin.js';
 import { UNARMED_STRIKE } from '#utils/damage/weaponAttack.js';
 import { type DocLink, docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 import localize from '#utils/localize.js';
+import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
+import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 
 type OfferRecipientActor = Parameters<typeof grantedAttackGroups>[0] & {
 	id?: string | null;
@@ -92,6 +96,7 @@ function overCountWarning(offers: GrantedActionOffer[]): LinkedPart[] | null {
 function sectionsOf(
 	offers: GrantedActionOffer[],
 	shown: (offer: GrantedActionOffer) => boolean,
+	lineWarning: (offer: GrantedActionOffer) => string | null = () => null,
 ): GrantedAttackSection[] {
 	const sections = new Map<GrantedAttackKind, GrantedAttackSection>();
 	for (const offer of offers) {
@@ -108,9 +113,12 @@ function sectionsOf(
 	}
 	for (const section of sections.values()) {
 		if (!section.offers.some((offer) => !offer.used)) continue;
-		section.warning = overCountWarning(
-			offers.filter((offer) => grantedAttackKind(offer) === section.kind),
-		);
+		const ofKind = offers.filter((offer) => grantedAttackKind(offer) === section.kind);
+		const moveWarning = section.offers
+			.filter((offer) => !offer.used)
+			.map(lineWarning)
+			.find((warning) => warning !== null);
+		section.warning = overCountWarning(ofKind) ?? (moveWarning ? [moveWarning] : null);
 	}
 	return [...sections.values()];
 }
@@ -177,7 +185,36 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 		(getMessage()?.reactive?.system as { grantedActionOffers?: GrantedActionOffer[] })
 			?.grantedActionOffers ?? [],
 	);
-	const sections = $derived(sectionsOf(offers, (offer) => offer.used || canUseOffer(offer)));
+	const moveEnded = $derived(
+		afterMoveLineShown(
+			{
+				speaker: (getMessage() as unknown as OfferCard)?.speaker,
+				system: getMessage()?.reactive?.system as OfferCard['system'],
+			},
+			isMovementOffersAutomationEnabled(),
+		),
+	);
+	const sections = $derived(
+		sectionsOf(
+			offers,
+			(offer) => offer.used || (canUseOffer(offer) && (!offer.afterMove || moveEnded)),
+			getAfterMoveWarning,
+		),
+	);
+
+	/** The warning of a line whose check failed where its user stopped, or null. */
+	function getAfterMoveWarning(offer: GrantedActionOffer): string | null {
+		if (!offer.afterMove) return null;
+		const uuid = speakerTokenUuid(getMessage() as unknown as OfferCard);
+		const mover = uuid
+			? fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false })
+			: null;
+		return afterMoveWarning(
+			offer,
+			(mover ?? null) as Parameters<typeof afterMoveWarning>[1],
+			getRecipientActor(offer)?.name ?? '',
+		);
+	}
 
 	function getChosen(offer: GrantedActionOffer, groups: ChoiceGroups): string {
 		return chosenByOffer[offer.id] ?? groups[0]?.choices[0]?.value ?? '';

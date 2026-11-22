@@ -442,4 +442,53 @@ describe('GrantedActionOffers', () => {
 		expect(screen.queryByRole('combobox')).toBeNull();
 		expect(screen.queryByRole('heading')).toBeNull();
 	});
+
+	describe('a line that waits for the move', () => {
+		const SPEAKER_TOKEN = 'Scene.s.Token.hero';
+
+		function moveCard(state: string, mover: unknown) {
+			const g = globalThis as Record<string, any>;
+			g.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === SPEAKER_TOKEN ? mover : createRecipient(),
+			);
+			const message = createMessage([
+				{
+					...createOffer({ free: true, condition: 'If you land adjacent to at least 2 enemies.' }),
+					afterMove: true,
+					afterMoveCheck: 'adjacentEnemies',
+					afterMoveMinEnemies: 2,
+					afterMoveStatus: '',
+				} as never,
+			]) as Record<string, any>;
+			message.speaker = { scene: 's', token: 'hero', actor: 'ally' };
+			message.system.activation = {
+				effects: [{ id: 'leap', type: 'move', kind: 'free', recipient: 'self' }],
+			};
+			message.system.movementOffers = [
+				{ id: 'leap.hero', nodeId: 'leap', tokenUuid: SPEAKER_TOKEN, spaces: 6, state },
+			];
+			return message;
+		}
+
+		const loneMover = { id: 'hero', actor: { uuid: 'Actor.ally' }, parent: { tokens: [] } };
+
+		it('is hidden until the move from the card ends', () => {
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('open', loneMover) },
+			});
+
+			expect(screen.queryByRole('button')).toBeNull();
+			expect(screen.queryByText('If you land adjacent to at least 2 enemies.')).toBeNull();
+		});
+
+		it('shows one warning once the move ended, and the Attack button stays', () => {
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('taken', loneMover) },
+			});
+
+			expect(screen.queryByText('If you land adjacent to at least 2 enemies.')).toBeNull();
+			expect(screen.getByText('Sir Brannon is not next to 2 enemies.')).toBeTruthy();
+			expect(attackButton().disabled).toBe(false);
+		});
+	});
 });

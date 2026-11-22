@@ -8,8 +8,19 @@ import { NimbleBaseRule } from './base.js';
  */
 const GRANTED_ACTIVATION_TYPES = ['weaponAttack'] as const;
 
-/** When the line goes on a card: the item is used, or its owner Interposes. */
-const GRANTED_ACTIVATION_TRIGGERS = ['onActivation', 'onInterpose'] as const;
+/**
+ * When the line goes on a card: the item is used, its user's move from the item's card ends,
+ * or its owner Interposes.
+ */
+const GRANTED_ACTIVATION_TRIGGERS = ['onActivation', 'afterMove', 'onInterpose'] as const;
+
+/** What the card checks at the Stop of the move, to warn when it fails. */
+const AFTER_MOVE_CHECKS = [
+	'none',
+	'adjacentToQuarry',
+	'adjacentEnemies',
+	'adjacentToCondition',
+] as const;
 
 /** The weapons the recipient can attack with. */
 const GRANTED_WEAPON_KINDS = ['any', 'melee', 'ranged', 'unarmed'] as const;
@@ -17,6 +28,11 @@ const GRANTED_WEAPON_KINDS = ['any', 'melee', 'ranged', 'unarmed'] as const;
 type GrantedActivationType = (typeof GRANTED_ACTIVATION_TYPES)[number];
 type GrantedActivationTrigger = (typeof GRANTED_ACTIVATION_TRIGGERS)[number];
 type GrantedWeaponKind = (typeof GRANTED_WEAPON_KINDS)[number];
+type AfterMoveCheck = (typeof AFTER_MOVE_CHECKS)[number];
+
+const afterMove = (data: Record<string, unknown>) => data.trigger === 'afterMove';
+const forUse = (data: Record<string, unknown>) =>
+	data.trigger !== 'onInterpose' && data.trigger !== 'afterMove';
 
 const key = (field: string, part: 'label' | 'hint') =>
 	`NIMBLE.rules.grantActivation.${field}.${part}`;
@@ -57,7 +73,7 @@ function schema() {
 				initial: false,
 				label: key('includesUser', 'label'),
 				hint: key('includesUser', 'hint'),
-				showWhen: (data: Record<string, unknown>) => data.trigger !== 'onInterpose',
+				showWhen: forUse,
 			}),
 		),
 		includesTargets: new fields.BooleanField(
@@ -67,7 +83,7 @@ function schema() {
 				initial: true,
 				label: key('includesTargets', 'label'),
 				hint: key('includesTargets', 'hint'),
-				showWhen: (data: Record<string, unknown>) => data.trigger !== 'onInterpose',
+				showWhen: forUse,
 			}),
 		),
 		targetCount: new fields.NumberField(
@@ -79,8 +95,7 @@ function schema() {
 				initial: 0,
 				label: key('targetCount', 'label'),
 				hint: key('targetCount', 'hint'),
-				showWhen: (data: Record<string, unknown>) =>
-					data.trigger !== 'onInterpose' && data.includesTargets !== false,
+				showWhen: (data: Record<string, unknown>) => forUse(data) && data.includesTargets !== false,
 			}),
 		),
 		weaponKind: new fields.StringField({
@@ -102,6 +117,54 @@ function schema() {
 			label: key('condition', 'label'),
 			hint: key('condition', 'hint'),
 		}),
+		afterMoveCheck: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'none',
+				label: key('afterMoveCheck', 'label'),
+				hint: key('afterMoveCheck', 'hint'),
+				choices: choiceLabels('grantActivation', 'afterMoveCheck', AFTER_MOVE_CHECKS),
+				showWhen: afterMove,
+			}),
+		),
+		afterMoveMinEnemies: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 1,
+				initial: 1,
+				label: key('afterMoveMinEnemies', 'label'),
+				hint: key('afterMoveMinEnemies', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					afterMove(data) && data.afterMoveCheck === 'adjacentEnemies',
+			}),
+		),
+		afterMoveStatus: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: key('afterMoveStatus', 'label'),
+				hint: key('afterMoveStatus', 'hint'),
+				choices: () => CONFIG.NIMBLE.conditions,
+				showWhen: (data: Record<string, unknown>) =>
+					afterMove(data) && data.afterMoveCheck === 'adjacentToCondition',
+			}),
+		),
+		emptyPoolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				label: key('emptyPoolIdentifier', 'label'),
+				hint: key('emptyPoolIdentifier', 'hint'),
+				widget: 'chargePoolPicker',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantActivation' }),
 	};
 }
@@ -137,6 +200,10 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	declare spendsReaction: boolean;
 	declare ignoresRushed: boolean;
 	declare condition: string;
+	declare afterMoveCheck: AfterMoveCheck;
+	declare afterMoveMinEnemies: number;
+	declare afterMoveStatus: string;
+	declare emptyPoolIdentifier: string;
 
 	static override defineSchema(): GrantActivationRule.Schema {
 		return {
@@ -149,7 +216,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['activationType', '"weaponAttack"'],
-				['trigger', '"onActivation" | "onInterpose"'],
+				['trigger', '"onActivation" | "afterMove" | "onInterpose"'],
 				['includesUser', 'boolean'],
 				['includesTargets', 'boolean'],
 				['targetCount', 'number'],
@@ -159,12 +226,20 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 				['spendsReaction', 'boolean'],
 				['ignoresRushed', 'boolean'],
 				['condition', 'string'],
+				[
+					'afterMoveCheck',
+					'"none" | "adjacentToQuarry" | "adjacentEnemies" | "adjacentToCondition"',
+				],
+				['afterMoveMinEnemies', 'number'],
+				['afterMoveStatus', 'string'],
+				['emptyPoolIdentifier', 'string'],
 			]),
 		);
 	}
 }
 
 export {
+	type AfterMoveCheck,
 	GRANTED_WEAPON_KINDS,
 	GrantActivationRule,
 	type GrantedActivationTrigger,

@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { CardEventText, MovementOfferHost } from '#types/cardEvent.d.ts';
 import type { OfferCard } from '#types/movement.js';
 import { activationEventsOf } from '#utils/chat/activationEvents.js';
@@ -27,6 +28,7 @@ const TRIGGERS = [
 	'onTurnStart',
 	'onCritReceived',
 	'afterPoolDiceToMax',
+	'onCritThrough',
 ] as const;
 
 type FreeMoveTrigger = (typeof TRIGGERS)[number];
@@ -187,6 +189,10 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	override async onItemActivated(context: ItemActivatedContext): Promise<void> {
 		if (!this.isOnActor) return;
 		if (!this.test()) return;
+		if (this.trigger === 'onCritThrough') {
+			await this.#offerOnCritThrough(context.card);
+			return;
+		}
 		if (this.trigger !== 'onActivation') return;
 		if (!this.item || context.sourceItem?.uuid !== this.item.uuid) return;
 		const use = activationEventsOf(this.actor);
@@ -258,6 +264,22 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			{ key: `${REASONS}.afterPoolDiceToMax`, data: { item: this.parentDocument.name ?? '' } },
 			null,
 			this.#useHost(),
+		);
+	}
+
+	/** An attack made through this item crit: the move goes on that attack's card. */
+	async #offerOnCritThrough(card: ChatMessage | null): Promise<void> {
+		if (!card || !this.item?.uuid) return;
+		const flags = (card as unknown as { flags?: Record<string, unknown> }).flags?.[SYSTEM_ID] as
+			| { origin?: { uuid?: string } }
+			| undefined;
+		if (flags?.origin?.uuid !== this.item.uuid) return;
+		const outcome = (card as unknown as { system?: { isCritical?: boolean } }).system ?? {};
+		if (!firesCritTriggers(outcome)) return;
+		await this.#offer(
+			{ key: `${REASONS}.onCritThrough`, data: { item: this.parentDocument.name ?? '' } },
+			speakerToken(card),
+			{ card },
 		);
 	}
 

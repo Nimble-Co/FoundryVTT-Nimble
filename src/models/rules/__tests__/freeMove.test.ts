@@ -210,6 +210,7 @@ describe('FreeMoveRule', () => {
 				'onTurnStart',
 				'onCritReceived',
 				'afterPoolDiceToMax',
+				'onCritThrough',
 			]);
 			expect(schema.poolIdentifier?.initial).toBe('');
 			expect(schema.distance?.initial).toBe('@speed');
@@ -358,6 +359,57 @@ describe('FreeMoveRule', () => {
 
 		it('ignores the event when set to another trigger', async () => {
 			await activate(makeRule({ trigger: 'onTurnStart' }));
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('onCritThrough', () => {
+		const weapon = { uuid: 'Actor.hero-actor.Item.dagger' };
+		const attackCard = (isCritical: boolean, originUuid = 'Actor.hero-actor.Item.step') => ({
+			id: 'attack',
+			system: { isCritical, isMiss: false },
+			flags: { [SYSTEM_ID]: { origin: { uuid: originUuid, identifier: '' } } },
+		});
+
+		it('puts a move on the card of a crit made through its item', async () => {
+			const harness = makeRule({ trigger: 'onCritThrough', distance: '4' });
+			const card = attackCard(true);
+			offerHosts.length = 0;
+			await harness.rule.onItemActivated({
+				sourceItem: weapon,
+				sourceActor: harness.actor,
+				card,
+			} as never);
+
+			expect(lastOffer().node).toMatchObject({ kind: 'free', distance: '4' });
+			expect(lastOffer().recipients).toBe('self');
+			expect(offerHosts.at(-1)).toEqual({ card });
+		});
+
+		it('does nothing for a hit that is not a crit, or a crit made another way', async () => {
+			const harness = makeRule({ trigger: 'onCritThrough' });
+			await harness.rule.onItemActivated({
+				sourceItem: weapon,
+				sourceActor: harness.actor,
+				card: attackCard(false),
+			} as never);
+			await harness.rule.onItemActivated({
+				sourceItem: weapon,
+				sourceActor: harness.actor,
+				card: attackCard(true, 'Actor.hero-actor.Item.other'),
+			} as never);
+			await harness.rule.onItemActivated({
+				sourceItem: weapon,
+				sourceActor: harness.actor,
+				card: null,
+			} as never);
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('does nothing when its own item is used', async () => {
+			const harness = makeRule({ trigger: 'onCritThrough' });
+			await activate(harness);
 			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 	});

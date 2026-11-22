@@ -730,6 +730,12 @@
 				"extraTarget": "{count} more within Reach {reach} ({source})",
 				"extraTargetAnyReach": "{count} more ({source})",
 				"noEligibleItems": "No weapon to attack with.",
+				"afterMoveWarnings": {
+					"adjacentToQuarry": "{name} is not next to their quarry.",
+					"adjacentEnemies": "{name} is not next to {min} enemies.",
+					"adjacentToCondition": "{name} is not next to a {condition} creature."
+				},
+				"emptyPoolWarning": "{item} is for when {pool} has no charges. You still have some.",
 				"used": "{name} attacked.",
 				"usedWith": "{name} attacked with {weapon}.",
 				"targetCountOne": "{source} reaches 1 creature. {names} are targeted.",
@@ -2614,9 +2620,10 @@
 				},
 				"trigger": {
 					"label": "When",
-					"hint": "When the line goes on a card. On use: this item's card gets a line for each targeted creature. On Interpose: when the owner of this item Interposes, the card of the attack gets a line for them.",
+					"hint": "When the line goes on a card. On use: this item's card gets a line for each targeted creature. After the move: this item's card gets a line for the user, shown once the user's move from the card ends. On Interpose: when the owner of this item Interposes, the card of the attack gets a line for them.",
 					"choices": {
 						"onActivation": "When this item is used",
+						"afterMove": "When the user's move from this item ends",
 						"onInterpose": "When its owner Interposes"
 					}
 				},
@@ -2661,13 +2668,35 @@
 				"condition": {
 					"label": "Condition",
 					"hint": "Text under the line's label, for a condition the table checks (e.g. If you end adjacent to your quarry)."
+				},
+				"afterMoveCheck": {
+					"label": "Check at the end of the move",
+					"hint": "What the card checks where the user stops. When the check fails, the line shows a warning. The Attack button stays.",
+					"choices": {
+						"none": "No check",
+						"adjacentToQuarry": "Adjacent to the quarry",
+						"adjacentEnemies": "Adjacent to enough enemies",
+						"adjacentToCondition": "Adjacent to a creature with a condition"
+					}
+				},
+				"afterMoveMinEnemies": {
+					"label": "Enemies",
+					"hint": "The fewest enemies that must be adjacent to the user."
+				},
+				"afterMoveStatus": {
+					"label": "Condition of the creature",
+					"hint": "The condition an adjacent creature must have."
+				},
+				"emptyPoolIdentifier": {
+					"label": "Needs an empty pool",
+					"hint": "When the item is used while this charge pool has charges, a warning shows. The use goes on."
 				}
 			},
 			"freeMove": {
 				"description": "Let a creature move for free, on a chat card, when an event occurs. The player chooses where to move, or chooses not to move.",
 				"trigger": {
 					"label": "Trigger",
-					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires."
+					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires. onCritThrough: an attack made through this item is a crit; the move goes on the card of that attack."
 				},
 				"poolIdentifier": {
 					"label": "Dice pool",
@@ -2707,7 +2736,8 @@
 					"onInitiativeRolled": "rolled Initiative",
 					"onTurnStart": "turn started",
 					"afterPoolDiceToMax": "{item} lets you move.",
-					"onCritReceived": "took a critical hit"
+					"onCritReceived": "took a critical hit",
+					"onCritThrough": "crit with {item}"
 				}
 			},
 			"movementTrigger": {

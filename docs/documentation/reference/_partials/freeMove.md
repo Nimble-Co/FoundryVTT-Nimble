@@ -16,3 +16,5 @@ The rule posts nothing while the **Pushes, Pulls and Moves for Free** toggle is 
 **Whisper the card** is not set by default, so everyone sees the card. Set it to show the card only to the feature's owner, the players whose creatures get the move, and the GM. The ruler still shows the Free Move to everyone who sees the drag.
 
 **Charge pool** limits how often the rule posts its card. With a 1/round pool, the rule posts once a round and spends the charge when its card posts. Leave it empty for no limit.
+
+**Trigger** `onCritThrough` puts the move on the card of an attack made through this item, when that attack is a crit. How'd YOU get here?! uses it: its card gives the Cheat an attack line, and a crit with that attack lets them "teleport" up to 4 spaces again.

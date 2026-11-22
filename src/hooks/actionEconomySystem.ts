@@ -1,6 +1,10 @@
 import { SYSTEM_ID, systemHookName } from '#system';
+import { rulePoolState } from '#utils/chargePool/ruleChargeGate.js';
 import { buildActionDeltaSummary } from '#utils/combat/actionDeltaSummary.js';
-import { collectGrantedActionOffers } from '#utils/combat/grantedActionOffers.js';
+import {
+	collectGrantedActionOffers,
+	emptyPoolWarnings,
+} from '#utils/combat/grantedActionOffers.js';
 import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
 import { requestCombatantActionDelta } from '#utils/combat/requestCombatantActionDelta.js';
 import type { ActionDeltaApplication, ActionDeltaRule } from '../models/rules/actionDelta.js';
@@ -223,6 +227,13 @@ function handleUseItem(item: unknown, chatMessage: unknown, context: unknown): v
 	const targets = ((context as UseItemContext | null)?.targets ?? []).filter(
 		(target): target is UseItemTarget => Boolean(target),
 	);
+
+	for (const warning of emptyPoolWarnings(
+		typedItem as Parameters<typeof emptyPoolWarnings>[0],
+		(identifier) => rulePoolState(typedItem.actor as Actor | null, identifier),
+	)) {
+		ui.notifications?.warn(warning);
+	}
 
 	const summary = applyActionDeltas(typedItem, targets);
 	const offers = collectOffersForCard(typedItem, targets, message);

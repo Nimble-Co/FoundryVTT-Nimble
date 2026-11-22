@@ -7,7 +7,31 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "into-the-fray-attack",
+				"identifier": "",
+				"label": "Into the Fray",
+				"predicate": {},
+				"priority": 1,
+				"activationType": "weaponAttack",
+				"trigger": "afterMove",
+				"includesUser": true,
+				"includesTargets": false,
+				"weaponKind": "any",
+				"allowsCantrips": false,
+				"free": true,
+				"spendsReaction": false,
+				"ignoresRushed": false,
+				"condition": "If you land adjacent to at least 2 enemies, make an attack against 1 of them for free.",
+				"afterMoveCheck": "adjacentEnemies",
+				"afterMoveMinEnemies": 2,
+				"afterMoveStatus": "",
+				"emptyPoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -21,7 +45,20 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "n4mCxwAO8D9Rktxd",
+					"type": "move",
+					"kind": "free",
+					"recipient": "self",
+					"distance": "2 * @dexterity",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": false,
+					"direction": "any",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

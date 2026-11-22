@@ -1,5 +1,6 @@
 import { SYSTEM_ID } from '#system';
 import type {
+	AfterMoveCheck,
 	GrantedActivationTrigger,
 	GrantedActivationType,
 	GrantedWeaponKind,
@@ -7,6 +8,7 @@ import type {
 import { ruleLabel, rulesOfType } from '../actor/actorRules.js';
 import { identifierOf } from '../documents/itemIdentifier.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
+import localize from '../localize.js';
 
 /**
  * Foundry system socket channel. Must be `system.<id>` so the request reaches the GM's
@@ -51,6 +53,13 @@ interface GrantedActionOffer {
 	targetCount: number;
 	/** How many targeted creatures got a line from the rule. More than the count: the card warns. */
 	targetedCount: number;
+	/** The line shows only after the user's move from the same card ends. */
+	afterMove: boolean;
+	/** What the card checks at the Stop, to warn when it fails. */
+	afterMoveCheck: AfterMoveCheck;
+	afterMoveMinEnemies: number;
+	/** The condition an adjacent creature must have. */
+	afterMoveStatus: string;
 	used: boolean;
 	/** Id of the user who consumed the offer */
 	usedBy: string | null;
@@ -87,6 +96,10 @@ interface GrantActivationRuleLike {
 	ignoresRushed?: boolean;
 	condition?: string;
 	targetCount?: number;
+	afterMoveCheck?: AfterMoveCheck;
+	afterMoveMinEnemies?: number;
+	afterMoveStatus?: string;
+	emptyPoolIdentifier?: string;
 	appliesTo?: () => boolean;
 }
 
@@ -105,14 +118,14 @@ interface OfferTargetToken {
 
 function grantRulesOf(
 	item: OfferGrantingItem,
-	trigger: GrantedActivationTrigger,
+	...triggers: GrantedActivationTrigger[]
 ): GrantActivationRuleLike[] {
 	const rules =
 		item.rules && typeof item.rules.values === 'function' ? [...item.rules.values()] : [];
 	return rules.filter(
 		(rule) =>
 			rule?.type === GRANT_ACTIVATION_RULE_TYPE &&
-			(rule.trigger ?? 'onActivation') === trigger &&
+			triggers.includes(rule.trigger ?? 'onActivation') &&
 			rule.appliesTo?.(),
 	);
 }
@@ -140,6 +153,10 @@ function offerOf(
 		condition: rule.condition ?? '',
 		targetCount: targetCount > 0 ? targetCount + extraTargets : 0,
 		targetedCount: targeted,
+		afterMove: rule.trigger === 'afterMove',
+		afterMoveCheck: rule.trigger === 'afterMove' ? (rule.afterMoveCheck ?? 'none') : 'none',
+		afterMoveMinEnemies: rule.afterMoveMinEnemies ?? 1,
+		afterMoveStatus: rule.afterMoveStatus ?? '',
 		used: false,
 		usedBy: null,
 		usedWith: null,
@@ -150,14 +167,15 @@ function offerOf(
  * Build the granted-activation offers a used item extends to the user's
  * current targets, one offer per (rule, target actor). The activating actor
  * gets an offer from their own activation only when the rule says so, and the
- * targets get none when the rule is not for them. A rule's target count is
- * reported on its lines, not enforced: every target still gets a line.
+ * targets get none when the rule is not for them. A line that waits for the
+ * user's move is for the user alone. A rule's target count is reported on its
+ * lines, not enforced: every target still gets a line.
  */
 export function collectGrantedActionOffers(
 	item: OfferGrantingItem,
 	targets: OfferTargetToken[],
 ): GrantedActionOffer[] {
-	const grantRules = grantRulesOf(item, 'onActivation');
+	const grantRules = grantRulesOf(item, 'onActivation', 'afterMove');
 	if (grantRules.length < 1) return [];
 
 	const sourceActorUuid = item.actor?.uuid ?? '';
@@ -169,17 +187,19 @@ export function collectGrantedActionOffers(
 	const offersByKey = new Map<string, GrantedActionOffer>();
 
 	for (const rule of grantRules) {
-		const ruleTargets = rule.includesTargets === false ? [] : targets;
+		const afterMove = rule.trigger === 'afterMove';
+		const includesUser = afterMove || rule.includesUser;
+		const ruleTargets = afterMove || rule.includesTargets === false ? [] : targets;
 		const targeted = new Set(
 			ruleTargets
 				.map((target) => target.actor?.uuid ?? '')
 				.filter((uuid) => uuid && uuid !== sourceActorUuid),
 		).size;
-		const recipients = rule.includesUser ? [{ actor: item.actor }, ...ruleTargets] : ruleTargets;
+		const recipients = includesUser ? [{ actor: item.actor }, ...ruleTargets] : ruleTargets;
 		for (const target of recipients) {
 			const targetActorUuid = target.actor?.uuid ?? '';
 			if (!targetActorUuid) continue;
-			if (targetActorUuid === sourceActorUuid && !rule.includesUser) continue;
+			if (targetActorUuid === sourceActorUuid && !includesUser) continue;
 
 			const key = `${rule.id ?? ''}:${targetActorUuid}`;
 			if (offersByKey.has(key)) continue;
@@ -189,6 +209,27 @@ export function collectGrantedActionOffers(
 	}
 
 	return Array.from(offersByKey.values());
+}
+
+/**
+ * The warnings to show when the item is used while a pool its rules need empty has charges. The
+ * use goes on: the table decides.
+ */
+export function emptyPoolWarnings(
+	item: OfferGrantingItem,
+	poolOf: (identifier: string) => { label: string; current: number } | null,
+): string[] {
+	return grantRulesOf(item, 'onActivation', 'afterMove').flatMap((rule) => {
+		const identifier = rule.emptyPoolIdentifier?.trim();
+		const pool = identifier ? poolOf(identifier) : null;
+		if (!pool || pool.current <= 0) return [];
+		return [
+			localize('NIMBLE.chat.grantedActionOffers.emptyPoolWarning', {
+				item: item.name ?? '',
+				pool: pool.label,
+			}),
+		];
+	});
 }
 
 /** The lines the actor's own rules give them when they Interpose. */

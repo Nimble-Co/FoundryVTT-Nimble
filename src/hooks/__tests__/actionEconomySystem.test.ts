@@ -6,6 +6,7 @@ vi.mock('#system', () => ({
 }));
 vi.mock('#utils/combat/grantedActionOffers.js', () => ({
 	collectGrantedActionOffers: vi.fn(() => []),
+	emptyPoolWarnings: vi.fn(() => []),
 }));
 vi.mock('#utils/combat/requestCombatantActionDelta.js', () => ({
 	requestCombatantActionDelta: vi.fn(),
@@ -14,7 +15,10 @@ vi.mock('#utils/combat/isCombatantDead.js', () => ({
 	isCombatantDead: (combatant: { dead?: boolean }) => Boolean(combatant?.dead),
 }));
 
-import { collectGrantedActionOffers } from '#utils/combat/grantedActionOffers.js';
+import {
+	collectGrantedActionOffers,
+	emptyPoolWarnings,
+} from '#utils/combat/grantedActionOffers.js';
 import { handleUseItem, resolveTargetCombatants } from '../actionEconomySystem.js';
 
 const FRIENDLY = 1;
@@ -178,5 +182,18 @@ describe('handleUseItem', () => {
 		handleUseItem(makeItem([]), { system: { grantedActionOffers: [] }, update }, { targets: [] });
 
 		expect(update).not.toHaveBeenCalled();
+	});
+
+	it('shows each warning of a pool that should be empty, and the use goes on', () => {
+		vi.mocked(emptyPoolWarnings).mockReturnValueOnce(['Roll & Strike: Thrill is not empty.']);
+		const warn = vi.fn();
+		(globalThis as Record<string, any>).ui = { notifications: { warn } };
+		vi.mocked(collectGrantedActionOffers).mockReturnValue([{ id: 'offer' }] as never);
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+
+		handleUseItem(makeItem([]), { system: { grantedActionOffers: [] }, update }, { targets: [] });
+
+		expect(warn).toHaveBeenCalledWith('Roll & Strike: Thrill is not empty.');
+		expect(update).toHaveBeenCalledTimes(1);
 	});
 });

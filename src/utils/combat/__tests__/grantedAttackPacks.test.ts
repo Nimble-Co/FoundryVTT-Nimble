@@ -303,3 +303,108 @@ describe('the rules of the pack documents these lines change', () => {
 		expect(await packRuleFailures(readItem(`packs/${path}`))).toEqual([]);
 	});
 });
+
+describe.each([
+	{
+		name: 'Roll & Strike',
+		path: 'classFeatures/core/hunter/hunter-progression/roll-and-strike.json',
+		distance: '@speed',
+		line: {
+			weaponKind: 'melee',
+			afterMoveCheck: 'adjacentToQuarry',
+			condition: 'If you end adjacent to your quarry, make a melee attack against them for free.',
+		},
+	},
+	{
+		name: 'Into the Fray',
+		path: 'classFeatures/core/berserker/savage-arsenal/into-the-fray.json',
+		distance: '2 * @dexterity',
+		line: {
+			weaponKind: 'any',
+			afterMoveCheck: 'adjacentEnemies',
+			afterMoveMinEnemies: 2,
+			condition:
+				'If you land adjacent to at least 2 enemies, make an attack against 1 of them for free.',
+		},
+	},
+	{
+		name: "How'd YOU get here?!",
+		path: 'classFeatures/core/the-cheat/underhanded-abilities/how-you-get-here.json',
+		distance: '4',
+		line: {
+			weaponKind: 'melee',
+			afterMoveCheck: 'adjacentToCondition',
+			afterMoveStatus: 'distracted',
+			condition: 'Make a melee attack against the Distracted target you appear next to.',
+		},
+	},
+])('$name', ({ path, distance, line }) => {
+	const source = JSON.parse(readFileSync(resolve(__dirname, '../../../../packs', path), 'utf8'));
+	const feature = packFeature(path, 'Actor.hero');
+
+	it('lets the user move for free, up to the distance', () => {
+		expect(source.system.activation.effects).toEqual([
+			expect.objectContaining({
+				type: 'move',
+				kind: 'free',
+				recipient: 'self',
+				distance,
+				parentNode: null,
+			}),
+		]);
+	});
+
+	it('gives the user alone a free attack line once the move ends, with its check', () => {
+		const lines = collectGrantedActionOffers(feature, [{ actor: { uuid: 'Actor.goblin' } }]);
+
+		expect(lines).toEqual([
+			expect.objectContaining({
+				targetActorUuid: 'Actor.hero',
+				free: true,
+				afterMove: true,
+				...line,
+			}),
+		]);
+	});
+
+	it('has no em-dash or middle dot in its text', () => {
+		const text = readFileSync(resolve(__dirname, '../../../../packs', path), 'utf8');
+		expect(text).not.toMatch(/[—·]/);
+	});
+});
+
+describe('Roll & Strike charges', () => {
+	it('needs Thrill of the Hunt empty, and warns at use when it is not', () => {
+		const feature = packFeature(
+			'classFeatures/core/hunter/hunter-progression/roll-and-strike.json',
+			'Actor.hunter',
+		);
+		const rule = [...feature.rules.values()].find((entry) => entry.type === 'grantActivation');
+
+		expect(rule).toMatchObject({ emptyPoolIdentifier: 'thrill-of-the-hunt' });
+	});
+});
+
+describe("How'd YOU get here?! crit", () => {
+	it('lets the Cheat "teleport" again on the card of an attack made through it that crits', () => {
+		const source = JSON.parse(
+			readFileSync(
+				resolve(
+					__dirname,
+					'../../../../packs',
+					'classFeatures/core/the-cheat/underhanded-abilities/how-you-get-here.json',
+				),
+				'utf8',
+			),
+		);
+
+		expect(source.system.rules).toContainEqual(
+			expect.objectContaining({
+				type: 'freeMove',
+				trigger: 'onCritThrough',
+				distance: '4',
+				recipient: 'self',
+			}),
+		);
+	});
+});

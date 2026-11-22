@@ -6,7 +6,49 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "how-you-get-here-attack",
+				"identifier": "",
+				"label": "How'd YOU get here?!",
+				"predicate": {},
+				"priority": 1,
+				"activationType": "weaponAttack",
+				"trigger": "afterMove",
+				"includesUser": true,
+				"includesTargets": false,
+				"weaponKind": "melee",
+				"allowsCantrips": false,
+				"free": true,
+				"spendsReaction": false,
+				"ignoresRushed": false,
+				"condition": "Make a melee attack against the Distracted target you appear next to.",
+				"afterMoveCheck": "adjacentToCondition",
+				"afterMoveMinEnemies": 1,
+				"afterMoveStatus": "distracted",
+				"emptyPoolIdentifier": ""
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "how-you-get-here-teleport-again",
+				"identifier": "",
+				"label": "“Teleport” again",
+				"predicate": {},
+				"priority": 1,
+				"trigger": "onCritThrough",
+				"poolIdentifier": "",
+				"distance": "4",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": "",
+				"whisper": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +62,20 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "qgGIF2lqPhHN43Cj",
+					"type": "move",
+					"kind": "free",
+					"recipient": "self",
+					"distance": "4",
+					"distanceBySize": {},
+					"ignoreDifficultTerrain": false,
+					"direction": "any",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

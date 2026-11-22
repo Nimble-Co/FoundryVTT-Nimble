@@ -123,6 +123,21 @@ export const grantedActionOffers = () => ({
 				min: 0,
 				initial: 0,
 			}),
+			afterMove: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			afterMoveCheck: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'none',
+				choices: ['none', 'adjacentToQuarry', 'adjacentEnemies', 'adjacentToCondition'],
+			}),
+			afterMoveMinEnemies: new fields.NumberField({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 1,
+				initial: 1,
+			}),
+			afterMoveStatus: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
 			usedWith: new fields.SchemaField(
