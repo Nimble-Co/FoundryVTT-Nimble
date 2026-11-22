@@ -115,11 +115,8 @@ export function createItemActivationConfigDialogState(
 	const spendableChargePools: SpendableChargePool[] = extractSpendableChargePools(actor);
 	const variableChargeSpends: VariableChargeSpend[] = extractVariableChargeSpends(actor, item);
 
-	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
-	// advantage and bonus damage. Snapshot what applies against the target at
-	// dialog-open time; with two or more targets, a bonus that tests the target is
-	// not offered. If the player retargets while the dialog is open, the choice is
-	// not checked again at submit.
+	// The actor that target tests read, taken when the dialog opens. None with two or more
+	// targets, unless the first target decides for a single-target attack.
 	const firstTargetActor = (
 		soleTarget(game.user?.targets, {
 			firstDecides:
@@ -212,11 +209,10 @@ export function createItemActivationConfigDialogState(
 	const initialConditionLines = conditionLinesFor(weapons[0] ?? null);
 	let conditionLines = $state(initialConditionLines);
 
-	// Conditional bonuses (e.g. Hunter's quarry) offer a per-attack choice between
-	// advantage and bonus damage. Snapshot what applies against the target at
-	// dialog-open time; with two or more targets, a bonus that tests the target is
-	// not offered. If the player retargets while the dialog is open, the choice is
-	// not checked again at submit.
+	// Conditional bonuses offer a per-attack choice between advantage and bonus damage.
+	// Snapshot what applies against the target at dialog-open time; with two or more
+	// targets, a bonus that tests the target is not offered. If the player retargets while
+	// the dialog is open, the choice is not checked again at submit.
 	const conditionalBonusesFor = (weapon: WeaponOption | null) =>
 		getActiveConditionalBonuses(
 			actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
