@@ -231,6 +231,7 @@ describe('rule types that need an item', () => {
 				'diceConsumer',
 				'dicePool',
 				'dieResultEffect',
+				'extraTargets',
 				'freeAssess',
 				'grantActivation',
 				'grantItem',

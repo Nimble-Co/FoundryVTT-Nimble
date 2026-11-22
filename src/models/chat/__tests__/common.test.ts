@@ -34,6 +34,12 @@ describe('grantedActionOffers schema factory', () => {
 			'activationType',
 			'ruleId',
 			'sourceItemUuid',
+			'free',
+			'spendsReaction',
+			'weaponKind',
+			'allowsCantrips',
+			'ignoresRushed',
+			'condition',
 			'used',
 			'usedBy',
 		]);
