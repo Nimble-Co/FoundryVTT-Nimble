@@ -2,6 +2,7 @@
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { useTargetChanges } from '../utils/useTargetChanges.svelte.ts';
 	import { ricochetLineOf } from './ricochetLine.ts';
 
@@ -32,7 +33,7 @@
 
 	async function act() {
 		const action = line?.action;
-		if (!messageDocument || !action || action.disabled || busy) return;
+		if (!messageDocument || !action || busy) return;
 		busy = true;
 		try {
 			if (action.kind === 'apply')
@@ -48,7 +49,7 @@
 	<section class="nimble-effect nimble-ricochet">
 		<p class="nimble-ricochet__text">
 			<i class="fa-solid fa-arrows-turn-right" aria-hidden="true"></i>
-			<span>{line.text}</span>
+			<span><LinkedText parts={line.parts} /></span>
 		</p>
 		{#if line.action}
 			<button
@@ -56,7 +57,7 @@
 				data-button-variant="card-action"
 				style="--nimble-card-action-color: currentColor"
 				type="button"
-				disabled={line.action.disabled || busy}
+				disabled={busy}
 				onclick={act}
 			>
 				{line.action.label}

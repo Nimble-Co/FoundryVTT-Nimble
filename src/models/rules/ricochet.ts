@@ -1,4 +1,4 @@
-import { ruleLabel } from '../../utils/actor/actorRules.js';
+import { ruleSource } from '../../utils/actor/actorRules.js';
 import { NimbleBaseRule } from './base.js';
 
 const WEAPON_PROPERTIES = ['', 'light', 'load', 'thrown', 'twoHanded', 'vicious'] as const;
@@ -51,6 +51,7 @@ declare namespace RicochetRule {
 /** The weapon of an attack, as a ricochet reads it. */
 interface RicochetWeapon {
 	name?: string | null;
+	uuid?: string | null;
 	system?: { weaponType?: string | null; properties?: { selected?: readonly string[] } } | null;
 }
 
@@ -58,10 +59,13 @@ interface RicochetWeapon {
 interface Ricochet {
 	/** What the card line calls the rule: its label, or the name of its item. */
 	source: string;
+	/** The uuid of the rule's item or effect, so its name can open it. */
+	sourceUuid?: string;
 	/** The reach the other creature is within, shown as text. */
 	reach: number;
 	/** The weapon's name when only a throw ricochets: the card cannot tell a throw from a melee hit. */
 	thrownWeapon?: string;
+	weaponUuid?: string;
 }
 
 function words(text: string | null | undefined): string[] {
@@ -111,10 +115,17 @@ class RicochetRule extends NimbleBaseRule<RicochetRule.Schema> {
 		if (word && !isNamed(weapon, word)) return null;
 		const property = this.weaponProperty ?? '';
 		if (property && !weapon.system?.properties?.selected?.includes(property)) return null;
+		const source = ruleSource(this);
 		return {
-			source: ruleLabel(this),
+			source: source.name,
+			...(source.uuid ? { sourceUuid: source.uuid } : {}),
 			reach: Math.max(0, Math.trunc(Number(this.reach) || 0)),
-			...(property === 'thrown' ? { thrownWeapon: weapon.name || word } : {}),
+			...(property === 'thrown'
+				? {
+						thrownWeapon: weapon.name || word,
+						...(weapon.uuid ? { weaponUuid: weapon.uuid } : {}),
+					}
+				: {}),
 		};
 	}
 }

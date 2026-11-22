@@ -26,6 +26,7 @@ function ricochet(data: Record<string, unknown>, options: { embedded?: boolean }
 function weapon(name: string, properties: string[] = ['light', 'thrown'], weaponType = '') {
 	return {
 		name,
+		uuid: `Actor.cheat.Item.${name}`,
 		type: 'object',
 		system: { objectType: 'weapon', weaponType, properties: { selected: properties } },
 	};
@@ -47,8 +48,10 @@ describe('RicochetRule', () => {
 
 		expect(rule.ricochetFor(weapon('Dagger'))).toEqual({
 			source: 'Trickshot',
+			sourceUuid: 'Actor.cheat.Item.trickshot',
 			reach: 2,
 			thrownWeapon: 'Dagger',
+			weaponUuid: 'Actor.cheat.Item.Dagger',
 		});
 		expect(rule.ricochetFor(weapon('Venomfang Dagger'))).not.toBeNull();
 		expect(rule.ricochetFor(weapon('Mindlink Daggers'))).not.toBeNull();
@@ -71,6 +74,7 @@ describe('RicochetRule', () => {
 	it('names the thrown weapon only when the rule asks for a thrown weapon', () => {
 		expect(ricochet({ weapon: 'dagger' }).ricochetFor(weapon('Dagger'))).toEqual({
 			source: 'Trickshot',
+			sourceUuid: 'Actor.cheat.Item.trickshot',
 			reach: 2,
 		});
 	});

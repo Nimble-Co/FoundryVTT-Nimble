@@ -51,7 +51,6 @@
 
 				{#if nodeGroup === firstDamageGroup}
 					<DefendReactions />
-					<RicochetLine />
 				{/if}
 
 				{#if game.user?.isGM}
@@ -59,6 +58,10 @@
 						<LatchedMissButton />
 						<ApplyDamageButton nodes={nodeGroup} />
 					</section>
+				{/if}
+
+				{#if nodeGroup === firstDamageGroup}
+					<RicochetLine />
 				{/if}
 			{/if}
 		</section>

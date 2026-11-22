@@ -99,17 +99,24 @@ interface RangedActivation {
 	targets?: { attackType?: string; distance?: number };
 }
 
+/** The halved range of a half range attack at range, or undefined. */
+function halfRangeDistance(activation: RangedActivation | null | undefined): number | undefined {
+	if (!activation?.halfRange || activation.targets?.attackType !== 'range') return undefined;
+	return activation.targets.distance;
+}
+
 /** "Range 8 (half range)" for a half range attack at range, else an empty string. */
 export function halfRangeText(activation: RangedActivation | null | undefined): string {
-	const distance = activation?.targets?.distance;
-	if (
-		!activation?.halfRange ||
-		activation.targets?.attackType !== 'range' ||
-		distance === undefined
-	) {
-		return '';
-	}
+	const distance = halfRangeDistance(activation);
+	if (distance === undefined) return '';
 	return localize('NIMBLE.rollWindow.halfRange', { distance: String(distance) });
+}
+
+/** "Range 8" for a half range attack at range, else an empty string: the card's description says half range. */
+export function halfRangeTag(activation: RangedActivation | null | undefined): string {
+	const distance = halfRangeDistance(activation);
+	if (distance === undefined) return '';
+	return localize('NIMBLE.npcSheet.range', { distance: String(distance) });
 }
 
 interface WeaponOwner {

@@ -19,7 +19,7 @@ describe('the dice division of the roll window', () => {
 			['Kobold', 1],
 		]);
 		expect(state.heading).toBe('Divide the dice (Grim Harrow)');
-		expect(state.totalLine).toBe('3 of 3 dice given out');
+		expect(state.totalLine).toBe('3/3 dice set');
 		expect(state.cannotRollReason).toBe('');
 	});
 
@@ -37,7 +37,7 @@ describe('the dice division of the roll window', () => {
 
 		state.adjust('Token.goblin', -2);
 
-		expect(state.totalLine).toBe('1 of 3 dice given out');
+		expect(state.totalLine).toBe('1/3 dice set');
 		expect(state.cannotRollReason).toBe('Give out every die before you roll.');
 		expect(state.rows[0]?.limit).toBe(2);
 	});

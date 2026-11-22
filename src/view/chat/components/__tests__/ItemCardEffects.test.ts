@@ -102,6 +102,26 @@ function applyButtons() {
 	return screen.queryAllByRole('button', { name: /apply damage/i });
 }
 
+describe('the ricochet line', () => {
+	it('sits below Apply Damage', () => {
+		const message = createMessage([[damageNode('a', 'piercing', 7)]]);
+		message.cardRicochet = {
+			ricochet: () => ({ source: 'Trickshot', reach: 2 }),
+			record: {},
+			damage: () => 3,
+		} as never;
+		gameStub().user = {
+			isGM: true,
+			targets: new Set([{ document: { uuid: 'Token.kobold', name: 'Kobold' } }]),
+		};
+		render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
+
+		const [apply] = applyButtons();
+		const ricochet = screen.getByRole('button', { name: 'Apply 3 Damage to Kobold' });
+		expect(apply?.compareDocumentPosition(ricochet)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+	});
+});
+
 describe('ItemCardEffects apply-damage controls', () => {
 	it('renders one control for a card with a single damage packet', () => {
 		render(ItemCardEffectsTestHarness, {

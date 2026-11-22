@@ -181,6 +181,7 @@ describe('the ricochet damage', () => {
 		expect(card.setFlag).toHaveBeenCalledWith(SYSTEM_ID, 'ricochet', {
 			targetUuid: KOBOLD,
 			applied: true,
+			amount: 3,
 		});
 	});
 

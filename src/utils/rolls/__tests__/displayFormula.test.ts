@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { displayFormula } from '../displayFormula.ts';
+import { displayFormula, formulaValue } from '../displayFormula.ts';
 
 describe('displayFormula', () => {
 	it('works out a dice count in parentheses', () => {
@@ -40,5 +40,16 @@ describe('displayFormula', () => {
 	it('gives back a formula it cannot read with only the labels taken out', () => {
 		expect(displayFormula('1d8 + @missing.value')).toBe('1d8 + @missing.value');
 		expect(displayFormula('')).toBe('');
+	});
+});
+
+describe('formulaValue', () => {
+	it('works out a formula with no dice, with the roll data put in', () => {
+		expect(formulaValue('(2 + floor(@level / 5))', { level: 10 })).toBe(4);
+	});
+
+	it('is null for dice or a formula it cannot read', () => {
+		expect(formulaValue('1d6 + 2')).toBeNull();
+		expect(formulaValue('level + 2')).toBeNull();
 	});
 });

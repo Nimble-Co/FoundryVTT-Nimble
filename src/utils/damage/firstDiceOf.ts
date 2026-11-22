@@ -1,3 +1,5 @@
+import { formulaValue } from '#utils/rolls/displayFormula.ts';
+
 /** The first dice term of a formula: how many dice, their faces, and where its count is written. */
 export interface FirstDice {
 	count: number;
@@ -24,14 +26,8 @@ function countStartOf(formula: string, dieIndex: number): number {
 }
 
 function workedOutCount(text: string, rollData: Record<string, unknown>): number | null {
-	try {
-		const value = Roll.safeEval(Roll.replaceFormulaData(text, rollData, { missing: '0' }));
-		return typeof value === 'number' && Number.isFinite(value)
-			? Math.max(0, Math.floor(value))
-			: null;
-	} catch {
-		return null;
-	}
+	const value = formulaValue(text, rollData);
+	return value === null ? null : Math.max(0, Math.floor(value));
 }
 
 function countOf(text: string, rollData: Record<string, unknown>): number {

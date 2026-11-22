@@ -1,5 +1,15 @@
 import type { EffectNode } from '#types/effectTree.js';
 
+/** Damage for one target together, the targets in the order they first show. */
+function byTarget(nodes: EffectNode[]): EffectNode[] {
+	const groups = new Map<string, EffectNode[]>();
+	for (const node of nodes) {
+		const key = (node as { forTarget?: string }).forTarget ?? '';
+		groups.set(key, [...(groups.get(key) ?? []), node]);
+	}
+	return [...groups.values()].flat();
+}
+
 export function groupNodes(nodes: EffectNode[]) {
 	const damageNodes: EffectNode[] = [];
 	const healingNodes: EffectNode[] = [];
@@ -42,7 +52,7 @@ export function groupNodes(nodes: EffectNode[]) {
 
 	return [
 		Array.from(textNodes.values()).flat(),
-		damageNodes,
+		byTarget(damageNodes),
 		healingNodes,
 		applyEffectNodes,
 		moveNodes,

@@ -5,12 +5,14 @@ import type { Ricochet } from '../../models/rules/ricochet.js';
 import { clearBankedDamageReduction } from '../../utils/damage/bankedDamageReduction.js';
 import { withDamageCard } from '../../utils/damage/damageCard.js';
 
-/** The creature a ricochet goes to, and whether its damage is applied. */
+/** The creature a ricochet goes to, and the damage it took once applied. */
 export const RICOCHET_FLAG = 'ricochet';
 
 export interface RicochetRecord {
 	targetUuid?: string;
 	applied?: boolean;
+	/** The damage the creature took. */
+	amount?: number;
 }
 
 /** One damage packet of the card. */
@@ -94,6 +96,10 @@ export class CardRicochet {
 		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor);
 		await withDamageCard(this.#host.id(), () => resolved.actor.applyDamage(resolved.total));
 		await spendHeldChanges(resolved.usedVulnerabilities, this.#host.endedLines());
-		await this.#host.setFlag(RICOCHET_FLAG, { targetUuid: tokenUuid, applied: true });
+		await this.#host.setFlag(RICOCHET_FLAG, {
+			targetUuid: tokenUuid,
+			applied: true,
+			amount: resolved.total,
+		});
 	}
 }

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+	halfRangeTag,
 	halfRangeText,
 	UNARMED_STRIKE,
 	useWeaponDamage,
@@ -141,6 +142,15 @@ describe('halfRangeText', () => {
 			'',
 		);
 		expect(halfRangeText({ targets: { attackType: 'range', distance: 16 } })).toBe('');
+	});
+});
+
+describe('halfRangeTag', () => {
+	it('names only the halved range, as the card description says half range', () => {
+		expect(halfRangeTag({ halfRange: true, targets: { attackType: 'range', distance: 8 } })).toBe(
+			'Range 8',
+		);
+		expect(halfRangeTag({ targets: { attackType: 'range', distance: 16 } })).toBe('');
 	});
 });
 

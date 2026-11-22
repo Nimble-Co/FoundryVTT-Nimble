@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { divideDice as divideEffects } from '../divideDice.js';
 import { evenDiceShares } from '../evenDiceShares.js';
-import { firstDiceOf } from '../firstDiceOf.js';
+import { firstDiceOf, withDiceCountsWorkedOut } from '../firstDiceOf.js';
 
 interface Node {
 	id: string;
@@ -167,5 +167,13 @@ describe('divideDice', () => {
 		);
 
 		expect(effects.some((node) => node.forTarget === 'Token.orc')).toBe(false);
+	});
+});
+
+describe('withDiceCountsWorkedOut', () => {
+	it('writes a count in parentheses as its number', () => {
+		expect(withDiceCountsWorkedOut('(2 + floor(@level / 5))d12 + 3', { level: 10 })).toBe(
+			'4d12 + 3',
+		);
 	});
 });

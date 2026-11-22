@@ -764,9 +764,9 @@
 				"lineThrownAnyReach": "Ricochet ({source}), if you threw the {weapon}: half the damage, rounded down, to another creature.",
 				"pick": "Ricochet to {name}",
 				"apply": "Apply {amount} Damage to {name}",
-				"noTarget": "Target another creature",
+				"noTarget": "Target another creature for the ricochet.",
 				"waitsForGm": "{name} takes it when the GM applies it.",
-				"applied": "Applied to {name}."
+				"took": "{name} took {amount} damage."
 			},
 			"escapeDamage": {
 				"cause": "Escaped {effect} - {formula}"
@@ -5953,7 +5953,7 @@
 		"rollWindow": {
 			"divideDice": {
 				"heading": "Divide the dice ({source})",
-				"given": "{given} of {dice} dice given out",
+				"given": "{given}/{dice} dice set",
 				"giveAll": "Give out every die before you roll.",
 				"decrement": "One less die for {name}",
 				"increment": "One more die for {name}"
