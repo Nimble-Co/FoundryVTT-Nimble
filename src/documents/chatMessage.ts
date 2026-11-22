@@ -155,9 +155,10 @@ type ChargeCardOfferRule = Pick<
 
 /** The kept die results of an evaluated roll. */
 function rolledFaces(roll: { terms?: unknown[] }): number[] {
-	return ((roll.terms ?? []) as Array<{ results?: Array<{ result: number; active?: boolean }> }>)
+	type Result = { result: number; active?: boolean; discarded?: boolean };
+	return ((roll.terms ?? []) as Array<{ results?: Result[] }>)
 		.flatMap((term) => term.results ?? [])
-		.filter((result) => result.active !== false)
+		.filter((result) => result.active !== false && result.discarded !== true)
 		.map((result) => result.result);
 }
 

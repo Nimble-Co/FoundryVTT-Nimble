@@ -253,6 +253,35 @@ describe('a spend of a charge from the attack card', () => {
 		});
 	});
 
+	it('stores only the kept dice: a discarded die does not count', async () => {
+		class DiscardedDieRoll extends CombatDieRoll {
+			override async evaluate() {
+				await super.evaluate();
+				this.terms = [
+					{
+						faces: 8,
+						results: [
+							{ result: 2, discarded: true },
+							{ result: 6, active: true },
+						],
+					},
+				];
+				return this;
+			}
+		}
+		globals.Roll = DiscardedDieRoll;
+		const actor = createActor(2);
+		useActor(actor);
+		const message = createMessage();
+
+		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
+
+		const payload = message.update.mock.calls[0][0] as {
+			system: { incomingReactions: Array<Record<string, unknown>> };
+		};
+		expect(payload.system.incomingReactions[0].usedFaces).toEqual([6]);
+	});
+
 	it('rolls the formula with the numbers of the attacker', async () => {
 		const actor = createActor(2);
 		useActor(actor);
