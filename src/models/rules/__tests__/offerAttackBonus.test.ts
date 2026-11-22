@@ -84,7 +84,11 @@ describe('Juggernaut', () => {
 		const attack = (origin?: string) => ({
 			side: 'roller' as const,
 			other: null,
-			roll: { kind: 'attack' as const, delivery: null, ...(origin ? { origin } : {}) },
+			roll: {
+				kind: 'attack' as const,
+				delivery: null,
+				...(origin ? { origin: { identifier: origin } } : {}),
+			},
 		});
 
 		expect(juggernaut().offersUseOn(attack('coordinated-strike'))).toBe(true);
@@ -156,7 +160,7 @@ describe('Withering Strike', () => {
 			necrotic().offersUseOn({
 				side: 'roller',
 				other: null,
-				roll: { kind: 'attack', delivery: null, origin: 'coordinated-strike' },
+				roll: { kind: 'attack', delivery: null, origin: { identifier: 'coordinated-strike' } },
 			}),
 		).toBe(false);
 	});

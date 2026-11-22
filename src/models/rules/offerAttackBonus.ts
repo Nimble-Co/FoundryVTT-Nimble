@@ -117,7 +117,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	offersUseOn(context: RollUseContext): boolean {
 		if (isRuleAutomationEnabled() || context.side !== 'roller') return false;
 		if (context.roll.kind !== 'attack') return false;
-		const bonus = this.bonusFor(context.roll.origin);
+		const bonus = this.bonusFor(context.roll.origin?.identifier);
 		if (!bonus) return false;
 		return bonus.primaryDie !== 0 || (bonus.damage > 0 && !bonus.damageType);
 	}

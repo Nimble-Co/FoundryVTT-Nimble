@@ -1,4 +1,5 @@
 import type { AttackDelivery } from '../damage/attackDelivery.js';
+import type { AttackOrigin } from '../damage/attackOrigin.js';
 
 /** The kinds of roll a `reroll` rule can reroll. */
 const REROLL_ROLL_KINDS = ['attack', 'save', 'skillCheck', 'abilityCheck'] as const;
@@ -21,10 +22,8 @@ type RollToReroll =
 			damageTypes?: readonly string[];
 			/** The stats the attack's formula has. */
 			stats?: readonly string[];
-			/** The identifier of the feature the attack was made through. */
-			origin?: string;
-			/** The uuid of the feature the attack was made through. */
-			originUuid?: string;
+			/** The feature the attack was made through. The uuid is there only for an attack made through another item. */
+			origin?: Partial<AttackOrigin>;
 			/** The upcast steps of the spell. */
 			upcastSteps?: number;
 	  }

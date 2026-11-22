@@ -1368,7 +1368,7 @@ describe('a row that changes the crit dice, with Feature Effects off', () => {
 
 describe("an attack bonus row on an ally's attack made through another creature's item, with Feature Effects off", () => {
 	const ORIGIN = 'Actor.owner.Item.rally';
-	const throughRally = { ...MELEE, origin: 'rally', originUuid: ORIGIN };
+	const throughRally = { ...MELEE, origin: { identifier: 'rally', uuid: ORIGIN } };
 
 	function ownerWith(originAttacker: string) {
 		const owner = { uuid: 'Actor.owner', rules: [] as unknown[] };

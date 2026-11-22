@@ -173,7 +173,7 @@ function damageRollContext(
 	const primaryNode = findPrimaryDamageRoll(card.system())?.damageNode;
 	const damageType = (primaryNode as { damageType?: string } | undefined)?.damageType;
 	const stats = statsInFormula(attackFormula(rolled, primaryNode));
-	const origin = originIdentifierOfRoll(rolled?.options);
+	const originIdentifier = originIdentifierOfRoll(rolled?.options);
 	const originUuid = rolled?.options?.origin?.uuid;
 	const upcastSteps =
 		(card.system() as { upcast?: { upcastSteps?: number } | null }).upcast?.upcastSteps ?? 0;
@@ -195,8 +195,14 @@ function damageRollContext(
 			...(damageType ? { damageTypes: [damageType] } : {}),
 			...(stats.length > 0 ? { stats } : {}),
 			...(upcastSteps > 0 ? { upcastSteps } : {}),
-			...(origin ? { origin } : {}),
-			...(originUuid ? { originUuid } : {}),
+			...(originIdentifier || originUuid
+				? {
+						origin: {
+							...(originIdentifier ? { identifier: originIdentifier } : {}),
+							...(originUuid ? { uuid: originUuid } : {}),
+						},
+					}
+				: {}),
 		},
 		outcome: {
 			isCritical: outcome.isCritical,

@@ -356,8 +356,8 @@ function otherCreature(side: RerollSide, context: RerollRollContext): RerollingA
 
 /** The opted-in rules of the creature whose item an attack was made through, when it is not the roller. */
 function originOwnerRulesOf(roller: RerollingActor, context: RerollRollContext): RerollRuleLike[] {
-	if (context.roll.kind !== 'attack' || !context.roll.originUuid) return [];
-	return originOwnerRules<RerollRuleLike>(roller, { uuid: context.roll.originUuid });
+	if (context.roll.kind !== 'attack' || !context.roll.origin?.uuid) return [];
+	return originOwnerRules<RerollRuleLike>(roller, context.roll.origin);
 }
 
 /** Who can use a rule on each side of this roll. */

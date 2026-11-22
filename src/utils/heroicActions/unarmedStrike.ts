@@ -201,7 +201,7 @@ export async function rollUnarmedStrike(
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
 		stats: statsInFormula(rollFormula),
-		...(origin ? { origin: origin.identifier, originUuid: origin.uuid } : {}),
+		...(origin ? { origin } : {}),
 	});
 	const attackOutcome = collectAttackOutcome({
 		attacker: actor as { rules?: unknown },

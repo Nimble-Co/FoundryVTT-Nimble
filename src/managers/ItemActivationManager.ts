@@ -703,8 +703,7 @@ class ItemActivationManager {
 				...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
-				origin: this.origin.identifier,
-				originUuid: this.#ruleOrigin.uuid,
+				origin: this.#ruleOrigin,
 			},
 		);
 
