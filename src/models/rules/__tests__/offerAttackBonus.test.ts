@@ -139,6 +139,7 @@ describe('Withering Strike', () => {
 		expect(rulesOf('offerAttackBonus')[0].damage).toBe('@pools.combat-dice.faces');
 		expect(necrotic().bonusFor('coordinated-strike')).toEqual({
 			label: 'Withering Strike',
+			itemUuid: 'Item.j',
 			damage: 8,
 			primaryDie: 0,
 			damageType: 'necrotic',

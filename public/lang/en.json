@@ -715,22 +715,23 @@
 				"useFailed": "Could not use {name}."
 			},
 			"grantedActionOffers": {
-				"heading": "Granted Actions",
-				"weaponAttack": "Weapon Attack",
-				"offerLabel": "{name}: {heading} ({source})",
-				"offerLabelNoSource": "{name}: {heading}",
+				"headings": {
+					"free": "Free Attack",
+					"action": "Attack (1 action)",
+					"reaction": "Opportunity Attack (reaction)"
+				},
 				"attack": "Attack",
+				"choiceLabel": "What {name} attacks with",
 				"cantrips": "Cantrips",
+				"tooltip": "{source}: {details}",
 				"sharedTargets": "Up to {count} targets share one attack: {extras}.",
 				"extraTarget": "{count} more within Reach {reach} ({source})",
 				"extraTargetAnyReach": "{count} more ({source})",
 				"noEligibleItems": "No weapon to attack with.",
-				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
-				"currentTarget": "Target: {name}",
-				"usedBy": "Granted action used by {name}",
-				"usedByVia": "Granted action used by {name} via {label}",
-				"targetCountOne": "{source} reaches 1 creature. {targeted} are targeted.",
-				"targetCountMany": "{source} reaches {count} creatures. {targeted} are targeted."
+				"used": "{name} attacked.",
+				"usedWith": "{name} attacked with {weapon}.",
+				"targetCountOne": "{source} reaches 1 creature. {names} are targeted.",
+				"targetCountMany": "{source} reaches {count} creatures. {names} are targeted."
 			},
 			"damageBack": {
 				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",

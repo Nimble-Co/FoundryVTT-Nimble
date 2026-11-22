@@ -386,6 +386,47 @@ describe('requestGrantedActionOfferUse', () => {
 		expect(globals().game.socket.emit).not.toHaveBeenCalled();
 	});
 
+	it('keeps what the line was used with', async () => {
+		const { requestGrantedActionOfferUse } = await loadModule();
+		const message = createMessage([createOffer()]);
+		setMessages({ 'message-1': message });
+		setUser({ id: 'gm-user', isGM: true });
+
+		await requestGrantedActionOfferUse({
+			messageId: 'message-1',
+			offerId: 'offer-1',
+			usedWith: { name: 'Longsword', uuid: 'Actor.ally.Item.sword' },
+		});
+
+		expect(message.update).toHaveBeenCalledWith({
+			system: {
+				grantedActionOffers: [
+					expect.objectContaining({
+						used: true,
+						usedWith: { name: 'Longsword', uuid: 'Actor.ally.Item.sword' },
+					}),
+				],
+			},
+		});
+	});
+
+	it('sends what the line was used with in the socket request', async () => {
+		const { requestGrantedActionOfferUse } = await loadModule();
+		setMessages({ 'message-1': createMessage([createOffer()]) });
+		setUser({ id: 'player-1', isGM: false });
+
+		await requestGrantedActionOfferUse({
+			messageId: 'message-1',
+			offerId: 'offer-1',
+			usedWith: { name: 'Unarmed Strike', uuid: '' },
+		});
+
+		expect(globals().game.socket.emit).toHaveBeenCalledWith(
+			'system.nimble',
+			expect.objectContaining({ usedWith: { name: 'Unarmed Strike', uuid: '' } }),
+		);
+	});
+
 	it('emits a socket request with the expected payload for a non-GM user', async () => {
 		const { requestGrantedActionOfferUse } = await loadModule();
 		const message = createMessage([createOffer()]);
@@ -401,6 +442,7 @@ describe('requestGrantedActionOfferUse', () => {
 			messageId: 'message-1',
 			offerId: 'offer-1',
 			userId: 'player-1',
+			usedWith: null,
 		});
 		expect(message.update).not.toHaveBeenCalled();
 	});
@@ -488,6 +530,42 @@ describe('registerGrantedActionOfferSocketListener', () => {
 				grantedActionOffers: [
 					expect.objectContaining({ id: 'offer-1', used: true, usedBy: 'player-1' }),
 				],
+			},
+		});
+	});
+
+	it('keeps a relayed weapon, and drops one that is not a name', async () => {
+		setUser({ id: 'gm-user', isGM: true });
+		const message = createMessage([
+			createOffer(),
+			createOffer({ id: 'offer-2', targetActorUuid: 'Actor.ally' }),
+		]);
+		setMessages({ 'message-1': message });
+		const listener = await registerAndGetListener();
+
+		listener(relayedRequest({ usedWith: { name: 'Handaxe', uuid: 'Actor.ally.Item.axe' } }));
+		await flushAsync();
+
+		expect(message.update).toHaveBeenLastCalledWith({
+			system: {
+				grantedActionOffers: [
+					expect.objectContaining({
+						id: 'offer-1',
+						usedWith: { name: 'Handaxe', uuid: 'Actor.ally.Item.axe' },
+					}),
+					expect.objectContaining({ id: 'offer-2', used: false }),
+				],
+			},
+		});
+
+		listener(relayedRequest({ offerId: 'offer-2', usedWith: { name: 7 } }));
+		await flushAsync();
+
+		expect(message.update).toHaveBeenLastCalledWith({
+			system: {
+				grantedActionOffers: expect.arrayContaining([
+					expect.objectContaining({ id: 'offer-2', used: true, usedWith: null }),
+				]),
 			},
 		});
 	});

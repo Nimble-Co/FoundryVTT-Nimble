@@ -44,6 +44,7 @@ describe('grantedActionOffers schema factory', () => {
 			'targetedCount',
 			'used',
 			'usedBy',
+			'usedWith',
 		]);
 	});
 
@@ -57,6 +58,7 @@ describe('grantedActionOffers schema factory', () => {
 
 		expect(element.fields.used.options.initial).toBe(false);
 		expect(element.fields.usedBy.options.initial).toBeNull();
+		expect(element.fields.usedWith.options.initial).toBeNull();
 	});
 
 	it('constrains the activation type to the closed weaponAttack set', () => {

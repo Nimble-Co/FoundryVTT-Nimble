@@ -54,6 +54,14 @@ interface GrantedActionOffer {
 	used: boolean;
 	/** Id of the user who consumed the offer */
 	usedBy: string | null;
+	/** What the attack was made with. Null on a card from before it was kept. */
+	usedWith?: GrantedActionOfferUsedWith | null;
+}
+
+/** The weapon, Unarmed Strike or cantrip a line was used with. The uuid is empty for Unarmed Strike. */
+interface GrantedActionOfferUsedWith {
+	name: string;
+	uuid: string;
 }
 
 interface GrantedActionOfferRequest {
@@ -61,6 +69,7 @@ interface GrantedActionOfferRequest {
 	messageId: string;
 	offerId: string;
 	userId: string;
+	usedWith?: GrantedActionOfferUsedWith | null;
 }
 
 interface GrantActivationRuleLike {
@@ -133,6 +142,7 @@ function offerOf(
 		targetedCount: targeted,
 		used: false,
 		usedBy: null,
+		usedWith: null,
 	};
 }
 
@@ -261,6 +271,7 @@ async function executeGrantedActionOfferUse(
 	offerId: string,
 	requestingUserId: string,
 	viaSocket: boolean,
+	usedWith: GrantedActionOfferUsedWith | null,
 ): Promise<void> {
 	if (!game.user?.isGM) return;
 
@@ -271,11 +282,18 @@ async function executeGrantedActionOfferUse(
 	if (!found) return;
 
 	const updatedOffers = found.offers.map((entry) =>
-		entry.id === offerId ? { ...entry, used: true, usedBy: requestingUserId } : entry,
+		entry.id === offerId ? { ...entry, used: true, usedBy: requestingUserId, usedWith } : entry,
 	);
 	await message.update({
 		system: { grantedActionOffers: updatedOffers },
 	});
+}
+
+function usedWithOf(value: unknown): GrantedActionOfferUsedWith | null {
+	if (!value || typeof value !== 'object') return null;
+	const { name, uuid } = value as Partial<GrantedActionOfferUsedWith>;
+	if (typeof name !== 'string' || !name) return null;
+	return { name, uuid: typeof uuid === 'string' ? uuid : '' };
 }
 
 async function handleGrantedActionOfferRequest(payload: unknown): Promise<void> {
@@ -287,7 +305,13 @@ async function handleGrantedActionOfferRequest(payload: unknown): Promise<void> 
 	if (request.type !== GRANTED_ACTION_OFFER_REQUEST_TYPE) return;
 	if (!request.messageId || !request.offerId || !request.userId) return;
 
-	await executeGrantedActionOfferUse(request.messageId, request.offerId, request.userId, true);
+	await executeGrantedActionOfferUse(
+		request.messageId,
+		request.offerId,
+		request.userId,
+		true,
+		usedWithOf(request.usedWith),
+	);
 }
 
 let hasRegisteredGrantedActionOfferSocketListener = false;
@@ -319,11 +343,19 @@ export function registerGrantedActionOfferSocketListener(): void {
 export async function requestGrantedActionOfferUse(params: {
 	messageId: string;
 	offerId: string;
+	usedWith?: GrantedActionOfferUsedWith | null;
 }): Promise<boolean> {
 	if (!game.user?.id) return false;
+	const usedWith = usedWithOf(params.usedWith);
 
 	if (game.user.isGM) {
-		await executeGrantedActionOfferUse(params.messageId, params.offerId, game.user.id, false);
+		await executeGrantedActionOfferUse(
+			params.messageId,
+			params.offerId,
+			game.user.id,
+			false,
+			usedWith,
+		);
 		return true;
 	}
 
@@ -341,8 +373,9 @@ export async function requestGrantedActionOfferUse(params: {
 		messageId: params.messageId,
 		offerId: params.offerId,
 		userId: game.user.id,
+		usedWith,
 	});
 	return true;
 }
 
-export type { GrantedActionOffer };
+export type { GrantedActionOffer, GrantedActionOfferUsedWith };

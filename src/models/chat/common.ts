@@ -125,6 +125,13 @@ export const grantedActionOffers = () => ({
 			}),
 			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+			usedWith: new fields.SchemaField(
+				{
+					name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),

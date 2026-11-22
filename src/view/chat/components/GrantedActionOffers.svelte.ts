@@ -1,6 +1,7 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 import {
 	type GrantedActionOffer,
+	type GrantedActionOfferUsedWith,
 	requestGrantedActionOfferUse,
 } from '#utils/combat/grantedActionOffers.js';
 import {
@@ -8,9 +9,9 @@ import {
 	grantedAttackTargets,
 	makeGrantedAttack,
 } from '#utils/combat/grantedAttack.js';
+import { UNARMED_STRIKE } from '#utils/damage/weaponAttack.js';
+import { type DocLink, docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 import localize from '#utils/localize.js';
-import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
-import { useTargetChanges } from '../utils/useTargetChanges.svelte.ts';
 
 type OfferRecipientActor = Parameters<typeof grantedAttackGroups>[0] & {
 	id?: string | null;
@@ -20,50 +21,149 @@ type OfferRecipientActor = Parameters<typeof grantedAttackGroups>[0] & {
 
 type ChoiceGroups = ReturnType<typeof grantedAttackGroups>;
 
+/** What a line spends, which names its section. */
+export type GrantedAttackKind = 'free' | 'action' | 'reaction';
+
+/** The lines of one kind on a card: one heading, one warning at most, a block per creature. */
+export interface GrantedAttackSection {
+	kind: GrantedAttackKind;
+	heading: string;
+	warning: LinkedPart[] | null;
+	offers: GrantedActionOffer[];
+}
+
+const TEXT = 'NIMBLE.chat.grantedActionOffers';
+
 function getRecipientActor(offer: GrantedActionOffer): OfferRecipientActor | null {
 	return (fromUuidSync(offer.targetActorUuid as Parameters<typeof fromUuidSync>[0]) ??
 		null) as OfferRecipientActor | null;
 }
 
+function recipientName(offer: GrantedActionOffer): string {
+	return getRecipientActor(offer)?.name ?? '';
+}
+
 function canUseOffer(offer: GrantedActionOffer): boolean {
 	if (game.user?.isGM) return true;
+	return !!getRecipientActor(offer)?.isOwner;
+}
+
+function kindOf(offer: GrantedActionOffer): GrantedAttackKind {
+	if (offer.spendsReaction) return 'reaction';
+	return offer.free ? 'free' : 'action';
+}
+
+/** The granting feature: its real name when it resolves, else the rule's label. */
+function sourceOf(offer: GrantedActionOffer): DocLink {
+	const item = offer.sourceItemUuid
+		? (fromUuidSync(offer.sourceItemUuid as Parameters<typeof fromUuidSync>[0]) as {
+				name?: string;
+			} | null)
+		: null;
+	return docLink(item?.name || offer.label, offer.sourceItemUuid);
+}
+
+/** The creature that used the feature gets a line only when the rule includes it; it is not a target. */
+function isActivator(offer: GrantedActionOffer): boolean {
+	return (
+		!!offer.sourceItemUuid && offer.sourceItemUuid.startsWith(`${offer.targetActorUuid}.Item.`)
+	);
+}
+
+function listOf(names: string[]): string {
+	return new Intl.ListFormat(game.i18n?.lang ?? 'en', {
+		style: 'long',
+		type: 'conjunction',
+	}).format(names);
+}
+
+/** A rule whose lines went to more targeted creatures than it reaches. The lines all stay usable. */
+function overCountWarning(offers: GrantedActionOffer[]): LinkedPart[] | null {
+	const over = offers.find(
+		(offer) => offer.targetCount > 0 && offer.targetedCount > offer.targetCount,
+	);
+	if (!over) return null;
+	const names = offers
+		.filter(
+			(offer) =>
+				offer.sourceItemUuid === over.sourceItemUuid &&
+				offer.ruleId === over.ruleId &&
+				!isActivator(offer),
+		)
+		.map(recipientName)
+		.filter(Boolean);
+	return linkedParts(`${TEXT}.${over.targetCount === 1 ? 'targetCountOne' : 'targetCountMany'}`, {
+		source: sourceOf(over),
+		count: String(over.targetCount),
+		names: listOf(names),
+	});
+}
+
+/** The lines grouped by what they spend, in the order the card has them. */
+function sectionsOf(
+	offers: GrantedActionOffer[],
+	shown: (offer: GrantedActionOffer) => boolean,
+): GrantedAttackSection[] {
+	const sections = new Map<GrantedAttackKind, GrantedAttackSection>();
+	for (const offer of offers) {
+		if (!shown(offer)) continue;
+		const kind = kindOf(offer);
+		const section = sections.get(kind) ?? {
+			kind,
+			heading: localize(`${TEXT}.headings.${kind}`),
+			warning: null,
+			offers: [],
+		};
+		section.offers.push(offer);
+		sections.set(kind, section);
+	}
+	for (const section of sections.values()) {
+		if (!section.offers.some((offer) => !offer.used)) continue;
+		const ofKind = offers.filter((offer) => kindOf(offer) === section.kind);
+		section.warning = [overCountWarning(ofKind)].find((warning) => warning !== null) ?? null;
+	}
+	return [...sections.values()];
+}
+
+/** The line's extra targets as one sentence, or null when the attack has one target. */
+function sharedTargetsNote(offer: GrantedActionOffer): string | null {
 	const actor = getRecipientActor(offer);
-	return !!actor?.isOwner;
+	if (!actor) return null;
+	const { count, extras } = grantedAttackTargets(actor, offer);
+	if (count < 2) return null;
+	const parts = extras.map((extra) =>
+		extra.reach > 0
+			? localize(`${TEXT}.extraTarget`, {
+					count: String(extra.count),
+					reach: String(extra.reach),
+					source: extra.source,
+				})
+			: localize(`${TEXT}.extraTargetAnyReach`, {
+					count: String(extra.count),
+					source: extra.source,
+				}),
+	);
+	return localize(`${TEXT}.sharedTargets`, {
+		count: String(count),
+		extras: parts.join(', '),
+	});
 }
 
-function getOfferHeading(offer: GrantedActionOffer): string {
-	if (offer.weaponKind === 'unarmed') return localize('NIMBLE.ui.heroicActions.unarmedStrike');
-	return localize(`NIMBLE.chat.grantedActionOffers.${offer.activationType}`);
+/** Plain text for the creature's name line: the feature, then what the table checks itself. */
+function getOfferTooltip(offer: GrantedActionOffer): string {
+	const source = sourceOf(offer).name;
+	const details = [offer.condition, sharedTargetsNote(offer)].filter(Boolean).join(' ');
+	if (!details) return source;
+	return source ? localize(`${TEXT}.tooltip`, { source, details }) : details;
 }
 
-function getOfferLabel(offer: GrantedActionOffer): string {
-	const heading = getOfferHeading(offer);
-	const name = getRecipientActor(offer)?.name ?? '';
-	return offer.label
-		? localize('NIMBLE.chat.grantedActionOffers.offerLabel', {
-				name,
-				heading,
-				source: offer.label,
-			})
-		: localize('NIMBLE.chat.grantedActionOffers.offerLabelNoSource', { name, heading });
-}
-
-function getOfferTooltip(offer: GrantedActionOffer): string | null {
-	if (!offer.sourceItemUuid) return null;
-	const item = fromUuidSync(offer.sourceItemUuid as Parameters<typeof fromUuidSync>[0]) as {
-		name?: string;
-	} | null;
-	return item?.name ?? null;
-}
-
-function getUsedAttribution(offer: GrantedActionOffer): string {
-	const actorName = getRecipientActor(offer)?.name ?? '';
-	return offer.label
-		? localize('NIMBLE.chat.grantedActionOffers.usedByVia', {
-				name: actorName,
-				label: offer.label,
-			})
-		: localize('NIMBLE.chat.grantedActionOffers.usedBy', { name: actorName });
+/** "<Name> attacked with <weapon>.", or "<Name> attacked." for a card from before the weapon was kept. */
+function getUsedLine(offer: GrantedActionOffer): LinkedPart[] {
+	const name = recipientName(offer);
+	const weapon = offer.usedWith;
+	return weapon?.name
+		? linkedParts(`${TEXT}.usedWith`, { name, weapon: docLink(weapon.name, weapon.uuid) })
+		: linkedParts(`${TEXT}.used`, { name });
 }
 
 function getChoiceGroups(offer: GrantedActionOffer): ChoiceGroups {
@@ -71,56 +171,15 @@ function getChoiceGroups(offer: GrantedActionOffer): ChoiceGroups {
 	return actor ? grantedAttackGroups(actor, offer) : [];
 }
 
-/** The line's extra targets as one sentence, or null when the attack has one target. */
-function getSharedTargetsNote(offer: GrantedActionOffer): string | null {
-	const actor = getRecipientActor(offer);
-	if (!actor) return null;
-	const { count, extras } = grantedAttackTargets(actor, offer);
-	if (count < 2) return null;
-	const parts = extras.map((extra) =>
-		extra.reach > 0
-			? localize('NIMBLE.chat.grantedActionOffers.extraTarget', {
-					count: String(extra.count),
-					reach: String(extra.reach),
-					source: extra.source,
-				})
-			: localize('NIMBLE.chat.grantedActionOffers.extraTargetAnyReach', {
-					count: String(extra.count),
-					source: extra.source,
-				}),
-	);
-	return localize('NIMBLE.chat.grantedActionOffers.sharedTargets', {
-		count: String(count),
-		extras: parts.join(', '),
-	});
+/** The weapon, Unarmed Strike or cantrip of a choice, as the card keeps it. */
+function usedWithOf(groups: ChoiceGroups, choice: string): GrantedActionOfferUsedWith | null {
+	const found = groups.flatMap((group) => group.choices).find((each) => each.value === choice);
+	if (!found) return null;
+	return { name: found.name, uuid: choice === UNARMED_STRIKE ? '' : choice };
 }
 
-/**
- * One warning for each rule whose lines went to more targeted creatures than it reaches.
- * The lines all stay usable: who takes the attack is the table's call.
- */
-function getTargetWarnings(offers: GrantedActionOffer[]): string[] {
-	const warnings = new Map<string, string>();
-	for (const offer of offers) {
-		const key = `${offer.sourceItemUuid}:${offer.ruleId}`;
-		if (warnings.has(key) || !(offer.targetCount > 0)) continue;
-		if (!(offer.targetedCount > offer.targetCount)) continue;
-		const wording = offer.targetCount === 1 ? 'targetCountOne' : 'targetCountMany';
-		warnings.set(
-			key,
-			localize(`NIMBLE.chat.grantedActionOffers.${wording}`, {
-				source: offer.label,
-				count: String(offer.targetCount),
-				targeted: String(offer.targetedCount),
-			}),
-		);
-	}
-	return [...warnings.values()];
-}
-
-/** The attack lines of a chat card: the pending lines the user can use, and the used ones. */
+/** The attack lines of a chat card: per section the lines the user can use, and the used ones. */
 export function createGrantedActionOffersState(getMessage: () => NimbleChatMessage) {
-	const targetChanges = useTargetChanges();
 	let busy = $state(false);
 	const chosenByOffer = $state<Record<string, string>>({});
 
@@ -128,9 +187,7 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 		(getMessage()?.reactive?.system as { grantedActionOffers?: GrantedActionOffer[] })
 			?.grantedActionOffers ?? [],
 	);
-	const pendingOffers = $derived(offers.filter((offer) => !offer.used && canUseOffer(offer)));
-	const usedOffers = $derived(offers.filter((offer) => offer.used));
-	const targetWarnings = $derived(getTargetWarnings(offers));
+	const sections = $derived(sectionsOf(offers, (offer) => offer.used || canUseOffer(offer)));
 
 	function getChosen(offer: GrantedActionOffer, groups: ChoiceGroups): string {
 		return chosenByOffer[offer.id] ?? groups[0]?.choices[0]?.value ?? '';
@@ -141,23 +198,8 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 	}
 
 	/**
-	 * What the line is currently pointed at. Reading the target changes re-runs this the
-	 * moment the user retargets, so the display never sits on a stale answer.
-	 */
-	function getOfferTargeting(offer: GrantedActionOffer) {
-		void targetChanges.version;
-
-		const recipientActorId = getRecipientActor(offer)?.id ?? '';
-		// Read the target set directly so the names stay in the order the user
-		// targeted them. Partitioning it here instead would hoist one group.
-		const targetedTokens = Array.from(game.user?.targets ?? []);
-
-		return resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
-	}
-
-	/**
-	 * Make the attack of the line, then mark the line used. A cancelled attack
-	 * leaves the line available.
+	 * Make the attack of the line, then mark the line used with what it attacked with. A cancelled
+	 * attack leaves the line available.
 	 */
 	async function attackWith(offer: GrantedActionOffer, choice: string) {
 		if (busy || !choice) return;
@@ -170,6 +212,7 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 			await requestGrantedActionOfferUse({
 				messageId: getMessage().id ?? '',
 				offerId: offer.id,
+				usedWith: usedWithOf(getChoiceGroups(offer), choice),
 			});
 		} finally {
 			busy = false;
@@ -180,23 +223,15 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 		get busy() {
 			return busy;
 		},
-		get pendingOffers() {
-			return pendingOffers;
+		get sections() {
+			return sections;
 		},
-		get usedOffers() {
-			return usedOffers;
-		},
-		get targetWarnings() {
-			return targetWarnings;
-		},
+		recipientName,
 		getChoiceGroups,
 		getChosen,
 		choose,
-		getOfferTargeting,
-		getOfferLabel,
 		getOfferTooltip,
-		getSharedTargetsNote,
-		getUsedAttribution,
+		getUsedLine,
 		attackWith,
 	};
 }
