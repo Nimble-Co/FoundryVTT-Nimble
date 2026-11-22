@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import type { DefendWay } from '#types/defend.d.ts';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
+import { openDefendWindowOnNewestCard } from '#utils/defend/openDefendWindow.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,
@@ -232,7 +233,6 @@ export async function useChatReaction(
 ): Promise<boolean> {
 	const way = DEFEND_WAYS[reaction];
 	if (way) {
-		const { openDefendWindowOnNewestCard } = await import('#utils/defend/openDefendWindow.js');
 		const reacted = await openDefendWindowOnNewestCard(actor as Actor.Implementation, way);
 		if (reacted !== null) return reacted;
 	}

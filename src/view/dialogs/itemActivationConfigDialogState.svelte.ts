@@ -175,9 +175,13 @@ export function createItemActivationConfigDialogState(
 			firstTargetActor ?? null,
 			itemSystem.properties?.selected,
 		);
-	let conditionLines = $state(conditionLinesFor(weapons[0] ?? null));
+	const initialConditionLines = conditionLinesFor(weapons[0] ?? null);
+	let conditionLines = $state(initialConditionLines);
 	const conditionOptions = $derived(conditionRollModeOptions(conditionLines));
-	const opened = openRollModeTicks(initialRollMode, conditionRollModeOptions(conditionLines));
+	const opened = openRollModeTicks(
+		initialRollMode,
+		conditionRollModeOptions(initialConditionLines),
+	);
 	let selectedRollMode = $state(opened.mode);
 	let appliedTicks = $state<AppliedTicks>(opened.applied);
 
