@@ -7,6 +7,7 @@ import { groupWeapons, UNARMED_STRIKE, weaponOptionsFor } from '../damage/weapon
 import { attackWithReaction } from '../heroicActions/reactions.js';
 import { rollUnarmedStrike, strikeUnarmed } from '../heroicActions/unarmedStrike.js';
 import localize from '../localize.js';
+import { type GrantedAttackKind, grantedAttackKind } from './grantedAttackKind.js';
 
 /** What a granted attack line says about the attack it gives. */
 export interface GrantedAttackLine {
@@ -95,8 +96,9 @@ async function attack(
 	actor: Recipient,
 	line: GrantedAttackLine,
 	choice: string,
-	free: boolean,
+	kind: GrantedAttackKind,
 ): Promise<boolean> {
+	const free = kind !== 'action';
 	const targets = grantedAttackTargets(actor, line).count;
 	const options = {
 		originUuid: line.sourceItemUuid,
@@ -114,7 +116,7 @@ async function attack(
 	const card = await actor.activateItem(item.id, {
 		...options,
 		...(free ? { skipActionDeduction: true } : {}),
-		...(free && !line.spendsReaction ? { grantedFree: true } : {}),
+		...(kind === 'free' ? { grantedFree: true } : {}),
 	});
 	return Boolean(card);
 }
@@ -122,15 +124,16 @@ async function attack(
 /**
  * Makes the attack of a line with the chosen weapon, Unarmed Strike or cantrip, made through the
  * granting feature. A free line spends no action; a line that spends the reaction spends that in
- * place of an action. True when the attack was made.
+ * place of an action. A free opportunity attack spends neither. True when the attack was made.
  */
 export async function makeGrantedAttack(
 	actor: Recipient,
 	line: GrantedAttackLine,
 	choice: string,
 ): Promise<boolean> {
-	if (line.spendsReaction) {
-		return attackWithReaction(actor as NimbleCharacter, () => attack(actor, line, choice, true));
+	const kind = grantedAttackKind(line);
+	if (kind === 'reaction') {
+		return attackWithReaction(actor as NimbleCharacter, () => attack(actor, line, choice, kind));
 	}
-	return attack(actor, line, choice, line.free);
+	return attack(actor, line, choice, kind);
 }

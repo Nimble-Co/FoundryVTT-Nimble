@@ -207,6 +207,26 @@ describe('an attack from a granted attack line', () => {
 		expect(useHeroicReactions).toHaveBeenCalledWith(combatant.id, ['opportunityAttack'], undefined);
 	});
 
+	it('spends no reaction and no action for a free opportunity attack, with no free attack note', async () => {
+		const sword = weapon('Longsword');
+		const { actor, activateItem } = hero([sword]);
+		const combatant = createHeroicCombatant(actor);
+		const useHeroicReactions = vi.fn(async () => true);
+		setHeroicCombat(combatant, { useHeroicReactions });
+
+		await grantedAttack.makeGrantedAttack(
+			actor,
+			line({ free: true, spendsReaction: true }),
+			sword.uuid,
+		);
+
+		expect(activateItem).toHaveBeenCalledWith('Longsword', {
+			originUuid: 'Item.granting',
+			skipActionDeduction: true,
+		});
+		expect(useHeroicReactions).not.toHaveBeenCalled();
+	});
+
 	describe('with extra targets for attacks through the granting feature', () => {
 		function extraTargets(attackOrigin: string, source: string, reach: number) {
 			return {

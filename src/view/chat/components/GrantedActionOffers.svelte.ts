@@ -9,6 +9,7 @@ import {
 	grantedAttackTargets,
 	makeGrantedAttack,
 } from '#utils/combat/grantedAttack.js';
+import { type GrantedAttackKind, grantedAttackKind } from '#utils/combat/grantedAttackKind.js';
 import { UNARMED_STRIKE } from '#utils/damage/weaponAttack.js';
 import { type DocLink, docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 import localize from '#utils/localize.js';
@@ -20,9 +21,6 @@ type OfferRecipientActor = Parameters<typeof grantedAttackGroups>[0] & {
 };
 
 type ChoiceGroups = ReturnType<typeof grantedAttackGroups>;
-
-/** What a line spends, which names its section. */
-export type GrantedAttackKind = 'free' | 'action' | 'reaction';
 
 /** The lines of one kind on a card: one heading, one warning at most, a block per creature. */
 export interface GrantedAttackSection {
@@ -46,11 +44,6 @@ function recipientName(offer: GrantedActionOffer): string {
 function canUseOffer(offer: GrantedActionOffer): boolean {
 	if (game.user?.isGM) return true;
 	return !!getRecipientActor(offer)?.isOwner;
-}
-
-function kindOf(offer: GrantedActionOffer): GrantedAttackKind {
-	if (offer.spendsReaction) return 'reaction';
-	return offer.free ? 'free' : 'action';
 }
 
 /** The granting feature: its real name when it resolves, else the rule's label. */
@@ -107,7 +100,7 @@ function sectionsOf(
 	const sections = new Map<GrantedAttackKind, GrantedAttackSection>();
 	for (const offer of offers) {
 		if (!shown(offer)) continue;
-		const kind = kindOf(offer);
+		const kind = grantedAttackKind(offer);
 		const section = sections.get(kind) ?? {
 			kind,
 			heading: localize(`${TEXT}.headings.${kind}`),
@@ -119,7 +112,7 @@ function sectionsOf(
 	}
 	for (const section of sections.values()) {
 		if (!section.offers.some((offer) => !offer.used)) continue;
-		const ofKind = offers.filter((offer) => kindOf(offer) === section.kind);
+		const ofKind = offers.filter((offer) => grantedAttackKind(offer) === section.kind);
 		section.warning = [overCountWarning(ofKind)].find((warning) => warning !== null) ?? null;
 	}
 	return [...sections.values()];

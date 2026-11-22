@@ -718,7 +718,8 @@
 				"headings": {
 					"free": "Free Attack",
 					"action": "Attack (1 action)",
-					"reaction": "Opportunity Attack (reaction)"
+					"reaction": "Opportunity Attack (reaction)",
+					"freeOpportunity": "Opportunity Attack (free)"
 				},
 				"attack": "Attack",
 				"choiceLabel": "What {name} attacks with",

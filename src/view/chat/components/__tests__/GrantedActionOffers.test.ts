@@ -135,6 +135,18 @@ describe('GrantedActionOffers', () => {
 		expect(screen.getByRole('heading', { name: 'Opportunity Attack (reaction)' })).toBeTruthy();
 	});
 
+	it('heads a free opportunity attack as free, not as a reaction', () => {
+		render(GrantedActionOffersTestHarness, {
+			props: {
+				messageDocument: createMessage([createOffer({ free: true, spendsReaction: true })]),
+			},
+		});
+
+		expect(screen.getAllByRole('heading').map((heading) => heading.textContent?.trim())).toEqual([
+			'Opportunity Attack (free)',
+		]);
+	});
+
 	it('keeps one Free Attack heading when cantrips are in the dropdown', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: {
