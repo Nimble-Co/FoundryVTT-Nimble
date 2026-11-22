@@ -5,7 +5,7 @@
 	"img": "icons/skills/melee/hand-grip-staff-blue.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "burst-of-speed",
 		"rules": [
 			{
 				"type": "chargePool",
@@ -86,6 +86,80 @@
 				"oncePerTurn": true,
 				"manaCost": 0,
 				"woundCost": 0
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "ClbjfB2OWZZXVd6Q",
+				"identifier": "burst-of-speed-turn",
+				"label": "Burst of Speed (once per turn)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": true,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onAnyTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "uZPfB6jB1tCnB5Zw",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 4,
+				"poolIdentifier": "burst-of-speed",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "EggZnKhKARvMoNYq",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 4,
+				"poolIdentifier": "burst-of-speed-turn",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": ""
+			},
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "9AmtiGlhcaIyj4DI",
+				"identifier": "",
+				"label": "Swiftstrike",
+				"predicate": {},
+				"priority": 5,
+				"activationType": "weaponAttack",
+				"trigger": "onActivation",
+				"includesUser": true,
+				"includesTargets": false,
+				"weaponKind": "any",
+				"allowsCantrips": false,
+				"free": true,
+				"spendsReaction": false,
+				"ignoresRushed": true,
+				"condition": ""
 			}
 		],
 		"activation": {

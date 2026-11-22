@@ -17,6 +17,18 @@ When the Commander uses the feature with an ally targeted, its card gets a line 
 
 The line goes on the card of the attack that the Zephyr Interposes against. When that card is a whisper, or when there is no attack card, it goes on the Interpose card.
 
+**Example: Swiftstrike.** The Zephyr spends 1 Burst of Speed to attack for free, with no disadvantage from Rushed Attacks.
+
+- **Label** → `Swiftstrike`
+- **When** → `When this item is used`
+- **Also for the user** → on
+- **For the targets** → off
+- **Weapon** → `Any weapon`
+- **Free** → on
+- **Ignores Rushed Attacks** → on
+
+The line is only for the Zephyr, even when an enemy is targeted. An Extra Targets rule for attacks made through the item lets the attack of the line hit more creatures with one roll.
+
 **Free** spends no action. **Spends the reaction** spends the Opportunity Attack reaction in place of an action, after the attack. With neither, the attack spends an action as usual.
 
 A free attack still counts as an attack of the turn, so it takes Rushed Attack disadvantage and adds to the count. **Ignores Rushed Attacks** removes only that disadvantage. The attack still counts.

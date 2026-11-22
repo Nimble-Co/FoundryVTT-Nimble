@@ -721,6 +721,9 @@
 				"offerLabelNoSource": "{name}: {heading}",
 				"attack": "Attack",
 				"cantrips": "Cantrips",
+				"sharedTargets": "Up to {count} targets share one attack: {extras}.",
+				"extraTarget": "{count} more within Reach {reach} ({source})",
+				"extraTargetAnyReach": "{count} more ({source})",
 				"noEligibleItems": "No weapon to attack with.",
 				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
 				"currentTarget": "Target: {name}",
@@ -2078,6 +2081,7 @@
 			"tags": "Tags",
 			"turnDamage": "Damage each turn",
 			"escapeDamage": "Damage on escape",
+			"extraTargets": "Extra Targets",
 			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
@@ -2609,6 +2613,10 @@
 				"includesUser": {
 					"label": "Also for the user",
 					"hint": "The user of the item gets a line too."
+				},
+				"includesTargets": {
+					"label": "For the targets",
+					"hint": "Each targeted creature gets a line. Off: only the user gets one, with Also for the user on."
 				},
 				"weaponKind": {
 					"label": "Weapon",
@@ -3875,6 +3883,17 @@
 					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
 				},
 				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
+			},
+			"extraTargets": {
+				"description": "An attack made through one feature can target more creatures. The extra targets share one attack: one roll, and each target's armor, miss and crit as normal. The attack line of the feature on a chat card shows the extra targets. The reach is shown, not checked.",
+				"count": {
+					"label": "Extra targets",
+					"hint": "How many more creatures the attack can target."
+				},
+				"reach": {
+					"label": "Within Reach",
+					"hint": "The reach the extra targets must be within, shown on the line. 0: no reach is shown."
+				}
 			},
 			"zeroHpAtEnd": {
 				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."

@@ -31,6 +31,7 @@ import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { EmptyPoolsAtEndRule } from '../models/rules/emptyPoolsAtEnd.js';
 import { EscapeDamageRule } from '../models/rules/escapeDamage.js';
+import { ExtraTargetsRule } from '../models/rules/extraTargets.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { FreeSpellCostRule } from '../models/rules/freeSpellCost.js';
@@ -150,6 +151,7 @@ export const RULE_CLASSES = {
 	critDiceSave: CritDiceSaveRule,
 	saveOnEvent: SaveOnEventRule,
 	escapeDamage: EscapeDamageRule,
+	extraTargets: ExtraTargetsRule,
 	critBack: CritBackRule,
 	freeAssess: FreeAssessRule,
 	hitCondition: HitConditionRule,

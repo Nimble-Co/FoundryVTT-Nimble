@@ -71,6 +71,8 @@ export interface RollUnarmedStrikeOptions {
 	free?: boolean;
 	/** The strike takes no Rushed Attack disadvantage; it still counts as an attack of the turn. */
 	ignoresRushed?: boolean;
+	/** Up to this many targets share one attack: one roll, each target's armor, miss and crit as normal. */
+	sharedTargets?: number;
 }
 
 function buildRollFormula(
@@ -141,6 +143,8 @@ export async function rollUnarmedStrike(
 	const offerAdded = addOfferBonuses(built.formula, offerBonuses, false);
 	const rollFormula = offerAdded.formula;
 	const damageParts = [...built.damageParts, ...offerAdded.damageParts];
+	const shared = (options.sharedTargets ?? 0) > 1;
+	const sharedFlag = shared ? { singleTargetAttack: true } : {};
 	// Only characters proficient with unarmed strikes can crit.
 	const canCrit = hasUnarmedProficiency(actor);
 	const name = localize('NIMBLE.ui.heroicActions.unarmedStrike');
@@ -150,7 +154,7 @@ export async function rollUnarmedStrike(
 		img: UNARMED_STRIKE_IMG,
 		system: {
 			activation: {
-				targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE },
+				targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE, ...sharedFlag },
 				effects: [
 					{
 						type: 'damage',
@@ -185,8 +189,8 @@ export async function rollUnarmedStrike(
 
 	const rollMode = result.rollMode ?? startRollMode;
 	const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
-	const multiTarget = targets.length > 1;
-	const target = soleTarget(targets);
+	const multiTarget = targets.length > 1 && !shared;
+	const target = soleTarget(targets, { firstDecides: shared });
 	const delivery = deliveryOfAttack({ targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE } }, actor);
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
@@ -354,7 +358,12 @@ export async function rollUnarmedStrike(
 				effects: [...evaluatedEffects, ...extraDamage.map((part) => part.node)],
 				cost: { type: 'action', quantity: 1 },
 				duration: { type: 'none', quantity: 1 },
-				targets: { count: 1, attackType: UNARMED_STRIKE_ATTACK_TYPE, distance: 1 },
+				targets: {
+					count: 1,
+					attackType: UNARMED_STRIKE_ATTACK_TYPE,
+					distance: 1,
+					...sharedFlag,
+				},
 			},
 			targets: Array.from(game.user?.targets ?? [], (token) => token.document.uuid),
 			incomingReactions: postRoll.stampEntries,

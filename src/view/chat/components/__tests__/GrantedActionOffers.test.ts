@@ -144,6 +144,30 @@ describe('GrantedActionOffers', () => {
 		expect(screen.getByText('If you end adjacent to your quarry.')).toBeTruthy();
 	});
 
+	it('shows the extra targets the recipient can attack, which share one attack', () => {
+		const extra = (source: string, reach: number) => ({
+			type: 'extraTargets',
+			extraTargetsFor: (origin: string) =>
+				origin === 'flurry' ? { source, count: 1, reach } : null,
+		});
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Item.flurry'
+				? { system: { identifier: 'flurry' } }
+				: { ...createRecipient(), rules: [extra('Wide Reach', 2), extra('Wider Reach', 0)] },
+		);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer({ sourceItemUuid: 'Item.flurry' })]) },
+		});
+
+		expect(
+			screen.getByText(
+				'Up to 3 targets share one attack: 1 more within Reach 2 (Wide Reach), 1 more (Wider Reach).',
+			),
+		).toBeTruthy();
+	});
+
 	it('says so when the recipient has nothing to attack with', () => {
 		const g = globalThis as Record<string, any>;
 		g.fromUuidSync = vi.fn(() => createRecipient({ items: [] }));

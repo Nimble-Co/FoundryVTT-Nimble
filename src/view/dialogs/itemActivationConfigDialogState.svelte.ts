@@ -75,6 +75,8 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	useOptionGroups?: readonly UseOptionGroup[];
 	/** The identifier of the feature the attack is made through. */
 	attackOrigin?: string;
+	/** The extra targets share one attack, so the first target decides. */
+	sharesOneAttack?: boolean;
 }
 
 export function createItemActivationConfigDialogState(
@@ -107,6 +109,7 @@ export function createItemActivationConfigDialogState(
 	const firstTargetActor = (
 		soleTarget(game.user?.targets, {
 			firstDecides:
+				options.sharesOneAttack === true ||
 				(item.system as { activation?: { targets?: { singleTargetAttack?: boolean } } }).activation
 					?.targets?.singleTargetAttack === true,
 		}) as Token | null

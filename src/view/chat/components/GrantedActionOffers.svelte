@@ -3,7 +3,11 @@
 	import type { GrantedActionOffer } from '#utils/combat/grantedActionOffers.ts';
 
 	import { getContext } from 'svelte';
-	import { grantedAttackGroups, makeGrantedAttack } from '#utils/combat/grantedAttack.js';
+	import {
+		grantedAttackGroups,
+		grantedAttackTargets,
+		makeGrantedAttack,
+	} from '#utils/combat/grantedAttack.js';
 	import { requestGrantedActionOfferUse } from '#utils/combat/grantedActionOffers.js';
 	import { docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 	import localize from '../../../utils/localize.js';
@@ -65,6 +69,30 @@
 	function getChoiceGroups(offer: GrantedActionOffer) {
 		const actor = getRecipientActor(offer);
 		return actor ? grantedAttackGroups(actor, offer) : [];
+	}
+
+	/** The line's extra targets as one sentence, or null when the attack has one target. */
+	function getSharedTargetsNote(offer: GrantedActionOffer): string | null {
+		const actor = getRecipientActor(offer);
+		if (!actor) return null;
+		const { count, extras } = grantedAttackTargets(actor, offer);
+		if (count < 2) return null;
+		const parts = extras.map((extra) =>
+			extra.reach > 0
+				? localize('NIMBLE.chat.grantedActionOffers.extraTarget', {
+						count: String(extra.count),
+						reach: String(extra.reach),
+						source: extra.source,
+					})
+				: localize('NIMBLE.chat.grantedActionOffers.extraTargetAnyReach', {
+						count: String(extra.count),
+						source: extra.source,
+					}),
+		);
+		return localize('NIMBLE.chat.grantedActionOffers.sharedTargets', {
+			count: String(count),
+			extras: parts.join(', '),
+		});
 	}
 
 	function getChosen(offer: GrantedActionOffer, groups: ReturnType<typeof getChoiceGroups>) {
@@ -145,6 +173,7 @@
 					{@const chosen = getChosen(offer, groups)}
 					{@const targeting = getOfferTargeting(offer)}
 					{@const label = getOfferLabel(offer)}
+					{@const sharedTargetsNote = getSharedTargetsNote(offer)}
 
 					<li class="nimble-granted-action-offer">
 						<p class="nimble-granted-action-offer__label" data-tooltip={getOfferTooltip(offer)}>
@@ -154,6 +183,10 @@
 
 						{#if offer.condition}
 							<p class="nimble-granted-action-offer__note">{offer.condition}</p>
+						{/if}
+
+						{#if sharedTargetsNote}
+							<p class="nimble-granted-action-offer__note">{sharedTargetsNote}</p>
 						{/if}
 
 						{#if groups.length > 0}

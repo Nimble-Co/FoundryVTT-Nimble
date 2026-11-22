@@ -60,6 +60,16 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.trigger !== 'onInterpose',
 			}),
 		),
+		includesTargets: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: true,
+				label: key('includesTargets', 'label'),
+				hint: key('includesTargets', 'hint'),
+				showWhen: (data: Record<string, unknown>) => data.trigger !== 'onInterpose',
+			}),
+		),
 		weaponKind: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -89,8 +99,8 @@ declare namespace GrantActivationRule {
 
 /**
  * Gives creatures an attack line on a chat card: when the owning item is used
- * (its user and the user's current targets), or when the owner Interposes (the
- * owner). Carries no lifecycle hooks: the card code collects the rules and
+ * (its user, the user's current targets, or both), or when the owner Interposes
+ * (the owner). Carries no lifecycle hooks: the card code collects the rules and
  * stamps the lines, where the recipient's owner (or a GM) uses them.
  *
  * A line runs the recipient's normal activation. It spends an action unless
@@ -106,6 +116,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	declare activationType: GrantedActivationType;
 	declare trigger: GrantedActivationTrigger;
 	declare includesUser: boolean;
+	declare includesTargets: boolean;
 	declare weaponKind: GrantedWeaponKind;
 	declare allowsCantrips: boolean;
 	declare free: boolean;
@@ -126,6 +137,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 				['activationType', '"weaponAttack"'],
 				['trigger', '"onActivation" | "onInterpose"'],
 				['includesUser', 'boolean'],
+				['includesTargets', 'boolean'],
 				['weaponKind', '"any" | "melee" | "ranged" | "unarmed"'],
 				['allowsCantrips', 'boolean'],
 				['free', 'boolean'],

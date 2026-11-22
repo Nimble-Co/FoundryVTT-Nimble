@@ -522,6 +522,7 @@ class ItemActivationManager {
 			spendsActions: options.spendsActions,
 			ignoreDisadvantage: this.#ignoresDisadvantage || undefined,
 			attackOrigin: this.origin.identifier,
+			sharesOneAttack: this.#isSingleTargetAttack(),
 		};
 
 		if (!this.#hasFittingWeapon()) return { activation: null, rolls: null };
@@ -724,6 +725,9 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain, incomingAttackPlan);
 		fixSaveDCs(this.activationData?.effects, this.actor as never);
+		if (this.#isSingleTargetAttack()) {
+			this.activationData.targets = { ...this.activationData.targets, singleTargetAttack: true };
+		}
 
 		return {
 			rolls,
@@ -1986,7 +1990,10 @@ class ItemActivationManager {
 
 	/** The item's extra targets do not make the attack a Multi-target Attack. */
 	#isSingleTargetAttack(): boolean {
-		return this.activationData?.targets?.singleTargetAttack === true;
+		return (
+			this.activationData?.targets?.singleTargetAttack === true ||
+			(this.#options.sharedTargets ?? 0) > 1
+		);
 	}
 
 	/**
@@ -2028,6 +2035,8 @@ namespace ItemActivationManager {
 		rushedAttack?: number;
 		/** The attack takes no Rushed Attack disadvantage; it still counts as an attack of the turn. */
 		ignoresRushed?: boolean;
+		/** Up to this many targets share one attack: one roll, each target's armor, miss and crit as normal. */
+		sharedTargets?: number;
 		/** False for a use inside another use, such as a free copy: it is not an attack of the turn. */
 		countsAsAttack?: boolean;
 		/** The actions that this use spends; the roll window says so. */

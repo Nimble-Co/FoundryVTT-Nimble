@@ -1,5 +1,8 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import type { ExtraTargets } from '../../models/rules/extraTargets.js';
 import type { GrantedWeaponKind } from '../../models/rules/grantActivation.js';
+import { rulesOfType } from '../actor/actorRules.js';
+import { attackOriginOf } from '../damage/attackOrigin.js';
 import { groupWeapons, UNARMED_STRIKE, weaponOptionsFor } from '../damage/weaponAttack.js';
 import { attackWithReaction } from '../heroicActions/reactions.js';
 import { rollUnarmedStrike, strikeUnarmed } from '../heroicActions/unarmedStrike.js';
@@ -38,6 +41,7 @@ interface RecipientItem {
 interface Recipient {
 	type?: string | null;
 	system?: unknown;
+	rules?: unknown;
 	items?: Iterable<RecipientItem>;
 	activateItem?: (id: string, options?: Record<string, unknown>) => Promise<unknown>;
 }
@@ -66,15 +70,38 @@ export function grantedAttackGroups(
 	];
 }
 
+/** How many creatures the attack of a line can target: 1, plus the extras the recipient's rules give. */
+export interface GrantedAttackTargets {
+	count: number;
+	extras: ExtraTargets[];
+}
+
+/** The targets of a line's attack. More than 1: the extra targets share one attack. */
+export function grantedAttackTargets(
+	actor: Recipient,
+	line: Pick<GrantedAttackLine, 'sourceItemUuid'>,
+): GrantedAttackTargets {
+	const rules = rulesOfType(actor, 'extraTargets');
+	if (rules.length < 1 || !line.sourceItemUuid) return { count: 1, extras: [] };
+	const origin = attackOriginOf({}, line.sourceItemUuid).identifier;
+	const extras = rules.flatMap((rule) => {
+		const extra = rule.extraTargetsFor(origin);
+		return extra ? [extra] : [];
+	});
+	return { count: extras.reduce((total, extra) => total + extra.count, 1), extras };
+}
+
 async function attack(
 	actor: Recipient,
 	line: GrantedAttackLine,
 	choice: string,
 	free: boolean,
 ): Promise<boolean> {
+	const targets = grantedAttackTargets(actor, line).count;
 	const options = {
 		originUuid: line.sourceItemUuid,
 		...(line.ignoresRushed ? { ignoresRushed: true } : {}),
+		...(targets > 1 ? { sharedTargets: targets } : {}),
 	};
 	if (choice === UNARMED_STRIKE) {
 		const hero = actor as NimbleCharacter;

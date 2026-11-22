@@ -120,6 +120,34 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	it('shares one attack among targets it may have, with crit and miss as normal', async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([
+			targetToken('Scene.s.Token.goblin'),
+			targetToken('Scene.s.Token.kobold'),
+		]);
+		const actor = createHeroicCharacter();
+		Object.assign(actor, { proficient: true });
+
+		await rollUnarmedStrike(actor, { sharedTargets: 2 });
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ canCrit: true, canMiss: true, multiTarget: false }),
+		);
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				system: expect.objectContaining({
+					activation: expect.objectContaining({
+						targets: expect.objectContaining({ singleTargetAttack: true }),
+					}),
+					targets: ['Scene.s.Token.goblin', 'Scene.s.Token.kobold'],
+				}),
+			}),
+		);
+	});
+
 	it("reads the striker's Attack Outcome rules, and spends their charge after the card", async () => {
 		dialogResult({ rollMode: 0 });
 		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);

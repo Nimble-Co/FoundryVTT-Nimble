@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "extraTargets",
+				"disabled": false,
+				"id": "Kq7bWz2LmN4xRt8P",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"attackOrigin": "burst-of-speed",
+				"count": 1,
+				"reach": 4
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -107,4 +107,6 @@ export interface ItemActivationConfigDialogProps {
 	useOptionGroups?: UseOptionGroup[];
 	/** The identifier of the feature the attack is made through. */
 	attackOrigin?: string;
+	/** The extra targets share one attack, so the first target decides. */
+	sharesOneAttack?: boolean;
 }

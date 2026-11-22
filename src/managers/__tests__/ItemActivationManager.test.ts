@@ -2175,6 +2175,15 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(await critWithTwoTargets({ fastForward: true })).toBe(false);
 		});
 
+		it('share one attack when the use lets them, which can crit and miss, and the card says so', async () => {
+			const canCrit = await critWithTwoTargets({ fastForward: true, sharedTargets: 2 });
+
+			expect(canCrit).toBe(true);
+			expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[2]).toMatchObject({ canMiss: true });
+			expect(vi.mocked(DamageRoll).mock.calls.at(-1)?.[2]).not.toHaveProperty('multiTarget');
+			expect(manager.activationData.targets).toMatchObject({ singleTargetAttack: true });
+		});
+
 		it('are none on a free use, so the user targets do not make it a Multi-target Attack', async () => {
 			const canCrit = await critWithTwoTargets({
 				fastForward: true,

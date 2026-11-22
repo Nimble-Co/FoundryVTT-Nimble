@@ -229,6 +229,22 @@ describe('collectGrantedActionOffers', () => {
 		});
 	});
 
+	it('gives only the user a line when the rule is not for the targets', async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([
+			{
+				type: 'grantActivation',
+				id: 'rule-1',
+				includesUser: true,
+				includesTargets: false,
+			} as never,
+		]);
+
+		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.enemy' } }]);
+
+		expect(offers.map((offer) => offer.targetActorUuid)).toEqual(['Actor.commander']);
+	});
+
 	it('gives no line on use for a rule that waits for an Interpose', async () => {
 		const { collectGrantedActionOffers } = await loadModule();
 		const item = createGrantingItem([

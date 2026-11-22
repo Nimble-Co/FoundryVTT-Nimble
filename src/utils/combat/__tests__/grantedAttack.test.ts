@@ -205,6 +205,79 @@ describe('an attack from a granted attack line', () => {
 		expect(useHeroicReactions).toHaveBeenCalledWith(combatant.id, ['opportunityAttack'], undefined);
 	});
 
+	describe('with extra targets for attacks through the granting feature', () => {
+		function extraTargets(attackOrigin: string, source: string, reach: number) {
+			return {
+				type: 'extraTargets',
+				extraTargetsFor: (origin: string | null | undefined) =>
+					origin === attackOrigin ? { source, count: 1, reach } : null,
+			};
+		}
+
+		beforeEach(() => {
+			vi.stubGlobal(
+				'fromUuidSync',
+				vi.fn((uuid: string) =>
+					uuid === 'Item.granting' ? { system: { identifier: 'flurry' } } : null,
+				),
+			);
+		});
+		afterEach(() => vi.unstubAllGlobals());
+
+		function heroWithExtras(items: unknown[]) {
+			const made = hero(items);
+			Object.assign(made.actor, {
+				rules: [
+					extraTargets('flurry', 'Wide Reach', 2),
+					extraTargets('flurry', 'Wider Reach', 4),
+					extraTargets('other', 'Elsewhere', 1),
+				],
+			});
+			return made;
+		}
+
+		it('counts the targets the attack can have, with the reach of each extra', () => {
+			const { actor } = heroWithExtras([]);
+
+			expect(grantedAttack.grantedAttackTargets(actor, line())).toEqual({
+				count: 3,
+				extras: [
+					{ source: 'Wide Reach', count: 1, reach: 2 },
+					{ source: 'Wider Reach', count: 1, reach: 4 },
+				],
+			});
+			expect(grantedAttack.grantedAttackTargets(hero([]).actor, line())).toEqual({
+				count: 1,
+				extras: [],
+			});
+		});
+
+		it('lets the extra targets share one attack with a weapon', async () => {
+			const sword = weapon('Longsword');
+			const { actor, activateItem } = heroWithExtras([sword]);
+
+			await grantedAttack.makeGrantedAttack(actor, line({ free: true }), sword.uuid);
+
+			expect(activateItem).toHaveBeenCalledWith('Longsword', {
+				originUuid: 'Item.granting',
+				sharedTargets: 3,
+				skipActionDeduction: true,
+			});
+		});
+
+		it('lets the extra targets share one Unarmed Strike', async () => {
+			const { actor } = heroWithExtras([]);
+
+			await grantedAttack.makeGrantedAttack(actor, line({ free: true }), 'unarmedStrike');
+
+			expect(rollUnarmedStrikeMock).toHaveBeenCalledWith(actor, {
+				originUuid: 'Item.granting',
+				sharedTargets: 3,
+				free: true,
+			});
+		});
+	});
+
 	it('does nothing for a choice the recipient no longer has', async () => {
 		const { actor, activateItem } = hero([]);
 
