@@ -750,18 +750,6 @@ describe('the origin of an attack', () => {
 		expect(attackOptions(feature).origin).toEqual(grantingOrigin);
 	});
 
-	it('takes the granting feature by its old option name too', async () => {
-		const actor = hero();
-		longbow(actor);
-		const granting = grantingFeature(actor);
-		findItems(actor);
-		const feature = incendiaryShot(actor);
-
-		await feature.activate({ offerSourceUuid: granting.uuid });
-
-		expect(attackOptions(feature).origin).toEqual(grantingOrigin);
-	});
-
 	describe('a damage bonus for attacks made through one feature', () => {
 		const bonus = (entry: Record<string, unknown>) => ({
 			value: null,

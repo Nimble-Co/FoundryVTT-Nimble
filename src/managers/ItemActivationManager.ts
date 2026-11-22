@@ -391,8 +391,7 @@ class ItemActivationManager {
 
 	/** The feature that caused this attack: the item it was made through, or the item itself. */
 	get origin(): AttackOrigin {
-		const through = this.#options.originUuid || this.#options.offerSourceUuid;
-		return attackOriginOf(this.#item, through);
+		return attackOriginOf(this.#item, this.#options.originUuid);
 	}
 
 	/** The attack roll of this activation, for the uses its crit dice spend. */
@@ -2056,8 +2055,6 @@ namespace ItemActivationManager {
 		lessMana?: boolean;
 		/** The item this attack is made through, such as the feature that grants it. */
 		originUuid?: string;
-		/** @deprecated The old name of `originUuid`. */
-		offerSourceUuid?: string;
 		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
 		/** Whether to hide the roll from other players. */
