@@ -882,6 +882,7 @@
 					"source": "{source}",
 					"reasonAndSource": "{reason} - {source}",
 					"usedUp": "This roll used it",
+					"spentOnHit": "Spent {count} from {pool} on this hit",
 					"usedByAction": "This action used it",
 					"lastsUntil": "{moment}"
 				},
@@ -972,6 +973,7 @@
 				"poolSpendConfirm": "Add to Damage",
 				"poolSpendEmpty": "No dice left in {label}.",
 				"poolSpendUnavailable": "That feature's dice pool is no longer available.",
+				"chargeSpendEmpty": "That pool has no charge left. Nothing was spent.",
 				"poolSpendStale": "Those dice are no longer in the pool. Nothing was spent.",
 				"poolSpendNoLongerOffered": "That spend no longer applies to this attack. Nothing was spent.",
 				"poolSpendUnknownDamageType": "That feature is set to deal \"{damageType}\" damage, which this system does not know. Nothing was spent.",
@@ -2214,7 +2216,7 @@
 				}
 			},
 			"chargeConsumer": {
-				"description": "Spend charges from an item or actor pool when this rule’s owner is activated.",
+				"description": "Spend charges from an item or actor pool when this rule’s owner is activated, or from a button on the owner’s attack card.",
 				"costMode": {
 					"label": "Cost mode",
 					"hint": "Fixed spends the cost every activation. Variable asks the player how much to spend, from the cost up to the maximum, and the item’s effect formulas read the chosen amount as @spent.",
@@ -2238,6 +2240,26 @@
 				"oncePerTurn": {
 					"label": "1/turn",
 					"hint": "One use each turn, of any creature. The 1/turn options on the same item, such as a Defend option, share it. Outside combat there is no limit."
+				},
+				"cardOffer": {
+					"label": "Spend from the attack card",
+					"hint": "The charge is not spent when the item is used. Your attack cards get a button instead, after a hit or only after a crit, that spends the cost and adds the damage formula to the attack. Leave empty to spend the charge when the item is used."
+				},
+				"cardOfferSource": {
+					"label": "Button on attacks made with",
+					"hint": "Weapon: the button shows only on attacks with a weapon. An Unarmed Strike and a feature attack with a chosen weapon are weapon attacks. Spell: the button shows only on attacks with a spell. Any: the button shows on all attacks."
+				},
+				"effectFormula": {
+					"label": "Damage",
+					"hint": "The damage the button adds to the attack, such as 1d@pools.combat-dice.faces for a roll of the pool's die."
+				},
+				"pushDistance": {
+					"label": "Push",
+					"hint": "Spaces the button pushes each target away from you, as a line on the card. Leave blank for no push."
+				},
+				"pushDistanceBySize": {
+					"label": "Push by size",
+					"hint": "The push for a target of this size, in place of Push. Leave a size blank to use Push."
 				}
 			},
 			"resourceCost": {
@@ -2427,6 +2449,10 @@
 					"label": "Show the count with no maximum",
 					"hint": "For a pool the book gives no cap. The maximum stays only as a limit, and the sheet and the card show the count alone."
 				},
+				"spentByFeaturesOnly": {
+					"label": "Spent only by its features",
+					"hint": "The roll window shows no Spend Pool Dice row for this pool. Features that spend from the pool still work."
+				},
 				"showAsResource": {
 					"label": "Show as a resource",
 					"hint": "Also show the pool as a meter on the character sheet, with the other meters. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."
@@ -2523,6 +2549,10 @@
 				"targetCondition": {
 					"label": "Target condition",
 					"hint": "Predicate evaluated against the target's state at activation. The choice is only offered when the target matches, e.g. { \"$and\": [\"target:quarry\"] }."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Choosing the bonus spends one charge of this pool when you roll. The roll window does not show the bonus when the pool has no charge left, or when the use itself or a Spend Pool Dice choice in the window already spends from this pool. A chosen bonus hides the Spend Pool Dice choice for this pool. Leave blank for a bonus that costs nothing."
 				}
 			},
 			"damageBonus": {
@@ -4424,6 +4454,12 @@
 			"header": "Charges",
 			"temporaryUses": "{count} temporary: spent first, gone when the encounter ends.",
 			"temporaryUsesFrom": "{count} temporary from {source}: spent first, gone when the encounter ends.",
+			"cardLine": {
+				"spent": "{pool}: spent {count}, {left} left",
+				"regained": "{pool}: regained {count}, {left} left",
+				"left": "{pool}: {left} left",
+				"countOf": "{current} of {max}"
+			},
 			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
@@ -4457,6 +4493,7 @@
 				"onTurnStart": "Turn Start",
 				"onTurnEnd": "Turn End",
 				"onAnyTurnStart": "Start of Each Creature's Turn",
+				"onRoundStart": "Round Start",
 				"onKill": "Kill",
 				"onBloodied": "Bloodied",
 				"onMarkedDeath": "Marked creature dies"
@@ -5965,7 +6002,7 @@
 			"noWeapon": "You have no weapon of this kind.",
 			"noWeaponFor": "{item}: you have no weapon of this kind.",
 			"noCharge": "{pool}: none left.",
-			"spendsCharge": "{pool}: this roll spends {count} ({left} left).",
+			"spendCharge": "{count} from {pool} ({left} left after)",
 			"lessMana": "Spend 1 less mana",
 			"dualWield": {
 				"name": "Dual wield",
@@ -6030,7 +6067,9 @@
 				"advantage": "Advantage × {count}",
 				"damage": "+{value} damage",
 				"damageDoubled": "+{value} damage (doubled)",
-				"none": "None"
+				"none": "None",
+				"tick": "{label}: +{value} damage",
+				"tickWithNote": "{label}: +{value} damage ({note})"
 			}
 		},
 		"characterSettings": {

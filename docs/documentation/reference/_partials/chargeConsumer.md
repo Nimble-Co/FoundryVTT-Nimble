@@ -17,6 +17,8 @@ An item with a variable consumer always opens its roll window, even when it is s
 
 **Example: Burst of Speed.** A fixed cost of `1` with **1/turn** on. The item can be used 1 time each turn, of any creature. Its Defend options that are 1/turn share that use, so the item or one of its options can be used each turn, not each of them. Outside combat there is no limit.
 
+**Example: Heavy Strike.** Set **Spend from the attack card** to `hit` and **Button on attacks made with** to `weapon`. Using the item then spends nothing. Each weapon attack card of the hero that hits gets an **Add Damage** button that spends the **Cost** and adds **Damage** to the attack, such as `1d@pools.combat-dice.faces` for a roll of the Combat Die. **Push** pushes each target away by that many spaces, as a Move line on the card, and **Push by size** sets the push for one size, such as `@strength*2` for a Small target. A size that has no push of its own takes **Push**.
+
 An item can have a fixed cost and a variable one on the same pool. The fixed cost comes out first and the player picks from what is left, so a pool of 10 with a fixed cost of 3 offers up to 7. If the pool cannot cover both, the item cannot be used.
 
 A variable consumer will not work in these cases. The item cannot be used, and the message names the pool.

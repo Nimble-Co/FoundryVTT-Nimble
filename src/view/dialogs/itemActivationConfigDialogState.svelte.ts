@@ -19,6 +19,7 @@ import {
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
+import { labelNote } from '#utils/chargePool/poolHeading.js';
 import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import {
 	type AttackActivation,
@@ -63,6 +64,15 @@ import { useOptionSplits } from './useOptionSplits.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
 
+/** "Bonus: +1d6 × 2 damage (+1 Reach)": a note in brackets on the label goes last. */
+function conditionalBonusTick(label: string, damage: string): string {
+	const text = 'NIMBLE.activationDialog.conditionalBonus';
+	const { name, note } = labelNote(label);
+	return note
+		? localize(`${text}.tickWithNote`, { label: name, value: damage, note })
+		: localize(`${text}.tick`, { label, value: damage });
+}
+
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
 	item: () => Item;
@@ -95,16 +105,11 @@ export function createItemActivationConfigDialogState(
 	const resources = resourceAmounts(actor, options.resourceCosts ?? []);
 	const splits = useOptionSplits(actor, options.useOptionGroups ?? []);
 
-	const spendLine = $derived.by(() => {
-		const costParts = rollWindowCostParts([...resources.chosen(), ...splits.costs()]);
-		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
-	});
-
 	const allRolledPools = extractRolledPools(actor);
 	const spendablePools: SpendablePool[] = allRolledPools.filter(
 		(pool) => pool.consumption !== 'autoBonus',
 	);
-	const spendableChargePools: SpendableChargePool[] = extractSpendableChargePools(actor);
+	const chargePoolsWithDie: SpendableChargePool[] = extractSpendableChargePools(actor);
 	const variableChargeSpends: VariableChargeSpend[] = extractVariableChargeSpends(actor, item);
 
 	// The actor that target tests read, taken when the dialog opens. None with two or more
@@ -136,7 +141,8 @@ export function createItemActivationConfigDialogState(
 	let dualWield = $state(false);
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
-	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
+	const spendsCharges = isResourceSpendingAutomationEnabled();
+	const fixedChargeCosts = spendsCharges ? fixedChargeCostsOf(actor, item) : [];
 	const held = heldChangeChoice(actor, item, options.ignoresDisadvantage, {
 		get: () => selectedRollMode,
 		set: (mode) => {
@@ -218,6 +224,8 @@ export function createItemActivationConfigDialogState(
 	// Snapshot what applies against the target at dialog-open time; with two or more
 	// targets, a bonus that tests the target is not offered. If the player retargets while
 	// the dialog is open, the choice is not checked again at submit.
+	// One spend of a pool per attack: a bonus does not spend from a pool the use already spends from.
+	const poolsSpentByUse = new Set(fixedChargeCosts.map((cost) => cost.poolId));
 	const conditionalBonusesFor = (weapon: WeaponOption | null) =>
 		getActiveConditionalBonuses(
 			actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
@@ -229,7 +237,7 @@ export function createItemActivationConfigDialogState(
 			firstTargetActor,
 			weaponItemOf(weapon?.uuid),
 			options.attackOrigin,
-		);
+		).filter((option) => !option.charge || !poolsSpentByUse.has(option.charge.poolId));
 	const initialConditionalBonusOptions = conditionalBonusesFor(weapons[0] ?? null);
 	let conditionalBonusOptions = $state<ConditionalBonusOption[]>(initialConditionalBonusOptions);
 	const conditionOptions = $derived(conditionRollModeOptions(conditionLines));
@@ -273,7 +281,7 @@ export function createItemActivationConfigDialogState(
 
 	// Per-charge-pool count of charges the player has chosen to spend.
 	let chargeSpendCounts = $state<Record<string, number>>(
-		Object.fromEntries(spendableChargePools.map((p) => [p.id, 0])),
+		Object.fromEntries(chargePoolsWithDie.map((p) => [p.id, 0])),
 	);
 
 	// Variable spends open at their minimum rather than at 0: the activation is
@@ -313,7 +321,7 @@ export function createItemActivationConfigDialogState(
 	}
 
 	function adjustChargeSpend(poolId: string, delta: number) {
-		const pool = spendableChargePools.find((p) => p.id === poolId);
+		const pool = offeredChargePools.find((p) => p.id === poolId);
 		if (!pool) return;
 		const next = Math.max(0, Math.min(pool.current, (chargeSpendCounts[poolId] ?? 0) + delta));
 		chargeSpendCounts = { ...chargeSpendCounts, [poolId]: next };
@@ -338,7 +346,7 @@ export function createItemActivationConfigDialogState(
 	// per pool: "+2d6[Combat Dice]" rather than two separate "+1d6" terms.
 	const chargeBonusFragments = $derived.by<ChargeBonusFragment[]>(() => {
 		const fragments: ChargeBonusFragment[] = [];
-		for (const pool of spendableChargePools) {
+		for (const pool of offeredChargePools) {
 			const count = chargeSpendCounts[pool.id] ?? 0;
 			if (count < 1) continue;
 			fragments.push({
@@ -359,10 +367,6 @@ export function createItemActivationConfigDialogState(
 			chargeBonusFragments.map((f) => f.formula).join(''),
 	);
 
-	const hasSpendablePools = $derived(
-		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
-	);
-
 	// The variable spends in the shape the manager deducts from.
 	const consumedVariableCharges = $derived(
 		variableChargeSpends
@@ -376,7 +380,61 @@ export function createItemActivationConfigDialogState(
 		conditionalChoices = { ...conditionalChoices, [key]: choice };
 	}
 
-	const hasConditionalBonuses = $derived(conditionalBonusOptions.length > 0);
+	// A chosen bonus that spends a charge takes one when the roll is made.
+	const chosenCharges = $derived(
+		conditionalBonusOptions
+			.filter((o) => o.charge && (conditionalChoices[o.key] ?? 'none') !== 'none')
+			.map((o) => o.charge as NonNullable<ConditionalBonusOption['charge']>),
+	);
+	// One spend of a pool per attack: the stepper and a chosen bonus never both spend from one pool.
+	const offeredChargePools = $derived(
+		chargePoolsWithDie.filter(
+			(pool) =>
+				!poolsSpentByUse.has(pool.id) && !chosenCharges.some((charge) => charge.poolId === pool.id),
+		),
+	);
+	const offeredChargeSpends = $derived(
+		offeredChargePools
+			.map((pool) => ({ poolId: pool.id, count: chargeSpendCounts[pool.id] ?? 0 }))
+			.filter((entry) => entry.count > 0),
+	);
+	const shownBonusOptions = $derived(
+		conditionalBonusOptions.filter(
+			(option) =>
+				!option.charge ||
+				!offeredChargeSpends.some((spend) => spend.poolId === option.charge?.poolId),
+		),
+	);
+	const hasConditionalBonuses = $derived(shownBonusOptions.length > 0);
+	const hasSpendablePools = $derived(
+		spendablePools.length > 0 || offeredChargePools.length > 0 || autoBonusPools.length > 0,
+	);
+	const chargeCosts = $derived([
+		...fixedChargeCosts,
+		...(spendsCharges ? chosenCharges : [])
+			.filter((charge) => !charge.hidden)
+			.map((charge) => ({ label: charge.label, amount: 1, current: charge.current })),
+	]);
+	// One line for every cost of the roll, charges with what is left after the roll.
+	const spendLine = $derived.by(() => {
+		const costParts = rollWindowCostParts([...resources.chosen(), ...splits.costs()]);
+		const charges = chargeCosts.map((cost) =>
+			localize('NIMBLE.rollWindow.spendCharge', {
+				count: String(cost.amount),
+				pool: cost.label,
+				left: String(Math.max(0, cost.current - cost.amount)),
+			}),
+		);
+		return rollSpendLine(
+			options.spendsActions,
+			[...costParts.spends, ...charges],
+			costParts.sacrifices,
+		);
+	});
+	const consumedChargePools = $derived([
+		...offeredChargeSpends,
+		...chosenCharges.map((charge) => ({ poolId: charge.poolId, count: 1 })),
+	]);
 
 	// Net advantage stacks contributed by choices set to "advantage".
 	const conditionalAdvantageTotal = $derived(
@@ -547,7 +605,9 @@ export function createItemActivationConfigDialogState(
 		get rangeLine() {
 			return rangeLine;
 		},
-		chargeCosts,
+		get chargeCosts() {
+			return chargeCosts;
+		},
 		get cannotRollReason() {
 			if (weaponAttack !== '' && !chosenWeapon) return localize('NIMBLE.rollWindow.noWeapon');
 			const unpaid = chargeCosts.find((cost) => cost.current < cost.amount);
@@ -634,13 +694,15 @@ export function createItemActivationConfigDialogState(
 
 		// Pool snapshots (immutable).
 		spendablePools,
-		spendableChargePools,
 		variableChargeSpends,
+		get spendableChargePools() {
+			return offeredChargePools;
+		},
 		get autoBonusSummaries() {
 			return autoBonusSummaries;
 		},
 		get conditionalBonusOptions() {
-			return conditionalBonusOptions;
+			return shownBonusOptions;
 		},
 
 		// Conditional-bonus choices.
@@ -654,10 +716,15 @@ export function createItemActivationConfigDialogState(
 			return conditionalAdvantageTotal;
 		},
 		setConditionalChoice,
+		conditionalBonusTick,
 
 		// Selection getters.
 		get chargeSpendCounts() {
 			return chargeSpendCounts;
+		},
+		/** The charges the roll spends: the ones the player added, and those of chosen bonuses. */
+		get consumedChargePools() {
+			return consumedChargePools;
 		},
 		get variableSpendCounts() {
 			return variableSpendCounts;

@@ -4,182 +4,184 @@ title: "Dice Rolls & Chat Cards"
 
 # Dice Rolls & Chat Cards
 
-This page tells how attack dice work, what the roll windows ask, and what you can do on a chat card.
-
 ## How Nimble attack dice work
 
-An attack rolls all its damage dice at once, but one die decides the outcome: the **Primary Die**, the first die of the attack's damage. The other dice and the modifiers only add to the total.
+An attack rolls all its damage dice at once. The first die, the **Primary Die**, decides the outcome. The rest only add to the total.
 
-- **Crit:** the Primary Die rolls its max. It explodes: roll it again and add it, as long as it rolls its max.
+- **Crit:** the Primary Die rolls its max. It explodes: roll and add it again while it rolls its max.
 - **Miss:** the Primary Die rolls a 1. Some targets make more faces a miss.
-- **Advantage and disadvantage:** each step adds one die, and the lowest die drops (the highest with disadvantage). Advantage and disadvantage cancel one for one. A 1 that drops is not a miss.
-- **No crit and no miss:** an area attack, and an attack on 2 or more targets. The card shows a tag, such as "No miss: 2 targets", when the die shows a face that does not count.
-- **One attack on several targets:** some features, such as Whirlwind, make one attack on every target. One roll hits or misses each target against its own armor, and a crit is a crit on each. Sweeping Strike also does not miss on a 1. The reach is shown, not checked.
+- **Advantage and disadvantage:** each step adds one die, and the lowest die drops (the highest with disadvantage). They cancel one for one. A 1 that drops is not a miss.
+- **No crit and no miss:** an area attack, and an attack on 2 or more targets, with a tag such as "No miss: 2 targets". A feature such as Whirlwind hits, misses or crits each target against its own armor.
 - **No crit:** a weapon you are not proficient with, and all minions.
 
 ## The roll window
 
 A click on a skill, a save, an ability or Initiative opens a roll window.
 
-![The check roll window with the advantage slider and the formula preview](/images/documentation/roll-dialog-simple-attack.png)
+![The check roll window](/images/documentation/roll-dialog-simple-attack.png)
 
 - **The advantage slider** goes from Disadvantage ×6 to Advantage ×6. The formula under it shows what you roll.
-- **Situational Modifiers:** a tick for each condition that changes the roll, such as Poisoned. The ticks are on when the window opens, and the slider counts them. See [Conditions that change a roll](conditions.md#conditions-that-change-a-roll).
-- **Hide roll** *(GM only)* makes a blind roll. The **Hide Rolls by Default** setting ticks it at the start.
+- **Situational Modifiers:** a tick, on by default, for each condition that changes the roll, such as Poisoned. The slider counts them. See [Conditions that change a roll](conditions.md#conditions-that-change-a-roll).
+- **Hide roll** *(GM only)* makes a blind roll.
 
 A save can start with advantage or disadvantage from your class or ancestry. To change it, turn on **Edit** and click **Saves** on the Core tab.
 
 ### The attack roll window
 
-An item that rolls damage or healing opens the same window. The ticks also list the conditions of the target that change the roll. The window has more fields:
+An item that rolls damage or healing opens the same window, with ticks for the target's conditions too, and more fields:
 
-- **Add to Roll:** a number or dice, such as `2` or `1d4`, added to the first damage formula. It does not change the Primary Die.
-- **Set Primary Die Result:** the Primary Die shows this number and is not rolled. The max is a crit, 1 is a miss.
-- **Add to Primary Die Result:** this number is added to the face of the Primary Die, from 1 up to its max. The new face decides: a d6 at 5 with +1 crits.
+- **Add to Roll:** a number or dice, such as `1d4`, added to the damage, not to the Primary Die.
+- **Set Primary Die Result:** the Primary Die shows this number and is not rolled.
+- **Add to Primary Die Result:** this number goes on the Primary Die, up to its max, so a d6 at 5 with +1 crits.
 
-A line tells what the roll spends or sacrifices: the actions in combat, and the mana, HP, temp HP or Wounds of the use. When a use needs more than you have and its rule lets you go beyond, a window asks you to confirm first. It asks only while the **Costs** automation setting is on. Your second attack in a turn starts with the disadvantage of a Rushed Attack. Move the slider when a feature or the GM says otherwise.
-
-A feature that attacks with a weapon, such as Vital Shot, shows a **Weapon** dropdown. It lists every weapon of the right kind that you carry, under **Equipped** and **Not equipped** when you have both, and starts on your first equipped weapon. A feature that can use a melee weapon also lists your Unarmed Strike, with the damage and the melee damage bonuses of the sheet's Unarmed Strike. An attack with a weapon that is not equipped does not equip it. With no weapon of the right kind, the roll window does not open, and a message tells you why.
-
-The attack uses the weapon with everything it does. Extra damage or notes the weapon has on a hit, miss or crit come on the card next to those of the feature, and the weapon's own rules apply, such as a damage bonus only for that weapon's attacks. Weapon damage bonuses, such as Enchant Weapon, apply as well. The attack is melee or ranged as the weapon is, with its reach or range, so a rule, held change or pool bonus for melee or ranged attacks reads the weapon, not the feature. The feature still decides how the attack lands: when it cannot miss, the weapon does not change that. The card records the weapon.
-
-The cast window of a spell shows a dropdown for each option that a feature gives, such as **Spellshaper (1/turn)**: pick one option or **None**. When an option can take the place of the spell's cost, the window shows **Spend** buttons, with the spell's own cost first. On a melee attack, an option with picks shows one counter for each pick.
-
-A feature that lets you divide the dice of an attack among its targets, such as Grim Harrow for the Bonescythe, shows a row for each target with **−** and **+**. The dice start spread evenly. Give out every die before you roll. One roll decides the hit, miss or crit of all targets: the first target with dice takes its dice and the flat damage, and each other target takes its own dice. The card shows each target's damage as its own boxes, one target after the other, and **Apply Damage** gives each target only its part, through its own armor.
-
-Some features add a tick to the window, for example **Max damage** or **Dual wield**. **Dual wield** shows when you have 2 equipped weapons, or 1 equipped weapon with a quantity of 2 or more. A feature can also hold a change for your next attack, for example Assess or True Strike. The creature shows an icon, and the window shows a line for each held change. The attack that uses a change ends it. With **Feature Effects** off, each line is a tick box that starts unticked, and only the changes you tick go on the roll. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
+A line tells what the roll spends: "When you roll, it spends 1 action and 1 from Combat Dice (2 left after)." A use that goes beyond what you have asks you to confirm (**Costs** setting). A second attack in a turn starts with Rushed Attack disadvantage.
 
 ::: details More about the Primary Die fields
-- With advantage, the dice drop first. The set or added number then goes on the die that stays.
-- A reroll rolls the Primary Die again and loses **Set Primary Die Result**. It keeps **Add to Primary Die Result**.
-- Features that add to the Primary Die (for example +1 on melee attacks) work as **Add to Primary Die Result** and add up with it. The card shows one Primary Die line with each feature, such as "Primary Die: 5 + 1 (Juggernaut) = 6". A set value shows in the same line: "Primary Die: set to 4, + 1 (Juggernaut) = 5". When a change set the die and its value is final, the line says that the set result replaces the bonus. Hover the line to read why.
-- An area attack gets none of these.
+- With advantage, the dice drop first. The set or added number goes on the die that stays.
+- A reroll loses **Set Primary Die Result** and keeps **Add to Primary Die Result**. Features that add to the Primary Die add up with it. An area attack gets none of these.
 :::
+
+### Ticks and held changes
+
+Some features add a tick, such as **Max damage** or **Dual wield**. A tick that spends a charge adds it to the spend line. A tick with a limit, such as **(1/round)**, hides until the use comes back. One attack spends from a charge pool one time only: when a tick, the use or an **Add Damage** button spent a Combat Die, nothing else spends one.
+
+A feature such as Assess can hold a change for your next attack. The creature shows an icon, and the next attack window shows a line for it and ends it. With **Feature Effects** off, the line is a tick box that starts unticked. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
+
+::: details More about ticks and spell options
+- **Dual wield** shows with 2 equipped weapons, or 1 with a quantity of 2 or more.
+- A spell's cast window shows a dropdown for each option a feature gives, such as **Spellshaper (1/turn)**. When an option can replace the spell's cost, **Spend** buttons show. On a melee attack, an option with picks shows a counter for each pick.
+:::
+
+### Attacks with a weapon or divided dice
+
+A feature that attacks with a weapon, such as Vital Shot, shows a **Weapon** dropdown of the right weapons you carry, equipped or not. A melee feature also lists Unarmed Strike. The attack does not equip the weapon. With no right weapon, a message tells why.
+
+The attack uses the weapon's reach or range, rules and hit, miss and crit text, plus the feature's rules, so a feature that cannot miss still cannot. Half range shows as "Range 8 (half range)". Nothing checks the distance.
+
+A feature that divides the dice, such as Grim Harrow, shows a row for each target with **−** and **+**. Give out every die, then roll once for the hit, miss or crit of all. Each target takes its dice through its own armor, and the first also takes the flat damage. The card groups the boxes by target: "Slashing to G1", "Necrotic to G1", then G2.
 
 ## Anatomy of a chat card
 
-![An attack chat card with a damage total, the Apply Damage button, the targets and an Effects part with Slowed](/images/documentation/apply-effect-chat-card.png)
+![An attack chat card](/images/documentation/apply-effect-chat-card.png)
 
-- **Header:** the item, and under it **Hit**, **Critical Hit** or **Miss**. A feature that attacks with a weapon names the weapon, as in "Hit with Longsword". An attack made through another feature names that feature, as in "Hit (Coordinated Strike!)". An opportunity attack says so, as in "Hit (opportunity attack)". When it is also made through a feature, the feature comes after it: "Hit (opportunity attack, Coordinated Strike!)". Click a name to open its sheet.
-- **Cost:** what the Spend or Sacrifice costs and the options of the use took, such as **Cost: 2 mana (Stretch Time)**. The mana of a spell's own tier is not on this line.
-- **Roll boxes:** the total of each damage or healing roll, with its type. Click the arrow, or hover the total, to see the dice. Small lines under a damage box tell where its parts came from: the Primary Die line, a line for each feature that added damage, such as "Juggernaut: +14", and "From Withering Strike" on a box that a feature made.
-- **Add Damage buttons:** a feature that spends dice to add damage after a hit or a crit is a button over **Apply Damage**, such as **Add Damage with Death Blow**. The damage goes on the total of the attack, so armor counts one time, and shows as a line in the damage box. Spend before the GM clicks **Apply Damage**.
-- **Apply Damage** *(GM only)*: applies the damage to the targets of the card. When a target takes less (armor, resistance, a reduction), the card lists why under **Reduced Damage**.
-- **Targets:** the tokens you targeted when you rolled. Buttons add the selected or targeted tokens, or remove one. Hostile targets are marked.
-- **Save:** a d20 button. Select the tokens that save and click it. With no token selected, it warns you and rolls nothing.
-- **Effects:** a row for each effect of the item, with its Lasts Until. An effect for the targets has an **Apply to Targets** button. An effect for the user goes on by itself, or has an **Apply to You** button while Feature Effects is off. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
-- **Change This Roll:** rerolls and changes from features. See below.
-- **Ricochet:** after a hit with a weapon that a feature lets ricochet, such as a thrown dagger with Trickshot. The line sits below **Apply Damage**. Target the other creature and click **Ricochet to** it. It takes half the damage, rounded down, through its own armor. The GM clicks **Apply** on the line; a GM who targets the creature can apply it at once. Then the line says who took how much, such as "G2 took 5 damage." The card cannot tell a thrown dagger from a stab, so the line says "if you threw the Dagger" and the table decides.
-- **Reactions:** Defend and Interpose on an attack that hits a hero. See [Defend and Interpose](#defend-and-interpose).
-- **Attack lines:** an attack that a feature gives, such as Coordinated Strike!. The heading says what the attack spends: **Free Attack**, **Attack (1 action)**, **Opportunity Attack (reaction)** or **Opportunity Attack (free)**. Under it, each creature has its name and a row with a dropdown and an **Attack** button. The dropdown lists the weapons of that creature as the attack window does, with **Cantrips** when the feature allows a cantrip. **Attack** opens the usual attack window. The attack counts as made through the feature, so the riders of that feature apply. A free attack spends no action, but it still counts toward Rushed Attacks unless the feature says it ignores them. Hover the name to see the feature, a condition the table checks, and how many targets share one attack when the feature lets it hit more. When more creatures are targeted than the feature reaches, one warning names them; every line stays usable. A line that follows a move, such as Roll & Strike, shows once that move ends. When the system sees that its condition failed, for example you did not end next to your quarry, the section shows a warning, and you can still attack. After the attack, the line says "Wren attacked with Longsword." Only the owner of that creature and the GM see the controls. A monster can give a hero a line too: Control from the Ul'vek, Psionic Despot gives the target a line that spends one of their actions; hover the name to read that they attack with disadvantage if they passed the save.
+- **Header:** the item and the result. The result names the weapon a feature attacked with, "Hit with Longsword", or the feature you attacked through, "Hit (Coordinated Strike!)". An opportunity attack says so: "Hit (opportunity attack)". A free cast with no roll says "Free (Coordinated Strike!)".
+- **Cost:** what the use spent or sacrificed, such as **Cost: 2 mana (Stretch Time)**. A spent charge is one line at the bottom: "Combat Dice: spent 1, 2 of 3 left".
+- **Roll boxes:** the total of each roll. Click the arrow, or hover the total, to see the dice.
+- **Apply Damage** *(GM only)*: applies the damage to the card's targets. **Reduced Damage** tells why a target took less.
+- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens.
+- **Save:** rolls for the selected tokens.
+- **Effects:** **Apply to Targets** puts an effect on the targets. An effect for the user goes on by itself (**Apply to You** with Feature Effects off). See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 
-A player sees only the rows of the characters they own. The GM sees all.
+A player sees only the rows of the characters they own. Names on the card and in **Events** are underlined when you may see that document. Click one to open its sheet.
 
-**Names open their sheets.** The name of a feature, spell, item or effect on a card, such as the card title, a reroll line or a line in Events, is underlined when you may see that document. Click it to open its sheet and read it, or drag it like any content link. A name you may not see, an object that is not identified, or a document that is gone stays plain text.
+**Tags at the roll** tell why when the die does not, such as **Crit: target Stunned** or **Cannot miss**. Hover or tap a tag to read it as a sentence. Dice that a crit adds, such as Sneak Attack, show as their own line.
 
-**Tags at the roll.** When the die does not explain the result, a tag tells why, for example **Crit: target Stunned** (a melee hit on an Incapacitated creature is a crit) or **Cannot miss**. Dice that a crit adds, such as Sneak Attack, show as their own line. Hover a tag or a line to read it as a sentence. On a touch screen, click it.
+### Where the damage comes from
+
+Small lines under a damage box tell where it came from:
+
+- One Primary Die line: "Primary Die: 4 + 1 (Juggernaut) = 5", or "Primary Die: set to 4".
+- A line for each feature that added damage: "Juggernaut: +14".
+- "From Withering Strike" on a box that a feature made.
+
+A feature that spends dice or a charge to add damage after a hit or a crit is a button over **Apply Damage**, such as **Add Damage with Heavy Strike**. Click it before the damage is applied. Its damage becomes a line in the box, "Heavy Strike: +5", and anything else, such as a push, goes in **Events**.
+
+After a hit, a weapon that can ricochet gets a line under **Apply Damage**. The card cannot tell a throw from a stab, so it says "if you threw the Dagger". Target another creature for a button such as **Apply 3 Damage to G2**: half the damage, rounded down, through its armor. Then the line says "G2 took 3 damage."
+
+### Attacks from a feature
+
+A feature such as Coordinated Strike! can give creatures an attack. The card gets a section headed by what it spends: **Free Attack**, **Attack (1 action)**, **Opportunity Attack (reaction)** or **Opportunity Attack (free)**. Each creature has its name, a weapon dropdown (with Cantrips when allowed) and an **Attack** button, which only the owner and the GM see. Hover the name to see the feature, a condition the table checks, and how many targets share one attack.
+
+**Attack** opens the usual attack window, as an attack made through the feature. A free attack says "A free attack (Coordinated Strike!): it spends no action." It still counts toward Rushed Attacks unless the feature ignores them, and then the window says so. After, the line says "Cora attacked with Longsword."
+
+A line that follows a move, such as Roll & Strike, shows when the move ends. A section shows one warning at most, and you can still attack: more creatures targeted than the feature reaches (it names them), or a failed check after the move ("Wren is not next to their quarry.").
+
+::: details Lines from reactions and monsters
+- **Interpose and Defend.** A feature that lets you attack when you Interpose, or an opportunity attack when your Defend blocks all the damage, goes on the attack card. When you cannot see that card, or you used the sheet, it goes on your Interpose or Defend card.
+- **Opportunity attacks** roll at disadvantage and spend your reaction, unless the feature says otherwise. A ranged one reads **Ranged Opportunity Attack (reaction)**.
+- **Monsters.** A monster's attack, such as the Control of the Ul'vek, Psionic Despot, can give a hero an attack that spends one of the hero's actions.
+:::
 
 ## The result of a save or check
 
-With a known DC, the line under the name tells the result: "Failed - DC 14" or "Succeeded - DC 14". On a save or a skill check, a 1 always fails and a 20 always succeeds. With no DC, compare the total at the table. The result applies nothing by itself.
+With a known DC, the line under the name reads "Failed - DC 14" or "Succeeded - DC 14". On a save or a skill check, a 1 always fails and a 20 always succeeds. The result applies nothing by itself.
 
 ## Change This Roll
 
-Features that change a roll after it is made are rows under one button on the card: **Change This Roll (3)**. The number tells how many rows you see. With no rows, you see no button.
+Features that change a roll after it is made are rows under **Change This Roll (3)**, with what each does and costs. The rows open by themselves on a failure or a miss.
 
-The rows open by themselves on a failed save or check and on a miss. Each row shows the feature, what it does and its cost at the right: uses, Mana, Wounds, an action or a Heroic Reaction. The button alone spends nothing. A click on a row uses the feature. A row goes away when the feature cannot be used.
-
-A feature of an ally shows under the ally's name. Two player characters are always allies. For other tokens, the token disposition decides, and a feature with a range needs the token within that range. When a disposition or a range kept an ally's row off a card, the GM sees a line such as "1 ally reroll left out", with an **Add** button.
+An ally's feature shows under the ally's name. Player characters are always allies; other tokens go by disposition, and a range needs the token within it. When an ally's row was left off, the GM sees "1 ally reroll left out", with **Add**.
 
 ### Rerolls
 
-A **Reroll** row rolls again. Some features reroll only one die (you click the die), several dice (cost per die), or with another stat (you click the stat). Some let you keep either result: two **Keep** buttons show, and **Apply Damage** waits until you pick one.
+A **Reroll** row rolls again: one die (you click it), several dice, or with another stat (you click the stat). When you can keep either result, **Apply Damage** waits until you click **Keep**. A line shows the old and new Primary Die. A crit or a miss that comes or goes updates the whole card.
 
-After a reroll, a line shows the old Primary Die, paler, an arrow and the new one. A reroll that happened by itself has an **Automatic** tag. A crit or a miss that comes or goes after a reroll changes the card: the crit dice, **Apply Damage** and the features that need a hit.
-
-Some features add to the reroll of another feature, for example advantage, damage, an action or temp HP. Each shows as a small tag under the reroll line. With **Feature Effects** off, the tags for actions and temp HP are dashed, and a note tells what to give by hand.
+Features that add to a reroll, such as advantage, damage, an action or temp HP, are tags under the reroll line. With **Feature Effects** off, action and temp HP tags are dashed: give them by hand.
 
 ### Changing a die
 
-A **Change Die** row gives one die a new value. No die is rolled. The feature tells which die (the Primary Die, or one you click) and how: it sets the die to a value you pick, or it adds a number. The value picker shows the old die, an arrow and the new value, with **-** and **+** buttons. Click **Set to 8**, or press Enter.
-
-The other dice stay as they are, and advantage is not worked out again. The crit, the miss and the total are, so a Primary Die set to its max crits and explodes. A later reroll of that die discards the change.
+A **Change Die** row sets one die to a value, or adds a number, with no roll. Pick it with **-** and **+**, then click **Set to 8** or press Enter. A Primary Die set to its max crits and explodes. A later reroll of that die discards the change.
 
 ### Changing a result
 
-These rows change the result, not the dice:
+- **Succeed Instead:** the save or check succeeds.
+- **Change to 10:** the total becomes that number. On Initiative, your actions in the combat tracker change too.
+- **Add +3:** the number goes on the total, shown as **7 + 3 + 3 = 13**. A 1 on a save or a skill check still fails.
 
-- **Succeed Instead:** the save or check succeeds. The total stays.
-- **Change to 10:** the total becomes that number. On Initiative, it also changes your actions in the combat tracker.
-- **Add +3:** the number goes on the total. You can click it again while you can pay.
-
-A box above the history shows how the total came from the roll, such as **7 + 3 + 3 = 13**. A 1 on a save or a skill check still fails after an add, so the add row stays but you cannot click it. Some changes happen by themselves, for example a total of 1 or less that counts as a 20.
-
-Each change has a **Remove** button that takes it off and gives the cost back. An action or a Heroic Reaction comes back only in the same turn. A reroll replaces the total, so the changes come off, and their costs stay spent.
-
-### Making an attack a crit
-
-A **Make It a Crit** row makes a hit a crit after the roll. The Primary Die keeps its face, and the crit dice are rolled. A later reroll changes only the damage dice. The row does not show on a crit, an area attack or an attack on 2 or more targets.
+**Remove** takes a change off and gives the cost back (an action or a Heroic Reaction only in the same turn). A reroll removes the changes, and their costs stay spent.
 
 ### Other rows
 
-- **No Damage:** the target of a hit takes no damage from this attack. The other targets do.
-- **Cost of 1 action:** on your turn, the action is spent at once. Off your turn, your next turn starts with 1 fewer action. Out of combat, nothing is spent.
+- **Make It a Crit:** a hit becomes a crit, and the crit dice roll. Not on an area attack or an attack on 2 or more targets.
+- **No Damage:** the target of a hit takes no damage from this attack.
+- **Cost of 1 action:** on your turn, the action is spent at once. Off your turn, your next turn starts with 1 fewer action.
 
 ## Defend and Interpose
 
-In a combat that started, an attack card that hits a hero has a **Reactions** section. It has a button for each hero the attack hits, and for each ally who can Interpose for them (only on an attack with one target). A player sees only their own heroes.
-
-The button opens the Defend window. Its heading tells the attack, the hero and the damage, for example "Fire Breath hits Pip for 14". Each row shows its cost and the damage you take:
+In combat, an attack card that hits a hero has a **Reactions** section: a button for each hero hit, and for each ally who can Interpose (one target only). It opens the Defend window. Each row shows its cost and the damage you take:
 
 - **Defend:** your Armor comes off the damage. It costs 1 more action in armor or a shield you are not proficient with.
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-Pick a row and click the button. A window asks first when your reaction is spent, when you have no actions, or when it is your turn. Features that do something when you Defend show as ticks or rows in the same window, with their cost. A move or an attack back is a line on the card for the table to do. An effect that a feature puts on the attacker goes on it when you Defend, with a line on the card. **Undo** does not take it off. A Defend that covers every attack this round is an effect on the hero until the start of their next turn. A free Defend that is a spell, such as Flame Barrier, has its own row. Cast from that row, an effect of the spell that hurts attackers also counts the attack you answer. Cast from the sheet, the effect counts only the attacks after it.
+A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too: a move back is a line for the table, and an attack back is an [attack line](#attacks-from-a-feature).
 
-After a Defend, the target row shows a green shield and the damage after Armor. Until the damage is applied, the GM can click the shield when the damage cannot be avoided (no Armor comes off), or click **Undo** to give back the reaction and its actions.
+After a Defend, the target row shows a green shield. Before the damage is applied, the GM can click it when the damage cannot be avoided, or **Undo** to give back the reaction and actions. An effect a feature put on the attacker stays.
 
-The **Defend** and **Interpose** rows on the Actions tab of the sheet, and the hotbar buttons, open the same window on the newest attack that the hero can still react to.
+The **Defend** and **Interpose** rows on the sheet's Actions tab and the hotbar buttons open this window on the newest attack the hero can react to.
 
-A feature that lets you attack when you Interpose, such as Quickstrike, puts an attack line for you on the attack card. When that card is a whisper you cannot see, or when you Interpose from the sheet with no attack card, the line goes on the Interpose card. Target the enemy and click **Attack**.
-
-Other features add an opportunity attack line. Shield Expert puts one on the attack card when your Defend blocks all its damage, or on a Defend card when the attack card is a whisper. No Escape puts one on the card of an ally's opportunity attack. Opportunistic Frenzy posts a card with one when an enemy enters your reach while you Rage. The attack rolls at disadvantage, unless a feature takes it away, and spends your reaction, unless the feature makes it free.
+::: details More about Defend features
+- A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
+- A free Defend that is a spell, such as Flame Barrier, has its own row. Cast from that row, its effect that hurts attackers also counts the attack you answer.
+:::
 
 ## The Initiative card
 
-The line under the name tells how many actions a hero starts combat with: 1, 2 with a total of 10 or more, 3 with 20 or more or a natural 20. A monster's card has no line. A change from **Change This Roll**, such as **Change to 10**, also goes to the combat tracker: the Initiative, the starting actions, and your current actions if you did not spend them yet. **Remove** does the reverse.
+The line under the name tells the actions a hero starts combat with: 1, 2 at 10 or more, 3 at 20 or more or a natural 20. **Change to 10** and **Remove** also change the actions in the combat tracker.
 
 ## Events on a card
 
-Some things happen because of a roll or a use: an effect ends, a feature is used for free, a pool gains dice, a creature can move for free, a hero Interposes. They show as lines in the **Events** strip at the bottom of the card that caused them, not as new messages. Each line says what happened and why.
+What a roll or a use causes shows as a line in the **Events** strip at the bottom of its card: an effect ends, a free use, a pool gains dice, a push or a free move. With no card to cause it, such as at the start of a turn, the chat gets one message for that moment.
 
-When nothing on the chat caused it, such as the start of a turn, the end of a round or a time that passes, the chat gets one message for that moment, with a line for each event. A feature used for free with nothing to click or read is one line, not a card of its own. A note on the feature keeps its card.
+![Events on a crit: Grug uses Rage for free](/images/documentation/events-free-use.png)
 
-![A Goblin's critical hit on Grug: in Events, Grug uses Rage for free, because an enemy hit them with a crit (Titan's Fury)](/images/documentation/events-free-use.png)
+**Undo** on an ended effect puts it back. See [How an effect works](../homebrew/effects.md#how-an-effect-works). Some lines ask a creature's owner to choose or roll, with buttons only the owner and the GM see.
 
-**Undo** on the line of an ended effect puts that effect back. See [How an effect works](../homebrew/effects.md#how-an-effect-works) for pictures of each step, and [How long a condition lasts](how-long-effects-last.md#lasts-until).
+- **A save.** "Tessa saves to keep Concentration", with **Roll**. Rerolls work on its save card. A failure ends the effect, and a reroll to a success puts it back.
+- **Temp HP.** Temp HP do not add up. When a creature would gain no more than it has, the line asks, such as **Keep 5** or **Take 3**.
 
-Some lines ask the owner of a creature to choose or roll. Only that owner and the GM see the buttons.
-
-- **A save.** "Tessa saves to keep Concentration", with **Roll**. The roll uses the save window and makes a save card with "Tessa saves to keep Concentration - Flame Barrier" next to its result (the item part shows when the item has another name), so rerolls and reactions work on it as on any save. A success makes the line "Tessa keeps Concentration" with **Kept**; a failure ends the effect, and the line of the ended effect has **Undo**. The line follows the save card: a reroll that turns the failure into a success puts the effect back.
-- **Temp HP.** Temp HP do not add up. When a creature that has temp HP would gain an amount that is not more, the line says "Tessa has 5 temp HP and would gain 3", with **Keep 5** and **Take 3**. Then it says "Tessa chose to keep 5 temp HP". A larger amount takes the place of the old one with no question.
-
-A line for the GM only goes on a card that only the GM sees, or in a whisper to the GM. An Interpose against an attack that only the GM sees gets its own message, so the players see it. A line that asks a player to act, such as a save, a temp HP choice or a move, goes on a card that player sees. When the card that caused it is a whisper the player does not see, the line goes on a message of its own for that player and the GMs.
-
-::: details When a moment gets a second message
-The lines of one moment, such as the start of one turn, go on one message. The system looks for that message in the last 20 chat messages. When 20 or more messages came after it, the next line of that moment starts a new message.
+::: details Where a line goes
+A GM-only line goes on a card only the GM sees. A line that asks a player to act goes on a card that player sees, or on its own message for that player and the GMs. Lines of one moment share one message among the last 20.
 :::
 
 ## Targeting and roll visibility
 
-Target tokens (key T) before you roll, and they show on the card. **Apply Damage** uses the targets of the card, not the selected tokens. The save button rolls for the selected tokens.
+Target tokens (key T) before you roll. **Apply Damage** uses the card's targets, not the selected ones.
 
-Two settings for each player change what you see: **Auto-Expand Rolls** always shows the dice under each total, and **Hide Rolls by Default** makes your rolls blind rolls. A GM can untick **Hide roll** in the window. A player has no **Hide roll** tick, so a player who turns this on makes only blind rolls. See the [Settings Reference](../reference/settings.md).
+**Auto-Expand Rolls** shows the dice under each total. **Hide Rolls by Default** makes your rolls blind, and only a GM can untick **Hide roll**. See the [Settings Reference](../reference/settings.md).
 
 ## Related pages
 
 - [The Character Sheet](../characters/character-sheet.md)
 - [Conditions](conditions.md)
 - [Combat](../gm/combat.md)
-- [Settings Reference](../reference/settings.md)

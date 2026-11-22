@@ -51,6 +51,11 @@ describe('fixedChargeCostsOf', () => {
 		expect(fixedChargeCostsOf(actor, item)).toEqual([]);
 	});
 
+	it('leaves out a cost that is spent from a button on the attack card', () => {
+		const { actor, item } = heroWith({ cost: '1', cardOffer: 'hit' });
+		expect(fixedChargeCostsOf(actor, item)).toEqual([]);
+	});
+
 	it('has nothing for a creature that is not a hero', () => {
 		const { actor, item } = heroWith({ cost: '2' }, 'npc');
 		expect(fixedChargeCostsOf(actor, item)).toEqual([]);

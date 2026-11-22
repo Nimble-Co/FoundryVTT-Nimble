@@ -69,6 +69,8 @@ type ChargePoolState = {
 	showAsResource: boolean;
 	/** The book gives no cap: show the count alone. */
 	hideMax?: boolean;
+	/** The roll window shows no generic spend row for this pool. */
+	spentByFeaturesOnly?: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
@@ -92,6 +94,7 @@ type ChargePoolRuleLike = {
 	hidden?: boolean;
 	showAsResource?: boolean;
 	hideMax?: boolean;
+	spentByFeaturesOnly?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;
@@ -109,6 +112,8 @@ type ChargeConsumerRuleLike = {
 	maxCost?: string;
 	allowFree?: boolean;
 	oncePerTurn?: boolean;
+	/** Spent from a button on the owner's attack card, not when the item is used. */
+	cardOffer?: string | null;
 	/**
 	 * Optional because the structural type is also satisfied by plain objects in
 	 * tests; real rule instances always inherit it from the base rule class.

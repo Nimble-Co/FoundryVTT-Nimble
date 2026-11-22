@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { poolCountText, poolHeading } from '../poolHeading.js';
+import { labelNote, poolCountText, poolHeading } from '../poolHeading.js';
 
 describe('poolHeading', () => {
 	it('puts the refill note of a pool label in the tooltip', () => {
@@ -16,6 +16,20 @@ describe('poolHeading', () => {
 	it('keeps brackets that are not at the end, and a label that is only a note', () => {
 		expect(poolHeading('Fury (Rage) Dice')).toEqual({ name: 'Fury (Rage) Dice', tooltip: null });
 		expect(poolHeading('(1/Safe Rest)')).toEqual({ name: '(1/Safe Rest)', tooltip: null });
+	});
+});
+
+describe('labelNote', () => {
+	it('splits the trailing note in brackets from the name', () => {
+		expect(labelNote('Lunging Strike (+1 Reach)')).toEqual({
+			name: 'Lunging Strike',
+			note: '+1 Reach',
+		});
+	});
+
+	it('gives no note for a label without one', () => {
+		expect(labelNote('Combat Dice')).toEqual({ name: 'Combat Dice', note: null });
+		expect(labelNote('(1/round)')).toEqual({ name: '(1/round)', note: null });
 	});
 });
 

@@ -65,14 +65,19 @@ export function ruleChargesLeft(
 	return findPool(actor, id)?.pool.current ?? null;
 }
 
-/** The label and charges of a rule's pool, or null when the actor has no pool of that identifier. */
+/**
+ * The key, label and charges of a rule's pool, and whether the sheet hides it. Null when the
+ * actor has no pool of that identifier.
+ */
 export function rulePoolState(
 	actor: Actor | null | undefined,
 	identifier: string,
-): { label: string; current: number } | null {
+): { key: string; label: string; current: number; hidden: boolean } | null {
 	const id = identifier.trim();
-	const pool = id ? findPool(actor, id)?.pool : null;
-	return pool ? { label: pool.label || id, current: pool.current } : null;
+	const entry = id ? findPool(actor, id) : null;
+	if (!entry) return null;
+	const { pool } = entry;
+	return { key: entry.key, label: pool.label || id, current: pool.current, hidden: pool.hidden };
 }
 
 const pending = new WeakMap<object, Map<string, Promise<void>>>();

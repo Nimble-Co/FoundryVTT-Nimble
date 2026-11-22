@@ -8,6 +8,7 @@ export function fixedChargeCostsOf(actor: unknown, item: unknown) {
 	return getChargeConsumers(typedActor, item as never)
 		.filter((consumer) => !consumer.variable)
 		.map((consumer) => ({
+			poolId: consumer.poolId,
 			label: pools[consumer.poolId]?.label ?? consumer.poolIdentifier,
 			amount: consumer.cost,
 			current: pools[consumer.poolId]?.current ?? 0,

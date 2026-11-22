@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { buildTargetDomain, getActiveConditionalBonuses } from '../conditionalBonuses.js';
 
 // getActiveConditionalBonuses drives real ConditionalBonusRule instances in production,
@@ -338,6 +339,70 @@ describe('conditionalBonuses', () => {
 				),
 			});
 			expect(getActiveConditionalBonuses(createAttacker([ownItem]), sword, null)).toHaveLength(1);
+		});
+	});
+
+	describe('getActiveConditionalBonuses with a charge to spend', () => {
+		function heroWith(current: number, rule: object) {
+			const holder = {
+				id: 'item-fit',
+				name: 'Fit for Any Battlefield',
+				flags: {
+					[SYSTEM_ID]: { chargePools: { 'combat-dice': { current, max: 3, seeded: true } } },
+				},
+				rules: new Map([
+					[
+						'pool',
+						{
+							type: 'chargePool',
+							id: 'pool',
+							identifier: 'combat-dice',
+							label: 'Combat Dice',
+							scope: 'item',
+							max: '3',
+							dieSize: 'd8',
+							initial: 'max',
+							recoveries: [],
+						},
+					],
+				]),
+			};
+			return {
+				type: 'character',
+				rules: [rule],
+				items: { contents: [holder], get: () => holder },
+				flags: {},
+				getRollData: () => ({}),
+				getFlag: () => ({}),
+			};
+		}
+		const lunging = () =>
+			createRule({
+				chargePoolIdentifier: 'combat-dice',
+				offersDamage: vi.fn(() => true),
+				resolveDamage: vi.fn(() => ({ value: null, formula: '1d8*2' })),
+			});
+
+		it('names the charge it spends', () => {
+			const [option] = getActiveConditionalBonuses(heroWith(2, lunging()), weaponItem, null);
+
+			expect(option?.charge).toEqual({
+				poolId: 'combat-dice',
+				label: 'Combat Dice',
+				current: 2,
+				hidden: false,
+			});
+		});
+
+		it('is not offered with no charge left', () => {
+			expect(getActiveConditionalBonuses(heroWith(0, lunging()), weaponItem, null)).toEqual([]);
+		});
+
+		it('spends nothing when it names no pool', () => {
+			const options = getActiveConditionalBonuses(heroWith(0, createRule()), weaponItem, null);
+
+			expect(options).toHaveLength(1);
+			expect(options[0].charge).toBeUndefined();
 		});
 	});
 

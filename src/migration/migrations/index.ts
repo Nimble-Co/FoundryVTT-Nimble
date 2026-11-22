@@ -90,3 +90,4 @@ export { Migration089TimedEffectsContent } from './Migration089TimedEffectsConte
 export { Migration090InspirationStartsOff } from './Migration090InspirationStartsOff.js';
 export { Migration091ChoicesWaitAndKnownSchools } from './Migration091ChoicesWaitAndKnownSchools.js';
 export { Migration092FeatureCostsContent } from './Migration092FeatureCostsContent.js';
+export { Migration093FeatureWeaponAttacksContent } from './Migration093FeatureWeaponAttacksContent.js';

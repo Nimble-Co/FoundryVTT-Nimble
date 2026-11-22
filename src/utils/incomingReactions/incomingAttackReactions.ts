@@ -70,7 +70,7 @@ function pickFrom(value: unknown): RerollPick {
 export const requestIncomingAttackReaction = defineCardOperation<{
 	messageId: string;
 	entryId: string;
-	/** spendPoolForDamage only */
+	/** spendPoolForDamage only: the dice picked. Absent for a spend of a charge. */
 	selection?: PoolSpendSelection;
 	/** reroll only: the player confirmed using a heroic reaction already spent */
 	forceHeroicReaction?: boolean;
@@ -102,8 +102,12 @@ export const requestIncomingAttackReaction = defineCardOperation<{
 		if (entry.kind === 'redirectToSelf') {
 			await message.resolveRedirectReaction(entryId, userId, viaSocket);
 		} else if (entry.kind === 'spendPoolForDamage') {
-			if (!selection) return;
-			await message.resolveSpendPoolForDamageOffer(entryId, userId, selection, viaSocket);
+			// A spend with no dice picked takes a charge.
+			if (selection) {
+				await message.resolveSpendPoolForDamageOffer(entryId, userId, selection, viaSocket);
+			} else {
+				await message.resolveSpendChargeForDamageOffer(entryId, userId, viaSocket);
+			}
 		} else if (entry.kind === 'reroll') {
 			await message.cardRerolls.resolveRerollReaction(
 				entryId,

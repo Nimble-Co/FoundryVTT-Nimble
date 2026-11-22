@@ -8,11 +8,37 @@
 		"identifier": "",
 		"rules": [
 			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "assist-me-round-pool",
+				"identifier": "assist-me-my-friend-round",
+				"label": "Assist Me, My Friend! (1/round)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"recoveries": [
+					{
+						"trigger": "onRoundStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				],
+				"hidden": true
+			},
+			{
 				"type": "conditionalBonus",
 				"disabled": false,
 				"id": "YxlrHitpIxVvLld3",
 				"identifier": "",
-				"label": "Assist Me, My Friend!",
+				"label": "Using Assist Me, My Friend! (1/round)",
 				"predicate": {},
 				"priority": 1,
 				"advantage": 0,
@@ -23,7 +49,8 @@
 				"delivery": "melee",
 				"source": "any",
 				"targetCondition": {},
-				"doubleFor": []
+				"doubleFor": [],
+				"chargePoolIdentifier": "assist-me-my-friend-round"
 			}
 		],
 		"activation": {

@@ -12,6 +12,7 @@ const damageRollMock = vi.fn();
 const dialogMock = vi.fn();
 const spendRuleChargeMock = vi.fn(async () => true);
 const fireAttackEventsMock = vi.fn();
+const spendChosenChargesMock = vi.fn(async () => []);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let rollUnarmedStrike: typeof import('../unarmedStrike.ts').rollUnarmedStrike;
@@ -26,6 +27,9 @@ beforeAll(async () => {
 	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
 		hasRuleCharge: () => true,
 		spendRuleCharge: spendRuleChargeMock,
+	}));
+	vi.doMock('#utils/chargePool/spendChosenCharges.js', () => ({
+		spendChosenCharges: spendChosenChargesMock,
 	}));
 	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({
 		fireAttackEvents: fireAttackEventsMock,
@@ -55,6 +59,7 @@ beforeEach(() => {
 	savedFromUuidSync = globals.fromUuidSync;
 	dialogMock.mockReset();
 	fireAttackEventsMock.mockClear();
+	spendChosenChargesMock.mockClear();
 	damageRollMock.mockReset();
 	damageRollMock.mockImplementation(function roll() {
 		return { evaluate: vi.fn(), toJSON: () => ({}), isCritical: false, isMiss: false };
@@ -94,6 +99,61 @@ describe('rollUnarmedStrike', () => {
 				}),
 			}),
 		);
+	});
+
+	it('rolls the bonuses ticked in its window, and spends their charges after the card', async () => {
+		dialogResult({
+			rollMode: 0,
+			rollFormula: '1 + 2 + 1d4 + 1d6 * 2',
+			conditionalDamages: [
+				{ formula: '3', damageType: 'radiant', label: 'Assist Me', itemUuid: 'Item.assist' },
+			],
+			consumedChargePools: [{ poolId: 'Item.lunge:combat-dice', count: 1 }],
+		});
+		const actor = createHeroicCharacter();
+
+		expect(await rollUnarmedStrike(actor)).toBe(true);
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			'1 + 2 + 1d4 + 1d6 * 2',
+			{},
+			expect.objectContaining({ damageType: 'bludgeoning' }),
+		);
+		const card = vi.mocked(ChatMessage.create).mock.calls[0][0] as unknown as {
+			system: { activation: { effects: Array<{ damageType?: string; formula?: string }> } };
+		};
+		expect(card.system.activation.effects).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ formula: '1 + 2 + 1d4 + 1d6 * 2' }),
+				expect.objectContaining({ damageType: 'radiant', formula: '3' }),
+			]),
+		);
+		expect(spendChosenChargesMock).toHaveBeenCalledWith(actor, [
+			{ poolId: 'Item.lunge:combat-dice', count: 1 },
+		]);
+	});
+
+	it('records the charges it spent on its card, so the card offers no second spend from the pool', async () => {
+		const spent = [{ poolId: 'combat-dice', change: -1 }];
+		spendChosenChargesMock.mockResolvedValueOnce(spent as never);
+		dialogResult({ rollMode: 0, consumedChargePools: [{ poolId: 'combat-dice', count: 1 }] });
+
+		await rollUnarmedStrike(createHeroicCharacter());
+
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				flags: { [SYSTEM_ID]: expect.objectContaining({ chargeConsumption: spent }) },
+			}),
+		);
+	});
+
+	it('spends no charge when its window ticks no bonus', async () => {
+		dialogResult({ rollMode: 0 });
+
+		await rollUnarmedStrike(createHeroicCharacter());
+
+		expect(spendChosenChargesMock).toHaveBeenCalledWith(expect.anything(), []);
+		expect(damageRollMock).toHaveBeenCalledWith('1 + 2 + 1d4', {}, expect.anything());
 	});
 
 	it('marks the card of an opportunity attack', async () => {

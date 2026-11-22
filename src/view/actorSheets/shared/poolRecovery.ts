@@ -1,12 +1,12 @@
 /**
  * When the uses of a pool come back. The start of each creature's turn reads
- * "turn". The owner's own turn start and turn end read "round".
+ * "turn". The start of a round and the owner's own turn start and turn end read "round".
  */
 export type PoolRecovery = 'turn' | 'round' | 'safeRest' | 'fieldRest' | 'encounter';
 
 const RECOVERY_ORDER: [PoolRecovery, string[]][] = [
 	['turn', ['onAnyTurnStart']],
-	['round', ['onTurnStart', 'onTurnEnd']],
+	['round', ['onRoundStart', 'onTurnStart', 'onTurnEnd']],
 	['encounter', ['encounterStart', 'encounterEnd']],
 	['fieldRest', ['fieldRest']],
 	['safeRest', ['safeRest']],

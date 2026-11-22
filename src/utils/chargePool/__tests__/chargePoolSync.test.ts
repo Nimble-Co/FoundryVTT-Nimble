@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getResourcePools } from '../chargePoolSync.js';
+import { getPools, getResourcePools } from '../chargePoolSync.js';
 import type { CharacterActorLike, ChargePoolRuleLike } from '../types.js';
 
 type MockRule = ChargePoolRuleLike & { type: string; id: string };
@@ -106,5 +106,19 @@ describe('getResourcePools', () => {
 
 	it('returns nothing for an actor that is not a character', () => {
 		expect(getResourcePools(null)).toEqual([]);
+	});
+});
+
+describe('getPools', () => {
+	it('carries the spent-by-features-only flag of the rule onto the pool', () => {
+		const actor = createMockActor([
+			createPoolItem('item-1', 'Gate', { identifier: 'gate', spentByFeaturesOnly: true }),
+			createPoolItem('item-2', 'Open', { identifier: 'open' }),
+		]);
+
+		expect(getPools(actor).map((pool) => [pool.identifier, pool.spentByFeaturesOnly])).toEqual([
+			['gate', true],
+			['open', false],
+		]);
 	});
 });

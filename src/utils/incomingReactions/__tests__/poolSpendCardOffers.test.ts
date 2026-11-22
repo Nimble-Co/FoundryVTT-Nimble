@@ -73,6 +73,30 @@ describe('collectPoolSpendCardOffers', () => {
 		expect(providesCardOffer).toHaveBeenCalledWith(undefined);
 	});
 
+	it('offers a charge spend the same way', () => {
+		const offers = collectPoolSpendCardOffers(
+			actorWith([
+				consumerRule({
+					type: 'chargeConsumer',
+					id: 'heavy-strike',
+					label: '',
+					cardOffer: 'hit',
+					parentDocument: { name: 'Heavy Strike', uuid: 'Item.heavy' },
+				}),
+			]),
+		);
+
+		expect(offers).toEqual([
+			expect.objectContaining({
+				kind: 'spendPoolForDamage',
+				ruleId: 'heavy-strike',
+				itemUuid: 'Item.heavy',
+				label: 'Heavy Strike',
+				outcomeTrigger: 'hit',
+			}),
+		]);
+	});
+
 	it('ignores rules of other types', () => {
 		const offers = collectPoolSpendCardOffers(actorWith([consumerRule({ type: 'dicePool' })]));
 

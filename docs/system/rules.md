@@ -552,7 +552,7 @@ A recovery entry (on `chargePool.recoveries` or `modifyPool.addRefills`) can set
 
 The `onInitiativeRolled` trigger runs once per actor per combat: `initiativeTrigger.ts` stores the combat id on the actor (`flags.<system>.initiativeRecoveryCombat`) and ignores a later Initiative roll in that combat. At `combatStart`, on the client that starts the combat, it also refills each character combatant that has an Initiative (typed by hand) and is not marked yet. The mark is written before the refill and cleared when the refill fails.
 
-The `onAnyTurnStart` trigger runs on the active GM at `nimbleCombatTurnStart`, for every character in the combat (once per actor), whoever's turn it is. On a character's own turn it runs before `onTurnStart`, and the two run one after the other, because `persistChargePoolMap` writes every pool of an item.
+The `onAnyTurnStart` trigger runs on the active GM at `nimbleCombatTurnStart`, for every character in the combat (once per actor), whoever's turn it is. On a character's own turn it runs before `onTurnStart`, and the two run one after the other, because `persistChargePoolMap` writes every pool of an item. The `onRoundStart` trigger runs on the active GM at `nimbleCombatRoundStart`, for every character in the combat. The turn-start refills of the first turn wait for it.
 
 ### Charge pool state tags
 

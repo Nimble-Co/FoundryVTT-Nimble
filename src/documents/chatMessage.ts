@@ -57,6 +57,7 @@ import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRel
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
+import { spendsPoolAgain } from '../utils/chargePool/attackPoolSpends.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
 import { mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
@@ -79,6 +80,11 @@ import { noDamageTargetsOf, owesCritTriggers } from '../utils/rolls/cardRollStat
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import { resultChangesOf } from '../utils/rolls/resultChanges.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import {
+	CardChargeSpend,
+	type ChargeSpendCard,
+	type SpendForDamage,
+} from './chatMessage/cardChargeSpend.js';
 import {
 	CardDamageBack,
 	type DamageBackCard,
@@ -268,12 +274,36 @@ function getTermFlavor(term: unknown): string {
 function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number | null {
 	let diceDamage = 0;
 	let hasDiceTerm = false;
+	// A die times a number counts as that many times the die.
+	let lastDieValue: number | null = null;
+	let multipliesLastDie = false;
 
 	if (!Array.isArray(serializedRoll.terms)) return null;
 
 	for (const term of serializedRoll.terms) {
-		const serializedTerm = term as { faces?: unknown; results?: unknown; number?: unknown };
+		const serializedTerm = term as {
+			faces?: unknown;
+			results?: unknown;
+			number?: unknown;
+			operator?: unknown;
+		};
 		const faces = Number(serializedTerm.faces);
+
+		if (serializedTerm.operator !== undefined) {
+			multipliesLastDie = serializedTerm.operator === '*' && lastDieValue !== null;
+			if (!multipliesLastDie) lastDieValue = null;
+			continue;
+		}
+
+		if (multipliesLastDie && (!Number.isFinite(faces) || faces <= 0)) {
+			const factor = Number(serializedTerm.number);
+			if (Number.isFinite(factor)) diceDamage += (lastDieValue ?? 0) * (factor - 1);
+			multipliesLastDie = false;
+			lastDieValue = null;
+			continue;
+		}
+		multipliesLastDie = false;
+		lastDieValue = null;
 
 		if (!Number.isFinite(faces) || faces <= 0) {
 			// Banked dice-pool faces (Fury Dice etc.) ship as flavored numeric
@@ -291,6 +321,7 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 		hasDiceTerm = true;
 
 		if (!Array.isArray(serializedTerm.results)) continue;
+		let dieValue = 0;
 		for (const result of serializedTerm.results) {
 			const serializedResult = result as {
 				result?: unknown;
@@ -301,8 +332,10 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 
 			const resultValue = Number(serializedResult.result);
 			if (!Number.isFinite(resultValue)) continue;
-			diceDamage += resultValue;
+			dieValue += resultValue;
 		}
+		diceDamage += dieValue;
+		lastDieValue = dieValue;
 	}
 
 	if (!hasDiceTerm) return null;
@@ -995,6 +1028,22 @@ class NimbleChatMessage extends ChatMessage {
 		attackDelivery: () => this.#attackDelivery(),
 		movementOfferChanges: (changes) => this.#movementOfferChanges(changes),
 		update: (changes) => this.update(changes),
+	});
+
+	/** Spends of charges from the buttons on this card. */
+	readonly cardChargeSpend = new CardChargeSpend({
+		card: () => this,
+		isActivationCard: () => this.isActivationCard(),
+		system: () => this.system as unknown as ReturnType<ChargeSpendCard['system']>,
+		rollsSource: () => ((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+		flags: () => (this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID],
+		attackDelivery: () => this.#attackDelivery(),
+		sourceItem: () => this.#cardSourceItem(),
+		spendsPoolAgain: (entry) => this.spendsPoolAgain(entry),
+		queueSpendOffer: (entryId, apply) => this.#queueSpendOffer(entryId, apply),
+		spendOfferEntry: (entryId, requestingUserId, viaSocket) =>
+			this.#spendOfferEntry(entryId, requestingUserId, viaSocket),
+		landSpendForDamage: (entry, reject, spend) => this.#landSpendForDamage(entry, reject, spend),
 	});
 
 	constructor(data: ChatMessage.CreateData, context?: ChatMessage.ConstructionContext) {
@@ -2106,6 +2155,17 @@ class NimbleChatMessage extends ChatMessage {
 		);
 	}
 
+	/** Whether using the entry would spend again from a charge pool this attack spent from. */
+	spendsPoolAgain(entry: IncomingReactionEntry): boolean {
+		const flags = (this.flags as Record<string, { chargeConsumption?: unknown } | undefined>)?.[
+			SYSTEM_ID
+		];
+		return spendsPoolAgain(entry, {
+			consumption: flags?.chargeConsumption,
+			entries: this.#incomingReactionEntries(),
+		});
+	}
+
 	/** How this card's attack is delivered. */
 	#attackDelivery(): AttackDelivery {
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -2147,17 +2207,9 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return;
 		if (!selection?.faceIndices?.length) return;
 
-		const lockKey = `${this.id}:${entryId}`;
-		if (inFlightSpendOffers.has(lockKey)) return;
-		inFlightSpendOffers.add(lockKey);
-
-		try {
-			await queueReactionWrite(this.id ?? '', () =>
-				this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket),
-			);
-		} finally {
-			inFlightSpendOffers.delete(lockKey);
-		}
+		await this.#queueSpendOffer(entryId, () =>
+			this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket),
+		);
 	}
 
 	async #applySpendPoolForDamageOffer(
@@ -2166,23 +2218,7 @@ class NimbleChatMessage extends ChatMessage {
 		selection: PoolSpendSelection,
 		viaSocket: boolean,
 	): Promise<void> {
-		// Every refusal below reports back to whoever asked. The executor runs on
-		// the GM's client, so a bare `return` would leave the spending player
-		// watching their button come back unexplained when its hold lapses.
-		const reject = (reasonKey: string) =>
-			rejectCardRequest({
-				messageId: this.id ?? '',
-				entryId,
-				userId: requestingUserId,
-				reasonKey,
-			});
-
-		const entry = this.#validateIncomingReaction(
-			entryId,
-			'spendPoolForDamage',
-			requestingUserId,
-			viaSocket,
-		);
+		const { entry, reject } = this.#spendOfferEntry(entryId, requestingUserId, viaSocket);
 		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
@@ -2226,34 +2262,106 @@ class NimbleChatMessage extends ChatMessage {
 		const picked = resolvePoolSpendSelection(pool.faces, selection);
 		if (!picked) return reject('NIMBLE.chat.incomingReactions.poolSpendStale');
 
-		const effectRoll = new Roll(
-			substituteSpendFormula(
+		await this.#landSpendForDamage(entry, reject, {
+			actor,
+			formula: substituteSpendFormula(
 				consumer.effectFormula,
 				picked.spentFaces.length,
 				picked.spentFaces.reduce((sum, face) => sum + face, 0),
 			),
-			(actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
-		);
-		await effectRoll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+			patch: (bonusDamage) =>
+				this.#buildSpendDamagePatch(systemData, consumer, bonusDamage, entry.itemUuid ?? ''),
+			// Charge the pool only if it actually accepted the write, otherwise the
+			// card would gain damage the player never paid for.
+			charge: () => setPoolFaces(actor, pool.id, picked.remainingFaces),
+			poolLabel: pool.label,
+			usedFaces: () => picked.spentFaces,
+		});
+	}
 
-		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
+	/** Spend charges of a charge pool from a button on this card. See `CardChargeSpend`. */
+	async resolveSpendChargeForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
+		await this.cardChargeSpend.resolve(entryId, requestingUserId, viaSocket);
+	}
+
+	/**
+	 * Run a spend from the card once at a time per entry, and after any other
+	 * reaction write on this card (see `queueReactionWrite`).
+	 */
+	async #queueSpendOffer(entryId: string, apply: () => Promise<void>): Promise<void> {
+		const lockKey = `${this.id}:${entryId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+
+		try {
+			await queueReactionWrite(this.id ?? '', apply);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	/** The spend entry the request names, if it still stands, and how to refuse the request. */
+	#spendOfferEntry(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): { entry: IncomingReactionEntry | null; reject: (reasonKey: string) => void } {
+		// Every refusal reports back to whoever asked. The executor runs on the
+		// GM's client, so a bare `return` would leave the spending player
+		// watching their button come back unexplained when its hold lapses.
+		const reject = (reasonKey: string) =>
+			rejectCardRequest({
+				messageId: this.id ?? '',
+				entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+		const entry = this.#validateIncomingReaction(
+			entryId,
+			'spendPoolForDamage',
+			requestingUserId,
+			viaSocket,
+		);
+		return { entry, reject };
+	}
+
+	/**
+	 * The last steps of a spend from the card, after its gates pass: roll the
+	 * spend's damage, build the card change, charge the pool, then write the
+	 * damage and mark the entry used. Charges only once the change is known to
+	 * be possible. Resolves whether the spend landed.
+	 */
+	async #landSpendForDamage(
+		entry: IncomingReactionEntry,
+		reject: (reasonKey: string) => void,
+		spend: SpendForDamage,
+	): Promise<boolean> {
+		const roll = new Roll(
+			spend.formula,
+			(spend.actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
+		);
+		await roll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+
+		const bonusDamage = Math.floor(Number(roll.total ?? 0));
 		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) {
-			return reject('NIMBLE.chat.incomingReactions.useFailed');
+			reject('NIMBLE.chat.incomingReactions.useFailed');
+			return false;
 		}
 
-		const patched = await this.#buildSpendDamagePatch(
-			systemData,
-			consumer,
-			bonusDamage,
-			entry.itemUuid ?? '',
-		);
-		if (!patched) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const patched = await spend.patch(bonusDamage);
+		if (!patched) {
+			reject('NIMBLE.chat.incomingReactions.useFailed');
+			return false;
+		}
 
-		// Charge the pool only once the patch is known to be possible, and only
-		// if the pool actually accepted the write — otherwise the card would
-		// gain damage the player never paid for.
-		const spent = await setPoolFaces(actor, pool.id, picked.remainingFaces);
-		if (!spent) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		if (!(await spend.charge())) {
+			reject('NIMBLE.chat.incomingReactions.useFailed');
+			return false;
+		}
 
 		await this.update({
 			rolls: patched.rolls,
@@ -2261,11 +2369,12 @@ class NimbleChatMessage extends ChatMessage {
 				activation: patched.activation,
 				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
 					usedAmount: bonusDamage,
-					usedPoolLabel: pool.label,
-					usedFaces: picked.spentFaces,
+					usedPoolLabel: spend.poolLabel,
+					usedFaces: spend.usedFaces(roll),
 				}),
 			},
 		} as Record<string, unknown>);
+		return true;
 	}
 
 	/**

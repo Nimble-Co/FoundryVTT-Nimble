@@ -16,6 +16,7 @@ type ConditionalBonusSource = 'weapon' | 'spell' | 'any';
  * it is not yet extracted to a shared helper.
  */
 const DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
+const DIE_SIZE_REFERENCE = /(?<![a-zA-Z])d@/i;
 
 interface ResolvedConditionalDamage {
 	/** Resolved numeric value (null when dice-based or no damage offered). */
@@ -131,6 +132,17 @@ function schema() {
 			choices: ['weapon', 'spell', 'any'],
 		}),
 		attackOrigin: attackOriginField(),
+		chargePoolIdentifier: new fields.StringField(
+			withWidget({
+				// Not required, so the picker lists an empty choice for no pool.
+				required: false,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.conditionalBonus.chargePoolIdentifier.label',
+				hint: 'NIMBLE.rules.conditionalBonus.chargePoolIdentifier.hint',
+				widget: 'chargePoolPicker',
+			}),
+		),
 		targetCondition: new PredicateField({
 			label: 'NIMBLE.rules.conditionalBonus.targetCondition.label',
 			hint: 'NIMBLE.rules.conditionalBonus.targetCondition.hint',
@@ -167,6 +179,8 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 	declare delivery: ConditionalBonusDelivery;
 	declare source: ConditionalBonusSource;
 	declare attackOrigin: string;
+	/** The charge pool that choosing the bonus spends one charge of. Blank for none. */
+	declare chargePoolIdentifier: string;
 
 	static override defineSchema(): ConditionalBonusRule.Schema {
 		return {
@@ -185,6 +199,7 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 				['delivery', 'string'],
 				['source', 'string'],
 				['attackOrigin', 'string'],
+				['chargePoolIdentifier', 'string'],
 				['targetCondition', 'object'],
 			]),
 		);
@@ -247,6 +262,12 @@ class ConditionalBonusRule extends NimbleBaseRule<ConditionalBonusRule.Schema> {
 			this.checkReferences(formula);
 			if (!itemDamage) return { value: null, formula, ...fromItem };
 			// The roll window shows the item's damage with the attacker's numbers, as it rolls.
+			const shown = Roll.replaceFormulaData(formula, this.rollData(), { missing: '0' });
+			return { value: null, formula: shown, ...fromItem };
+		}
+		// A die whose size is a number of the attacker, such as `1d@pools.combat-dice.faces`.
+		if (DIE_SIZE_REFERENCE.test(formula)) {
+			this.checkReferences(formula);
 			const shown = Roll.replaceFormulaData(formula, this.rollData(), { missing: '0' });
 			return { value: null, formula: shown, ...fromItem };
 		}

@@ -4,6 +4,7 @@ import type { RerollPick } from '#types/rerollPick.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
 import type { PaidUseCost } from '#types/useCost.d.ts';
+import { spendsPoolAgain } from '#utils/chargePool/attackPoolSpends.js';
 import {
 	applyRerollRecoveryChange,
 	RECOVERY_DOMAIN_FLAG,
@@ -694,8 +695,16 @@ export class CardRerolls {
 	canStillUseReroll(entry: IncomingReactionEntry): boolean {
 		if (entry.kind !== 'reroll' || entry.used || this.pendingKeep()) return false;
 		const target = this.#rerollTarget();
-		if (!target?.findRoll()) return false;
+		if (!target?.findRoll() || this.#spendsPoolAgain(entry)) return false;
 		return usableRerollEntry(entry, target.context(), this.#host.incomingReactions()).ok;
+	}
+
+	/** Whether the entry would spend again from a charge pool this attack spent from. */
+	#spendsPoolAgain(entry: IncomingReactionEntry): boolean {
+		return spendsPoolAgain(entry, {
+			consumption: this.#host.flags()?.chargeConsumption,
+			entries: this.#host.incomingReactions(),
+		});
 	}
 
 	/**
@@ -705,7 +714,7 @@ export class CardRerolls {
 	blockedReroll(entry: IncomingReactionEntry): 'naturalOne' | null {
 		if (entry.kind !== 'reroll' || entry.used || this.pendingKeep()) return null;
 		const target = this.#rerollTarget();
-		if (!target?.findRoll()) return null;
+		if (!target?.findRoll() || this.#spendsPoolAgain(entry)) return null;
 		const usable = usableRerollEntry(entry, target.context(), this.#host.incomingReactions());
 		return !usable.ok && usable.reason === 'naturalOne' ? 'naturalOne' : null;
 	}
@@ -889,6 +898,7 @@ export class CardRerolls {
 		// its targets and the actor's state can all change after stamping.
 		const usable = usableRerollEntry(entry, rollTarget.context(), this.#host.incomingReactions());
 		if (!usable.ok) return reject(REJECT_REASON_KEYS[usable.reason]);
+		if (this.#spendsPoolAgain(entry)) return reject(REJECT_REASON_KEYS.unavailable);
 		const found = rollTarget.findRoll();
 		if (!found) return reject('NIMBLE.chat.incomingReactions.useFailed');
 		const kind = rollChangeKindOf(usable.rule);

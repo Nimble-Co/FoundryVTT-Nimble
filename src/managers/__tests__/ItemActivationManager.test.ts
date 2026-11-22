@@ -3508,6 +3508,45 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(longbow.system.equipped).toBe(false);
 		});
 
+		it('tells a card spend rule that the attack is made with a weapon, and a spell is not', async () => {
+			const providesCardOffer = vi.fn(() => false);
+			Object.assign(mockActor, { rules: [{ type: 'chargeConsumer', providesCardOffer }] });
+
+			await attackWith('ranged', [weapon('Shortbow', '1d6', 'range', true)], {
+				fastForward: true,
+			});
+			expect(providesCardOffer).toHaveBeenLastCalledWith(
+				expect.objectContaining({ source: 'weapon', weaponUuid: 'Item.Shortbow' }),
+			);
+
+			mockItem.type = 'spell';
+			(mockItem.system.activation as Record<string, unknown>).weaponAttack = '';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d10',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = {
+				effects: [damageNode],
+				targets: { attackType: 'range' },
+			} as never;
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			await manager.getData();
+
+			expect(providesCardOffer).toHaveBeenLastCalledWith(
+				expect.objectContaining({ source: 'spell' }),
+			);
+		});
+
 		describe('with an Unarmed Strike', () => {
 			beforeEach(() => {
 				mockActor.type = 'character';

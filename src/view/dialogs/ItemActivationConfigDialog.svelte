@@ -80,9 +80,6 @@
 			const [poolId, indexStr] = key.split(':');
 			return { poolId, faceIndex: Number(indexStr) };
 		});
-		const consumedChargePools = Object.entries(state.chargeSpendCounts)
-			.filter(([, count]) => count > 0)
-			.map(([poolId, count]) => ({ poolId, count }));
 		dialog.submitActivation({
 			// "Damage" conditional-bonus choices are already in the modified formula below.
 			rollMode: state.submittedRollMode,
@@ -109,7 +106,7 @@
 				: {}),
 			...(division.shares ? { diceShares: division.shares } : {}),
 			consumedPoolDice,
-			consumedChargePools,
+			consumedChargePools: state.consumedChargePools,
 			consumedVariableCharges: state.consumedVariableCharges,
 			resourceAmounts: state.resourceAmounts,
 			...(state.useOptions.length > 0 ? { useOptions: state.useOptions } : {}),
@@ -130,15 +127,6 @@
 >
 	{#if attackNote}<p class="spends">{attackNote}</p>{/if}
 	{#if state.spendLine}<p class="spends">{state.spendLine}</p>{/if}
-	{#each state.chargeCosts as cost (cost.label)}
-		<p class="spends">
-			{localize('NIMBLE.rollWindow.spendsCharge', {
-				count: String(cost.amount),
-				pool: cost.label,
-				left: String(cost.current),
-			})}
-		</p>
-	{/each}
 
 	{#if state.needsWeapon}
 		<div class="fld">
@@ -222,47 +210,63 @@
 						option.damageFormula ?? `${option.damageValue ?? 0}`,
 						rollData,
 					)}
-					<div class="nimble-conditional-bonus__row">
-						<span class="nimble-conditional-bonus__label">{option.label}</span>
-						<div class="nimble-conditional-bonus__choices">
-							{#if option.advantage > 0}
-								<button
-									type="button"
-									class="nimble-conditional-bonus__choice"
-									class:nimble-conditional-bonus__choice--selected={choice === 'advantage'}
-									aria-pressed={choice === 'advantage'}
-									onclick={() => state.setConditionalChoice(option.key, 'advantage')}
-								>
-									{localize('NIMBLE.activationDialog.conditionalBonus.advantage', {
-										count: option.advantage,
-									})}
-								</button>
-							{/if}
-							{#if option.damageValue !== null || option.damageFormula !== null}
-								<button
-									type="button"
-									class="nimble-conditional-bonus__choice"
-									class:nimble-conditional-bonus__choice--selected={choice === 'damage'}
-									aria-pressed={choice === 'damage'}
-									onclick={() => state.setConditionalChoice(option.key, 'damage')}
-								>
-									{localize(
-										`NIMBLE.activationDialog.conditionalBonus.${option.doubled ? 'damageDoubled' : 'damage'}`,
-										{ value: damageLabel },
+					{#if option.advantage === 0}
+						<label class="check">
+							<input
+								type="checkbox"
+								checked={choice === 'damage'}
+								onchange={(event) =>
+									state.setConditionalChoice(
+										option.key,
+										event.currentTarget.checked ? 'damage' : 'none',
 									)}
+							/>
+							<i class="fa-solid fa-plus" aria-hidden="true"></i>
+							<span>{state.conditionalBonusTick(option.label, damageLabel)}</span>
+						</label>
+					{:else}
+						<div class="nimble-conditional-bonus__row">
+							<span class="nimble-conditional-bonus__label">{option.label}</span>
+							<div class="nimble-conditional-bonus__choices">
+								{#if option.advantage > 0}
+									<button
+										type="button"
+										class="nimble-conditional-bonus__choice"
+										class:nimble-conditional-bonus__choice--selected={choice === 'advantage'}
+										aria-pressed={choice === 'advantage'}
+										onclick={() => state.setConditionalChoice(option.key, 'advantage')}
+									>
+										{localize('NIMBLE.activationDialog.conditionalBonus.advantage', {
+											count: option.advantage,
+										})}
+									</button>
+								{/if}
+								{#if option.damageValue !== null || option.damageFormula !== null}
+									<button
+										type="button"
+										class="nimble-conditional-bonus__choice"
+										class:nimble-conditional-bonus__choice--selected={choice === 'damage'}
+										aria-pressed={choice === 'damage'}
+										onclick={() => state.setConditionalChoice(option.key, 'damage')}
+									>
+										{localize(
+											`NIMBLE.activationDialog.conditionalBonus.${option.doubled ? 'damageDoubled' : 'damage'}`,
+											{ value: damageLabel },
+										)}
+									</button>
+								{/if}
+								<button
+									type="button"
+									class="nimble-conditional-bonus__choice"
+									class:nimble-conditional-bonus__choice--selected={choice === 'none'}
+									aria-pressed={choice === 'none'}
+									onclick={() => state.setConditionalChoice(option.key, 'none')}
+								>
+									{localize('NIMBLE.activationDialog.conditionalBonus.none')}
 								</button>
-							{/if}
-							<button
-								type="button"
-								class="nimble-conditional-bonus__choice"
-								class:nimble-conditional-bonus__choice--selected={choice === 'none'}
-								aria-pressed={choice === 'none'}
-								onclick={() => state.setConditionalChoice(option.key, 'none')}
-							>
-								{localize('NIMBLE.activationDialog.conditionalBonus.none')}
-							</button>
+							</div>
 						</div>
-					</div>
+					{/if}
 				{/each}
 			</div>
 		</div>
