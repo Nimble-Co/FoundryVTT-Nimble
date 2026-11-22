@@ -6,6 +6,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import type { OfferActor, OfferCard } from '#types/movement.js';
 import { type ActivationEvents, openActivationEvents } from '#utils/chat/activationEvents.js';
 import type { EffectCard } from '#utils/chat/applyEffectFromCard.js';
+import { cardEventLink } from '#utils/chat/cardEventLink.js';
 import {
 	addCardEvents,
 	addMomentEvents,
@@ -56,6 +57,7 @@ const CONCENTRATION_CARD_TYPES: ReadonlySet<string> = new Set(['spell', 'object'
 interface UsedItem {
 	actor?: { name?: string | null } | null;
 	name: string;
+	uuid?: string | null;
 	img?: string | null;
 }
 
@@ -77,7 +79,7 @@ async function foldFreeUse(
 	if (!sink) return null;
 	const line = freeUseEvent({
 		actorName: item.actor?.name ?? '',
-		item: { name: item.name, img: item.img },
+		item: { name: item.name, uuid: item.uuid, img: item.img },
 		reason: use.free.reason,
 		effects: (chatData.system?.activation?.effects ?? []) as EffectNode[],
 	});
@@ -100,7 +102,7 @@ async function postWithoutCard(
 		key: `once:${foundry.utils.randomID()}`,
 		heading: {
 			key: 'NIMBLE.chat.events.useHeading',
-			data: { name: item.actor?.name ?? '', item: item.name },
+			data: { name: item.actor?.name ?? '', item: cardEventLink(item.name, item.uuid) },
 		},
 	};
 	const whisper = use.hidden ? gmReaders() : [];

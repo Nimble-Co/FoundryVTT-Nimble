@@ -8,6 +8,7 @@
 	let {
 		picking,
 		feature,
+		featureUuid = null,
 		primaryOutcome = null,
 		primaryDieBonuses = [],
 		onpick,
@@ -22,6 +23,7 @@
 	<RerollStatPicker
 		stats={picking.stats}
 		{feature}
+		{featureUuid}
 		sending={picking.sent}
 		onpick={onstat}
 		{oncancel}
@@ -30,6 +32,7 @@
 	<DieValuePicker
 		die={picking.valueDie}
 		{feature}
+		{featureUuid}
 		{primaryOutcome}
 		{primaryDieBonuses}
 		sending={!!picking.rolling}
@@ -40,6 +43,7 @@
 	<RerollDiePicker
 		dice={picking.dice}
 		{feature}
+		{featureUuid}
 		{primaryOutcome}
 		use={picking.entry.use ?? 'reroll'}
 		rolling={picking.rolling}

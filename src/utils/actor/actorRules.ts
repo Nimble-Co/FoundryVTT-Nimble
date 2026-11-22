@@ -1,4 +1,5 @@
 import type { RuleOf, RuleType } from '#types/ruleTypes.d.ts';
+import { type DocLink, docLink } from '#utils/documents/docLink.ts';
 import { isEffectParent } from '../../models/rules/_ruleParent.js';
 
 /** The rules of an actor as an array. Empty when it has no rules to read. */
@@ -22,6 +23,14 @@ export function ruleLabel(rule: {
 	parentDocument?: { name?: string | null } | null;
 }): string {
 	return rule.label || rule.parentDocument?.name || '';
+}
+
+/** What a card calls a rule, with the uuid of its item or effect, so the name can open it. */
+export function ruleSource(rule: {
+	label?: string;
+	parentDocument?: { name?: string | null; uuid?: string | null } | null;
+}): DocLink {
+	return docLink(ruleLabel(rule), rule.parentDocument?.uuid);
 }
 
 /** The key of a rule on its item. */

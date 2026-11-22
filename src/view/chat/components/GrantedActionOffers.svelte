@@ -4,7 +4,9 @@
 
 	import { getContext } from 'svelte';
 	import { requestGrantedActionOfferUse } from '#utils/combat/grantedActionOffers.js';
+	import { docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 	import localize from '../../../utils/localize.js';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
 
 	interface OfferRecipientActor {
@@ -52,14 +54,14 @@
 		return item?.name ?? null;
 	}
 
-	function getUsedAttribution(offer: GrantedActionOffer): string {
+	function getUsedAttribution(offer: GrantedActionOffer): LinkedPart[] {
 		const actorName = getRecipientActor(offer)?.name ?? '';
 		return offer.label
-			? localize('NIMBLE.chat.grantedActionOffers.usedByVia', {
+			? linkedParts('NIMBLE.chat.grantedActionOffers.usedByVia', {
 					name: actorName,
-					label: offer.label,
+					label: docLink(offer.label, offer.sourceItemUuid),
 				})
-			: localize('NIMBLE.chat.grantedActionOffers.usedBy', { name: actorName });
+			: linkedParts('NIMBLE.chat.grantedActionOffers.usedBy', { name: actorName });
 	}
 
 	/** The recipient's items the offer allows them to activate. */
@@ -220,7 +222,7 @@
 		{#each usedOffers as offer (offer.id)}
 			<p class="nimble-granted-action-offer-attribution">
 				<i class="fa-solid fa-hand-point-right"></i>
-				{getUsedAttribution(offer)}
+				<LinkedText parts={getUsedAttribution(offer)} />
 			</p>
 		{/each}
 	</section>

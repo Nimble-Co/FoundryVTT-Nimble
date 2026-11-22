@@ -95,6 +95,7 @@
 								<RollUsePicker
 									picking={pickingHere}
 									feature={text.featureName(entry) || entry.label}
+									featureUuid={entry.itemUuid}
 									{primaryOutcome}
 									{primaryDieBonuses}
 									onpick={control.pickDie}

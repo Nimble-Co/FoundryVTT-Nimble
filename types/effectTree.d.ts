@@ -137,6 +137,8 @@ export type ApplyEffectNode = {
 /** What a card shows of the effect: the item's effect, or the condition of a card a rule made. */
 export interface ApplyEffectSource {
 	name: string;
+	/** The effect on its item, which its name opens. None for a condition. */
+	uuid?: string | null;
 	img: string;
 	lastsUntil: readonly Moment[];
 	/** The attack that uses up its Held Roll rule. */

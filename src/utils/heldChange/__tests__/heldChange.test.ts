@@ -420,7 +420,10 @@ describe('spendHeldChanges', () => {
 				kind: 'effectEnded',
 				text: {
 					key: 'NIMBLE.lastsUntil.chat.ended',
-					data: { effect: 'True Strike', name: 'Grug' },
+					data: {
+						effect: { link: expect.objectContaining({ name: 'True Strike' }) },
+						name: 'Grug',
+					},
 				},
 				cause: expect.objectContaining({
 					data: expect.objectContaining({ reason: { key: 'NIMBLE.chat.events.cause.usedUp' } }),

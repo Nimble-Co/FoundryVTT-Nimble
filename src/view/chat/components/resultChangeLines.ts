@@ -1,6 +1,7 @@
 import type { ResultChangeLine } from '#types/components/ResultChangeLines.d.ts';
 import type { ResultChange, ResultUse } from '#types/resultChange.d.ts';
 import { keepsTurnCost } from '#utils/cost/useCost.ts';
+import { docLink, linkedParts } from '#utils/documents/docLink.ts';
 import localize from '#utils/localize.js';
 import { NATURAL_20, resultTotal, standingResultChanges } from '#utils/rolls/resultChanges.ts';
 import { signedNumber, spacedSignedNumber } from '#utils/signedNumber.ts';
@@ -105,8 +106,8 @@ function resultChangeLines(input: ResultChangeLinesInput): ResultChangeLine[] {
 		return {
 			id,
 			verb,
-			withFeature: localize('NIMBLE.chat.incomingReactions.changeThisRoll.withFeature', {
-				feature,
+			withFeature: linkedParts('NIMBLE.chat.incomingReactions.changeThisRoll.withFeature', {
+				feature: docLink(feature, first.itemUuid),
 			}),
 			sentence: localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', {
 				verb,

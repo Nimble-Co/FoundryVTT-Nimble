@@ -1,11 +1,19 @@
 import { SYSTEM_ID } from '#system';
 import type {
 	CardEvent,
+	CardEventLink,
 	CardEventMoment,
 	CardEventText,
 	CardEventValue,
 	EndedEffectRow,
 } from '#types/cardEvent.d.ts';
+import {
+	type DocLink,
+	isDocLink,
+	type LinkedPart,
+	linkedParts,
+	partsText,
+} from '#utils/documents/docLink.ts';
 import { keyedQueue } from '#utils/keyedQueue.js';
 import { describeLastsUntil, holderReader } from '#utils/lastsUntil/describeLastsUntil.js';
 import { endedEffectEvent } from '#utils/lastsUntil/endedEffectEvent.js';
@@ -90,27 +98,42 @@ export function cardEventsOf(
 	return [...rows.map((row) => endedEffectEvent(row, at)), ...events];
 }
 
-function valueText(value: CardEventValue): string {
+function isLink(value: CardEventValue): value is CardEventLink {
+	return typeof value === 'object' && 'link' in value && isDocLink(value.link);
+}
+
+function lastsUntilText(value: Extract<CardEventValue, { lastsUntil: unknown }>): string {
+	return describeLastsUntil({
+		moments: [value.lastsUntil],
+		reader: holderReader(value.source || null),
+		localize,
+		format: localize,
+	});
+}
+
+function valueParts(value: CardEventValue): string | DocLink | LinkedPart[] {
 	if (typeof value === 'string') return value;
 	if (typeof value === 'number') return String(value);
-	if ('lastsUntil' in value) {
-		return describeLastsUntil({
-			moments: [value.lastsUntil],
-			reader: holderReader(value.source || null),
-			localize,
-			format: localize,
-		});
-	}
-	return cardEventText(value);
+	if (isLink(value)) return value.link;
+	if ('lastsUntil' in value) return lastsUntilText(value);
+	if ('key' in value) return cardEventParts(value);
+	return '';
+}
+
+/**
+ * The text in the language of this client, in pieces: a document name is a piece of its own, so
+ * the Events strip can show it as a link.
+ */
+export function cardEventParts(text: CardEventText): LinkedPart[] {
+	const data = Object.fromEntries(
+		Object.entries(text.data ?? {}).map(([name, value]) => [name, valueParts(value)]),
+	);
+	return linkedParts(text.key, data);
 }
 
 /** The text in the language of this client. */
 export function cardEventText(text: CardEventText): string {
-	if (!text.data) return localize(text.key);
-	const data = Object.fromEntries(
-		Object.entries(text.data).map(([name, value]) => [name, valueText(value)]),
-	);
-	return localize(text.key, data);
+	return partsText(cardEventParts(text));
 }
 
 /** The ids of the GMs: who reads a card for the GMs only. */

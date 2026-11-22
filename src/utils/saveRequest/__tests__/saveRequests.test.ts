@@ -57,7 +57,10 @@ describe('save requests', () => {
 			kind: 'saveRequest',
 			text: {
 				key: 'NIMBLE.chat.saveRequest.ask',
-				data: { name: 'Tessa', effect: 'Concentration' },
+				data: {
+					name: 'Tessa',
+					effect: { link: { name: 'Concentration', uuid: 'Actor.tessa.ActiveEffect.eConc' } },
+				},
 			},
 			action: {
 				kind: 'saveRequest',

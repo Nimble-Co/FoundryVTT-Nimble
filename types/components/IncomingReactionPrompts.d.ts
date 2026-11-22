@@ -1,6 +1,7 @@
 import type { PickableDie } from '../../src/dice/oneDieReroll.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import type { StatChoice } from '#types/rollStat.d.ts';
+import type { LinkedPart } from '#utils/documents/docLink.ts';
 
 /**
  * Where on the card the prompts render. `roll` is inside the damage section of
@@ -79,5 +80,6 @@ export interface IncomingReactionText {
 	/** `reason`: why the row cannot be used now. It replaces the note. */
 	row(entry: IncomingReactionEntry, reason?: string): IncomingReactionRow;
 	icon(entry: IncomingReactionEntry): string;
-	usedAttribution(entry: IncomingReactionEntry): string;
+	/** The line of a used entry; the feature name is a link. */
+	usedAttribution(entry: IncomingReactionEntry): LinkedPart[];
 }

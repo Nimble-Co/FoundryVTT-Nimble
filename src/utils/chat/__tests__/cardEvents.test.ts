@@ -6,6 +6,7 @@ import {
 	addCardEvents,
 	addMomentEvents,
 	canHost,
+	cardEventParts,
 	cardEventsOf,
 	cardEventText,
 	cardHoldingEvent,
@@ -695,5 +696,40 @@ describe('cardEventText', () => {
 				data: { moment: { lastsUntil: moment, source: 'Cultist' } },
 			}),
 		).toBe('Until Cultist takes damage');
+	});
+
+	it('reads a document name as its name, and as a piece of its own for the strip', () => {
+		const text = {
+			key: 'NIMBLE.chat.events.cause.reasonAndSource',
+			data: {
+				reason: {
+					key: 'NIMBLE.lastsUntil.chat.ended',
+					data: {
+						effect: { link: { name: 'Blinded', uuid: 'Actor.g.ActiveEffect.b' } },
+						name: 'Goblin',
+					},
+				},
+				source: { link: { name: 'Pocket Sand', uuid: 'Actor.h.Item.sand' } },
+			},
+		};
+
+		expect(cardEventText(text)).toBe('Blinded ended on Goblin - Pocket Sand');
+		expect(cardEventParts(text)).toEqual([
+			{ name: 'Blinded', uuid: 'Actor.g.ActiveEffect.b' },
+			' ended on Goblin - ',
+			{ name: 'Pocket Sand', uuid: 'Actor.h.Item.sand' },
+		]);
+	});
+
+	it('keeps reading a stored line whose names are plain text', () => {
+		const text = {
+			key: 'NIMBLE.lastsUntil.chat.ended',
+			data: { effect: 'Blinded', name: 'Goblin' },
+		};
+
+		expect(cardEventParts(text)).toEqual(['Blinded ended on Goblin']);
+		expect(cardEventText({ key: 'NIMBLE.chat.events.label' })).toBe(
+			cardEventParts({ key: 'NIMBLE.chat.events.label' })[0],
+		);
 	});
 });

@@ -105,7 +105,7 @@ describe('resultChangeLines', () => {
 	it('tells a succeed', () => {
 		const [line] = linesOf([click({ change: 'succeed', value: 0, stat: '' })]);
 		expect(line.verb).toBe('Succeeded Instead');
-		expect(line.withFeature).toBe('with Mighty Soul');
+		expect(line.withFeature).toEqual(['with ', { name: 'Mighty Soul', uuid: 'Item.soul' }]);
 		expect(line.sentence).toBe('Succeeded Instead with Mighty Soul');
 	});
 

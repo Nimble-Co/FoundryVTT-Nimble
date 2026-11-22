@@ -5,12 +5,14 @@
 	import localize from '#utils/localize.js';
 	import DieBonusBadge from './DieBonusBadge.svelte';
 	import DieFace from '../../components/DieFace.svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { createDieValuePickerState } from './DieValuePicker.svelte.ts';
 	import { primaryDieBonusText } from './primaryDieBonusText.ts';
 
 	let {
 		die,
 		feature,
+		featureUuid = null,
 		primaryOutcome = null,
 		primaryDieBonuses = [],
 		sending = false,
@@ -19,7 +21,14 @@
 	}: DieValuePickerProps = $props();
 
 	const titleId = $props.id();
-	const picker = createDieValuePickerState(() => ({ die, feature, sending, onpick, oncancel }));
+	const picker = createDieValuePickerState(() => ({
+		die,
+		feature,
+		featureUuid,
+		sending,
+		onpick,
+		oncancel,
+	}));
 	const { elements, set, confirm, onInputKeydown, onKeydown, onInputBlur, focusInput } = picker;
 
 	const bonus = $derived(primaryDieBonusText(die.bonus ?? 0, primaryDieBonuses));
@@ -37,7 +46,9 @@
 >
 	<div class="nimble-value-picker__head">
 		<i class="nimble-value-picker__icon fa-solid fa-pen" aria-hidden="true"></i>
-		<span id={titleId} class="nimble-value-picker__title" aria-live="polite">{picker.title}</span>
+		<span id={titleId} class="nimble-value-picker__title" aria-live="polite"
+			><LinkedText parts={picker.title} /></span
+		>
 		{#if !sending}
 			<button
 				class="nimble-value-picker__cancel nimble-u-unstyled-button"

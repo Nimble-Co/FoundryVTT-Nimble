@@ -350,7 +350,7 @@
 					"noUsesUntil": "No uses left until the next {per}",
 					"notEnough": "Not enough {pool}",
 					"poolMissing": "Needs {pool}, and the hero has none",
-					"cannotPay": "{pool} cannot pay for this use"
+					"cannotPay": "This use cannot spend from {pool}"
 				},
 				"facts": {
 					"cost": "Cost",
@@ -892,7 +892,7 @@
 				"whenYouInterposeOrDefend": "When you Interpose or Defend",
 				"tickNotForRow": "The row you picked cannot use this.",
 				"nothingToDo": "There is nothing to do against this attack.",
-				"cannotPay": "{label}: its cost could not be paid.",
+				"cannotPay": "{label}: its cost could not be spent.",
 				"rerollNotFound": "{label}: no reroll for this attack on the card.",
 				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
 				"allyUse": "{label}: {name} Defended",
@@ -1071,7 +1071,7 @@
 				"costHeroicReaction": "Heroic Reaction",
 				"costAction": "1 action",
 				"rerollNoLongerAvailable": "This reroll can no longer be used on this roll.",
-				"rerollCostUnpaid": "The cost of this reroll could not be paid.",
+				"rerollCostUnpaid": "The cost of this reroll could not be spent.",
 				"rerollPickADie": "Pick the die to reroll.",
 				"changePickADie": "Pick the die to change.",
 				"changePickAValue": "Pick the value to set the die to.",
@@ -3121,7 +3121,7 @@
 				},
 				"manaAtLeast": {
 					"label": "Mana at least",
-					"hint": "For You cast a spell: the cast must cost this much mana or more, after any mana it is free of. A cast paid from a charge pool, and a cantrip, cost 0. 0 is any cast."
+					"hint": "For You cast a spell: the cast must cost this much mana or more, after any mana it is free of. A cast that spends charges from a charge pool, and a cantrip, cost 0. 0 is any cast."
 				},
 				"freeOf": {
 					"label": "Free of",
@@ -3700,7 +3700,7 @@
 				}
 			},
 			"freeSpellCost": {
-				"description": "Only on an effect. While the effect is on, a tiered spell that your class pays for from a charge pool costs nothing from that pool, so it cannot go past the pool's limit. A mana cost does not change. The Lasts Until of the effect ends it, for example when you cast a tiered spell.",
+				"description": "Only on an effect. While the effect is on, a tiered spell for which your class spends charges from a charge pool costs nothing from that pool, so it cannot go past the pool's limit. A mana cost does not change. The Lasts Until of the effect ends it, for example when you cast a tiered spell.",
 				"poolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool that the spell cost would come from. Blank means any pool."
@@ -3894,7 +3894,7 @@
 				},
 				"change": {
 					"label": "How does it change the result?",
-					"hint": "The roll on the card stays what the dice gave. A reroll takes a change of a total or a success off, and its cost stays paid. No damage needs Attack as the roll and The target as who can use it. A natural 20 is for saves and skill checks, costs nothing and needs no click; with Feature Effects off it is a row.",
+					"hint": "The roll on the card stays what the dice gave. A reroll takes a change of a total or a success off, and its cost stays spent. No damage needs Attack as the roll and The target as who can use it. A natural 20 is for saves and skill checks, costs nothing and needs no click; with Feature Effects off it is a row.",
 					"choices": {
 						"succeed": "It succeeds",
 						"setTotal": "Set the total to a formula",
@@ -4266,7 +4266,7 @@
 			"raisedToFloor": "{flavor} (rolled {rolled}, raised to {face})",
 			"panel": {
 				"ariaLabel": "{label} actions",
-				"rolledMeta": "{count}/{max} · sum {total}",
+				"rolledMeta": "{count}/{max} - sum {total}",
 				"countMeta": "{current}/{max}",
 				"close": "Close",
 				"editDice": {
@@ -4285,7 +4285,7 @@
 					"pickDiceToMaximize": "Pick a die to raise to its maximum",
 					"dieAlreadyMax": "Already at its maximum",
 					"toggleDie": "Toggle die (value: {value})",
-					"summary": "Selected {count} · sum {total}",
+					"summary": "Selected {count} - sum {total}",
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
 					"spendWithCount": "Spend ({count})",
@@ -4345,9 +4345,9 @@
 			"tiny": "Tiny"
 		},
 		"sizeCategoryDescriptions": {
-			"gargantuan": "a castle keep · 4×4 spaces",
-			"huge": "a small house · 3×3 spaces",
-			"large": "a bear · 2×2 spaces",
+			"gargantuan": "a castle keep - 4×4 spaces",
+			"huge": "a small house - 3×3 spaces",
+			"large": "a bear - 2×2 spaces",
 			"medium": "average human size",
 			"small": "fits in a backpack",
 			"tiny": "fits in a pocket"
@@ -4751,7 +4751,7 @@
 				"cancel": "Cancel"
 			},
 			"confirmSpellOverdraft": {
-				"title": "Overdraw Spell Resource",
+				"title": "Cast With Too Little {pool}",
 				"message": "You have {available} of the {required} {pool} this cast requires.",
 				"halfMaxHpDamage": "Casting anyway will deal {damage} damage to you (half your maximum Hit Points).",
 				"resolvedAtTable": "At your level your class replaces the usual penalty with its own rule, which the system does not apply for you. Resolve it at the table.",
@@ -6927,7 +6927,7 @@
 				"labelArcana": "Arcana",
 				"labelUpcasting": "Upcasting",
 				"labelInventory": "Inventory",
-				"upcastUpToTier": "Up to {tier} · your highest unlocked",
+				"upcastUpToTier": "Up to {tier} - your highest unlocked",
 				"upcastNone": "Not possible. You haven't unlocked any spell tiers yet.",
 				"upcastFixed": "Not possible. It's fixed at {tier}.",
 				"arcanaNotNeeded": "No check needed. You already know {school} spells.",

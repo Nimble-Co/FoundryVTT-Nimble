@@ -68,6 +68,7 @@ describe('rerollHistoryLines', () => {
 		expect(lines([button, automatic], [], 'Actor.wren')).toEqual([
 			{
 				title: 'Pocket Sand',
+				titleLink: { name: 'Pocket Sand', uuid: 'Item.sand' },
 				tags: [],
 				offNote: null,
 				text: 'Rerolled with Pocket Sand',
@@ -81,6 +82,7 @@ describe('rerollHistoryLines', () => {
 			},
 			{
 				title: 'Warding Bond',
+				titleLink: { name: 'Warding Bond', uuid: 'Item.ward' },
 				tags: [],
 				offNote: null,
 				text: 'Rerolled with Warding Bond',
@@ -200,6 +202,7 @@ describe('rerollHistoryLines, what a use changed and gave', () => {
 			kind: 'automatic',
 			label: 'Automatic',
 			tooltip: 'Pocket Sand rerolled by itself. Nobody clicked.',
+			note: [{ name: 'Pocket Sand', uuid: 'Item.sand' }, ' rerolled by itself. Nobody clicked.'],
 			off: false,
 		});
 		expect(line.tags.map((tag) => tag.kind)).toEqual(['automatic', 'rollMode']);

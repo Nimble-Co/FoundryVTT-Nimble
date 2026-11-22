@@ -1,10 +1,14 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 	import type { RerollHistoryProps } from '#types/components/RerollHistory.d.ts';
+	import type { LinkedPart } from '#utils/documents/docLink.ts';
 
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import { partsText } from '#utils/documents/docLink.ts';
 	import DieFace from '../../components/DieFace.svelte';
+	import DocumentLink from '../../components/DocumentLink.svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { ATTACK_OUTCOME_TAG_ICONS } from './attackOutcomeTags.ts';
 	import { signed } from './primaryDieBonusText.ts';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
@@ -40,6 +44,7 @@
 	const message = getContext<NimbleChatMessage>('messageDocument');
 	const keepChoice = createRerollHistoryState(message, () => ({ pendingKeep, held }));
 	const tagNotes = createTagNotes(message?.id ?? '');
+	const bonusNotAddedText = $derived(bonusNotAdded ? partsText(bonusNotAdded) : null);
 </script>
 
 {#snippet tagButton(
@@ -64,10 +69,12 @@
 	</button>
 {/snippet}
 
-{#snippet tagNote(row: string, tags: { id: string; tooltip: string }[])}
+{#snippet tagNote(row: string, tags: { id: string; tooltip: string; note?: LinkedPart[] }[])}
 	{@const openTag = tags.find((tag) => tag.id === tagNotes.openTag(row))}
 	{#if openTag}
-		<p class="nimble-roll-changes__note">{openTag.tooltip}</p>
+		<p class="nimble-roll-changes__note">
+			<LinkedText parts={openTag.note ?? [openTag.tooltip]} />
+		</p>
 	{/if}
 {/snippet}
 
@@ -101,7 +108,8 @@
 {#each primaryDieBonuses as bonus, index (index)}
 	{@const value = signed(bonus.value)}
 	{@const sentence =
-		bonusNotAdded ?? localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
+		bonusNotAddedText ??
+		localize('NIMBLE.chat.primaryDieBonus.text', { label: bonus.label, value })}
 	{@const row = `bonus-${index}`}
 	<div
 		class="nimble-roll-changes__history nimble-roll-changes__history--bonus"
@@ -136,14 +144,16 @@
 		)}
 	</div>
 	{#if tagNotes.openTag(row)}
-		<p class="nimble-roll-changes__note nimble-roll-changes__note--line">{sentence}</p>
+		<p class="nimble-roll-changes__note nimble-roll-changes__note--line">
+			<LinkedText parts={bonusNotAdded ?? [sentence]} />
+		</p>
 	{/if}
 {/each}
 
 {#each legacyLines as line (line.id)}
 	<div class="nimble-roll-changes__history">
 		<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-		<p>{line.text}</p>
+		<p><LinkedText parts={line.parts} /></p>
 	</div>
 {/each}
 
@@ -156,7 +166,7 @@
 			<i class={REACTION_VERB_ICONS[line.use]} aria-hidden="true"></i>
 			<div class="nimble-roll-changes__text">
 				<p>
-					<span aria-hidden="true">{line.title}</span>
+					<span class="nimble-roll-changes__title"><DocumentLink link={line.titleLink} /></span>
 					<span class="nimble-roll-changes__spoken">{line.text}</span>
 				</p>
 				{#if line.detail}
@@ -197,7 +207,11 @@
 				{/each}
 				{@render tagNote(
 					row,
-					line.tags.map((tag) => ({ id: tag.kind + tag.label, tooltip: tag.tooltip })),
+					line.tags.map((tag) => ({
+						id: tag.kind + tag.label,
+						tooltip: tag.tooltip,
+						note: tag.note,
+					})),
 				)}
 				{#if line.offNote}
 					<p class="nimble-roll-changes__note">

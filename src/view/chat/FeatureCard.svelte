@@ -1,5 +1,6 @@
 <script>
 	import { setContext, untrack } from 'svelte';
+	import { SYSTEM_ID } from '#system';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import ActionDeltaSummaryNode from './components/ActionDeltaSummaryNode.svelte';
@@ -50,6 +51,7 @@
 	} = $derived(messageDocument.reactive.system);
 
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
+	let itemUuid = $derived(messageDocument.reactive.flags?.[SYSTEM_ID]?.itemUuid ?? null);
 	let attackTypeLabel = $derived(getAttackTypeLabel(attackType, attackDistance));
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
@@ -74,6 +76,7 @@
 		image={image || 'icons/svg/item-bag.svg'}
 		alt={name}
 		heading={name}
+		headingUuid={itemUuid}
 		{subheading}
 	/>
 

@@ -2,8 +2,10 @@
 	import type { RerollDiePickerProps } from '#types/components/RerollDiePicker.d.ts';
 
 	import { onMount } from 'svelte';
+	import { docLink, linkedParts } from '#utils/documents/docLink.ts';
 	import localize from '#utils/localize.js';
 	import DieFace from '../../components/DieFace.svelte';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import {
 		createRerollDiePickerState,
@@ -15,6 +17,7 @@
 	let {
 		dice,
 		feature,
+		featureUuid = null,
 		primaryOutcome = null,
 		use = 'reroll',
 		rolling = null,
@@ -30,8 +33,8 @@
 
 	let title = $derived(
 		rolling
-			? localize(`${pickDieWords(use)}.rolling`, { feature })
-			: localize(`${pickDieWords(use)}.title`),
+			? linkedParts(`${pickDieWords(use)}.rolling`, { feature: docLink(feature, featureUuid) })
+			: linkedParts(`${pickDieWords(use)}.title`),
 	);
 
 	onMount(() => {
@@ -49,7 +52,7 @@
 >
 	<div class="nimble-reroll-picker__head">
 		<i class="nimble-reroll-picker__icon {REACTION_VERB_ICONS[use]}" aria-hidden="true"></i>
-		<span id={titleId} class="nimble-reroll-picker__title">{title}</span>
+		<span id={titleId} class="nimble-reroll-picker__title"><LinkedText parts={title} /></span>
 		{#if !rolling}
 			<button
 				class="nimble-reroll-picker__cancel nimble-u-unstyled-button"

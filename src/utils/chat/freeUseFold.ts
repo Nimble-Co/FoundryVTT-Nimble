@@ -12,6 +12,7 @@ import { facesText } from '#utils/dicePool/poolEvents.js';
 import { cardSchemaHas } from '#utils/documents/cardSchemaHas.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 import { cardEventId } from './activationEvents.js';
+import { cardEventLink } from './cardEventLink.ts';
 import { addCardEvents, addMomentEvents, canHost, gmReaders } from './cardEvents.js';
 import type { FreeUseReason } from './freeUseReason.js';
 
@@ -102,7 +103,7 @@ function causeOf(reason: FreeUseReason): CardEventText {
 
 export interface FreeUseLineInput {
 	actorName: string;
-	item: { name?: string | null; img?: string | null };
+	item: { name?: string | null; uuid?: string | null; img?: string | null };
 	reason: FreeUseReason;
 	effects?: EffectNode[];
 }
@@ -117,7 +118,7 @@ export function freeUseEvent(input: FreeUseLineInput): CardEvent {
 		...(input.item.img ? { img: input.item.img } : { icon: 'fa-solid fa-forward' }),
 		text: {
 			key: `${WORDS}.text`,
-			data: { name: input.actorName, item: input.item.name ?? '' },
+			data: { name: input.actorName, item: cardEventLink(input.item.name, input.item.uuid) },
 		},
 		cause: results ? { key: `${WORDS}.causeWithResults`, data: { cause, results } } : cause,
 		at: Date.now(),

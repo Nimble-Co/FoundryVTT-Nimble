@@ -1,4 +1,5 @@
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+import { docLink, linkedParts } from '#utils/documents/docLink.ts';
 import type { IncomingReactionEntry } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import localize from '#utils/localize.js';
 import { documentName } from './incomingReactionText.ts';
@@ -67,7 +68,10 @@ export function createLeftOutRerollsState(message: NimbleChatMessage | undefined
 		open: openLists.has(listKey),
 		onToggle,
 		featureText: (entry: IncomingReactionEntry) =>
-			localize('NIMBLE.chat.incomingReactions.leftOut.feature', names(entry)),
+			linkedParts('NIMBLE.chat.incomingReactions.leftOut.feature', {
+				...names(entry),
+				feature: docLink(names(entry).feature, entry.itemUuid),
+			}),
 		addLabel: (entry: IncomingReactionEntry) =>
 			localize('NIMBLE.chat.incomingReactions.leftOut.addLabel', names(entry)),
 		reason,

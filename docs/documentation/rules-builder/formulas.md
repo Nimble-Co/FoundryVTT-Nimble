@@ -61,19 +61,19 @@ The exception is the **Damage Bonus** rule. Its **Bonus** field recognizes dice 
 
 **+1 damage per level** (a *Standard of the Legion* boon that scales with the bearer):
 
-- Rule: **Damage Bonus** · **Bonus** → `@level` · **Delivery** → `melee` · **Source** → `weapon`
+- Rule: **Damage Bonus** - **Bonus** → `@level` - **Delivery** → `melee` - **Source** → `weapon`
 
 **+Will modifier to spell damage** (an *Archmage's Focus* wand):
 
-- Rule: **Damage Bonus** · **Bonus** → `@will` · **Source** → `spell`
+- Rule: **Damage Bonus** - **Bonus** → `@will` - **Source** → `spell`
 
 **+1d6 fire damage** (a classic *Flametongue* sword):
 
-- Rule: **Damage Bonus** · **Bonus** → `1d6` · **Damage type** → `Fire` · **Delivery** → `melee` · **Source** → `weapon`
+- Rule: **Damage Bonus** - **Bonus** → `1d6` - **Damage type** → `Fire` - **Delivery** → `melee` - **Source** → `weapon`
 
 **Charges that scale with your key stat** (a class feature with `@key + 1` uses of its power):
 
-- Rule: **Charge Pool** · **Max charges** → `@key + 1`
+- Rule: **Charge Pool** - **Max charges** → `@key + 1`
 
 ![A Damage Bonus rule card with "1d6" in the Bonus field and Fire selected as damage type](/images/documentation/damage-bonus-rule.png)
 

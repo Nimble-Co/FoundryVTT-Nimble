@@ -78,23 +78,23 @@ Below the rows, a live preview tells you where you stand: a note that there are 
 
 **Only while unarmored** (a monk-style feature granting bonus Armor while wearing nothing):
 
-- Key `armor` · **is** · `unarmored`
+- Key `armor` - **is** - `unarmored`
 
 **Only from level 5** (a class feature that switches on at level 5):
 
-- Key `level` · **is at least** · `5`
+- Key `level` - **is at least** - `5`
 
 **Only while bloodied** (a trait that gets stronger below half HP):
 
-- Key `self` · **is** · `bloodied`
+- Key `self` - **is** - `bloodied`
 
 **Only for large-or-bigger creatures** (a monster trait):
 
-- Key `size` · **is at least** · `large`
+- Key `size` - **is at least** - `large`
 
 **Only while a charge pool still has a charge** (an item whose pool identifier is `ember`):
 
-- Key `self:emberChargePool` · **is at least** · `1`
+- Key `self:emberChargePool` - **is at least** - `1`
 
 The key suggestions only offer `self`, so type the full key yourself. This is how a "the first time each encounter" bonus is built: give the item a charge pool with a maximum of 1 that recovers at the start of an encounter, put this condition on the pool's consumer rule *and* on every rule that should only fire that first time. The first use sees the charge, applies the bonus, and spends it; later uses in the same encounter see an empty pool, so the bonus drops out and the item still works normally.
 
@@ -112,7 +112,7 @@ Everything above tests the character *carrying* the item. Some rule types can al
 
 The target tags are `target:bloodied`, `target:concentrating`, and one tag for each other condition, such as `target:distracted`. The size and armor tags work too: `target:size:tiny`, `target:armor:none`. A creature that the owner marked with a **Mark Target** rule also has `target:<flag key>`, such as `target:quarry`, but only for the owner who marked it. A **Count All As Marked** rule gives every creature that tag for one kind of attack of its owner, as Hunter's Resolve does for melee attacks. **Only when the other creature is**, **Only when the target is** and **Show the note only when** also see the owner's own tags, such as `feature:supreme-execution`, so one test can say "the target is Distracted, or I have this feature". Write such an "or" with `$or` in the raw JSON view, for example `{ "$or": ["target:distracted", "feature:supreme-execution"] }`.
 
-For example, a *Goblin Cleaver* axe that deals +2 damage to wounded enemies: add a Damage Bonus rule with **Bonus** `2`, and in **Target condition** a row with key `target` · **is** · `bloodied`.
+For example, a *Goblin Cleaver* axe that deals +2 damage to wounded enemies: add a Damage Bonus rule with **Bonus** `2`, and in **Target condition** a row with key `target` - **is** - `bloodied`.
 
 ## Debugging a condition that never matches
 

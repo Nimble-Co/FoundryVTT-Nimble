@@ -153,7 +153,10 @@ describe('waitEndEffects', () => {
 		expect(line.kind).toBe('waitingEnd');
 		expect(line.text).toEqual({
 			key: 'NIMBLE.lastsUntil.chat.endsOn',
-			data: { effect: 'Effect a', name: 'Goblin' },
+			data: {
+				effect: { link: { name: 'Effect a', uuid: 'Actor.goblin.ActiveEffect.a' } },
+				name: 'Goblin',
+			},
 		});
 		expect(line.action).toEqual({
 			kind: 'waitingEnd',

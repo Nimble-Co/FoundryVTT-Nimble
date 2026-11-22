@@ -2,13 +2,22 @@
 	import type { RerollStatPickerProps } from '#types/components/RerollStatPicker.d.ts';
 
 	import { onMount } from 'svelte';
+	import { docLink } from '#utils/documents/docLink.ts';
 	import localize from '#utils/localize.js';
+	import LinkedText from '../../components/LinkedText.svelte';
 	import { REACTION_VERB_ICONS } from './reactionVerbs.ts';
 	import { claimEscape } from './claimEscape.ts';
 	import { rovingFocusIndex } from './rovingFocusIndex.ts';
 	import { statChoiceLabel } from './resultChangeLines.ts';
 
-	let { stats, feature, sending = false, onpick, oncancel }: RerollStatPickerProps = $props();
+	let {
+		stats,
+		feature,
+		featureUuid = null,
+		sending = false,
+		onpick,
+		oncancel,
+	}: RerollStatPickerProps = $props();
 
 	const titleId = $props.id();
 	let root = $state<HTMLElement>();
@@ -47,7 +56,10 @@
 	<div class="nimble-reroll-stats__head">
 		<i class="nimble-reroll-stats__icon {REACTION_VERB_ICONS.reroll}" aria-hidden="true"></i>
 		<span id={titleId} class="nimble-reroll-stats__title">
-			{localize('NIMBLE.chat.incomingReactions.pickStat.title', { feature })}
+			<LinkedText
+				key="NIMBLE.chat.incomingReactions.pickStat.title"
+				data={{ feature: docLink(feature, featureUuid) }}
+			/>
 		</span>
 		{#if !sending}
 			<button

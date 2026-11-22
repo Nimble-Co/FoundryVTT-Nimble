@@ -12,6 +12,7 @@ import { mayActHere } from '#utils/chat/cardOperations.js';
 import { registerCombatStateHooks } from '#utils/combat/combatState.js';
 import { rerollIsUsedByDefend } from '#utils/defend/defendOptions.js';
 import { cardTakesDefends } from '#utils/defend/defendRecords.js';
+import { docLink, linkedParts } from '#utils/documents/docLink.ts';
 import {
 	requestIncomingAttackReaction,
 	requestResultRemoval,
@@ -110,8 +111,10 @@ export function createIncomingReactionPromptsState(
 					.filter((entry) => entry.kind === 'forceReroll' && entry.used)
 					.map((entry) => ({
 						id: entry.id,
-						text: localize('NIMBLE.chat.incomingReactions.rerolledBy', {
-							label: entry.label || (text.reactingActor(entry)?.name ?? ''),
+						parts: linkedParts('NIMBLE.chat.incomingReactions.rerolledBy', {
+							label: entry.label
+								? docLink(entry.label, entry.itemUuid)
+								: (text.reactingActor(entry)?.name ?? ''),
 						}),
 					}))
 			: [],

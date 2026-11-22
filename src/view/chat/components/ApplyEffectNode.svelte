@@ -35,6 +35,7 @@
 	<EffectStepRow
 		img={row.img}
 		name={row.name}
+		uuid={row.uuid}
 		lasts={row.lasts}
 		appliedLines={row.appliedLines}
 		notes={row.note ? [row.note] : []}

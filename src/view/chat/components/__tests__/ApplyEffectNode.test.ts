@@ -96,10 +96,10 @@ describe('applyEffectRow', () => {
 		});
 
 		expect(view.button).toBeNull();
-		expect(view.appliedLines).toEqual(['On Goblin', 'Taunted stays on Kobold']);
+		expect(view.appliedLines).toEqual(['On Goblin', [{ name: 'Taunted' }, ' stays on Kobold']]);
 		expect(
 			row({ applied: [{ effectUuid: 'y', actorName: 'Hero', stays: true }] }).appliedLines,
-		).toEqual(['Taunted stays on Hero']);
+		).toEqual([[{ name: 'Taunted' }, ' stays on Hero']]);
 	});
 
 	it('has no button for a user who did not roll the card, and a disabled one with no targets', () => {

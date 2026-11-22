@@ -1,5 +1,6 @@
 import type { CardEvent, CardEventText, StackGainAction } from '#types/cardEvent.d.ts';
 import type { StackReached } from '#types/effectPayload.d.ts';
+import { cardEventLink } from '#utils/chat/cardEventLink.ts';
 import { addCardEvents, addMomentEvents } from '#utils/chat/cardEvents.js';
 
 const WORDS = 'NIMBLE.chat.stackGain';
@@ -11,12 +12,14 @@ export interface StackHolder {
 }
 
 export function stackGainText(
-	action: Pick<StackGainAction, 'holderName' | 'count' | 'stackedName' | 'gainedName'>,
+	action: Pick<StackGainAction, 'holderName' | 'count' | 'stackedName' | 'gainedName'> &
+		Partial<Pick<StackGainAction, 'gainedUuid'>>,
 	gained: boolean,
 ): CardEventText {
 	const data = { name: action.holderName, count: action.count, stacked: action.stackedName };
 	if (!gained) return { key: `${WORDS}.has`, data };
-	return { key: `${WORDS}.gains`, data: { ...data, effect: action.gainedName } };
+	const effect = cardEventLink(action.gainedName, action.gainedUuid);
+	return { key: `${WORDS}.gains`, data: { ...data, effect } };
 }
 
 /**
@@ -46,7 +49,7 @@ export function stackGainEvent(
 			? { state: 'gained', gainedUuid: reached.gainedUuid }
 			: { state: 'waiting', payload: reached.payload }),
 	};
-	return { ...event, text: stackGainText(base, action.state === 'gained'), action };
+	return { ...event, text: stackGainText(action, action.state === 'gained'), action };
 }
 
 /**

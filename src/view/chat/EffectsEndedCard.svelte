@@ -3,7 +3,8 @@
 	import type { ChatCardProps } from '#types/components/ChatCard.d.ts';
 	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
-	import { cardEventText } from '#utils/chat/cardEvents.js';
+	import LinkedText from '../components/LinkedText.svelte';
+	import { cardEventParts } from '#utils/chat/cardEvents.js';
 
 	let { messageDocument }: ChatCardProps = $props();
 
@@ -16,14 +17,14 @@
 	);
 	// Cards from before the moment heading have it in words.
 	const heading = $derived(
-		system.momentHeading ? cardEventText(system.momentHeading) : system.heading,
+		system.momentHeading ? cardEventParts(system.momentHeading) : [system.heading],
 	);
 </script>
 
 <CardHeader {messageDocument} />
 
 <article class="nimble-chat-card__body nimble-effects-ended" data-card-type="effectsEnded">
-	<h3 class="nimble-effects-ended__heading">{heading}</h3>
+	<h3 class="nimble-effects-ended__heading"><LinkedText parts={heading} /></h3>
 
 	<CardEvents {messageDocument} labelled={false} />
 </article>

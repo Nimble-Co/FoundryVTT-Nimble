@@ -68,7 +68,7 @@
 				<dd>
 					{tierLabel}
 					{#if school}
-						· {getSpellSchoolLabel(school)}
+						- {getSpellSchoolLabel(school)}
 					{/if}
 				</dd>
 

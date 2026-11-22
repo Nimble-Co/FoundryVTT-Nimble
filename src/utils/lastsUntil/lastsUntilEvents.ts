@@ -1,5 +1,6 @@
-import type { CardEventText, EventHost } from '#types/cardEvent.d.ts';
+import type { CardEventLink, CardEventText, EventHost } from '#types/cardEvent.d.ts';
 import type { EffectNode } from '#types/effectTree.js';
+import { cardEventLink } from '#utils/chat/cardEventLink.js';
 import { effectsEndingAt } from '#utils/lastsUntil/endEffects.js';
 import { endOrWaitEffects } from '#utils/lastsUntil/endEffectsAt.js';
 import type { EndMoment } from '#utils/lastsUntil/endLines.js';
@@ -32,7 +33,7 @@ export function isAttackUse(item: UsedItem, targetActors: readonly object[]): bo
 
 interface HeadingNames {
 	name?: string | null;
-	item?: string | null;
+	item?: string | CardEventLink | null;
 	effect?: string | null;
 }
 
@@ -171,7 +172,7 @@ export function fireItemUseEvents(
 	if (item.uuid) {
 		events.push({
 			check: { type: 'event', event: 'useAgain', actor, itemUuid: item.uuid },
-			heading: eventHeading('useAgain', { name, item: item.name }),
+			heading: eventHeading('useAgain', { name, item: cardEventLink(item.name, item.uuid) }),
 		});
 	}
 	fireEvents(events, host);

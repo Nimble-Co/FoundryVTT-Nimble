@@ -79,7 +79,10 @@ describe('freeUseEvent', () => {
 		expect(event).toMatchObject({
 			kind: 'freeUse',
 			img: 'rage.webp',
-			text: { key: 'NIMBLE.chat.events.freeUse.text', data: { name: 'Hero', item: 'Rage' } },
+			text: {
+				key: 'NIMBLE.chat.events.freeUse.text',
+				data: { name: 'Hero', item: { link: { name: 'Rage' } } },
+			},
 			cause: {
 				key: 'NIMBLE.chat.events.freeUse.causeWithResults',
 				data: {

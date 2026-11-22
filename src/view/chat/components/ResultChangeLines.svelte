@@ -2,6 +2,7 @@
 	import type { ResultChangeLinesProps } from '#types/components/ResultChangeLines.d.ts';
 
 	import localize from '#utils/localize.js';
+	import LinkedText from '../../components/LinkedText.svelte';
 
 	let { sum = null, lines, held, onremove }: ResultChangeLinesProps = $props();
 
@@ -17,7 +18,7 @@
 	<div class="nimble-result-line" class:nimble-result-line--retired={line.retired}>
 		<p class="nimble-result-line__text">
 			<span class="nimble-result-line__verb">{line.verb}</span>
-			<span class="nimble-result-line__feature">{line.withFeature}</span>
+			<span class="nimble-result-line__feature"><LinkedText parts={line.withFeature} /></span>
 			{#if line.detail}
 				<span class="nimble-result-line__detail">{line.detail}</span>
 			{/if}

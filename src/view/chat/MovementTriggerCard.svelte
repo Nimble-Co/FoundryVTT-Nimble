@@ -22,6 +22,7 @@
 		image={card.system.image || 'icons/svg/item-bag.svg'}
 		alt={card.system.name}
 		heading={card.system.name}
+		headingUuid={card.system.itemUuid || null}
 	/>
 
 	<section class="nimble-movement-trigger-card__section">

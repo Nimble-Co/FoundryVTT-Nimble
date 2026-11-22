@@ -8,6 +8,7 @@ import type {
 	RerollRecord,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 
+import { docLink, type LinkedPart, linkedParts } from '../../../utils/documents/docLink.js';
 import localize from '../../../utils/localize.js';
 import { getIncomingReactionCost } from './incomingReactionCost.ts';
 import { REACTION_VERB_ICONS, REACTION_VERB_WORDS, reactionVerb } from './reactionVerbs.ts';
@@ -31,14 +32,14 @@ function icon(entry: IncomingReactionEntry): string {
 	return REACTION_VERB_ICONS[reactionVerb(entry)];
 }
 
-function usedAttribution(entry: IncomingReactionEntry): string {
+function usedAttribution(entry: IncomingReactionEntry): LinkedPart[] {
 	const actorName = reactingActor(entry)?.name ?? '';
 	// Spend offers store their outcome as components, so the sentence is
 	// built on whichever client renders it rather than the one that spent.
 	if (entry.kind === 'spendPoolForDamage') {
-		const name = featureName(entry) || entry.label;
-		if (typeof entry.usedAmount !== 'number') return name;
-		return localize('NIMBLE.chat.incomingReactions.poolSpendNote', {
+		const name = docLink(featureName(entry) || entry.label, entry.itemUuid);
+		if (typeof entry.usedAmount !== 'number') return [name];
+		return linkedParts('NIMBLE.chat.incomingReactions.poolSpendNote', {
 			label: name,
 			amount: String(entry.usedAmount),
 			pool: entry.usedPoolLabel ?? '',
@@ -46,11 +47,11 @@ function usedAttribution(entry: IncomingReactionEntry): string {
 		});
 	}
 	return entry.label
-		? localize('NIMBLE.chat.incomingReactions.redirectedToVia', {
+		? linkedParts('NIMBLE.chat.incomingReactions.redirectedToVia', {
 				name: actorName,
-				label: entry.label,
+				label: docLink(entry.label, entry.itemUuid),
 			})
-		: localize('NIMBLE.chat.incomingReactions.redirectedTo', { name: actorName });
+		: linkedParts('NIMBLE.chat.incomingReactions.redirectedTo', { name: actorName });
 }
 
 function resultVerb(use: ResultUse): string {
