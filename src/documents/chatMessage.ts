@@ -17,6 +17,8 @@ import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js'
 import {
 	type AttackActivation,
 	type AttackDelivery,
+	type AttackSource,
+	attackSourceOf,
 	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
@@ -147,7 +149,7 @@ type ChargeCardOfferRule = {
 	cardOffer?: RerollTrigger | null;
 	effectFormula?: string;
 	cardPush?: { distance: string; distanceBySize: Record<string, string> } | null;
-	providesCardOffer?: (context: { delivery: AttackDelivery }) => boolean;
+	providesCardOffer?: (context: { delivery: AttackDelivery; source: AttackSource }) => boolean;
 };
 
 /** The kept die results of an evaluated roll. */
@@ -2180,6 +2182,17 @@ class NimbleChatMessage extends ChatMessage {
 		});
 	}
 
+	/**
+	 * What this card's attack is made with. Of the cards with spend buttons,
+	 * only an Unarmed Strike has no item.
+	 */
+	#attackSource(): AttackSource {
+		const flags = this.flags?.[SYSTEM_ID] as { itemUuid?: unknown; weaponUuid?: unknown };
+		if (!flags?.itemUuid) return 'weapon';
+		const weaponUuid = typeof flags.weaponUuid === 'string' ? flags.weaponUuid : null;
+		return attackSourceOf(this.#cardSourceItem(), weaponUuid);
+	}
+
 	/** How this card's attack is delivered. */
 	#attackDelivery(): AttackDelivery {
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -2330,7 +2343,10 @@ class NimbleChatMessage extends ChatMessage {
 
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const stillOffered =
-			rule.providesCardOffer?.({ delivery: this.#attackDelivery() }) === true &&
+			rule.providesCardOffer?.({
+				delivery: this.#attackDelivery(),
+				source: this.#attackSource(),
+			}) === true &&
 			rerollTriggerMatches(rule.cardOffer ?? undefined, systemData) &&
 			!this.spendsPoolAgain(entry);
 		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');

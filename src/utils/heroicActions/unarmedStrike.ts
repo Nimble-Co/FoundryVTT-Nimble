@@ -203,6 +203,7 @@ export async function rollUnarmedStrike(
 	const delivery = deliveryOfAttack({ targets: { attackType: UNARMED_STRIKE_ATTACK_TYPE } }, actor);
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
+		source: 'weapon',
 		stats: statsInFormula(rollFormula),
 		...(origin ? { origin } : {}),
 	});

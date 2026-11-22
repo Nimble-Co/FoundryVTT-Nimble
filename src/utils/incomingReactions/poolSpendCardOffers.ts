@@ -1,5 +1,5 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
-import type { AttackDelivery } from '../damage/attackDelivery.js';
+import type { AttackDelivery, AttackSource } from '../damage/attackDelivery.js';
 import type { AttackOrigin } from '../damage/attackOrigin.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 
@@ -12,6 +12,8 @@ export interface CardOfferContext {
 	itemUuid?: string | null;
 	/** The weapon an ability attacks with. */
 	weaponUuid?: string | null;
+	/** What the attack is made with. */
+	source?: AttackSource;
 	/** The stats the attack's formula has. */
 	stats?: readonly string[];
 	/** The feature the attack was made through. The uuid is there only for an attack made through another item. */

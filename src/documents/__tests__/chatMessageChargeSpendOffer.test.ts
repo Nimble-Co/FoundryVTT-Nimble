@@ -128,13 +128,25 @@ type MockedMessage = InstanceType<typeof NimbleChatMessage> & {
 };
 
 function createMessage(
-	card: { isMiss?: boolean; targets?: string[]; chargeConsumption?: object[] } = {},
+	card: {
+		isMiss?: boolean;
+		targets?: string[];
+		chargeConsumption?: object[];
+		itemUuid?: string;
+		weaponUuid?: string;
+	} = {},
 ) {
 	const roll = damageRoll();
 	const message = new NimbleChatMessage({
 		type: 'feature',
 		speaker: { scene: 'scene', token: 'wren', actor: 'commander' },
-		flags: { [SYSTEM_ID]: { chargeConsumption: card.chargeConsumption ?? [] } },
+		flags: {
+			[SYSTEM_ID]: {
+				chargeConsumption: card.chargeConsumption ?? [],
+				...(card.itemUuid ? { itemUuid: card.itemUuid } : {}),
+				...(card.weaponUuid ? { weaponUuid: card.weaponUuid } : {}),
+			},
+		},
 		system: {
 			targets: card.targets ?? ['Scene.scene.Token.goblin'],
 			isCritical: false,
@@ -185,9 +197,16 @@ class CombatDieRoll extends BaseRoll {
 
 const wrenToken = { uuid: 'Scene.scene.Token.wren', name: 'Wren' };
 
+const cardItems: Record<string, { type: string; system?: { objectType: string } }> = {
+	'Actor.commander.Item.cantrip': { type: 'spell' },
+	'Actor.commander.Item.sword': { type: 'object', system: { objectType: 'weapon' } },
+	'Actor.commander.Item.strike': { type: 'feature' },
+};
+
 function useActor(actor: ReturnType<typeof createActor>) {
 	globals.fromUuidSync = vi.fn((uuid: string) => {
 		if (uuid === actor._heavy.uuid) return actor._heavy;
+		if (uuid in cardItems) return cardItems[uuid];
 		if (uuid === wrenToken.uuid) return { ...wrenToken, actor };
 		return actor;
 	});
@@ -312,6 +331,38 @@ describe('a spend of a charge from the attack card', () => {
 
 		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
 
+		expect(actor._pools.update).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it.each([
+		['a weapon', { itemUuid: 'Actor.commander.Item.sword' }],
+		[
+			'a feature with a chosen weapon',
+			{ itemUuid: 'Actor.commander.Item.strike', weaponUuid: 'unarmedStrike' },
+		],
+		['an Unarmed Strike, which has no item', {}],
+	])('asks the rule with a weapon attack for an attack with %s', async (_name, card) => {
+		const providesCardOffer = vi.fn(() => true);
+		const actor = createActor(2, consumerRule({ providesCardOffer }));
+		useActor(actor);
+
+		await createMessage(card).resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
+
+		expect(providesCardOffer).toHaveBeenCalledWith({ delivery: 'melee', source: 'weapon' });
+	});
+
+	it('refuses the spend on a spell card when the rule is for weapon attacks only', async () => {
+		const providesCardOffer = vi.fn(
+			(context: { source: string | null }) => context.source === 'weapon',
+		);
+		const actor = createActor(2, consumerRule({ providesCardOffer }));
+		useActor(actor);
+		const message = createMessage({ itemUuid: 'Actor.commander.Item.cantrip' });
+
+		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
+
+		expect(providesCardOffer).toHaveBeenCalledWith({ delivery: 'melee', source: 'spell' });
 		expect(actor._pools.update).not.toHaveBeenCalled();
 		expect(message.update).not.toHaveBeenCalled();
 	});

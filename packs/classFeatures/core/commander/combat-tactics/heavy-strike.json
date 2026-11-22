@@ -21,6 +21,7 @@
 				"maxCost": "",
 				"allowFree": false,
 				"cardOffer": "hit",
+				"cardOfferSource": "weapon",
 				"effectFormula": "1d@pools.combat-dice.faces",
 				"pushDistance": "0",
 				"pushDistanceBySize": {

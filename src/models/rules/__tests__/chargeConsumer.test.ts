@@ -96,6 +96,22 @@ describe('ChargeConsumerRule', () => {
 			);
 		});
 
+		it('is offered on all attacks until the rule names what they are made with', () => {
+			const rule = consumer({ cardOffer: 'hit', effectFormula: '1d6' });
+
+			expect(rule.providesCardOffer({ delivery: 'ranged', source: 'spell' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: 'melee', source: null })).toBe(true);
+		});
+
+		it('is offered on weapon attacks only when the rule says weapon', () => {
+			const rule = consumer({ cardOffer: 'hit', effectFormula: '1d6', cardOfferSource: 'weapon' });
+
+			expect(rule.providesCardOffer({ delivery: 'melee', source: 'weapon' })).toBe(true);
+			expect(rule.providesCardOffer({ delivery: 'ranged', source: 'spell' })).toBe(false);
+			expect(rule.providesCardOffer({ delivery: 'melee', source: null })).toBe(false);
+			expect(rule.providesCardOffer()).toBe(false);
+		});
+
 		it('pushes the targets by the distance of their size, else the distance', () => {
 			const rule = consumer({
 				cardOffer: 'hit',
@@ -118,7 +134,13 @@ describe('ChargeConsumerRule', () => {
 			const schema = ChargeConsumerRule.defineSchema() as any;
 
 			expect(schema.cardOffer.initial).toBeNull();
-			for (const field of ['effectFormula', 'pushDistance', 'pushDistanceBySize']) {
+			expect(schema.cardOfferSource.initial).toBe('any');
+			for (const field of [
+				'cardOfferSource',
+				'effectFormula',
+				'pushDistance',
+				'pushDistanceBySize',
+			]) {
 				expect(schema[field].options.showWhen({ cardOffer: 'hit' })).toBe(true);
 				expect(schema[field].options.showWhen({ cardOffer: null })).toBe(false);
 			}

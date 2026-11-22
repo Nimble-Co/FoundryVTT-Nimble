@@ -2245,6 +2245,10 @@
 					"label": "Spend from the attack card",
 					"hint": "The charge is not spent when the item is used. Your attack cards get a button instead, after a hit or only after a crit, that spends the cost and adds the damage formula to the attack. Leave empty to spend the charge when the item is used."
 				},
+				"cardOfferSource": {
+					"label": "Button on attacks made with",
+					"hint": "Weapon: the button shows only on attacks with a weapon. An Unarmed Strike and a feature attack with a chosen weapon are weapon attacks. Spell: the button shows only on attacks with a spell. Any: the button shows on all attacks."
+				},
 				"effectFormula": {
 					"label": "Damage",
 					"hint": "The damage the button adds to the attack, such as 1d@pools.combat-dice.faces for a roll of the pool's die."

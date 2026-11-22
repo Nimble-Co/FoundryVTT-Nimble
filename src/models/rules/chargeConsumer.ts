@@ -1,4 +1,5 @@
 import { ChargePoolRuleConfig } from '#utils/chargePool/chargePoolRuleConfig.js';
+import { ATTACK_SOURCES, type AttackSourceFilter } from '#utils/damage/attackDelivery.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import type { CardOfferContext } from '#utils/incomingReactions/poolSpendCardOffers.js';
 import { withWidget } from './_widgetOption.js';
@@ -119,6 +120,23 @@ function schema() {
 			hint: `${WORDS}.cardOffer.hint`,
 			choices: CARD_OFFER_TRIGGERS,
 		}),
+		cardOfferSource: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				label: `${WORDS}.cardOfferSource.label`,
+				hint: `${WORDS}.cardOfferSource.hint`,
+				choices: () =>
+					Object.fromEntries(
+						ATTACK_SOURCES.map((source) => [
+							source,
+							`NIMBLE.rules.attackOutcome.attackSource.choices.${source}`,
+						]),
+					),
+				showWhen: offeredOnCard,
+			}),
+		),
 		effectFormula: new fields.StringField(
 			withWidget({
 				required: true,
@@ -188,6 +206,9 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 	/** The spend is a button on the owner's attack cards after this outcome, not a cost of a use. */
 	declare cardOffer: (typeof DicePoolRuleConfig.cardOfferTriggers)[number] | null;
 
+	/** The attacks whose card gets the button: any, weapon attacks only, or spell attacks only. */
+	declare cardOfferSource: AttackSourceFilter;
+
 	/** The damage a spend from the card adds to the attack. */
 	declare effectFormula: string;
 
@@ -214,6 +235,7 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 				['allowFree', 'boolean'],
 				['oncePerTurn', 'boolean'],
 				['cardOffer', '"hit" | "criticalHit" | null'],
+				['cardOfferSource', '"any" | "weapon" | "spell"'],
 				['effectFormula', 'string'],
 				['pushDistance', 'string'],
 				['pushDistanceBySize', 'Record<size, string>'],
@@ -221,11 +243,17 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 		);
 	}
 
-	/** Whether the owner's attack card offers this spend. Heroes only: they hold the pools. */
-	providesCardOffer(_context?: CardOfferContext): boolean {
+	/**
+	 * Whether the owner's attack card offers this spend. Heroes only: they hold
+	 * the pools. A rule limited to weapon or spell attacks fails closed when the
+	 * caller does not say what the attack is made with.
+	 */
+	providesCardOffer(context?: CardOfferContext): boolean {
 		if (!this.cardOffer) return false;
 		if (!String(this.effectFormula ?? '').trim()) return false;
 		if (this.parentItem.actor?.type !== 'character') return false;
+		const source = this.cardOfferSource ?? 'any';
+		if (source !== 'any' && context?.source !== source) return false;
 		return this.test();
 	}
 

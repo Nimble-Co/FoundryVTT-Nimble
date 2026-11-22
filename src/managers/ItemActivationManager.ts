@@ -48,7 +48,11 @@ import {
 	resourceCostsOfUse,
 	settleResourceCosts,
 } from '../utils/cost/itemResourceCosts.js';
-import { type AttackDelivery, deliveryOfAttack } from '../utils/damage/attackDelivery.js';
+import {
+	type AttackDelivery,
+	attackSourceOf,
+	deliveryOfAttack,
+} from '../utils/damage/attackDelivery.js';
 import {
 	type AttackOrigin,
 	attackOriginName,
@@ -744,6 +748,7 @@ class ItemActivationManager {
 				delivery: this.#getAttackDelivery(),
 				itemUuid: this.#item.uuid,
 				...(this.#weapon ? { weaponUuid: this.#weapon.uuid } : {}),
+				source: attackSourceOf(this.#item, this.weaponUuid),
 				stats: statsInFormula(dialogData.rollFormula || this.#firstDamageFormula()),
 				upcastSteps: this.upcastResult?.upcastSteps ?? 0,
 				origin: this.#ruleOrigin,

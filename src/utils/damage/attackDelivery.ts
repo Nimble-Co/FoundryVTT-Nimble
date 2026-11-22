@@ -27,6 +27,23 @@ function matchesAttackSource(
 	return (item?.type === 'spell' ? 'spell' : 'weapon') === filter;
 }
 
+/** What an attack is made with. Null: neither, as a feature attack with no weapon. */
+type AttackSource = Exclude<AttackSourceFilter, 'any'> | null;
+
+/**
+ * What an attack with this item is made with. A weapon item, or a weapon the
+ * attack chose (an Unarmed Strike too), makes it a weapon attack.
+ */
+function attackSourceOf(
+	item: { type?: string; system?: { objectType?: string } } | null | undefined,
+	weaponUuid?: string | null,
+): AttackSource {
+	if (weaponUuid) return 'weapon';
+	if (item?.type === 'spell') return 'spell';
+	if (item?.type === 'object' && item.system?.objectType === 'weapon') return 'weapon';
+	return null;
+}
+
 /** The parts of an activation that say how its attack is delivered. */
 interface AttackActivation {
 	targets?: { attackType?: string | null } | null;
@@ -65,7 +82,9 @@ function matchesAttackDelivery(
 
 export {
 	ATTACK_SOURCES,
+	type AttackSource,
 	type AttackSourceFilter,
+	attackSourceOf,
 	matchesAttackSource,
 	ATTACK_DELIVERY_FILTERS,
 	deliveryOfAttack,

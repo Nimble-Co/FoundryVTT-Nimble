@@ -69,7 +69,12 @@ describe('Heavy Strike', () => {
 			cardOffer: 'hit',
 			effectFormula: '1d@pools.combat-dice.faces',
 		});
-		expect(rule().providesCardOffer({ delivery: 'melee' })).toBe(true);
+		expect(rule().providesCardOffer({ delivery: 'melee', source: 'weapon' })).toBe(true);
+	});
+
+	it('is a button on weapon attacks only, not on a spell that hits', () => {
+		expect(rule().providesCardOffer({ delivery: 'ranged', source: 'spell' })).toBe(false);
+		expect(rule().providesCardOffer({ delivery: 'melee', source: null })).toBe(false);
 	});
 
 	it('pushes a Medium creature STR spaces, a Small one twice as far, a Large one half', () => {

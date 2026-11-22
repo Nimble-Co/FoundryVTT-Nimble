@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deliveryOfAttack, matchesAttackDelivery } from '../attackDelivery.js';
+import { attackSourceOf, deliveryOfAttack, matchesAttackDelivery } from '../attackDelivery.js';
 
 describe('deliveryOfAttack', () => {
 	const hero = { type: 'character' };
@@ -60,5 +60,25 @@ describe('matchesAttackDelivery', () => {
 	it('fails a set filter against an activation with no delivery', () => {
 		expect(matchesAttackDelivery('melee', null)).toBe(false);
 		expect(matchesAttackDelivery('ranged', null)).toBe(false);
+	});
+});
+
+describe('attackSourceOf', () => {
+	const weapon = { type: 'object', system: { objectType: 'weapon' } };
+
+	it('makes an attack with a weapon item, or with a chosen weapon, a weapon attack', () => {
+		expect(attackSourceOf(weapon)).toBe('weapon');
+		expect(attackSourceOf({ type: 'feature' }, 'Actor.a.Item.sword')).toBe('weapon');
+		expect(attackSourceOf({ type: 'feature' }, 'unarmedStrike')).toBe('weapon');
+	});
+
+	it('makes an attack with a spell a spell attack', () => {
+		expect(attackSourceOf({ type: 'spell' })).toBe('spell');
+	});
+
+	it('gives no source to a feature attack with no weapon, or to an object that is not a weapon', () => {
+		expect(attackSourceOf({ type: 'feature' })).toBeNull();
+		expect(attackSourceOf({ type: 'object', system: { objectType: 'armor' } })).toBeNull();
+		expect(attackSourceOf(null)).toBeNull();
 	});
 });
