@@ -45,7 +45,11 @@ describe('RicochetRule', () => {
 	it('ricochets a thrown dagger, by its name or its weapon type', () => {
 		const rule = ricochet({ weapon: 'dagger', weaponProperty: 'thrown' });
 
-		expect(rule.ricochetFor(weapon('Dagger'))).toEqual({ source: 'Trickshot', reach: 2 });
+		expect(rule.ricochetFor(weapon('Dagger'))).toEqual({
+			source: 'Trickshot',
+			reach: 2,
+			thrownWeapon: 'Dagger',
+		});
 		expect(rule.ricochetFor(weapon('Venomfang Dagger'))).not.toBeNull();
 		expect(rule.ricochetFor(weapon('Mindlink Daggers'))).not.toBeNull();
 		expect(rule.ricochetFor(weapon('Fang', ['thrown'], 'Dagger'))).not.toBeNull();
@@ -62,6 +66,13 @@ describe('RicochetRule', () => {
 
 	it('ricochets every weapon when no weapon is named', () => {
 		expect(ricochet({}).ricochetFor(weapon('Handaxe', []))).not.toBeNull();
+	});
+
+	it('names the thrown weapon only when the rule asks for a thrown weapon', () => {
+		expect(ricochet({ weapon: 'dagger' }).ricochetFor(weapon('Dagger'))).toEqual({
+			source: 'Trickshot',
+			reach: 2,
+		});
 	});
 
 	it('does not ricochet while its item is not on a creature, or while it is off', () => {

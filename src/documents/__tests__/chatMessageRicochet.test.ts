@@ -123,21 +123,21 @@ describe('the ricochet of a card', () => {
 	it('is there after a hit with a thrown dagger of an attacker who has it', () => {
 		world();
 
-		expect(daggerCard().ricochet()).toEqual({ source: 'Trickshot', reach: 2 });
+		expect(daggerCard().cardRicochet.ricochet()).toEqual({ source: 'Trickshot', reach: 2 });
 	});
 
 	it('is not there after a miss', () => {
 		world();
 
-		expect(daggerCard({ isMiss: true }).ricochet()).toBeNull();
+		expect(daggerCard({ isMiss: true }).cardRicochet.ricochet()).toBeNull();
 	});
 
 	it('is not there for a weapon that does not fit, or an attacker without it', () => {
 		world({ weapon: dagger(['light']) });
-		expect(daggerCard().ricochet()).toBeNull();
+		expect(daggerCard().cardRicochet.ricochet()).toBeNull();
 
 		world({ withTrickshot: false });
-		expect(daggerCard().ricochet()).toBeNull();
+		expect(daggerCard().cardRicochet.ricochet()).toBeNull();
 	});
 
 	it('reads the weapon a feature attacked with', () => {
@@ -147,7 +147,7 @@ describe('the ricochet of a card', () => {
 			flags: { itemUuid: 'Actor.cheat.Item.feature', weaponUuid: DAGGER },
 		});
 
-		expect(card.ricochet()).not.toBeNull();
+		expect(card.cardRicochet.ricochet()).not.toBeNull();
 	});
 });
 
@@ -155,27 +155,27 @@ describe('the ricochet damage', () => {
 	it('is half the damage, rounded down', () => {
 		world();
 
-		expect(daggerCard().ricochetDamage(KOBOLD)).toBe(3);
+		expect(daggerCard().cardRicochet.damage(KOBOLD)).toBe(3);
 	});
 
 	it("goes through the creature's own armor", () => {
 		world({ armor: 'medium' });
 
 		// Medium armor takes only the dice: half of the 4 on the die.
-		expect(daggerCard().ricochetDamage(KOBOLD)).toBe(2);
+		expect(daggerCard().cardRicochet.damage(KOBOLD)).toBe(2);
 	});
 
 	it('is half of a crit, which armor does not stop', () => {
 		world({ armor: 'medium' });
 
-		expect(daggerCard({ isCritical: true }).ricochetDamage(KOBOLD)).toBe(3);
+		expect(daggerCard({ isCritical: true }).cardRicochet.damage(KOBOLD)).toBe(3);
 	});
 
 	it('is applied to the creature once, by the GM, and the card remembers it', async () => {
 		const { kobold } = world();
 		const card = daggerCard();
 
-		await card.applyRicochetDamage(KOBOLD);
+		await card.cardRicochet.applyDamage(KOBOLD);
 
 		expect(kobold.applyDamage).toHaveBeenCalledWith(3);
 		expect(card.setFlag).toHaveBeenCalledWith(SYSTEM_ID, 'ricochet', {
@@ -187,12 +187,12 @@ describe('the ricochet damage', () => {
 	it('is not applied by a player, or a second time', async () => {
 		const { kobold } = world();
 		globals.game.user.isGM = false;
-		await daggerCard().applyRicochetDamage(KOBOLD);
+		await daggerCard().cardRicochet.applyDamage(KOBOLD);
 
 		globals.game.user.isGM = true;
 		await daggerCard({
 			flags: { ricochet: { targetUuid: KOBOLD, applied: true } },
-		}).applyRicochetDamage(KOBOLD);
+		}).cardRicochet.applyDamage(KOBOLD);
 
 		expect(kobold.applyDamage).not.toHaveBeenCalled();
 	});
@@ -202,7 +202,7 @@ describe('the ricochet damage', () => {
 		globals.game.user.isGM = false;
 		const card = daggerCard();
 
-		await card.setRicochetTarget(KOBOLD);
+		await card.cardRicochet.setTarget(KOBOLD);
 
 		expect(card.setFlag).toHaveBeenCalledWith(SYSTEM_ID, 'ricochet', { targetUuid: KOBOLD });
 	});

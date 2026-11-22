@@ -4,11 +4,17 @@ import { ricochetLineOf } from '../ricochetLine.js';
 const KOBOLD = { uuid: 'Token.kobold', name: 'Kobold' };
 const GOBLIN = { uuid: 'Token.goblin', name: 'Goblin' };
 
-function card(record: { targetUuid?: string; applied?: boolean } = {}, hit = true) {
+function card(
+	record: { targetUuid?: string; applied?: boolean } = {},
+	hit = true,
+	thrownWeapon?: string,
+) {
 	return {
-		ricochet: () => (hit ? { source: 'Trickshot', reach: 2 } : null),
-		ricochetRecord: record,
-		ricochetDamage: (uuid: string) => (uuid === KOBOLD.uuid ? 3 : 5),
+		cardRicochet: {
+			ricochet: () => (hit ? { source: 'Trickshot', reach: 2, thrownWeapon } : null),
+			record,
+			damage: (uuid: string) => (uuid === KOBOLD.uuid ? 3 : 5),
+		},
 		system: { targets: [GOBLIN.uuid] },
 		isOwner: true,
 	};
@@ -26,6 +32,14 @@ describe('the ricochet line', () => {
 
 		expect(line?.text).toBe(
 			'Ricochet (Trickshot): half the damage, rounded down, to another creature within 2 spaces.',
+		);
+	});
+
+	it('asks the table if the weapon was thrown, when only a throw ricochets', () => {
+		const line = ricochetLineOf(card({}, true, 'Dagger'), { targets: [], isGM: false, names });
+
+		expect(line?.text).toBe(
+			'Ricochet (Trickshot), if you threw the Dagger: half the damage, rounded down, to another creature within 2 spaces.',
 		);
 	});
 

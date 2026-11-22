@@ -281,7 +281,7 @@ describe('the Bonescythe', () => {
 
 		await feature.activate();
 
-		expect(rolls[0].formula).toBe('(2 + floor(@level / 5))d12');
+		expect(rolls[0].formula).toBe('2d12');
 		expect(rolls[0].options).toMatchObject({ canCrit: true, canMiss: true });
 		expect(damageOf(feature)).toEqual([
 			[null, 'slashing', '(2 + floor(@level / 5))d12'],
@@ -355,6 +355,24 @@ describe('the Bonescythe', () => {
 			expect(cardOf(feature).system.targets).toEqual(['Token.goblin', 'Token.orc']);
 		});
 
+		it('rolls all the dice as the attack when one target gets them all', async () => {
+			globals.game.user.targets = [target('goblin'), target('kobold')];
+			const { feature } = reaver(1);
+			dialog.result = {
+				rollMode: 0,
+				diceShares: [
+					{ targetUuid: 'Token.goblin', dice: 2 },
+					{ targetUuid: 'Token.kobold', dice: 0 },
+				],
+			};
+
+			await feature.activate();
+
+			expect(rolls).toHaveLength(1);
+			expect(rolls[0].formula).toBe('2d12');
+			expect(cardOf(feature).system.targets).toEqual(['Token.goblin']);
+		});
+
 		it('spreads the dice evenly over the targets with no window', async () => {
 			const { feature } = reaver(1);
 
@@ -371,7 +389,7 @@ describe('the Bonescythe', () => {
 			await feature.activate();
 
 			expect(dialog.opened).not.toHaveProperty('diceDivision');
-			expect(rolls[0].formula).toBe('(2 + floor(@level / 5))d12');
+			expect(rolls[0].formula).toBe('3d12');
 		});
 	});
 });

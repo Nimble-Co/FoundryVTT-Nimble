@@ -23,15 +23,42 @@ function countStartOf(formula: string, dieIndex: number): number {
 	return start;
 }
 
+function workedOutCount(text: string, rollData: Record<string, unknown>): number | null {
+	try {
+		const value = Roll.safeEval(Roll.replaceFormulaData(text, rollData, { missing: '0' }));
+		return typeof value === 'number' && Number.isFinite(value)
+			? Math.max(0, Math.floor(value))
+			: null;
+	} catch {
+		return null;
+	}
+}
+
 function countOf(text: string, rollData: Record<string, unknown>): number {
 	if (text === '') return 1;
 	if (/^\d+$/.test(text)) return Number(text);
-	try {
-		const value = Roll.safeEval(Roll.replaceFormulaData(text, rollData, { missing: '0' }));
-		return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
-	} catch {
-		return 0;
+	return workedOutCount(text, rollData) ?? 0;
+}
+
+/**
+ * The formula with each count in parentheses before a `d` written as a number. A die reads
+ * such a count only once the roll is evaluated, so the roll would see one die before that.
+ */
+export function withDiceCountsWorkedOut(
+	formula: string,
+	rollData: Record<string, unknown>,
+): string {
+	let result = formula;
+	const matches = [...formula.matchAll(/\)d\d/g)].reverse();
+	for (const match of matches) {
+		const dieIndex = (match.index ?? 0) + 1;
+		const countStart = countStartOf(result, dieIndex);
+		if (countStart === dieIndex || /[a-z_]/i.test(result[countStart - 1] ?? '')) continue;
+		const count = workedOutCount(result.slice(countStart, dieIndex), rollData);
+		if (count === null) continue;
+		result = `${result.slice(0, countStart)}${count}${result.slice(dieIndex)}`;
 	}
+	return result;
 }
 
 /** The first dice of a formula, with the count worked out from the roll data, or null. */

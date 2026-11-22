@@ -2,21 +2,13 @@
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
 
 	import { getContext } from 'svelte';
+	import { useTargetChanges } from '../utils/useTargetChanges.svelte.ts';
 	import { ricochetLineOf } from './ricochetLine.ts';
 
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 
+	const targetChanges = useTargetChanges();
 	let busy = $state(false);
-	let targetingVersion = $state(0);
-
-	$effect(() => {
-		const hookId = Hooks.on('targetToken', () => {
-			targetingVersion += 1;
-		});
-		return () => {
-			Hooks.off('targetToken', hookId);
-		};
-	});
 
 	function tokenName(tokenUuid: string): string {
 		const token = fromUuidSync(tokenUuid as never) as { name?: string } | null;
@@ -24,7 +16,7 @@
 	}
 
 	const line = $derived.by(() => {
-		void targetingVersion;
+		void targetChanges.version;
 		const card = messageDocument?.reactive;
 		if (!card) return null;
 		const targets = Array.from(game.user?.targets ?? []).map((token) => ({
@@ -43,8 +35,9 @@
 		if (!messageDocument || !action || action.disabled || busy) return;
 		busy = true;
 		try {
-			if (action.kind === 'apply') await messageDocument.applyRicochetDamage(action.targetUuid);
-			else await messageDocument.setRicochetTarget(action.targetUuid);
+			if (action.kind === 'apply')
+				await messageDocument.cardRicochet.applyDamage(action.targetUuid);
+			else await messageDocument.cardRicochet.setTarget(action.targetUuid);
 		} finally {
 			busy = false;
 		}

@@ -1,10 +1,12 @@
-import type { Ricochet } from '../../../models/rules/ricochet.js';
 import localize from '#utils/localize.js';
+import type { Ricochet } from '../../../models/rules/ricochet.js';
 
 interface RicochetCard {
-	ricochet(): Ricochet | null;
-	ricochetRecord: { targetUuid?: string; applied?: boolean };
-	ricochetDamage(tokenUuid: string): number | null;
+	cardRicochet: {
+		ricochet(): Ricochet | null;
+		record: { targetUuid?: string; applied?: boolean };
+		damage(tokenUuid: string): number | null;
+	};
 	system: { targets?: string[] };
 	isOwner?: boolean;
 }
@@ -32,7 +34,7 @@ export interface RicochetLine {
 }
 
 function applyAction(card: RicochetCard, targetUuid: string, name: string): RicochetAction {
-	const amount = card.ricochetDamage(targetUuid) ?? 0;
+	const amount = card.cardRicochet.damage(targetUuid) ?? 0;
 	return {
 		kind: 'apply',
 		targetUuid,
@@ -43,16 +45,20 @@ function applyAction(card: RicochetCard, targetUuid: string, name: string): Rico
 
 /** The line a ricochet puts on a hit card, as the viewer sees it, or null. */
 export function ricochetLineOf(card: RicochetCard, viewer: RicochetViewer): RicochetLine | null {
-	const ricochet = card.ricochet();
+	const ricochet = card.cardRicochet.ricochet();
 	if (!ricochet) return null;
+	const weapon = ricochet.thrownWeapon;
+	const reach = String(ricochet.reach);
+	const { source } = ricochet;
 	const text =
 		ricochet.reach > 0
-			? localize('NIMBLE.chat.ricochet.line', {
-					source: ricochet.source,
-					reach: String(ricochet.reach),
-				})
-			: localize('NIMBLE.chat.ricochet.lineAnyReach', { source: ricochet.source });
-	const { targetUuid, applied } = card.ricochetRecord;
+			? weapon
+				? localize('NIMBLE.chat.ricochet.lineThrown', { source, weapon, reach })
+				: localize('NIMBLE.chat.ricochet.line', { source, reach })
+			: weapon
+				? localize('NIMBLE.chat.ricochet.lineThrownAnyReach', { source, weapon })
+				: localize('NIMBLE.chat.ricochet.lineAnyReach', { source });
+	const { targetUuid, applied } = card.cardRicochet.record;
 
 	if (targetUuid) {
 		const name = viewer.names(targetUuid);

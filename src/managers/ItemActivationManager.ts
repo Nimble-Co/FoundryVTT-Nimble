@@ -76,6 +76,7 @@ import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
 import { divideDice } from '../utils/damage/divideDice.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import type { DiceShare } from '../utils/damage/evenDiceShares.js';
+import { withDiceCountsWorkedOut } from '../utils/damage/firstDiceOf.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
@@ -944,7 +945,10 @@ class ItemActivationManager {
 
 					// Use modified formula if provided
 					this.#checkNodeFormula(dialogData.rollFormula || node.formula, activationRollData);
-					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
+					let formula = withDiceCountsWorkedOut(
+						normalizeDamageRollFormula(dialogData.rollFormula || node.formula),
+						activationRollData,
+					);
 
 					const damageParts: DamagePart[] = [];
 					// Apply damage bonuses filtered by delivery, source, damage type, and target

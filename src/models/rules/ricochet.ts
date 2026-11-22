@@ -60,6 +60,8 @@ interface Ricochet {
 	source: string;
 	/** The reach the other creature is within, shown as text. */
 	reach: number;
+	/** The weapon's name when only a throw ricochets: the card cannot tell a throw from a melee hit. */
+	thrownWeapon?: string;
 }
 
 function words(text: string | null | undefined): string[] {
@@ -112,6 +114,7 @@ class RicochetRule extends NimbleBaseRule<RicochetRule.Schema> {
 		return {
 			source: ruleLabel(this),
 			reach: Math.max(0, Math.trunc(Number(this.reach) || 0)),
+			...(property === 'thrown' ? { thrownWeapon: weapon.name || word } : {}),
 		};
 	}
 }

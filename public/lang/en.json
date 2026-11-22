@@ -760,6 +760,8 @@
 			"ricochet": {
 				"line": "Ricochet ({source}): half the damage, rounded down, to another creature within {reach} spaces.",
 				"lineAnyReach": "Ricochet ({source}): half the damage, rounded down, to another creature.",
+				"lineThrown": "Ricochet ({source}), if you threw the {weapon}: half the damage, rounded down, to another creature within {reach} spaces.",
+				"lineThrownAnyReach": "Ricochet ({source}), if you threw the {weapon}: half the damage, rounded down, to another creature.",
 				"pick": "Ricochet to {name}",
 				"apply": "Apply {amount} Damage to {name}",
 				"noTarget": "Target another creature",
@@ -4006,7 +4008,7 @@
 				},
 				"weaponProperty": {
 					"label": "Weapon property",
-					"hint": "The property the weapon must have, such as Thrown.",
+					"hint": "The property the weapon must have, such as Thrown. With Thrown, the line says \"if you threw\" the weapon: the card cannot tell a throw from a melee hit.",
 					"any": "Any"
 				},
 				"reach": {

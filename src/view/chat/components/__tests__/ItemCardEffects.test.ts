@@ -61,7 +61,7 @@ function createMessage(groups: unknown[][], effects: unknown[] = []) {
 		canRollDeferredDamage: () => true,
 		applyAllDamage: () => undefined,
 		applyDamage: () => undefined,
-		ricochet: () => null,
+		cardRicochet: { ricochet: () => null, record: {} },
 		reactive: null as unknown,
 	};
 	message.reactive = message;
