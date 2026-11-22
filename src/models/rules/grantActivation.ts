@@ -132,7 +132,8 @@ function schema() {
 			withWidget({
 				required: true,
 				nullable: false,
-				initial: 'quarry',
+				blank: true,
+				initial: '',
 				label: key('afterMoveFlagKey', 'label'),
 				hint: key('afterMoveFlagKey', 'hint'),
 				showWhen: (data: Record<string, unknown>) =>
@@ -238,10 +239,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 				['spendsReaction', 'boolean'],
 				['ignoresRushed', 'boolean'],
 				['condition', 'string'],
-				[
-					'afterMoveCheck',
-					'"none" | "adjacentToMarked" | "adjacentEnemies" | "adjacentToCondition"',
-				],
+				['afterMoveCheck', AFTER_MOVE_CHECKS.map((each) => `"${each}"`).join(' | ')],
 				['afterMoveFlagKey', 'string'],
 				['afterMoveMinEnemies', 'number'],
 				['afterMoveStatus', 'string'],

@@ -2681,7 +2681,7 @@
 				},
 				"afterMoveFlagKey": {
 					"label": "Mark",
-					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry."
+					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry. With no name, the card makes no check."
 				},
 				"afterMoveMinEnemies": {
 					"label": "Enemies",
@@ -3815,7 +3815,7 @@
 				"description": "Every creature counts as marked by the owner, for the attacks you choose. A bonus that needs a marked target, such as one for your quarry, then works against any target.",
 				"flagKey": {
 					"label": "Mark",
-					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry."
+					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry. With no name, the card makes no check."
 				},
 				"delivery": {
 					"label": "Attacks",

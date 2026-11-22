@@ -103,6 +103,7 @@ export function afterMoveWarning(
 	switch (line.afterMoveCheck) {
 		case 'adjacentToMarked': {
 			const mark = line.afterMoveFlagKey.trim();
+			if (!mark) return null;
 			const marked = markedUuids(mover, mark);
 			const found = adjacent.some((token) => marked.has(token.actor?.uuid ?? ''));
 			return found ? null : localize(`${WARNINGS}.adjacentToMarked`, { name, mark });

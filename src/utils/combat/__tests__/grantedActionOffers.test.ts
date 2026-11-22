@@ -317,7 +317,7 @@ describe('collectGrantedActionOffers', () => {
 				targetActorUuid: 'Actor.commander',
 				afterMove: true,
 				afterMoveCheck: 'adjacentEnemies',
-				afterMoveFlagKey: 'quarry',
+				afterMoveFlagKey: '',
 				afterMoveMinEnemies: 2,
 				afterMoveStatus: '',
 			}),

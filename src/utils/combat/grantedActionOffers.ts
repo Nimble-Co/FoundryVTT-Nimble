@@ -158,7 +158,7 @@ function offerOf(
 		targetedCount: targeted,
 		afterMove: rule.trigger === 'afterMove',
 		afterMoveCheck: rule.trigger === 'afterMove' ? (rule.afterMoveCheck ?? 'none') : 'none',
-		afterMoveFlagKey: rule.afterMoveFlagKey ?? 'quarry',
+		afterMoveFlagKey: rule.afterMoveFlagKey ?? '',
 		afterMoveMinEnemies: rule.afterMoveMinEnemies ?? 1,
 		afterMoveStatus: rule.afterMoveStatus ?? '',
 		used: false,

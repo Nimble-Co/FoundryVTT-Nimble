@@ -45,7 +45,7 @@ describe('GrantActivationRule', () => {
 			expect(schema.includesTargets?.options.initial).toBe(true);
 			expect(schema.targetCount?.options.initial).toBe(0);
 			expect(schema.afterMoveCheck?.options.initial).toBe('none');
-			expect(schema.afterMoveFlagKey?.options.initial).toBe('quarry');
+			expect(schema.afterMoveFlagKey?.options.initial).toBe('');
 			expect(schema.emptyPoolIdentifier?.options.initial).toBe('');
 		});
 

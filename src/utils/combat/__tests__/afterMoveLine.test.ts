@@ -189,6 +189,18 @@ describe('afterMoveWarning', () => {
 		expect(afterMoveWarning(check as never, hero as never, 'Hero')).toBeNull();
 	});
 
+	it('makes no mark check when the line names no mark', () => {
+		const { add } = makeScene();
+		const quarry = { quarry: [{ actorUuid: 'Actor.wolf', tokenUuid: null, name: 'Wolf' }] };
+		const hero = add('hero', 0, 0, { disposition: 1, flags: quarry });
+		add('wolf', 3, 0);
+
+		for (const afterMoveFlagKey of ['', '   ']) {
+			const check = line('adjacentToMarked', { afterMoveFlagKey });
+			expect(afterMoveWarning(check as never, hero as never, 'Hero')).toBeNull();
+		}
+	});
+
 	it('counts the adjacent enemies against the number the line needs', () => {
 		const { add } = makeScene();
 		const hero = add('hero', 5, 5, { disposition: 1 });

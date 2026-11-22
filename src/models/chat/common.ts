@@ -130,11 +130,7 @@ export const grantedActionOffers = () => ({
 				initial: 'none',
 				choices: [...AFTER_MOVE_CHECKS],
 			}),
-			afterMoveFlagKey: new fields.StringField({
-				required: true,
-				nullable: false,
-				initial: 'quarry',
-			}),
+			afterMoveFlagKey: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			afterMoveMinEnemies: new fields.NumberField({
 				required: true,
 				nullable: false,
