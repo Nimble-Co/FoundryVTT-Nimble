@@ -1,4 +1,4 @@
-import type { CardEvent, CardEventText } from '#types/cardEvent.d.ts';
+import type { CardEvent } from '#types/cardEvent.d.ts';
 import type { DefendEffect } from '#types/defend.d.ts';
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
@@ -17,8 +17,6 @@ import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js'
 import {
 	type AttackActivation,
 	type AttackDelivery,
-	type AttackSource,
-	attackSourceOf,
 	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
@@ -51,31 +49,17 @@ import {
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
-import {
-	reconcileMovementOffers,
-	speakerTokenUuid,
-	withEventOffers,
-} from '#utils/movement/movementOffers.js';
-import { offerMovement } from '#utils/movement/postMovementOfferCard.js';
+import { reconcileMovementOffers, withEventOffers } from '#utils/movement/movementOffers.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import { asksSave, requestSaves } from '#utils/saveRequest/saveRequests.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
-import type { CardPush, ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
-import {
-	isMovementOffersAutomationEnabled,
-	isRuleAutomationEnabled,
-} from '../settings/automationSettings.js';
+import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { spendsPoolAgain } from '../utils/chargePool/attackPoolSpends.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
-import {
-	hasRuleCharge,
-	rulePoolState,
-	spendRuleCharge,
-} from '../utils/chargePool/ruleChargeGate.js';
 import { mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
 import {
 	clearBankedDamageReduction,
@@ -96,6 +80,11 @@ import { noDamageTargetsOf, owesCritTriggers } from '../utils/rolls/cardRollStat
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import { resultChangesOf } from '../utils/rolls/resultChanges.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import {
+	CardChargeSpend,
+	type ChargeSpendCard,
+	type SpendForDamage,
+} from './chatMessage/cardChargeSpend.js';
 import {
 	CardDamageBack,
 	type DamageBackCard,
@@ -137,29 +126,6 @@ interface ActivationCardSystemData {
 	};
 	appliedHealing?: Record<string, AppliedHealingRecord>;
 	[key: string]: unknown;
-}
-
-/** The parts of a `chargeConsumer` rule that a spend from the card reads. */
-type ChargeCardOfferRule = Pick<
-	ChargeConsumerRule,
-	| 'id'
-	| 'type'
-	| 'disabled'
-	| 'poolIdentifier'
-	| 'cost'
-	| 'cardOffer'
-	| 'effectFormula'
-	| 'cardPush'
-	| 'providesCardOffer'
->;
-
-/** The kept die results of an evaluated roll. */
-function rolledFaces(roll: { terms?: unknown[] }): number[] {
-	type Result = { result: number; active?: boolean; discarded?: boolean };
-	return ((roll.terms ?? []) as Array<{ results?: Result[] }>)
-		.flatMap((term) => term.results ?? [])
-		.filter((result) => result.active !== false && result.discarded !== true)
-		.map((result) => result.result);
 }
 
 type HpMutableActor = Actor.Implementation &
@@ -1062,6 +1028,22 @@ class NimbleChatMessage extends ChatMessage {
 		attackDelivery: () => this.#attackDelivery(),
 		movementOfferChanges: (changes) => this.#movementOfferChanges(changes),
 		update: (changes) => this.update(changes),
+	});
+
+	/** Spends of charges from the buttons on this card. */
+	readonly cardChargeSpend = new CardChargeSpend({
+		card: () => this,
+		isActivationCard: () => this.isActivationCard(),
+		system: () => this.system as unknown as ReturnType<ChargeSpendCard['system']>,
+		rollsSource: () => ((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+		flags: () => (this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID],
+		attackDelivery: () => this.#attackDelivery(),
+		sourceItem: () => this.#cardSourceItem(),
+		spendsPoolAgain: (entry) => this.spendsPoolAgain(entry),
+		queueSpendOffer: (entryId, apply) => this.#queueSpendOffer(entryId, apply),
+		spendOfferEntry: (entryId, requestingUserId, viaSocket) =>
+			this.#spendOfferEntry(entryId, requestingUserId, viaSocket),
+		landSpendForDamage: (entry, reject, spend) => this.#landSpendForDamage(entry, reject, spend),
 	});
 
 	constructor(data: ChatMessage.CreateData, context?: ChatMessage.ConstructionContext) {
@@ -2184,17 +2166,6 @@ class NimbleChatMessage extends ChatMessage {
 		});
 	}
 
-	/**
-	 * What this card's attack is made with. Of the cards with spend buttons,
-	 * only an Unarmed Strike has no item.
-	 */
-	#attackSource(): AttackSource {
-		const flags = this.flags?.[SYSTEM_ID] as { itemUuid?: unknown; weaponUuid?: unknown };
-		if (!flags?.itemUuid) return 'weapon';
-		const weaponUuid = typeof flags.weaponUuid === 'string' ? flags.weaponUuid : null;
-		return attackSourceOf(this.#cardSourceItem(), weaponUuid);
-	}
-
 	/** How this card's attack is delivered. */
 	#attackDelivery(): AttackDelivery {
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -2308,79 +2279,13 @@ class NimbleChatMessage extends ChatMessage {
 		});
 	}
 
-	/**
-	 * Spend charges of a charge pool from this card: roll the consumer's damage
-	 * formula, add it to the attack's damage, and push the targets when the rule
-	 * says so. Runs on the primary GM's client, like the dice pool spend.
-	 */
+	/** Spend charges of a charge pool from a button on this card. See `CardChargeSpend`. */
 	async resolveSpendChargeForDamageOffer(
 		entryId: string,
 		requestingUserId: string,
 		viaSocket = false,
 	): Promise<void> {
-		if (!game.user?.isGM) return;
-		if (!this.isActivationCard()) return;
-
-		await this.#queueSpendOffer(entryId, () =>
-			this.#applySpendChargeForDamageOffer(entryId, requestingUserId, viaSocket),
-		);
-	}
-
-	async #applySpendChargeForDamageOffer(
-		entryId: string,
-		requestingUserId: string,
-		viaSocket: boolean,
-	): Promise<void> {
-		const { entry, reject } = this.#spendOfferEntry(entryId, requestingUserId, viaSocket);
-		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
-
-		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
-		const rule = runningRule<ChargeCardOfferRule>(entry.itemUuid, entry.ruleId);
-		const item = entry.itemUuid
-			? (fromUuidSync(entry.itemUuid as `Item.${string}`) as Item.Implementation | null)
-			: null;
-		if (!actor || !item || rule?.type !== 'chargeConsumer') {
-			return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
-		}
-
-		const systemData = this.system as unknown as ActivationCardSystemData;
-		const stillOffered =
-			rule.providesCardOffer?.({
-				delivery: this.#attackDelivery(),
-				source: this.#attackSource(),
-			}) === true &&
-			rerollTriggerMatches(rule.cardOffer ?? undefined, systemData) &&
-			!this.spendsPoolAgain(entry);
-		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
-
-		const identifier = String(rule.poolIdentifier ?? '');
-		const cost = Math.max(1, Math.trunc(Number(rule.cost) || 1));
-		const pool = rulePoolState(actor, identifier);
-		if (!pool) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
-		if (!hasRuleCharge(actor, identifier, cost)) {
-			return reject('NIMBLE.chat.incomingReactions.chargeSpendEmpty');
-		}
-
-		const landed = await this.#landSpendForDamage(entry, reject, {
-			actor,
-			formula: String(rule.effectFormula ?? ''),
-			patch: async (bonusDamage) =>
-				foldBonusIntoPrimaryDamage(
-					(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
-					((this._source as { rolls?: string[] }).rolls ?? []) as string[],
-					bonusDamage,
-					item.name ?? '',
-				),
-			charge: () => spendRuleCharge(actor, identifier, cost),
-			poolLabel: pool.label,
-			usedFaces: rolledFaces,
-		});
-		if (landed) {
-			await this.#offerCardPush(actor, item, rule.cardPush ?? null, {
-				key: 'NIMBLE.chat.events.cause.spentOnHit',
-				data: { count: String(cost), pool: pool.label },
-			});
-		}
+		await this.cardChargeSpend.resolve(entryId, requestingUserId, viaSocket);
 	}
 
 	/**
@@ -2433,16 +2338,7 @@ class NimbleChatMessage extends ChatMessage {
 	async #landSpendForDamage(
 		entry: IncomingReactionEntry,
 		reject: (reasonKey: string) => void,
-		spend: {
-			actor: Actor.Implementation;
-			formula: string;
-			patch: (
-				bonusDamage: number,
-			) => Promise<{ activation: Record<string, unknown>; rolls: string[] } | null>;
-			charge: () => Promise<boolean>;
-			poolLabel: string;
-			usedFaces: (roll: { terms?: unknown[] }) => number[];
-		},
+		spend: SpendForDamage,
 	): Promise<boolean> {
 		const roll = new Roll(
 			spend.formula,
@@ -2479,42 +2375,6 @@ class NimbleChatMessage extends ChatMessage {
 			},
 		} as Record<string, unknown>);
 		return true;
-	}
-
-	/** The targets of the card get a forced move away from the attacker, as a line on the card. */
-	async #offerCardPush(
-		actor: Actor.Implementation,
-		item: Item.Implementation,
-		push: CardPush | null,
-		reason: CardEventText,
-	): Promise<void> {
-		const targets = (this.system as { targets?: string[] }).targets ?? [];
-		const tokenUuid = speakerTokenUuid(this as unknown as OfferCard);
-		const token = tokenUuid
-			? (fromUuidSync(tokenUuid as Parameters<typeof fromUuidSync>[0], {
-					strict: false,
-				}) as TokenDocument | null)
-			: null;
-		if (!push || targets.length === 0 || !token || !isMovementOffersAutomationEnabled()) return;
-		await offerMovement(
-			{
-				actor,
-				token,
-				name: item.name ?? '',
-				image: item.img ?? undefined,
-				reason,
-				node: {
-					kind: 'forced',
-					distance: push.distance,
-					distanceBySize: push.distanceBySize,
-					direction: 'away',
-					ignoreDifficultTerrain: true,
-				},
-				recipients: [...targets],
-				whisper: false,
-			},
-			{ card: this as unknown as ChatMessage },
-		);
 	}
 
 	/**
