@@ -1106,7 +1106,9 @@ export class CardRerolls {
 				: effectFor(found, effect, usable.rule.critDiceSpec ?? null);
 		await this.#applyNewRoll(rollTarget, target, entry, usable, forceHeroicReaction, reject, {
 			effect,
-			...(effect === 'offerBonus' && usable.rule.offerBonus?.damage
+			...(effect === 'offerBonus' &&
+			usable.rule.offerBonus?.damage &&
+			!usable.rule.offerBonus.damageType
 				? {
 						rollChanges: [
 							{

@@ -1062,6 +1062,89 @@ describe('ApplyConditionRule', () => {
 		});
 	});
 
+	describe('only for attacks made through one feature', () => {
+		function scopedRule(actor: MockActor) {
+			const rule = createApplyConditionRule({ condition: 'smoldering', trigger: 'onHit' }, actor);
+			(rule as unknown as { attackOrigin: string }).attackOrigin = 'rally';
+			return rule;
+		}
+
+		const cardFrom = (identifier: string) =>
+			({ flags: { [SYSTEM_ID]: { origin: { uuid: 'Item.x', identifier } } } }) as never;
+
+		it('puts its step on the card of an attack made through that feature only', () => {
+			const rule = scopedRule(createMockActor());
+			const hit = { isCritical: false, isMiss: false };
+
+			expect(rule.getActivationCardNodes({ ...hit, origin: 'rally' })).toHaveLength(1);
+			expect(rule.getActivationCardNodes({ ...hit, origin: 'other' })).toEqual([]);
+			expect(rule.getActivationCardNodes(hit)).toEqual([]);
+		});
+
+		it('applies on a hit of an attack made through that feature only', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const rule = scopedRule(attacker);
+
+			await rule.onItemUsed({ ...buildItemUsedContext(attacker, target), card: cardFrom('other') });
+			expect(conditionsAppliedTo(target)).toEqual([]);
+
+			await rule.onItemUsed({ ...buildItemUsedContext(attacker, target), card: cardFrom('rally') });
+			expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+		});
+
+		describe("an ally's attack made through the owner's feature", () => {
+			const allyCard = {
+				flags: { [SYSTEM_ID]: { origin: { uuid: 'Actor.owner.Item.rally', identifier: 'rally' } } },
+			} as never;
+
+			const globals = globalThis as Record<string, unknown>;
+			const savedFromUuidSync = globals.fromUuidSync;
+
+			afterEach(() => {
+				globals.fromUuidSync = savedFromUuidSync;
+			});
+
+			function setup(originAttacker: 'self' | 'anyone') {
+				const owner = createMockActor();
+				const ally = createMockActor();
+				const target = createMockActor();
+				const rule = scopedRule(owner);
+				(rule as unknown as { originAttacker: string }).originAttacker = originAttacker;
+				globals.fromUuidSync = (uuid: string) =>
+					uuid === 'Actor.owner.Item.rally' ? { actor: owner } : null;
+				return { ally, target, rule };
+			}
+
+			it('applies with You and allies', async () => {
+				const { ally, target, rule } = setup('anyone');
+
+				await rule.onItemUsed({ ...buildItemUsedContext(ally, target), card: allyCard });
+
+				expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+			});
+
+			it('does not apply with You only', async () => {
+				const { ally, target, rule } = setup('self');
+
+				await rule.onItemUsed({ ...buildItemUsedContext(ally, target), card: allyCard });
+
+				expect(conditionsAppliedTo(target)).toEqual([]);
+			});
+
+			it("does not apply to the ally's attack through another feature", async () => {
+				const { ally, target, rule } = setup('anyone');
+				const otherCard = {
+					flags: { [SYSTEM_ID]: { origin: { uuid: 'Actor.ally.Item.x', identifier: 'rally' } } },
+				} as never;
+
+				await rule.onItemUsed({ ...buildItemUsedContext(ally, target), card: otherCard });
+
+				expect(conditionsAppliedTo(target)).toEqual([]);
+			});
+		});
+	});
+
 	describe('getActivationCardNodes', () => {
 		it('returns an Apply Effect node with the condition', () => {
 			const actor = createMockActor();

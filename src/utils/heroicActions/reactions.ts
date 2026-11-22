@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import type { DefendWay } from '#types/defend.d.ts';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
+import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
 import { openDefendWindowOnNewestCard } from '#utils/defend/openDefendWindow.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
@@ -167,6 +168,14 @@ function targetedMessage(type: string) {
 	};
 }
 
+const interposeMessage = {
+	type: 'interpose',
+	buildSystem: (actor: NimbleCharacter, targetUuids: string[]) => ({
+		targets: targetUuids,
+		grantedActionOffers: collectInterposeOffers(actor as never),
+	}),
+};
+
 const REACTION_CONFIGS: Record<ChatReactionId, ReactionChatConfig> = {
 	defend: {
 		reactionKeys: ['defend'],
@@ -176,12 +185,12 @@ const REACTION_CONFIGS: Record<ChatReactionId, ReactionChatConfig> = {
 	interpose: {
 		reactionKeys: ['interpose'],
 		localizationKey: 'NIMBLE.ui.heroicActions.reactions.interpose.label',
-		messages: [targetedMessage('interpose')],
+		messages: [interposeMessage],
 	},
 	interposeAndDefend: {
 		reactionKeys: ['interpose', 'defend'],
 		localizationKey: 'NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm',
-		messages: [targetedMessage('interpose'), defendMessage],
+		messages: [interposeMessage, defendMessage],
 	},
 	help: {
 		reactionKeys: ['help'],
@@ -240,13 +249,12 @@ export async function useChatReaction(
 }
 
 /**
- * Makes an Opportunity Attack with a weapon, or unarmed when `weaponId` is
- * null, at disadvantage by default. The reaction is used only after the roll.
- * Returns true when the reaction was used.
+ * Makes an attack that uses the Opportunity Attack reaction in place of an action: confirms a
+ * soft block, rolls, then uses the reaction. Returns true when the reaction was used.
  */
-export async function useOpportunityAttack(
+export async function attackWithReaction(
 	actor: NimbleCharacter,
-	weaponId: string | null,
+	attack: () => Promise<boolean>,
 ): Promise<boolean> {
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
 	const { combat, combatantId } = findCombatant(actor);
@@ -262,20 +270,33 @@ export async function useOpportunityAttack(
 	);
 	if (!confirmed) return false;
 
-	const rolled = weaponId
-		? Boolean(
-				await actor.activateItem(weaponId, {
-					rollMode: -1,
-					skipActionDeduction: true,
-					opportunityAttack: true,
-				}),
-			)
-		: await rollUnarmedStrike(actor, { rollMode: -1, opportunityAttack: true });
-	if (!rolled || !combat.useHeroicReactions) return false;
+	if (!(await attack()) || !combat.useHeroicReactions) return false;
 
 	return combat.useHeroicReactions(
 		combatantId,
 		['opportunityAttack'],
 		force ? { force: true } : undefined,
+	);
+}
+
+/**
+ * Makes an Opportunity Attack with a weapon, or unarmed when `weaponId` is
+ * null, at disadvantage by default. The reaction is used only after the roll.
+ * Returns true when the reaction was used.
+ */
+export async function useOpportunityAttack(
+	actor: NimbleCharacter,
+	weaponId: string | null,
+): Promise<boolean> {
+	return attackWithReaction(actor, async () =>
+		weaponId
+			? Boolean(
+					await actor.activateItem(weaponId, {
+						rollMode: -1,
+						skipActionDeduction: true,
+						opportunityAttack: true,
+					}),
+				)
+			: rollUnarmedStrike(actor, { rollMode: -1, opportunityAttack: true }),
 	);
 }

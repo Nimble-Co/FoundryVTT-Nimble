@@ -18,12 +18,14 @@ export interface CardMetaSource {
 
 interface CardMetaFlags {
 	itemUuid?: string | null;
+	/** A free attack from a card line. */
+	grantedFree?: boolean;
 	opportunityAttack?: boolean;
 	origin?: { uuid?: string | null } | null;
 	weaponUuid?: string | null;
 }
 
-type Outcome = 'crit' | 'miss' | 'hit' | 'healing';
+type Outcome = 'crit' | 'miss' | 'hit' | 'healing' | 'free';
 
 function outcomeOf(source: CardMetaSource, showsHealing: boolean): Outcome | null {
 	const effects = source.system?.activation?.effects ?? [];
@@ -68,16 +70,17 @@ function bracketParts(flags: CardMetaFlags | undefined): LinkedPart[] | null {
 }
 
 /**
- * The meta line under a card's title: the outcome of the attack, the weapon a feature attacked
- * with, and in brackets an opportunity attack and the feature the attack was made through. Null
- * when the card has none of them.
+ * The meta line under a card's title: the outcome of the attack (or Free for a free attack from a
+ * card line that has no outcome), the weapon a feature attacked with, and in brackets an
+ * opportunity attack and the feature the attack was made through. Null when the card has none of
+ * them.
  */
 export function cardMeta(
 	source: CardMetaSource,
 	{ showsHealing = false }: { showsHealing?: boolean } = {},
 ): LinkedPart[] | null {
-	const outcome = outcomeOf(source, showsHealing);
 	const flags = source.flags?.[SYSTEM_ID];
+	const outcome = outcomeOf(source, showsHealing) ?? (flags?.grantedFree ? 'free' : null);
 	const weapon = weaponLink(flags);
 	const bracket = bracketParts(flags);
 

@@ -15,6 +15,8 @@ An item with a variable consumer always opens its roll window, even when it is s
 
 **Example: Beastshift.** A fixed cost of `1` with **Use without a charge** on. The roll window of the item gets a tick, off at first. With the tick, the use spends no charge, for the uses Swiftshift and Friend of Beasts make free. An empty pool does not stop the item on the sheet, but a use without the tick still needs the charge. The system changes nothing else of a free use.
 
+**Example: Burst of Speed.** A fixed cost of `1` with **1/turn** on. The item can be used 1 time each turn, of any creature. Its Defend options that are 1/turn share that use, so the item or one of its options can be used each turn, not each of them. Outside combat there is no limit.
+
 An item can have a fixed cost and a variable one on the same pool. The fixed cost comes out first and the player picks from what is left, so a pool of 10 with a fixed cost of 3 offers up to 7. If the pool cannot cover both, the item cannot be used.
 
 A variable consumer will not work in these cases. The item cannot be used, and the message names the pool.

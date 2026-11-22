@@ -553,6 +553,7 @@
 				"miss": "Miss",
 				"crit": "Critical Hit",
 				"healing": "Healing",
+				"free": "Free",
 				"withWeapon": "{outcome} with {weapon}",
 				"weaponOnly": "With {weapon}",
 				"withOrigin": "{meta} ({origin})",
@@ -715,15 +716,24 @@
 				"useFailed": "Could not use {name}."
 			},
 			"grantedActionOffers": {
-				"heading": "Granted Actions",
-				"weaponAttack": "Weapon Attack",
-				"offerLabel": "{name}: {heading} ({source})",
-				"offerLabelNoSource": "{name}: {heading}",
-				"noEligibleItems": "No eligible items to use.",
-				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
-				"currentTarget": "Target: {name}",
-				"usedBy": "Granted action used by {name}",
-				"usedByVia": "Granted action used by {name} via {label}"
+				"headings": {
+					"free": "Free Attack",
+					"action": "Attack (1 action)",
+					"reaction": "Opportunity Attack (reaction)",
+					"freeOpportunity": "Opportunity Attack (free)"
+				},
+				"attack": "Attack",
+				"choiceLabel": "What {name} attacks with",
+				"cantrips": "Cantrips",
+				"tooltip": "{source}: {details}",
+				"sharedTargets": "Up to {count} targets share one attack: {extras}.",
+				"extraTarget": "{count} more within Reach {reach} ({source})",
+				"extraTargetAnyReach": "{count} more ({source})",
+				"noEligibleItems": "No weapon to attack with.",
+				"used": "{name} attacked.",
+				"usedWith": "{name} attacked with {weapon}.",
+				"targetCountOne": "{source} reaches 1 creature. {names} are targeted.",
+				"targetCountMany": "{source} reaches {count} creatures. {names} are targeted."
 			},
 			"damageBack": {
 				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
@@ -1993,6 +2003,7 @@
 			"armorClass": "Armor Class",
 			"auraReach": "Aura Reach",
 			"attackOutcome": "Attack Outcome",
+			"attackRollMode": "Attack Roll Mode",
 			"chargeConsumer": "Charge Consumer",
 			"resourceCost": "Spend or Sacrifice",
 			"useOption": "Spell or Attack Option",
@@ -2075,6 +2086,8 @@
 			"tags": "Tags",
 			"turnDamage": "Damage each turn",
 			"escapeDamage": "Damage on escape",
+			"extraTargets": "Extra Targets",
+			"grantTargetBonus": "Grant Activation Targets",
 			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
@@ -2200,6 +2213,10 @@
 				"allowFree": {
 					"label": "Use without a charge",
 					"hint": "The roll window gets a tick, off at first, to use the item and spend no charge, for a use that another feature makes free. The system changes nothing else of that use: what a free use does not give stays with the player."
+				},
+				"oncePerTurn": {
+					"label": "1/turn",
+					"hint": "One use each turn, of any creature. The 1/turn options on the same item, such as a Defend option, share it. Outside combat there is no limit."
 				}
 			},
 			"resourceCost": {
@@ -2590,14 +2607,60 @@
 				}
 			},
 			"grantActivation": {
-				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
-				"includesUser": {
-					"label": "Also for the user",
-					"hint": "The user of the item gets an offer row too."
-				},
+				"description": "Give creatures an attack line on a chat card: a weapon dropdown and an Attack button. The attack is made through this item, so rules that are only for attacks made through it apply.",
 				"activationType": {
 					"label": "Granted activation",
-					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
+					"hint": "What the recipient gets. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
+				},
+				"trigger": {
+					"label": "When",
+					"hint": "When the line goes on a card. On use: this item's card gets a line for each targeted creature. On Interpose: when the owner of this item Interposes, the card of the attack gets a line for them.",
+					"choices": {
+						"onActivation": "When this item is used",
+						"onInterpose": "When its owner Interposes"
+					}
+				},
+				"includesUser": {
+					"label": "Also for the user",
+					"hint": "The user of the item gets a line too."
+				},
+				"includesTargets": {
+					"label": "For the targets",
+					"hint": "Each targeted creature gets a line. Off: only the user gets one, with Also for the user on."
+				},
+				"targetCount": {
+					"label": "Targets it reaches",
+					"hint": "How many targeted creatures the item reaches. 0: no limit. With more targeted, each still gets a line and the card shows a warning."
+				},
+				"weaponKind": {
+					"label": "Weapon",
+					"hint": "The weapons the dropdown lists. Melee, any and unarmed include Unarmed Strike.",
+					"choices": {
+						"any": "Any weapon",
+						"melee": "A melee weapon",
+						"ranged": "A ranged weapon",
+						"unarmed": "An Unarmed Strike"
+					}
+				},
+				"allowsCantrips": {
+					"label": "Cantrips too",
+					"hint": "The dropdown also lists the recipient's cantrips."
+				},
+				"free": {
+					"label": "Free",
+					"hint": "The attack spends no action."
+				},
+				"spendsReaction": {
+					"label": "Spends the reaction",
+					"hint": "The attack spends the recipient's Opportunity Attack reaction in place of an action."
+				},
+				"ignoresRushed": {
+					"label": "Ignores Rushed Attacks",
+					"hint": "The attack takes no disadvantage from Rushed Attacks. It still counts as an attack of the turn."
+				},
+				"condition": {
+					"label": "Condition",
+					"hint": "Text under the line's label, for a condition the table checks (e.g. If you end adjacent to your quarry)."
 				}
 			},
 			"freeMove": {
@@ -3231,6 +3294,14 @@
 				"label": "Only attacks made through",
 				"hint": "The identifier of the feature, such as coordinated-strike. Leave blank for every attack."
 			},
+			"originAttacker": {
+				"label": "Attacks by",
+				"hint": "You and allies: an attack that another creature makes through the feature in Only attacks made through also gets this, for example an attack that the feature gives to an ally.",
+				"choices": {
+					"self": "You only",
+					"anyone": "You and allies"
+				}
+			},
 			"attackOutcome": {
 				"description": "Changes how an attack roll is read when it is made: the attack cannot miss, crits on a lower face, crits without the max, or crits when any die rolls its max. There is no choice to make. With Feature Effects off, a crit from this rule is a Make It a Crit row in Change This Roll on the card.",
 				"form": {
@@ -3362,7 +3433,7 @@
 				},
 				"oncePerTurn": {
 					"label": "1/turn",
-					"hint": "One use each turn, of any creature. The options on the same item share it."
+					"hint": "One use each turn, of any creature. The 1/turn options on the same item share it, and so does the use of the item when its charge is 1/turn."
 				},
 				"alsoInterpose": {
 					"label": "Also when you Interpose",
@@ -3578,7 +3649,11 @@
 				},
 				"damage": {
 					"label": "Extra damage",
-					"hint": "A formula. The damage has the type of the attack."
+					"hint": "A formula. The damage has the type of the attack, unless Damage type is set."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "Blank: the damage is part of the attack's own damage. Set: the damage has this type and goes on the card as its own damage. With Feature Effects off, the row does not add it."
 				},
 				"primaryDie": {
 					"label": "Primary Die bonus",
@@ -3717,6 +3792,17 @@
 					}
 				}
 			},
+			"attackRollMode": {
+				"description": "Changes the roll mode of your attacks: advantage, and all disadvantage ignored, Rushed Attacks too. The roll window opens with the change. Set Only attacks made through to limit it to the attacks of one feature.",
+				"advantage": {
+					"label": "Advantage",
+					"hint": "Steps of advantage the attack gets. 0 gives none."
+				},
+				"ignoreDisadvantage": {
+					"label": "Ignore all disadvantage",
+					"hint": "The attack takes no disadvantage: not from Rushed Attacks, conditions or the target."
+				}
+			},
 			"spellManaCost": {
 				"description": "Changes the mana that a tiered spell costs by a number, such as -5 for 5 fewer mana. The cost never goes below 0. Upcast tiers cost less too. On an effect, the Lasts Until of the effect ends it, for example when you cast a tiered spell.",
 				"value": {
@@ -3819,6 +3905,28 @@
 					"hint": "Dice or a number, rolled on the escape. Empty: no damage. An upcast can add to it."
 				},
 				"damageType": { "label": "Damage type", "hint": "The type of the damage, or none." }
+			},
+			"extraTargets": {
+				"description": "An attack made through one feature can target more creatures. The extra targets share one attack: one roll, and each target's armor, miss and crit as normal. The attack line of the feature on a chat card shows the extra targets. The reach is shown, not checked.",
+				"count": {
+					"label": "Extra targets",
+					"hint": "How many more creatures the attack can target."
+				},
+				"reach": {
+					"label": "Within Reach",
+					"hint": "The reach the extra targets must be within, shown on the line. 0: no reach is shown."
+				}
+			},
+			"grantTargetBonus": {
+				"description": "The Grant Activation rules of another item reach more targeted creatures. Only a rule with a target count is raised.",
+				"grantIdentifier": {
+					"label": "Item",
+					"hint": "The identifier of the item with the Grant Activation rule (e.g. coordinated-strike)."
+				},
+				"count": {
+					"label": "More targets",
+					"hint": "How many more targeted creatures the rule reaches."
+				}
 			},
 			"zeroHpAtEnd": {
 				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
@@ -4275,7 +4383,8 @@
 				"poolMissing": "{item} requires the charge pool \"{pool}\", but it is not available.",
 				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available.",
 				"conflictingConsumers": "{item} asks for more than one player-chosen spend from the charge pool \"{pool}\". Give each variable consumer its own pool, or make all but one a fixed cost.",
-				"unofferableSpend": "{item} cannot ask how much to spend from the charge pool \"{pool}\". A hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell asks about tier instead."
+				"unofferableSpend": "{item} cannot ask how much to spend from the charge pool \"{pool}\". A hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell asks about tier instead.",
+				"usedThisTurn": "{item} is 1/turn, and you used it or one of its 1/turn options this turn."
 			}
 		},
 		"dicePoolTracker": {
@@ -5788,6 +5897,8 @@
 				"straight": "Each advantage cancels one disadvantage."
 			},
 			"rushedAttack": "Rushed Attack: this is attack {attack} of your turn, so the roll starts with Disadvantage × {count}. You can change it.",
+			"freeAttack": "Free ({source}): it spends no action.",
+			"freeAttackNoRushed": "Free ({source}): it spends no action and has no Rushed Attack disadvantage.",
 			"spendAction": "{count} action",
 			"spendActions": "{count} actions",
 			"spendBoth": "{first} and {second}",

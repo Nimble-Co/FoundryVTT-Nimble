@@ -69,6 +69,13 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.costMode !== 'variable',
 			}),
 		),
+		oncePerTurn: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.chargeConsumer.oncePerTurn.label',
+			hint: 'NIMBLE.rules.chargeConsumer.oncePerTurn.hint',
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -107,6 +114,9 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 	/** The roll window has a tick to use the item with no charge. */
 	declare allowFree: boolean;
 
+	/** A use with this charge is 1/turn, shared with the item's 1/turn options. */
+	declare oncePerTurn: boolean;
+
 	static override defineSchema(): ChargeConsumerRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -123,6 +133,7 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 				['cost', 'string'],
 				['maxCost', 'string'],
 				['allowFree', 'boolean'],
+				['oncePerTurn', 'boolean'],
 			]),
 		);
 	}

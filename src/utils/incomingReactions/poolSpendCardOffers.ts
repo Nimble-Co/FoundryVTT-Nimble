@@ -1,5 +1,6 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import type { AttackDelivery } from '../damage/attackDelivery.js';
+import type { AttackOrigin } from '../damage/attackOrigin.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 
 const DICE_CONSUMER_RULE_TYPE = 'diceConsumer';
@@ -13,8 +14,8 @@ export interface CardOfferContext {
 	weaponUuid?: string | null;
 	/** The stats the attack's formula has. */
 	stats?: readonly string[];
-	/** The identifier of the feature the attack was made through. */
-	origin?: string;
+	/** The feature the attack was made through. The uuid is there only for an attack made through another item. */
+	origin?: Partial<AttackOrigin>;
 	/** The upcast steps of the spell. */
 	upcastSteps?: number;
 }

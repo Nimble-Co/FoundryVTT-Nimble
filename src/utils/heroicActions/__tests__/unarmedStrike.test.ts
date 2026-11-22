@@ -120,6 +120,34 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	it('shares one attack among targets it may have, with crit and miss as normal', async () => {
+		dialogResult({ rollMode: 0 });
+		heroicGlobals().game.user.targets = new Set([
+			targetToken('Scene.s.Token.goblin'),
+			targetToken('Scene.s.Token.kobold'),
+		]);
+		const actor = createHeroicCharacter();
+		Object.assign(actor, { proficient: true });
+
+		await rollUnarmedStrike(actor, { sharedTargets: 2 });
+
+		expect(damageRollMock).toHaveBeenCalledWith(
+			expect.any(String),
+			{},
+			expect.objectContaining({ canCrit: true, canMiss: true, multiTarget: false }),
+		);
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				system: expect.objectContaining({
+					activation: expect.objectContaining({
+						targets: expect.objectContaining({ singleTargetAttack: true }),
+					}),
+					targets: ['Scene.s.Token.goblin', 'Scene.s.Token.kobold'],
+				}),
+			}),
+		);
+	});
+
 	it("reads the striker's Attack Outcome rules, and spends their charge after the card", async () => {
 		dialogResult({ rollMode: 0 });
 		heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.goblin')]);
@@ -386,6 +414,228 @@ describe('rollUnarmedStrike', () => {
 			{},
 			expect.objectContaining({ rollMode: -1 }),
 		);
+	});
+
+	describe('a strike that a feature gives', () => {
+		function onOwnTurnAfterOneAttack(actor: ReturnType<typeof createHeroicCharacter>) {
+			const combatant = createHeroicCombatant(actor);
+			setHeroicCombat(combatant, {
+				turn: 0,
+				combatant: {
+					actorId: actor.id,
+					getFlag: () => ({ round: 1, turn: 0, count: 1 }),
+					setFlag: vi.fn(async () => undefined),
+				},
+			});
+		}
+
+		it('takes Rushed Attack disadvantage as the second attack of the turn', async () => {
+			dialogResult({});
+			globals.fromUuidSync = vi.fn(() => null);
+			const actor = createHeroicCharacter();
+			onOwnTurnAfterOneAttack(actor);
+
+			await rollUnarmedStrike(actor, { originUuid: 'Item.quickstrike' });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ rollMode: -1, rushedAttack: 2 }),
+			);
+		});
+
+		it('takes no Rushed Attack disadvantage when it ignores it', async () => {
+			dialogResult({});
+			const actor = createHeroicCharacter();
+			onOwnTurnAfterOneAttack(actor);
+
+			await rollUnarmedStrike(actor, { ignoresRushed: true });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ rollMode: 0, rushedAttack: undefined }),
+			);
+		});
+
+		it('says in its window that a free strike spends no action', async () => {
+			dialogResult({});
+			const actor = createHeroicCharacter();
+			onOwnTurnAfterOneAttack(actor);
+
+			await rollUnarmedStrike(actor, { free: true });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ spendsActions: 0 }),
+			);
+		});
+
+		it('records the feature as the origin, on the roll and on the card', async () => {
+			dialogResult({ rollMode: 0 });
+			globals.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.quickstrike' ? { system: { identifier: 'quickstrike' } } : null,
+			);
+
+			await rollUnarmedStrike(createHeroicCharacter(), { originUuid: 'Item.quickstrike' });
+
+			const origin = { uuid: 'Item.quickstrike', identifier: 'quickstrike' };
+			expect(damageRollMock).toHaveBeenCalledWith(
+				expect.any(String),
+				{},
+				expect.objectContaining({ origin }),
+			);
+			expect(ChatMessage.create).toHaveBeenCalledWith(
+				expect.objectContaining({ flags: { [SYSTEM_ID]: { origin } } }),
+			);
+		});
+		describe('the riders of attacks made through the feature', () => {
+			function commander() {
+				const actor = createHeroicCharacter();
+				Object.assign(actor, {
+					rules: [
+						{
+							type: 'offerAttackBonus',
+							bonusFor: (origin: string) =>
+								origin === 'rally' ? { label: 'Heavy Hand', damage: 3, primaryDie: 1 } : null,
+						},
+						{
+							type: 'primaryDieBonus',
+							label: 'Steady',
+							parentDocument: { uuid: 'Item.steady' },
+							bonusFor: ({ origin }: { origin?: string }) => (origin === 'rally' ? 1 : 0),
+						},
+						{
+							type: 'attackRollMode',
+							changeFor: (origin: string) =>
+								origin === 'rally'
+									? { advantage: 1, ignoreDisadvantage: true, label: 'Together' }
+									: null,
+						},
+					],
+				});
+				globals.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Item.rally' ? { system: { identifier: 'rally' } } : null,
+				);
+				return actor;
+			}
+
+			it('adds the damage and the Primary Die bonuses', async () => {
+				dialogResult({ rollMode: 0 });
+
+				await rollUnarmedStrike(commander(), { originUuid: 'Item.rally' });
+
+				expect(damageRollMock).toHaveBeenCalledWith(
+					'1 + 2 + 1d4 + 3',
+					{},
+					expect.objectContaining({ primaryDieModifier: 2 }),
+				);
+			});
+
+			it('opens the window with the roll mode change, and the roll takes no disadvantage', async () => {
+				dialogResult({ rollMode: -1 });
+				const actor = commander();
+				onOwnTurnAfterOneAttack(actor);
+
+				await rollUnarmedStrike(actor, { originUuid: 'Item.rally' });
+
+				expect(dialogMock).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.anything(),
+					expect.any(String),
+					expect.objectContaining({
+						rollMode: 1,
+						rushedAttack: undefined,
+						ignoreDisadvantage: true,
+					}),
+				);
+				expect(damageRollMock).toHaveBeenCalledWith(
+					expect.any(String),
+					{},
+					expect.objectContaining({ rollMode: 0 }),
+				);
+			});
+
+			it('puts damage of its own type on the card as its own damage', async () => {
+				dialogResult({ rollMode: 0 });
+				const actor = commander();
+				(actor.rules as unknown[]).push({
+					type: 'offerAttackBonus',
+					bonusFor: (origin: string) =>
+						origin === 'rally'
+							? { label: 'Dark Edge', damage: 6, primaryDie: 0, damageType: 'necrotic' }
+							: null,
+				});
+
+				await rollUnarmedStrike(actor, { originUuid: 'Item.rally' });
+
+				const card = vi.mocked(ChatMessage.create).mock.calls.at(-1)?.[0] as unknown as {
+					system: {
+						activation: { effects: Array<{ type: string; damageType: string; formula: string }> };
+					};
+				};
+				const damage = card.system.activation.effects.filter((node) => node.type === 'damage');
+				expect(damage.map((node) => [node.damageType, node.formula])).toEqual([
+					['bludgeoning', '1 + 2 + 1d4 + 3'],
+					['necrotic', '6'],
+				]);
+			});
+
+			it('adds nothing to a strike made another way', async () => {
+				dialogResult({ rollMode: 0 });
+
+				await rollUnarmedStrike(commander());
+
+				expect(damageRollMock).toHaveBeenCalledWith(
+					'1 + 2 + 1d4',
+					{},
+					expect.objectContaining({ primaryDieModifier: 0 }),
+				);
+			});
+
+			it("an ally's strike through the feature gets the owner's rules set to You and allies only", async () => {
+				dialogResult({ rollMode: 0 });
+				const rider = (originAttacker: string, damage: number, advantage: number) => [
+					{
+						type: 'offerAttackBonus',
+						originAttacker,
+						originScope: 'rally',
+						bonusFor: (origin: string) =>
+							origin === 'rally' ? { label: originAttacker, damage, primaryDie: 0 } : null,
+					},
+					{
+						type: 'attackRollMode',
+						originAttacker,
+						originScope: 'rally',
+						changeFor: (origin: string) =>
+							origin === 'rally'
+								? { advantage, ignoreDisadvantage: false, label: originAttacker }
+								: null,
+					},
+				];
+				const owner = {
+					uuid: 'Actor.owner',
+					rules: [...rider('anyone', 3, 1), ...rider('self', 7, 2)],
+				};
+				globals.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Item.rally' ? { system: { identifier: 'rally' }, actor: owner } : null,
+				);
+
+				await rollUnarmedStrike(createHeroicCharacter(), { originUuid: 'Item.rally' });
+
+				expect(dialogMock).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.anything(),
+					expect.any(String),
+					expect.objectContaining({ rollMode: 1 }),
+				);
+				expect(damageRollMock).toHaveBeenCalledWith('1 + 2 + 1d4 + 3', {}, expect.anything());
+			});
+		});
 	});
 
 	it('fires the attack event for the striker once', async () => {

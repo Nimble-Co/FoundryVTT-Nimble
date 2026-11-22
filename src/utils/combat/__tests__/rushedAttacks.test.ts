@@ -49,6 +49,14 @@ describe('which items are attacks', () => {
 		expect(rollsWithRushedDisadvantage(damageSpell)).toBe(true);
 		expect(rollsWithRushedDisadvantage(saveSpell)).toBe(false);
 	});
+
+	it('gives no disadvantage to an attack that ignores Rushed Attacks, which still counts', () => {
+		const sword = item('object', 'reach');
+
+		expect(rollsWithRushedDisadvantage(sword, { ignoresRushed: true })).toBe(false);
+		expect(rollsWithRushedDisadvantage(sword, {})).toBe(true);
+		expect(usesCountAsAttack(sword, { ignoresRushed: true } as never)).toBe(true);
+	});
 });
 
 describe('attacksMadeThisTurn', () => {

@@ -8,6 +8,7 @@
 	import CardEvents from './components/CardEvents.svelte';
 	import CardHeader from './components/CardHeader.svelte';
 	import DamageBackLines from './components/DamageBackLines.svelte';
+	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import Targets from './components/Targets.svelte';
 
 	const { messageDocument }: ReactionCardProps = $props();
@@ -98,6 +99,8 @@
 			{@html chatMessage}
 		</div>
 	{/if}
+
+	<GrantedActionOffers />
 
 	<CardEvents {messageDocument} />
 </article>

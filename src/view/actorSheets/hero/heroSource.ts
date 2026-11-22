@@ -112,7 +112,12 @@ export interface ItemPoolLike {
 
 /** Why the charge gate (`validateItemChargeConsumption`) stops a use. */
 export interface ChargeGateLike {
-	code: 'poolMissing' | 'insufficientCharges' | 'conflictingConsumers' | 'unofferableSpend';
+	code:
+		| 'poolMissing'
+		| 'insufficientCharges'
+		| 'conflictingConsumers'
+		| 'unofferableSpend'
+		| 'usedThisTurn';
 	poolLabel: string;
 	poolMax: number;
 	per: PoolRecovery | null;

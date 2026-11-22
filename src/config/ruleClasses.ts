@@ -4,6 +4,7 @@ import { ActionDeltaRule } from '../models/rules/actionDelta.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
+import { AttackRollModeRule } from '../models/rules/attackRollMode.js';
 import { AuraReachRule } from '../models/rules/auraReach.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChangeEffectRule } from '../models/rules/changeEffect.js';
@@ -30,6 +31,7 @@ import { DieResultEffectRule } from '../models/rules/dieResultEffect.js';
 import { DyingActionLimitRule } from '../models/rules/dyingActionLimit.js';
 import { EmptyPoolsAtEndRule } from '../models/rules/emptyPoolsAtEnd.js';
 import { EscapeDamageRule } from '../models/rules/escapeDamage.js';
+import { ExtraTargetsRule } from '../models/rules/extraTargets.js';
 import { FreeAssessRule } from '../models/rules/freeAssess.js';
 import { FreeMoveRule } from '../models/rules/freeMove.js';
 import { FreeSpellCostRule } from '../models/rules/freeSpellCost.js';
@@ -38,6 +40,7 @@ import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.js';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
+import { GrantTargetBonusRule } from '../models/rules/grantTargetBonus.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HeldRollRule } from '../models/rules/heldRoll.js';
 import { HitConditionRule } from '../models/rules/hitCondition.js';
@@ -101,6 +104,7 @@ export const RULE_CLASSES = {
 	armorClass: ArmorClassRule,
 	auraReach: AuraReachRule,
 	attackOutcome: AttackOutcomeRule,
+	attackRollMode: AttackRollModeRule,
 	chargeConsumer: ChargeConsumerRule,
 	resourceCost: ResourceCostRule,
 	changeDie: ChangeDieRule,
@@ -121,6 +125,7 @@ export const RULE_CLASSES = {
 	freeMove: FreeMoveRule,
 	freeSpellCost: FreeSpellCostRule,
 	grantActivation: GrantActivationRule,
+	grantTargetBonus: GrantTargetBonusRule,
 	grantMovement: GrantMovementRule,
 	diceConsumer: DiceConsumerRule,
 	dicePool: DicePoolRule,
@@ -148,6 +153,7 @@ export const RULE_CLASSES = {
 	critDiceSave: CritDiceSaveRule,
 	saveOnEvent: SaveOnEventRule,
 	escapeDamage: EscapeDamageRule,
+	extraTargets: ExtraTargetsRule,
 	critBack: CritBackRule,
 	freeAssess: FreeAssessRule,
 	hitCondition: HitConditionRule,

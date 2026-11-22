@@ -105,6 +105,13 @@ function notifyChargeFailure(itemName: string, failure: ChargeValidationFailure)
 		return;
 	}
 
+	if (failure.code === 'usedThisTurn') {
+		ui.notifications?.error(
+			localize('NIMBLE.charges.notifications.usedThisTurn', { item: itemName }),
+		);
+		return;
+	}
+
 	if (failure.code === 'poolMissing') {
 		ui.notifications?.error(
 			localize('NIMBLE.charges.notifications.poolMissing', {

@@ -24,9 +24,16 @@ import {
 	type AttackSourceFilter,
 	matchesAttackSource,
 } from '#utils/damage/attackDelivery.js';
+import {
+	isMadeThrough,
+	type OriginAttacker,
+	originOfCard,
+	ruleReachesAttack,
+} from '#utils/damage/attackOrigin.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { attackOriginFieldOptions, originAttackerField } from './_attackOriginField.js';
 import { choiceLabels } from './_rollUseRule.js';
 import {
 	attackOutcomeMatches,
@@ -108,6 +115,7 @@ function schema() {
 		condition: new fields.StringField({
 			required: true,
 			nullable: false,
+			blank: true,
 			initial: '',
 			label: 'NIMBLE.rules.applyCondition.condition.label',
 			hint: 'NIMBLE.rules.applyCondition.condition.hint',
@@ -158,6 +166,16 @@ function schema() {
 					hasAttackSource(String(data.trigger ?? 'onCrit')),
 			}),
 		),
+		attackOrigin: new fields.StringField(
+			withWidget({
+				...attackOriginFieldOptions(),
+				showWhen: (data: Record<string, unknown>) =>
+					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')),
+			}),
+		),
+		originAttacker: originAttackerField((data: Record<string, unknown>) =>
+			isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')),
+		),
 		manaAtLeast: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -189,6 +207,8 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	declare effectId: string;
 	declare wounds: number;
 	declare attackSource: AttackSourceFilter;
+	declare attackOrigin: string;
+	declare originAttacker: OriginAttacker;
 
 	declare manaAtLeast: number;
 
@@ -212,9 +232,16 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				['effectId', 'string'],
 				['wounds', 'number'],
 				['attackSource', 'string'],
+				['attackOrigin', 'string'],
+				['originAttacker', '"self" | "anyone"'],
 				['manaAtLeast', 'number'],
 			]),
 		);
+	}
+
+	/** The scope of an attack trigger. Another trigger has none. */
+	get originScope(): string {
+		return this.#isAttackTrigger() ? (this.attackOrigin ?? '') : '';
 	}
 
 	override async onItemUsed(context: ItemUsedContext): Promise<void> {
@@ -226,8 +253,10 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
 		if (!this.#isAttackTrigger()) return [];
+		if (context.isAttack === false) return [];
 		if (!this.#matchesAttackContext(context)) return [];
 		if (!this.#matchesSource(context.sourceItem)) return [];
+		if (!isMadeThrough(this.attackOrigin, context.origin)) return [];
 		const effect = this.#itemEffect();
 		const nodes: EffectNode[] = [];
 		if (effect || this.condition) {
@@ -347,8 +376,10 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	#shouldFireOnItemUsed(context: ItemUsedContext): boolean {
 		if (!this.test()) return false;
-		if (context.sourceActor !== this.actor) return false;
+		const origin = originOfCard(context.card);
+		if (!ruleReachesAttack(this, context.sourceActor, origin?.uuid)) return false;
 		if (!this.#matchesSource(context.sourceItem)) return false;
+		if (!isMadeThrough(this.attackOrigin, origin?.identifier || undefined)) return false;
 		return this.#matchesAttackContext(context);
 	}
 

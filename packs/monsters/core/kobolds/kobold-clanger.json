@@ -183,6 +183,54 @@
 				"systemVersion": "0.1.7",
 				"lastModifiedBy": null
 			}
+		},
+		{
+			"name": "Nooooo!",
+			"type": "monsterFeature",
+			"_id": "kCl4ngrN0oooo0Ab",
+			"img": "icons/skills/social/intimidation-impressing.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			}
 		}
 	],
 	"effects": [],

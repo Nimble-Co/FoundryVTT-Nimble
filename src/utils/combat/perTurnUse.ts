@@ -27,6 +27,11 @@ function usesOf(actor: FlagActor): Record<string, string> {
 
 const flagKey = (key: string) => key.replaceAll('.', '_');
 
+/** The 1/turn use that the item's own use and its 1/turn options share. */
+export function itemTurnUseKey(itemUuid: string | null | undefined): string {
+	return `${itemUuid ?? ''}:oncePerTurn`;
+}
+
 /** Whether a 1/turn use with this key was spent this turn. Outside combat there is no limit. */
 export function usedThisTurn(actor: Actor | null | undefined, key: string): boolean {
 	const turn = currentTurnId();

@@ -1,280 +1,189 @@
 <script lang="ts">
 	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-	import type { GrantedActionOffer } from '#utils/combat/grantedActionOffers.ts';
 
 	import { getContext } from 'svelte';
-	import { requestGrantedActionOfferUse } from '#utils/combat/grantedActionOffers.js';
-	import { docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
-	import localize from '../../../utils/localize.js';
+	import localize from '#utils/localize.js';
 	import LinkedText from '../../components/LinkedText.svelte';
-	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
+	import { createGrantedActionOffersState } from './GrantedActionOffers.svelte.ts';
 
-	interface OfferRecipientActor {
-		id?: string | null;
-		name?: string;
-		isOwner?: boolean;
-		items?: Iterable<OfferRecipientItem>;
-		activateItem?: (id: string, options?: Record<string, unknown>) => Promise<unknown>;
-	}
-
-	interface OfferRecipientItem {
-		id: string | null;
-		name: string;
-		type: string;
-		system?: { objectType?: string };
-	}
-
-	function getRecipientActor(offer: GrantedActionOffer): OfferRecipientActor | null {
-		return (fromUuidSync(offer.targetActorUuid as Parameters<typeof fromUuidSync>[0]) ??
-			null) as OfferRecipientActor | null;
-	}
-
-	function canUseOffer(offer: GrantedActionOffer): boolean {
-		if (game.user?.isGM) return true;
-		const actor = getRecipientActor(offer);
-		return !!actor?.isOwner;
-	}
-
-	function getOfferHeading(offer: GrantedActionOffer): string {
-		return localize(`NIMBLE.chat.grantedActionOffers.${offer.activationType}`);
-	}
-
-	function getOfferLabel(offer: GrantedActionOffer): string {
-		const heading = getOfferHeading(offer);
-		const name = getRecipientActor(offer)?.name ?? '';
-		return offer.label
-			? localize('NIMBLE.chat.grantedActionOffers.offerLabel', {
-					name,
-					heading,
-					source: offer.label,
-				})
-			: localize('NIMBLE.chat.grantedActionOffers.offerLabelNoSource', { name, heading });
-	}
-
-	function getOfferTooltip(offer: GrantedActionOffer): string | null {
-		if (!offer.sourceItemUuid) return null;
-		const item = fromUuidSync(offer.sourceItemUuid as Parameters<typeof fromUuidSync>[0]) as {
-			name?: string;
-		} | null;
-		return item?.name ?? null;
-	}
-
-	function getUsedAttribution(offer: GrantedActionOffer): LinkedPart[] {
-		const actorName = getRecipientActor(offer)?.name ?? '';
-		return offer.label
-			? linkedParts('NIMBLE.chat.grantedActionOffers.usedByVia', {
-					name: actorName,
-					label: docLink(offer.label, offer.sourceItemUuid),
-				})
-			: linkedParts('NIMBLE.chat.grantedActionOffers.usedBy', { name: actorName });
-	}
-
-	/** The recipient's items the offer allows them to activate. */
-	function getEligibleItems(offer: GrantedActionOffer): OfferRecipientItem[] {
-		const actor = getRecipientActor(offer);
-		if (!actor?.items) return [];
-		// weaponAttack is the only activation type; extend here alongside the
-		// rule's choice set.
-		return [...actor.items].filter(
-			(item) => item.type === 'object' && item.system?.objectType === 'weapon',
-		);
-	}
-
-	function toggleOffer(offerId: string): void {
-		expandedOfferId = expandedOfferId === offerId ? null : offerId;
-	}
-
-	/**
-	 * What the offer is currently pointed at. Reading `targetingVersion` re-runs
-	 * this the moment the user retargets, so the display never sits on a stale
-	 * answer.
-	 */
-	function getOfferTargeting(offer: GrantedActionOffer) {
-		void targetingVersion;
-
-		const recipientActorId = getRecipientActor(offer)?.id ?? '';
-		// Read the target set directly so the names stay in the order the user
-		// targeted them. Partitioning it here instead would hoist one group.
-		const targetedTokens = Array.from(game.user?.targets ?? []);
-
-		return resolveGrantedOfferTargeting({ recipientActorId, targetedTokens });
-	}
-
-	/**
-	 * Run the recipient's normal activation flow, then consume the offer. The
-	 * activation resolves its own costs (including any adjustments the granting
-	 * feature's rules declared), so the offer itself carries none. A cancelled
-	 * activation returns null and leaves the offer available.
-	 */
-	async function useOfferWithItem(offer: GrantedActionOffer, itemId: string | null) {
-		if (busy || !itemId) return;
-		busy = true;
-
-		try {
-			const actor = getRecipientActor(offer);
-			if (!actor?.activateItem) return;
-
-			const activationCard = await actor.activateItem(itemId, {
-				originUuid: offer.sourceItemUuid,
-			});
-			if (!activationCard) return;
-
-			await requestGrantedActionOfferUse({
-				messageId: messageDocument.id ?? '',
-				offerId: offer.id,
-			});
-			expandedOfferId = null;
-		} finally {
-			busy = false;
-		}
-	}
-
-	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
-	let busy = $state(false);
-	let expandedOfferId = $state<string | null>(null);
-	let targetingVersion = $state(0);
-
-	$effect(() => {
-		const hookId = Hooks.on('targetToken', () => {
-			targetingVersion += 1;
-		});
-		return () => {
-			Hooks.off('targetToken', hookId);
-		};
-	});
-
-	let offers = $derived(
-		(messageDocument?.reactive?.system as { grantedActionOffers?: GrantedActionOffer[] })
-			?.grantedActionOffers ?? [],
-	);
-	let pendingOffers = $derived(offers.filter((offer) => !offer.used && canUseOffer(offer)));
-	let usedOffers = $derived(offers.filter((offer) => offer.used));
+	const messageDocument = getContext<NimbleChatMessage>('messageDocument');
+	const lines = createGrantedActionOffersState(() => messageDocument);
 </script>
 
-{#if pendingOffers.length > 0 || usedOffers.length > 0}
+{#each lines.sections as section (section.kind)}
 	<section class="nimble-card-section nimble-card-section--granted-action-offers">
-		{#if pendingOffers.length > 0}
-			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">
-					{localize('NIMBLE.chat.grantedActionOffers.heading')}
-				</h3>
-			</header>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">{section.heading}</h3>
+		</header>
 
-			<ul class="nimble-granted-action-offer-list">
-				{#each pendingOffers as offer (offer.id)}
-					<li>
-						<button
-							class="nimble-button nimble-granted-action-offer-button"
-							type="button"
-							disabled={busy}
-							data-tooltip={getOfferTooltip(offer)}
-							onclick={() => toggleOffer(offer.id)}
-						>
-							<i class="nimble-button__icon fa-solid fa-hand-point-right"></i>
-							{getOfferLabel(offer)}
-						</button>
-
-						{#if expandedOfferId === offer.id}
-							{@const eligibleItems = getEligibleItems(offer)}
-							{@const targeting = getOfferTargeting(offer)}
-
-							{#if eligibleItems.length > 0}
-								{#if targeting.targetsRecipient}
-									<p class="nimble-granted-action-offer-notice">
-										<i class="fa-solid fa-circle-info"></i>
-										{localize('NIMBLE.chat.grantedActionOffers.targetingRecipient', {
-											name: targeting.recipientTargetNames.join(', '),
-										})}
-									</p>
-								{/if}
-
-								{#if targeting.otherTargetNames.length > 0}
-									<p class="nimble-granted-action-offer-notice">
-										{localize('NIMBLE.chat.grantedActionOffers.currentTarget', {
-											name: targeting.otherTargetNames.join(', '),
-										})}
-									</p>
-								{/if}
-
-								<ul
-									class="nimble-granted-action-offer-list nimble-granted-action-offer-list--items"
-								>
-									{#each eligibleItems as item (item.id)}
-										<li>
-											<button
-												class="nimble-button nimble-granted-action-offer-button"
-												type="button"
-												disabled={busy}
-												onclick={() => useOfferWithItem(offer, item.id)}
-											>
-												<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
-												{item.name}
-											</button>
-										</li>
-									{/each}
-								</ul>
-							{:else}
-								<p class="nimble-granted-action-offer-empty">
-									{localize('NIMBLE.chat.grantedActionOffers.noEligibleItems')}
-								</p>
-							{/if}
-						{/if}
-					</li>
-				{/each}
-			</ul>
+		{#if section.warning}
+			<p class="nimble-granted-action-offer__warning">
+				<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+				<span><LinkedText parts={section.warning} /></span>
+			</p>
 		{/if}
 
-		{#each usedOffers as offer (offer.id)}
-			<p class="nimble-granted-action-offer-attribution">
-				<i class="fa-solid fa-hand-point-right"></i>
-				<LinkedText parts={getUsedAttribution(offer)} />
-			</p>
-		{/each}
+		<ul class="nimble-granted-action-offer-list">
+			{#each section.offers as offer (offer.id)}
+				{#if offer.used}
+					<li class="nimble-granted-action-offer nimble-granted-action-offer--used">
+						<i class="fa-solid fa-check" aria-hidden="true"></i>
+						<span><LinkedText parts={lines.getUsedLine(offer)} /></span>
+					</li>
+				{:else}
+					{@const groups = lines.getChoiceGroups(offer)}
+					{@const chosen = lines.getChosen(offer, groups)}
+					{@const name = lines.recipientName(offer)}
+
+					<li class="nimble-granted-action-offer">
+						<p
+							class="nimble-granted-action-offer__name"
+							data-tooltip-text={lines.getOfferTooltip(offer)}
+						>
+							<i class="fa-solid fa-hand-point-right" aria-hidden="true"></i>
+							<span>{name}</span>
+						</p>
+
+						{#if groups.length > 0}
+							<div class="nimble-granted-action-offer__row">
+								<select
+									class="nimble-granted-action-offer__choice"
+									aria-label={localize('NIMBLE.chat.grantedActionOffers.choiceLabel', { name })}
+									value={chosen}
+									disabled={lines.busy}
+									onchange={(event) => lines.choose(offer, event.currentTarget.value)}
+								>
+									{#each groups as group, index (index)}
+										{#if group.label}
+											<optgroup label={group.label}>
+												{#each group.choices as choice (choice.value)}
+													<option value={choice.value}>{choice.name}</option>
+												{/each}
+											</optgroup>
+										{:else}
+											{#each group.choices as choice (choice.value)}
+												<option value={choice.value}>{choice.name}</option>
+											{/each}
+										{/if}
+									{/each}
+								</select>
+
+								<button
+									class="nimble-button"
+									data-button-variant="card-action"
+									style="--nimble-card-action-color: currentColor"
+									type="button"
+									disabled={lines.busy}
+									onclick={() => lines.attackWith(offer, chosen)}
+								>
+									<i class="fa-solid fa-dice-d20" aria-hidden="true"></i>
+									{localize('NIMBLE.chat.grantedActionOffers.attack')}
+								</button>
+							</div>
+						{:else}
+							<p class="nimble-granted-action-offer__empty">
+								{localize('NIMBLE.chat.grantedActionOffers.noEligibleItems')}
+							</p>
+						{/if}
+					</li>
+				{/if}
+			{/each}
+		</ul>
 	</section>
-{/if}
+{/each}
 
 <style lang="scss">
 	.nimble-granted-action-offer-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 0.5rem;
 		list-style: none;
 		padding: 0;
 		margin: 0;
+	}
 
-		&--items {
-			margin-block-start: 0.25rem;
-			margin-inline-start: 1rem;
+	.nimble-granted-action-offer {
+		// The dropdown and the Attack button share this height, so the row reads as one control.
+		--nimble-granted-row-height: 2.25rem;
+
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+
+		&--used {
+			flex-direction: row;
+			align-items: baseline;
+			gap: 0.375rem;
+			font-size: var(--nimble-sm-text);
+		}
+
+		&__name {
+			display: flex;
+			align-items: baseline;
+			gap: 0.375rem;
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+		}
+
+		&__warning {
+			display: flex;
+			align-items: baseline;
+			gap: 0.375rem;
+			margin: 0 0 0.375rem;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+
+			i {
+				color: var(--nimble-warning-icon-color);
+			}
+		}
+
+		&__empty {
+			margin: 0;
+			font-size: var(--nimble-xs-text);
+			font-style: italic;
+			color: var(--nimble-medium-text-color);
+		}
+
+		// The card-action button fills its grid column, and the column is as wide as the button's text.
+		&__row {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: 0.375rem;
+		}
+
+		&__choice {
+			box-sizing: border-box;
+			width: 100%;
+			height: var(--nimble-granted-row-height);
+			margin: 0;
+			padding: 0 0.5rem;
+			font-family: var(--font-sans);
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			line-height: 1;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-input-border-color);
+			border-radius: 4px;
+			box-shadow: none;
+			cursor: pointer;
+
+			&:focus {
+				outline: none;
+				border-color: var(--nimble-input-focus-border-color);
+			}
+
+			&:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
 		}
 	}
 
-	.nimble-granted-action-offer-button {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		width: 100%;
-		padding: 0.25rem 0.5rem;
-		font-size: var(--nimble-sm-text);
-		text-align: left;
-	}
-
-	.nimble-granted-action-offer-notice {
-		margin: 0.25rem 0 0 1rem;
-		font-size: var(--nimble-xs-text);
-		color: var(--nimble-medium-text-color);
-	}
-
-	.nimble-granted-action-offer-empty {
-		margin: 0.25rem 0 0 1rem;
-		font-size: var(--nimble-xs-text);
-		font-style: italic;
-		color: var(--nimble-medium-text-color);
-	}
-
-	.nimble-granted-action-offer-attribution {
-		margin: 0.25rem 0 0 0;
-		font-size: var(--nimble-xs-text);
-		font-style: italic;
+	.nimble-granted-action-offer--used i {
 		color: var(--nimble-medium-text-color);
 	}
 </style>

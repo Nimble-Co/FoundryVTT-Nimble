@@ -105,6 +105,56 @@ describe('heroic reactions', () => {
 			);
 		});
 
+		it("puts the hero's attack lines from Interpose rules on the Interpose card", async () => {
+			const { actor } = inCombat();
+			Object.assign(actor, {
+				uuid: 'Actor.heroic-actor',
+				items: [
+					{
+						uuid: 'Actor.heroic-actor.Item.quickstrike',
+						name: 'Quickstrike',
+						rules: new Map([
+							[
+								'strike',
+								{
+									type: 'grantActivation',
+									id: 'strike',
+									trigger: 'onInterpose',
+									weaponKind: 'unarmed',
+									free: true,
+									appliesTo: () => true,
+								},
+							],
+						]),
+					},
+				],
+			});
+
+			await reactions.useChatReaction(actor, 'interposeAndDefend');
+
+			expect(ChatMessage.create).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({
+					system: expect.objectContaining({
+						reactionType: 'interpose',
+						grantedActionOffers: [
+							expect.objectContaining({
+								targetActorUuid: 'Actor.heroic-actor',
+								label: 'Quickstrike',
+								weaponKind: 'unarmed',
+							}),
+						],
+					}),
+				}),
+			);
+			expect(ChatMessage.create).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({
+					system: expect.not.objectContaining({ grantedActionOffers: expect.anything() }),
+				}),
+			);
+		});
+
 		it('posts the help card with the targets', async () => {
 			const { actor } = inCombat();
 			heroicGlobals().game.user.targets = new Set([targetToken('Scene.s.Token.ally')]);

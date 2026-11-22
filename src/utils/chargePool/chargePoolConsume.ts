@@ -1,3 +1,4 @@
+import { itemTurnUseKey, markTurnUse, usedThisTurn } from '../combat/perTurnUse.js';
 import { emitCancelable, emitForCharacter } from './chargePoolHooks.js';
 import {
 	applyRecoveryTriggersToPools,
@@ -15,12 +16,17 @@ import {
 } from './helpers.js';
 import type {
 	CharacterActorLike,
+	ChargeConsumerState,
 	ChargeConsumptionDetail,
 	ChargeContext,
 	ChargeRecoveryGiven,
 	ChargeValidationResult,
 	RuleBackedItem,
 } from './types.js';
+
+function spendsTurnUse(consumers: readonly ChargeConsumerState[]): boolean {
+	return consumers.some((consumer) => consumer.oncePerTurn === true);
+}
 
 /**
  * With `freeUse`, a consumer that allows a use with no charge asks for none. With `freeOfUses`,
@@ -56,6 +62,18 @@ function validateItemChargeConsumption(
 	// Variable consumers are validated too, against their minimum: an item whose
 	// only cost is "spend any amount" still has nothing to do on an empty pool.
 	const consumers = getChargeConsumers(actor, ruleBackedItem, { includeVariable: true, freeUse });
+	if (spendsTurnUse(consumers) && usedThisTurn(actor, itemTurnUseKey(item.uuid))) {
+		return {
+			ok: false,
+			failure: {
+				code: 'usedThisTurn',
+				poolIdentifier: '',
+				poolLabel: '',
+				required: 0,
+				available: 0,
+			},
+		};
+	}
 
 	// Summed per pool, not checked one consumer at a time: costs that each fit
 	// alone can still overdraw the pool together, and the two kinds are deducted
@@ -337,6 +355,8 @@ async function consumeOnResolvedItemUse(
 			});
 		}
 	}
+
+	if (spendsTurnUse(consumers)) await markTurnUse(actor, itemTurnUseKey(item.uuid));
 
 	return {
 		ok: true,

@@ -12,6 +12,7 @@ import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
+import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackActivation,
@@ -19,6 +20,11 @@ import {
 	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
+import {
+	originIdentifierOfCard,
+	originOfCard,
+	originOwnerRules,
+} from '#utils/damage/attackOrigin.js';
 import {
 	buildDeferredDamagePatch,
 	findRollableDeferredDamageNode,
@@ -39,6 +45,7 @@ import { maximizedPackets } from '#utils/heldChange/areaMaximize.js';
 import {
 	heldMaximizeOnAreaTarget,
 	heldVulnerabilityTo,
+	isAttackRoll,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
@@ -891,6 +898,16 @@ function isAreaActivation(activation: Record<string, unknown>): boolean {
 	return !!activation.acquireTargetsFromTemplate && shape !== '';
 }
 
+/** Whether the card's activation makes an attack roll, which can hit, crit or miss. */
+function hasAttackRoll(activation: ActivationCardSystemData['activation']): boolean {
+	if (!activation) return false;
+	const targets = activation.targets as { attackType?: string } | undefined;
+	const damage = flattenEffectsTree((activation.effects ?? []) as EffectNode[]).find(
+		(node) => node.type === 'damage',
+	) as { canCrit?: boolean; canMiss?: boolean } | undefined;
+	return isAttackRoll(targets?.attackType, damage);
+}
+
 /** Whether a deferred roll became the card's primary damage roll. Never for an area activation. */
 function isPrimaryDeferredRoll(activation: Record<string, unknown>, nodeId: string): boolean {
 	if (isAreaActivation(activation)) return false;
@@ -1088,7 +1105,9 @@ class NimbleChatMessage extends ChatMessage {
 		const ruleNodes = this.#collectRuleActivationCardNodes({
 			isCritical: systemData.isCritical,
 			isMiss: systemData.isMiss,
+			isAttack: hasAttackRoll(systemData.activation),
 			sourceItem: this.#cardSourceItem(),
+			origin: originIdentifierOfCard(this),
 		});
 		if (ruleNodes.length > 0) {
 			nodes.push(ruleNodes);
@@ -1107,16 +1126,18 @@ class NimbleChatMessage extends ChatMessage {
 	#collectRuleActivationCardNodes(context: {
 		isCritical: boolean;
 		isMiss: boolean;
+		isAttack: boolean;
 		sourceItem: { type?: string } | null;
+		origin: string | undefined;
 	}): EffectNode[] {
+		type CardNodeRule = { getActivationCardNodes?: (ctx: typeof context) => EffectNode[] };
 		const actorId = this.speaker?.actor;
 		const actor = actorId ? game.actors?.get(actorId) : null;
-		const rules = (
-			actor as unknown as {
-				rules?: Array<{ getActivationCardNodes?: (ctx: typeof context) => EffectNode[] }>;
-			} | null
-		)?.rules;
-		if (!rules || rules.length === 0) return [];
+		const rules = [
+			...((actor as unknown as { rules?: CardNodeRule[] } | null)?.rules ?? []),
+			...originOwnerRules<CardNodeRule>(actor, originOfCard(this)),
+		];
+		if (rules.length === 0) return [];
 
 		const contributed: EffectNode[] = [];
 		for (const rule of rules) {
@@ -2344,6 +2365,7 @@ class NimbleChatMessage extends ChatMessage {
 		const protectedName =
 			(fromUuidSync(entry.targetTokenUuid ?? '', { strict: false }) as { name?: string } | null)
 				?.name ?? '';
+		const interposeOffers = collectInterposeOffers(protector as never);
 		const isPublic = (this.whisper ?? []).length < 1;
 		const hosted =
 			isPublic &&
@@ -2362,7 +2384,14 @@ class NimbleChatMessage extends ChatMessage {
 					at: Date.now(),
 				},
 			]));
-		if (hosted) return;
+		const cardOffers = (this.system as { grantedActionOffers?: unknown }).grantedActionOffers;
+		if (hosted && interposeOffers.length > 0 && Array.isArray(cardOffers)) {
+			await this.update({
+				system: { grantedActionOffers: [...cardOffers, ...interposeOffers] },
+			} as Record<string, unknown>);
+			return;
+		}
+		if (hosted && interposeOffers.length < 1) return;
 
 		await ChatMessage.create({
 			author: game.user?.id,
@@ -2376,6 +2405,7 @@ class NimbleChatMessage extends ChatMessage {
 				rollMode: 0,
 				reactionType: 'interpose',
 				targets: entry.targetTokenUuid ? [entry.targetTokenUuid] : [],
+				grantedActionOffers: interposeOffers,
 			},
 		} as unknown as ChatMessage.CreateData);
 	}

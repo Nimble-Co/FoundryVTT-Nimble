@@ -28,7 +28,12 @@ import {
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
-import { type WeaponOption, weaponAttackOf, weaponOptionsFor } from '#utils/damage/weaponAttack.js';
+import {
+	groupWeapons,
+	type WeaponOption,
+	weaponAttackOf,
+	weaponOptionsFor,
+} from '#utils/damage/weaponAttack.js';
 import { keptAmountFor } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.js';
 import {
@@ -55,24 +60,6 @@ import { useOptionSplits } from './useOptionSplits.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
 
-/** A group of the weapon dropdown. The label is null when the dropdown has one group only. */
-export interface WeaponGroup {
-	label: string | null;
-	weapons: WeaponOption[];
-}
-
-function groupWeapons(weapons: WeaponOption[]): WeaponGroup[] {
-	const equipped = weapons.filter((weapon) => weapon.equipped);
-	const notEquipped = weapons.filter((weapon) => !weapon.equipped);
-	if (equipped.length === 0 || notEquipped.length === 0) {
-		return weapons.length > 0 ? [{ label: null, weapons }] : [];
-	}
-	return [
-		{ label: localize('NIMBLE.rollWindow.weaponsEquipped'), weapons: equipped },
-		{ label: localize('NIMBLE.rollWindow.weaponsNotEquipped'), weapons: notEquipped },
-	];
-}
-
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
 	item: () => Item;
@@ -88,6 +75,8 @@ export interface CreateItemActivationConfigDialogStateOptions {
 	useOptionGroups?: readonly UseOptionGroup[];
 	/** The identifier of the feature the attack is made through. */
 	attackOrigin?: string;
+	/** The extra targets share one attack, so the first target decides. */
+	sharesOneAttack?: boolean;
 }
 
 export function createItemActivationConfigDialogState(
@@ -120,6 +109,7 @@ export function createItemActivationConfigDialogState(
 	const firstTargetActor = (
 		soleTarget(game.user?.targets, {
 			firstDecides:
+				options.sharesOneAttack === true ||
 				(item.system as { activation?: { targets?: { singleTargetAttack?: boolean } } }).activation
 					?.targets?.singleTargetAttack === true,
 		}) as Token | null

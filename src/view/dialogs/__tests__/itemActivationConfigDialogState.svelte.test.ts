@@ -58,6 +58,19 @@ describe('the activation dialog conditional bonuses', () => {
 		expect(openWith([{ uuid: 'Actor.goblin' }, { uuid: 'Actor.kobold' }])).toBeUndefined();
 	});
 
+	it('test the first target when the targets share one attack', () => {
+		const goblin = { uuid: 'Actor.goblin' };
+		user.targets = new Set([{ actor: goblin }, { actor: { uuid: 'Actor.kobold' } }]);
+		createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'weapon', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+			sharesOneAttack: true,
+		});
+
+		expect((conditionalBonuses.mock.calls[0] as unknown[])[2]).toBe(goblin);
+	});
+
 	it('are asked for the feature the attack is made through', () => {
 		user.targets = new Set();
 		createState({

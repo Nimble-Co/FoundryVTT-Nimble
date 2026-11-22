@@ -1,8 +1,9 @@
 import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
 import { ruleLabel } from '../../utils/actor/actorRules.js';
-import { isMadeThrough } from '../../utils/damage/attackOrigin.js';
+import { isMadeThrough, type OriginAttacker } from '../../utils/damage/attackOrigin.js';
 import type { RollEffect } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import { originAttackerField } from './_attackOriginField.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import type { RollUseContext } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
@@ -18,6 +19,7 @@ function schema() {
 			label: 'NIMBLE.rules.offerAttackBonus.offerSource.label',
 			hint: 'NIMBLE.rules.offerAttackBonus.offerSource.hint',
 		}),
+		originAttacker: originAttackerField(),
 		damage: new fields.StringField(
 			withWidget({
 				required: true,
@@ -28,6 +30,15 @@ function schema() {
 				widget: 'diceFormula',
 			}),
 		),
+		damageType: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			label: 'NIMBLE.rules.offerAttackBonus.damageType.label',
+			hint: 'NIMBLE.rules.offerAttackBonus.damageType.hint',
+			choices: () => CONFIG.NIMBLE.damageTypes,
+		}),
 		primaryDie: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -50,14 +61,16 @@ declare namespace OfferAttackBonusRule {
  */
 class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	declare offerSource: string;
+	declare originAttacker: OriginAttacker;
 	declare damage: string;
 	declare primaryDie: number;
+	// `damageType` is inferred from the schema's `choices`.
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.offerAttackBonus.description';
 	static override icon = 'fa-solid fa-handshake-angle';
 	static override formLayout: readonly RuleFormGroup[] = [
-		{ fields: ['offerSource', 'damage', 'primaryDie'] },
+		{ fields: ['offerSource', 'originAttacker', 'damage', 'damageType', 'primaryDie'] },
 	];
 
 	static override defineSchema(): OfferAttackBonusRule.Schema {
@@ -71,10 +84,16 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['offerSource', 'string'],
+				['originAttacker', '"self" | "anyone"'],
 				['damage', 'string'],
+				['damageType', 'string'],
 				['primaryDie', 'number'],
 			]),
 		);
+	}
+
+	get originScope(): string {
+		return this.offerSource ?? '';
 	}
 
 	/** What the rule adds to an attack made through its item. Null for another attack, or with no item. */
@@ -90,13 +109,17 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 			itemUuid: this.item?.uuid ?? this.parentDocument?.uuid ?? '',
 			damage: Math.max(0, Math.trunc(Number(this.resolveFormula(this.damage)) || 0)),
 			primaryDie: Math.trunc(Number(this.primaryDie) || 0),
+			...(this.damageType ? { damageType: this.damageType } : {}),
 		};
 	}
 
+	/** A row adds the Primary Die bonus, and damage of the attack's type. */
 	offersUseOn(context: RollUseContext): boolean {
 		if (isRuleAutomationEnabled() || context.side !== 'roller') return false;
 		if (context.roll.kind !== 'attack') return false;
-		return this.bonusFor(context.roll.origin) !== null;
+		const bonus = this.bonusFor(context.roll.origin?.identifier);
+		if (!bonus) return false;
+		return bonus.primaryDie !== 0 || (bonus.damage > 0 && !bonus.damageType);
 	}
 
 	get rollEffect(): RollEffect {

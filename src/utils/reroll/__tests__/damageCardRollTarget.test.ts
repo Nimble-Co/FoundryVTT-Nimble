@@ -141,14 +141,18 @@ describe('damageCardRollTarget', () => {
 			options: { ...roll.options, origin: { uuid: 'Item.granting', identifier: 'granting' } },
 		};
 		const card = makeCard([damageNode(withOrigin)]);
-		expect(damageCardRollTarget(card).context().roll).toMatchObject({ origin: 'granting' });
+		expect(damageCardRollTarget(card).context().roll).toMatchObject({
+			origin: { uuid: 'Item.granting', identifier: 'granting' },
+		});
 	});
 
 	it('reads the origin of a card rolled before the origin was recorded', () => {
 		const roll = serializedRoll();
 		const legacy = { ...roll, options: { ...roll.options, offerSource: 'granting' } };
 		const card = makeCard([damageNode(legacy)]);
-		expect(damageCardRollTarget(card).context().roll).toMatchObject({ origin: 'granting' });
+		expect(damageCardRollTarget(card).context().roll).toMatchObject({
+			origin: { identifier: 'granting' },
+		});
 	});
 
 	it('tells the gate whether a die of the roll is at its max', () => {

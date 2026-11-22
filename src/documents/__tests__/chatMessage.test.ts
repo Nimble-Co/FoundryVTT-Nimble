@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { ApplyConditionRule } from '../../models/rules/applyCondition.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 type TestGlobals = {
@@ -2860,6 +2861,70 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 			expectReactionCard();
 		});
 
+		describe('with a feature that gives an attack on Interpose', () => {
+			const strikeRule = {
+				type: 'grantActivation',
+				id: 'strike',
+				label: 'Quickstrike',
+				trigger: 'onInterpose',
+				free: true,
+				weaponKind: 'unarmed',
+				appliesTo: () => true,
+			};
+			const zephyr = {
+				...protectorActor,
+				uuid: 'Actor.protector',
+				items: [
+					{
+						uuid: 'Actor.protector.Item.quickstrike',
+						name: 'Quickstrike',
+						rules: new Map([['strike', strikeRule]]),
+					},
+				],
+			};
+
+			beforeEach(() => {
+				reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+					uuid === 'Scene.scene.Token.protector' ? { actor: zephyr } : null,
+				);
+			});
+
+			const line = expect.objectContaining({
+				targetActorUuid: 'Actor.protector',
+				label: 'Quickstrike',
+				sourceItemUuid: 'Actor.protector.Item.quickstrike',
+				free: true,
+				weaponKind: 'unarmed',
+				used: false,
+			});
+
+			it('gives the protector the attack line on the public attack card', async () => {
+				const message = attackCard();
+				Object.assign(message.system, { grantedActionOffers: [] });
+
+				await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+				expect(message.update).toHaveBeenCalledWith({ system: { grantedActionOffers: [line] } });
+				expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+			});
+
+			it('puts the attack line on the reaction card when the attack card is whispered', async () => {
+				const message = attackCard(['gm-user']);
+				Object.assign(message.system, { grantedActionOffers: [] });
+
+				await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+				expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
+					expect.objectContaining({
+						system: expect.objectContaining({
+							reactionType: 'interpose',
+							grantedActionOffers: [line],
+						}),
+					}),
+				);
+			});
+		});
+
 		it('posts the reaction card when no GM can write the line', async () => {
 			user().isActiveGM = false;
 			const message = attackCard();
@@ -3008,5 +3073,172 @@ describe('healing that goes to the one who used the item', () => {
 
 		expect(actor.applyHealing).not.toHaveBeenCalled();
 		expect(message.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleChatMessage.effectNodes — a hit step scoped to one feature', () => {
+	const weaponDamage = {
+		id: 'dmg',
+		type: 'damage',
+		formula: '1d8',
+		damageType: 'slashing',
+		canCrit: true,
+		canMiss: true,
+		parentNode: null,
+		parentContext: null,
+		on: {},
+	};
+
+	function grantingFeatureRule() {
+		const actor = { uuid: 'Actor.hero' };
+		const item = { actor, isEmbedded: true, name: 'Feature', uuid: 'Actor.hero.Item.f' };
+		const rule = new ApplyConditionRule(
+			{
+				type: 'applyCondition',
+				id: 'scoped',
+				label: 'Scoped',
+				condition: 'smoldering',
+				trigger: 'onHit',
+				attackOrigin: 'rally',
+			} as never,
+			{ parent: item as never, strict: false },
+		);
+		Object.assign(rule, {
+			id: 'scoped',
+			condition: 'smoldering',
+			trigger: 'onHit',
+			attackOrigin: 'rally',
+		});
+		return rule;
+	}
+
+	function card(type: string, origin: string | null, activation: Record<string, unknown>) {
+		return new NimbleChatMessage({
+			type,
+			speaker: { actor: 'hero' },
+			flags: origin ? { [SYSTEM_ID]: { origin: { uuid: 'Item.x', identifier: origin } } } : {},
+			system: { targets: [], isCritical: false, isMiss: false, activation },
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	function stepIds(message: NimbleChatMessage): string[] {
+		return message.effectNodes
+			.flat()
+			.filter((node) => node.type === 'applyEffect')
+			.map((node) => node.id);
+	}
+
+	beforeEach(() => {
+		const rule = grantingFeatureRule();
+		(globalThis as unknown as { game: Record<string, unknown> }).game.actors = {
+			get: (id: string) => (id === 'hero' ? { rules: [rule] } : null),
+		};
+		globals().fromUuidSync = vi.fn().mockReturnValue(null);
+	});
+
+	afterEach(() => {
+		delete (globalThis as unknown as { game: Record<string, unknown> }).game.actors;
+	});
+
+	it('gives the feature card itself, with no attack roll, no step', () => {
+		const message = card('feature', 'rally', { effects: [], targets: { count: 1 } });
+
+		expect(stepIds(message)).toEqual([]);
+	});
+
+	it('gives the card of an attack made through the feature that hits the step', () => {
+		const message = card('object', 'rally', {
+			effects: [weaponDamage],
+			targets: { count: 1, attackType: 'reach' },
+		});
+
+		expect(stepIds(message)).toEqual(['apply-condition-scoped']);
+	});
+
+	it('gives a plain attack that hits no step', () => {
+		const message = card('object', null, {
+			effects: [weaponDamage],
+			targets: { count: 1, attackType: 'reach' },
+		});
+
+		expect(stepIds(message)).toEqual([]);
+	});
+});
+
+describe("NimbleChatMessage.effectNodes — an ally's attack made through another creature's feature", () => {
+	const ORIGIN = 'Actor.owner.Item.rally';
+	const weaponDamage = {
+		id: 'dmg',
+		type: 'damage',
+		formula: '1d8',
+		damageType: 'slashing',
+		canCrit: true,
+		canMiss: true,
+		parentNode: null,
+		parentContext: null,
+		on: {},
+	};
+
+	function ownerRule(id: string, trigger: string, originAttacker: string, owner: object) {
+		const item = { actor: owner, isEmbedded: true, name: 'Rally', uuid: ORIGIN };
+		const rule = new ApplyConditionRule(
+			{ type: 'applyCondition', id, condition: 'smoldering', trigger } as never,
+			{ parent: item as never, strict: false },
+		);
+		Object.assign(rule, {
+			id,
+			condition: 'smoldering',
+			trigger,
+			attackOrigin: 'rally',
+			originAttacker,
+		});
+		return rule;
+	}
+
+	function allyCard(isCritical: boolean) {
+		return new NimbleChatMessage({
+			type: 'object',
+			speaker: { actor: 'ally' },
+			flags: { [SYSTEM_ID]: { origin: { uuid: ORIGIN, identifier: 'rally' } } },
+			system: {
+				targets: [],
+				isCritical,
+				isMiss: false,
+				activation: { effects: [weaponDamage], targets: { count: 1, attackType: 'reach' } },
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	function stepIds(message: NimbleChatMessage): string[] {
+		return message.effectNodes
+			.flat()
+			.filter((node) => node.type === 'applyEffect')
+			.map((node) => node.id);
+	}
+
+	beforeEach(() => {
+		const owner: { uuid: string; rules: unknown[] } = { uuid: 'Actor.owner', rules: [] };
+		owner.rules.push(
+			ownerRule('hit-anyone', 'onHit', 'anyone', owner),
+			ownerRule('crit-anyone', 'onCrit', 'anyone', owner),
+			ownerRule('hit-self', 'onHit', 'self', owner),
+		);
+		const ally = { uuid: 'Actor.ally', rules: [] };
+		(globalThis as unknown as { game: Record<string, unknown> }).game.actors = {
+			get: (id: string) => (id === 'ally' ? ally : null),
+		};
+		globals().fromUuidSync = vi.fn((uuid: string) => (uuid === ORIGIN ? { actor: owner } : null));
+	});
+
+	afterEach(() => {
+		delete (globalThis as unknown as { game: Record<string, unknown> }).game.actors;
+	});
+
+	it('gets the hit step of the rule set to You and allies, and not the one set to You only', () => {
+		expect(stepIds(allyCard(false))).toEqual(['apply-condition-hit-anyone']);
+	});
+
+	it('gets the crit step of the rule set to You and allies on a crit', () => {
+		expect(stepIds(allyCard(true))).toEqual(['apply-condition-crit-anyone']);
 	});
 });

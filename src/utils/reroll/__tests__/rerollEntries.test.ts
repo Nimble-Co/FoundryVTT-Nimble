@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Predicate } from '../../../etc/Predicate.js';
+import { OfferAttackBonusRule } from '../../../models/rules/offerAttackBonus.js';
 import type {
 	IncomingReactionEntry,
 	RerollSide,
@@ -1361,5 +1363,96 @@ describe('a row that changes the crit dice, with Feature Effects off', () => {
 		expect(rows(effectRule('viciousDie', 'target'), { ...CRIT, vicious: true }, 'target')).toEqual(
 			[],
 		);
+	});
+});
+
+describe("an attack bonus row on an ally's attack made through another creature's item, with Feature Effects off", () => {
+	const ORIGIN = 'Actor.owner.Item.rally';
+	const throughRally = { ...MELEE, origin: { identifier: 'rally', uuid: ORIGIN } };
+
+	function ownerWith(originAttacker: string) {
+		const owner = { uuid: 'Actor.owner', rules: [] as unknown[] };
+		const item = {
+			uuid: ORIGIN,
+			name: 'Rally',
+			isEmbedded: true,
+			actor: owner,
+			getDomain: () => new Set<string>(),
+		};
+		const rule = new OfferAttackBonusRule(
+			{ type: 'offerAttackBonus' } as never,
+			{
+				parent: item,
+				strict: false,
+			} as never,
+		);
+		Object.assign(rule, {
+			type: 'offerAttackBonus',
+			id: 'heavy',
+			disabled: false,
+			label: 'Heavy Hand',
+			offerSource: 'rally',
+			originAttacker,
+			damage: '0',
+			primaryDie: 1,
+			predicate: new Predicate({}),
+		});
+		Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
+		owner.rules.push(rule);
+		Object.assign(item, { rules: new Map([['heavy', rule]]) });
+		testGlobals.fromUuidSync = vi.fn((uuid: string) => (uuid === ORIGIN ? item : null));
+		return rule;
+	}
+
+	beforeEach(() => setToggles({ 'automation.applyRuleEffects': false }));
+	afterEach(() => {
+		delete testGlobals.game.settings;
+		testGlobals.fromUuidSync = vi.fn();
+	});
+
+	it('gives the roller a row from the rule set to You and allies', () => {
+		const rule = ownerWith('anyone');
+		const attacker = actor('Actor.ally');
+
+		const { manual } = collectRerollEntries(context({ attacker, roll: throughRally }));
+
+		expect(manual).toEqual([
+			expect.objectContaining({
+				actorUuid: 'Actor.ally',
+				side: 'roller',
+				ruleId: 'heavy',
+				itemUuid: ORIGIN,
+			}),
+		]);
+		const found = testGlobals.fromUuidSync as (uuid: string) => unknown;
+		testGlobals.fromUuidSync = vi.fn((uuid: string) =>
+			uuid === 'Actor.ally' ? attacker : found(uuid),
+		);
+		const usable = usableRerollEntry(
+			manual[0] as IncomingReactionEntry,
+			context({ attacker, roll: throughRally }),
+			manual,
+		);
+		expect(usable).toMatchObject({ ok: true, rule });
+	});
+
+	it('gives no row from the rule set to You only', () => {
+		ownerWith('self');
+
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.ally'), roll: throughRally }),
+		);
+
+		expect(manual).toEqual([]);
+	});
+
+	it("gives no row twice on the owner's own attack", () => {
+		const rule = ownerWith('anyone');
+
+		const { manual } = collectRerollEntries(
+			context({ attacker: actor('Actor.owner', [rule as never]), roll: throughRally }),
+		);
+
+		expect(manual.map((entry) => entry.ruleId)).toEqual(['heavy']);
 	});
 });

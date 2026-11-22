@@ -18,6 +18,17 @@
 				"poolIdentifier": "coordinated-strike-uses",
 				"dieSize": null,
 				"maxDelta": "1"
+			},
+			{
+				"type": "grantTargetBonus",
+				"disabled": false,
+				"id": "experienced-commander-ally",
+				"identifier": "",
+				"label": "Experienced Commander: Coordinated Strike reaches 1 more ally",
+				"predicate": {},
+				"priority": 1,
+				"grantIdentifier": "coordinated-strike",
+				"count": 1
 			}
 		],
 		"activation": {

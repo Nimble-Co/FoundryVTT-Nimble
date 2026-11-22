@@ -10,6 +10,7 @@ import {
 	RESULT_CHANGES,
 	ROLL_USES,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
+import { GRANTED_WEAPON_KINDS } from '../rules/grantActivation.js';
 
 const { fields } = foundry.data;
 
@@ -97,8 +98,40 @@ export const grantedActionOffers = () => ({
 			}),
 			ruleId: new fields.StringField({ required: true, nullable: false, initial: '' }),
 			sourceItemUuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			free: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			spendsReaction: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			weaponKind: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: [...GRANTED_WEAPON_KINDS],
+			}),
+			allowsCantrips: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			ignoresRushed: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+			condition: new fields.StringField({ required: true, nullable: false, initial: '' }),
+			targetCount: new fields.NumberField({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 0,
+				initial: 0,
+			}),
+			targetedCount: new fields.NumberField({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 0,
+				initial: 0,
+			}),
 			used: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 			usedBy: new fields.StringField({ required: false, nullable: true, initial: null }),
+			usedWith: new fields.SchemaField(
+				{
+					name: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+				},
+				{ required: false, nullable: true, initial: null },
+			),
 		}),
 		{ required: true, nullable: false, initial: [] },
 	),

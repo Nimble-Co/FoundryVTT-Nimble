@@ -5,7 +5,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "attackRollMode",
+				"disabled": false,
+				"id": "as-one-advantage",
+				"identifier": "",
+				"label": "As One!",
+				"predicate": {},
+				"priority": 1,
+				"advantage": 1,
+				"ignoreDisadvantage": true,
+				"attackOrigin": "coordinated-strike",
+				"originAttacker": "anyone"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

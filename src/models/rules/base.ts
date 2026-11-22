@@ -89,8 +89,12 @@ interface ItemUsedContext {
 interface ActivationCardContext {
 	isCritical: boolean;
 	isMiss: boolean;
+	/** False for a card with no attack roll, which no attack outcome reaches. */
+	isAttack?: boolean;
 	/** The item the card was made with, when it can be found. */
 	sourceItem?: { type?: string } | null;
+	/** The identifier of the feature the attack was made through. */
+	origin?: string;
 }
 
 // Context passed to onItemActivated — fires once when an item is used, regardless of

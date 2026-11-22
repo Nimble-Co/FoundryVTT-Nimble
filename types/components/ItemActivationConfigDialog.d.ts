@@ -99,6 +99,8 @@ export interface ItemActivationConfigDialogProps {
 	rushedAttack?: number;
 	/** the actions that this use spends */
 	spendsActions?: number;
+	/** What makes this attack free, said in the window. */
+	attackNote?: string;
 	/** The cast ignores disadvantage by itself, so it spends no Held Change that does. */
 	ignoreDisadvantage?: boolean;
 	/** What this use spends or sacrifices through Spend or Sacrifice rules. */
@@ -107,4 +109,6 @@ export interface ItemActivationConfigDialogProps {
 	useOptionGroups?: UseOptionGroup[];
 	/** The identifier of the feature the attack is made through. */
 	attackOrigin?: string;
+	/** The extra targets share one attack, so the first target decides. */
+	sharesOneAttack?: boolean;
 }

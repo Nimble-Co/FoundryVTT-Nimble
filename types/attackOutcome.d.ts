@@ -47,4 +47,6 @@ export interface OfferBonus {
 	itemUuid: string;
 	damage: number;
 	primaryDie: number;
+	/** The damage has this type, as its own damage. Absent: the type of the attack. */
+	damageType?: string;
 }
