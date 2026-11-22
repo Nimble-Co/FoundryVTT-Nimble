@@ -83,7 +83,7 @@ describe('DefendOptionRule', () => {
 	it('limits a once-per-turn option with one key for every option on its item', () => {
 		const slipstream = makeRule({ oncePerTurn: true }).optionCost;
 		const whirl = makeRule({ id: 'other', oncePerTurn: true }).optionCost;
-		expect(slipstream.turnUseKey).toBe('Actor.hero.Item.burst:defendOption');
+		expect(slipstream.turnUseKey).toBe('Actor.hero.Item.burst:oncePerTurn');
 		expect(whirl.turnUseKey).toBe(slipstream.turnUseKey);
 		expect(makeRule().optionCost.turnUseKey).toBeUndefined();
 	});

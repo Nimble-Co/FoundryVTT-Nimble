@@ -13,7 +13,7 @@ The Defend Option rule is something the owner can do with a Defend. It shows in 
 
 **Only when the attacker is** tests the creature that made the attack. It sees the attacker's `target:` tags and the marks the owner put on it, so `target:quarry` means "against my quarry".
 
-The cost (charges, actions, mana, Wounds, and **Expend a dice pool**) is spent when the player confirms. **Expend a dice pool** expends every die of that pool and needs at least one die. **Once per turn** gives one use each turn, of any creature; all the Defend Options on the same item share it. **Undo** on the target row gives it back.
+The cost (charges, actions, mana, Wounds, and **Expend a dice pool**) is spent when the player confirms. **Expend a dice pool** expends every die of that pool and needs at least one die. **Once per turn** gives one use each turn, of any creature; all the Defend Options on the same item share it, and so does the use of the item when its Charge Consumer is **1/turn**. **Undo** on the target row gives it back.
 
 **Example: Pocket Sand.** When you Defend against a melee attack, Blind the attacker and force them to reroll the attack.
 

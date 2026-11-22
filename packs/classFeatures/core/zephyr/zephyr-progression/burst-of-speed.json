@@ -88,33 +88,6 @@
 				"woundCost": 0
 			},
 			{
-				"type": "chargePool",
-				"disabled": false,
-				"id": "ClbjfB2OWZZXVd6Q",
-				"identifier": "burst-of-speed-turn",
-				"label": "Burst of Speed (once per turn)",
-				"predicate": {},
-				"priority": 1,
-				"scope": "item",
-				"max": "1",
-				"dieSize": null,
-				"initial": "max",
-				"hidden": true,
-				"showAsResource": false,
-				"recoveries": [
-					{
-						"trigger": "onAnyTurnStart",
-						"mode": "refresh",
-						"value": "1"
-					},
-					{
-						"trigger": "encounterEnd",
-						"mode": "refresh",
-						"value": "1"
-					}
-				]
-			},
-			{
 				"type": "chargeConsumer",
 				"disabled": false,
 				"id": "uZPfB6jB1tCnB5Zw",
@@ -126,21 +99,8 @@
 				"poolScope": "item",
 				"costMode": "fixed",
 				"cost": "1",
-				"maxCost": ""
-			},
-			{
-				"type": "chargeConsumer",
-				"disabled": false,
-				"id": "EggZnKhKARvMoNYq",
-				"identifier": "",
-				"label": "",
-				"predicate": {},
-				"priority": 4,
-				"poolIdentifier": "burst-of-speed-turn",
-				"poolScope": "item",
-				"costMode": "fixed",
-				"cost": "1",
-				"maxCost": ""
+				"maxCost": "",
+				"oncePerTurn": true
 			},
 			{
 				"type": "grantActivation",

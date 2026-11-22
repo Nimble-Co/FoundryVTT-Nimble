@@ -108,6 +108,7 @@ type ChargeConsumerRuleLike = {
 	cost?: string;
 	maxCost?: string;
 	allowFree?: boolean;
+	oncePerTurn?: boolean;
 	/**
 	 * Optional because the structural type is also satisfied by plain objects in
 	 * tests; real rule instances always inherit it from the base rule class.
@@ -159,6 +160,8 @@ type ChargeConsumerState = {
 	maxCost: number | null;
 	/** The player can use the item with no charge from this consumer. */
 	allowFree?: true;
+	/** The use spends the item's 1/turn use. */
+	oncePerTurn?: true;
 };
 
 type ChargeContext = {
@@ -184,7 +187,8 @@ type ChargeValidationFailure = {
 		| 'insufficientCharges'
 		| 'consumptionBlocked'
 		| 'conflictingConsumers'
-		| 'unofferableSpend';
+		| 'unofferableSpend'
+		| 'usedThisTurn';
 	poolIdentifier: string;
 	poolLabel: string;
 	required: number;

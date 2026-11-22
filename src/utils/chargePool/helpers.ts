@@ -609,6 +609,7 @@ function getChargeConsumers(
 					? resolveFormulaToInteger(actor, maxCostFormula, ruleOwner(consumerRule))
 					: null,
 			...(allowFree ? { allowFree } : {}),
+			...(consumerRule.oncePerTurn === true ? { oncePerTurn: true as const } : {}),
 		});
 	}
 

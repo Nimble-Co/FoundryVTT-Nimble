@@ -2211,6 +2211,10 @@
 				"allowFree": {
 					"label": "Use without a charge",
 					"hint": "The roll window gets a tick, off at first, to use the item and spend no charge, for a use that another feature makes free. The system changes nothing else of that use: what a free use does not give stays with the player."
+				},
+				"oncePerTurn": {
+					"label": "1/turn",
+					"hint": "One use each turn, of any creature. The 1/turn options on the same item, such as a Defend option, share it. Outside combat there is no limit."
 				}
 			},
 			"resourceCost": {
@@ -3419,7 +3423,7 @@
 				},
 				"oncePerTurn": {
 					"label": "1/turn",
-					"hint": "One use each turn, of any creature. The options on the same item share it."
+					"hint": "One use each turn, of any creature. The 1/turn options on the same item share it, and so does the use of the item when its charge is 1/turn."
 				},
 				"alsoInterpose": {
 					"label": "Also when you Interpose",
@@ -4369,7 +4373,8 @@
 				"poolMissing": "{item} requires the charge pool \"{pool}\", but it is not available.",
 				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available.",
 				"conflictingConsumers": "{item} asks for more than one player-chosen spend from the charge pool \"{pool}\". Give each variable consumer its own pool, or make all but one a fixed cost.",
-				"unofferableSpend": "{item} cannot ask how much to spend from the charge pool \"{pool}\". A hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell asks about tier instead."
+				"unofferableSpend": "{item} cannot ask how much to spend from the charge pool \"{pool}\". A hidden pool has no prompt to show, a maximum cost below the minimum leaves no legal amount, and a spell asks about tier instead.",
+				"usedThisTurn": "{item} is 1/turn, and you used it or one of its 1/turn options this turn."
 			}
 		},
 		"dicePoolTracker": {

@@ -210,6 +210,16 @@ describe('itemRow', () => {
 			expect(view.summary).toBe(reason);
 		});
 
+		it('says Used this turn when the 1/turn use of the item is spent', () => {
+			const hero = dicePoolHero();
+			const gate = { code: 'usedThisTurn' as const, poolLabel: '', poolMax: 0, per: null };
+			const context = dicePoolContext({ itemState: { rage: itemState({ gate }) } });
+
+			expect(itemRow(hero, item(hero, 'rage'), context).use).toMatchObject({
+				reason: `${SHARED}.reason.usedThis {"per":"${SHARED}.per.turn"}`,
+			});
+		});
+
 		it('names the pool when there is not enough in it', () => {
 			const hero = dicePoolHero();
 			const gate = {

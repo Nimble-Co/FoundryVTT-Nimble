@@ -202,6 +202,8 @@ function gateReason(gate: ChargeGateLike, context: HeroSheetContext): string {
 		if (per) return format(`${SHARED}.reason.noUsesUntil`, { per });
 		return format(`${SHARED}.reason.notEnough`, { pool: gate.poolLabel });
 	}
+	if (gate.code === 'usedThisTurn')
+		return format(`${SHARED}.reason.usedThis`, { per: context.localize(`${SHARED}.per.turn`) });
 	if (gate.code === 'poolMissing')
 		return format(`${SHARED}.reason.poolMissing`, { pool: gate.poolLabel });
 	return format(`${SHARED}.reason.cannotPay`, { pool: gate.poolLabel });

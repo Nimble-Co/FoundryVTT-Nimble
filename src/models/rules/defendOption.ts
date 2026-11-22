@@ -1,5 +1,6 @@
 import type { UseCost } from '#types/useCost.d.ts';
 import type { Predicate } from '../../etc/Predicate.js';
+import { itemTurnUseKey } from '../../utils/combat/perTurnUse.js';
 import {
 	ATTACK_DELIVERY_FILTERS,
 	type AttackDeliveryFilter,
@@ -281,8 +282,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 			woundCost: Math.max(0, Number(this.woundCost) || 0),
 			actionCost: Math.max(0, Number(this.actionCost) || 0),
 			heroicReaction: '',
-			// One turn use for every option of the item, as a feature's 1/turn reads.
-			...(this.oncePerTurn ? { turnUseKey: `${this.parentDocument.uuid ?? ''}:defendOption` } : {}),
+			...(this.oncePerTurn ? { turnUseKey: itemTurnUseKey(this.parentDocument.uuid) } : {}),
 		};
 	}
 

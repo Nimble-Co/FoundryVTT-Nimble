@@ -170,21 +170,16 @@ describe('Burst of Speed', () => {
 		expect(source.system.identifier).toBe('burst-of-speed');
 	});
 
-	it('spends 1 Burst of Speed, once each turn', () => {
-		const consumers = rulesOfType('chargeConsumer');
-		const turnPool = rulesOfType('chargePool').find((rule) => rule.hidden === true);
-
-		expect(turnPool).toMatchObject({
-			max: '1',
-			initial: 'max',
-			recoveries: expect.arrayContaining([
-				{ trigger: 'onAnyTurnStart', mode: 'refresh', value: '1' },
+	it('spends 1 Burst of Speed, with one 1/turn limit shared with its Defend options', () => {
+		expect(rulesOfType('chargePool').map((rule) => rule.identifier)).toEqual(['burst-of-speed']);
+		expect(
+			rulesOfType('chargeConsumer').map((rule) => [
+				rule.poolIdentifier,
+				rule.cost,
+				rule.oncePerTurn,
 			]),
-		});
-		expect(consumers.map((rule) => [rule.poolIdentifier, rule.cost])).toEqual([
-			['burst-of-speed', '1'],
-			[turnPool?.identifier, '1'],
-		]);
+		).toEqual([['burst-of-speed', '1', true]]);
+		expect(rulesOfType('defendOption').map((rule) => rule.oncePerTurn)).toEqual([true, true]);
 	});
 
 	it('keeps Slipstream and Whirling Defense as they are', () => {
