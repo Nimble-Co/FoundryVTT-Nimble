@@ -15,9 +15,9 @@ const GRANTED_ACTIVATION_TYPES = ['weaponAttack'] as const;
 const GRANTED_ACTIVATION_TRIGGERS = ['onActivation', 'afterMove', 'onInterpose'] as const;
 
 /** What the card checks at the Stop of the move, to warn when it fails. */
-const AFTER_MOVE_CHECKS = [
+export const AFTER_MOVE_CHECKS = [
 	'none',
-	'adjacentToQuarry',
+	'adjacentToMarked',
 	'adjacentEnemies',
 	'adjacentToCondition',
 ] as const;
@@ -128,6 +128,17 @@ function schema() {
 				showWhen: afterMove,
 			}),
 		),
+		afterMoveFlagKey: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'quarry',
+				label: key('afterMoveFlagKey', 'label'),
+				hint: key('afterMoveFlagKey', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					afterMove(data) && data.afterMoveCheck === 'adjacentToMarked',
+			}),
+		),
 		afterMoveMinEnemies: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -201,6 +212,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	declare ignoresRushed: boolean;
 	declare condition: string;
 	declare afterMoveCheck: AfterMoveCheck;
+	declare afterMoveFlagKey: string;
 	declare afterMoveMinEnemies: number;
 	declare afterMoveStatus: string;
 	declare emptyPoolIdentifier: string;
@@ -228,8 +240,9 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 				['condition', 'string'],
 				[
 					'afterMoveCheck',
-					'"none" | "adjacentToQuarry" | "adjacentEnemies" | "adjacentToCondition"',
+					'"none" | "adjacentToMarked" | "adjacentEnemies" | "adjacentToCondition"',
 				],
+				['afterMoveFlagKey', 'string'],
 				['afterMoveMinEnemies', 'number'],
 				['afterMoveStatus', 'string'],
 				['emptyPoolIdentifier', 'string'],

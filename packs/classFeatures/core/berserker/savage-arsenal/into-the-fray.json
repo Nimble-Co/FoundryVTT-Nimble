@@ -27,6 +27,7 @@
 				"ignoresRushed": false,
 				"condition": "If you land adjacent to at least 2 enemies, make an attack against 1 of them for free.",
 				"afterMoveCheck": "adjacentEnemies",
+				"afterMoveFlagKey": "quarry",
 				"afterMoveMinEnemies": 2,
 				"afterMoveStatus": "",
 				"emptyPoolIdentifier": ""

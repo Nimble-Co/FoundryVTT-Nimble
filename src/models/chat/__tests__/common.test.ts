@@ -44,6 +44,7 @@ describe('grantedActionOffers schema factory', () => {
 			'targetedCount',
 			'afterMove',
 			'afterMoveCheck',
+			'afterMoveFlagKey',
 			'afterMoveMinEnemies',
 			'afterMoveStatus',
 			'used',

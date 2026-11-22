@@ -10,7 +10,7 @@ import {
 	RESULT_CHANGES,
 	ROLL_USES,
 } from '../../utils/incomingReactions/incomingReactionEntry.js';
-import { GRANTED_WEAPON_KINDS } from '../rules/grantActivation.js';
+import { AFTER_MOVE_CHECKS, GRANTED_WEAPON_KINDS } from '../rules/grantActivation.js';
 
 const { fields } = foundry.data;
 
@@ -128,7 +128,12 @@ export const grantedActionOffers = () => ({
 				required: true,
 				nullable: false,
 				initial: 'none',
-				choices: ['none', 'adjacentToQuarry', 'adjacentEnemies', 'adjacentToCondition'],
+				choices: [...AFTER_MOVE_CHECKS],
+			}),
+			afterMoveFlagKey: new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: 'quarry',
 			}),
 			afterMoveMinEnemies: new fields.NumberField({
 				required: true,

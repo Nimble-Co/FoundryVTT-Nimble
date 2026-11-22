@@ -490,5 +490,37 @@ describe('GrantedActionOffers', () => {
 			expect(screen.getByText('Sir Brannon is not next to 2 enemies.')).toBeTruthy();
 			expect(attackButton().disabled).toBe(false);
 		});
+
+		it('checks again where the token stopped when a token moves while the card shows', async () => {
+			const g = globalThis as Record<string, any>;
+			const scene = { grid: { isGridless: true, size: 100 }, tokens: [] as unknown[] };
+			const token = (id: string, x: number, y: number, disposition: number) => ({
+				id,
+				x,
+				y,
+				width: 1,
+				height: 1,
+				disposition,
+				actor: { uuid: `Actor.${id}` },
+				parent: scene,
+			});
+			const mover = token('hero', 0, 0, 1);
+			scene.tokens.push(mover, token('g2', 500, 0, -1), token('g3', 500, 100, -1));
+
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('taken', mover) },
+			});
+			const warning = 'Sir Brannon is adjacent to 0 of the 2 enemies needed.';
+			expect(screen.getByText(warning)).toBeTruthy();
+
+			mover.x = 400;
+			for (const [hook, listener] of (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls) {
+				if (hook === 'updateToken') (listener as () => void)();
+			}
+			await tick();
+
+			expect(screen.queryByText(warning)).toBeNull();
+			expect(attackButton().disabled).toBe(false);
+		});
 	});
 });

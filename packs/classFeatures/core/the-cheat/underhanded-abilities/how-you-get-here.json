@@ -26,6 +26,7 @@
 				"ignoresRushed": false,
 				"condition": "Make a melee attack against the Distracted target you appear next to.",
 				"afterMoveCheck": "adjacentToCondition",
+				"afterMoveFlagKey": "quarry",
 				"afterMoveMinEnemies": 1,
 				"afterMoveStatus": "distracted",
 				"emptyPoolIdentifier": ""
@@ -70,7 +71,7 @@
 					"recipient": "self",
 					"distance": "4",
 					"distanceBySize": {},
-					"ignoreDifficultTerrain": false,
+					"ignoreDifficultTerrain": true,
 					"direction": "any",
 					"parentContext": null,
 					"parentNode": null

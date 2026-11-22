@@ -57,6 +57,8 @@ interface GrantedActionOffer {
 	afterMove: boolean;
 	/** What the card checks at the Stop, to warn when it fails. */
 	afterMoveCheck: AfterMoveCheck;
+	/** The mark list an adjacent creature must be on. */
+	afterMoveFlagKey: string;
 	afterMoveMinEnemies: number;
 	/** The condition an adjacent creature must have. */
 	afterMoveStatus: string;
@@ -97,6 +99,7 @@ interface GrantActivationRuleLike {
 	condition?: string;
 	targetCount?: number;
 	afterMoveCheck?: AfterMoveCheck;
+	afterMoveFlagKey?: string;
 	afterMoveMinEnemies?: number;
 	afterMoveStatus?: string;
 	emptyPoolIdentifier?: string;
@@ -155,6 +158,7 @@ function offerOf(
 		targetedCount: targeted,
 		afterMove: rule.trigger === 'afterMove',
 		afterMoveCheck: rule.trigger === 'afterMove' ? (rule.afterMoveCheck ?? 'none') : 'none',
+		afterMoveFlagKey: rule.afterMoveFlagKey ?? 'quarry',
 		afterMoveMinEnemies: rule.afterMoveMinEnemies ?? 1,
 		afterMoveStatus: rule.afterMoveStatus ?? '',
 		used: false,

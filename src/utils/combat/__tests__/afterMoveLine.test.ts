@@ -136,6 +136,7 @@ function makeScene() {
 
 const line = (check: string, extra: Record<string, unknown> = {}) => ({
 	afterMoveCheck: check,
+	afterMoveFlagKey: 'quarry',
 	afterMoveMinEnemies: 1,
 	afterMoveStatus: '',
 	...extra,
@@ -149,25 +150,43 @@ describe('afterMoveWarning', () => {
 		expect(afterMoveWarning(line('none') as never, hero as never, 'Hero')).toBeNull();
 	});
 
-	it('warns when the user did not stop adjacent to their quarry', () => {
+	it('warns when the user did not stop adjacent to a creature they marked', () => {
 		const { add } = makeScene();
 		const quarry = { quarry: [{ actorUuid: 'Actor.wolf', tokenUuid: null, name: 'Wolf' }] };
 		const hero = add('hero', 0, 0, { disposition: 1, flags: quarry });
 		add('wolf', 3, 0);
 		add('goblin', 1, 0);
 
-		expect(afterMoveWarning(line('adjacentToQuarry') as never, hero as never, 'Hero')).toBe(
+		expect(afterMoveWarning(line('adjacentToMarked') as never, hero as never, 'Hero')).toBe(
 			'Hero is not next to their quarry.',
 		);
 	});
 
-	it('says nothing when the user stopped adjacent to their quarry', () => {
+	it('says nothing when the user stopped adjacent to a creature they marked', () => {
 		const { add } = makeScene();
 		const quarry = { quarry: [{ actorUuid: 'Actor.wolf', tokenUuid: null, name: 'Wolf' }] };
 		const hero = add('hero', 0, 0, { disposition: 1, flags: quarry });
 		add('wolf', 1, 1);
 
-		expect(afterMoveWarning(line('adjacentToQuarry') as never, hero as never, 'Hero')).toBeNull();
+		expect(afterMoveWarning(line('adjacentToMarked') as never, hero as never, 'Hero')).toBeNull();
+	});
+
+	it('reads the mark the line names', () => {
+		const { add } = makeScene();
+		const marks = {
+			quarry: [{ actorUuid: 'Actor.goblin', tokenUuid: null, name: 'Goblin' }],
+			hex: [{ actorUuid: 'Actor.wolf', tokenUuid: null, name: 'Wolf' }],
+		};
+		const hero = add('hero', 0, 0, { disposition: 1, flags: marks });
+		add('goblin', 1, 0);
+		const check = line('adjacentToMarked', { afterMoveFlagKey: 'hex' });
+
+		expect(afterMoveWarning(check as never, hero as never, 'Hero')).toBe(
+			'Hero is not adjacent to a creature with their hex mark.',
+		);
+
+		add('wolf', 0, 1);
+		expect(afterMoveWarning(check as never, hero as never, 'Hero')).toBeNull();
 	});
 
 	it('counts the adjacent enemies against the number the line needs', () => {

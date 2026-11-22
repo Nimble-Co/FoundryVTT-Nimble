@@ -309,9 +309,11 @@ describe.each([
 		name: 'Roll & Strike',
 		path: 'classFeatures/core/hunter/hunter-progression/roll-and-strike.json',
 		distance: '@speed',
+		teleport: false,
 		line: {
 			weaponKind: 'melee',
-			afterMoveCheck: 'adjacentToQuarry',
+			afterMoveCheck: 'adjacentToMarked',
+			afterMoveFlagKey: 'quarry',
 			condition: 'If you end adjacent to your quarry, make a melee attack against them for free.',
 		},
 	},
@@ -319,6 +321,7 @@ describe.each([
 		name: 'Into the Fray',
 		path: 'classFeatures/core/berserker/savage-arsenal/into-the-fray.json',
 		distance: '2 * @dexterity',
+		teleport: false,
 		line: {
 			weaponKind: 'any',
 			afterMoveCheck: 'adjacentEnemies',
@@ -331,6 +334,7 @@ describe.each([
 		name: "How'd YOU get here?!",
 		path: 'classFeatures/core/the-cheat/underhanded-abilities/how-you-get-here.json',
 		distance: '4',
+		teleport: true,
 		line: {
 			weaponKind: 'melee',
 			afterMoveCheck: 'adjacentToCondition',
@@ -338,7 +342,7 @@ describe.each([
 			condition: 'Make a melee attack against the Distracted target you appear next to.',
 		},
 	},
-])('$name', ({ path, distance, line }) => {
+])('$name', ({ path, distance, teleport, line }) => {
 	const source = JSON.parse(readFileSync(resolve(__dirname, '../../../../packs', path), 'utf8'));
 	const feature = packFeature(path, 'Actor.hero');
 
@@ -349,6 +353,7 @@ describe.each([
 				kind: 'free',
 				recipient: 'self',
 				distance,
+				ignoreDifficultTerrain: teleport,
 				parentNode: null,
 			}),
 		]);

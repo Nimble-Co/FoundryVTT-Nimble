@@ -7,13 +7,11 @@ import { speakerTokenUuid } from '../movement/movementOffers.js';
 import { spacesBetween } from '../movement/spacesBetween.js';
 import { flattenEffectsTree } from '../treeManipulation/flattenEffectsTree.js';
 
-/** The mark list that holds a Hunter's quarry. */
-const QUARRY_FLAG_KEY = 'quarry';
-
 const WARNINGS = 'NIMBLE.chat.grantedActionOffers.afterMoveWarnings';
 
 export interface AfterMoveLineCheck {
 	afterMoveCheck: AfterMoveCheck;
+	afterMoveFlagKey: string;
 	afterMoveMinEnemies: number;
 	afterMoveStatus: string;
 }
@@ -67,12 +65,10 @@ function adjacentTokens(mover: CheckedToken): CheckedToken[] {
 	);
 }
 
-function quarryUuids(mover: CheckedToken): Set<string> {
+function markedUuids(mover: CheckedToken, flagKey: string): Set<string> {
 	const actor = mover.actor;
 	if (!actor?.getFlag) return new Set();
-	const entries = readToggledEffects(actor as { getFlag: typeof actor.getFlag & {} })[
-		QUARRY_FLAG_KEY
-	];
+	const entries = readToggledEffects(actor as { getFlag: typeof actor.getFlag & {} })[flagKey];
 	return new Set((Array.isArray(entries) ? entries : []).map((entry) => entry.actorUuid));
 }
 
@@ -93,10 +89,11 @@ export function afterMoveWarning(
 	if (!mover || line.afterMoveCheck === 'none') return null;
 	const adjacent = adjacentTokens(mover);
 	switch (line.afterMoveCheck) {
-		case 'adjacentToQuarry': {
-			const quarry = quarryUuids(mover);
-			const found = adjacent.some((token) => quarry.has(token.actor?.uuid ?? ''));
-			return found ? null : localize(`${WARNINGS}.adjacentToQuarry`, { name });
+		case 'adjacentToMarked': {
+			const mark = line.afterMoveFlagKey.trim();
+			const marked = markedUuids(mover, mark);
+			const found = adjacent.some((token) => marked.has(token.actor?.uuid ?? ''));
+			return found ? null : localize(`${WARNINGS}.adjacentToMarked`, { name, mark });
 		}
 		case 'adjacentEnemies': {
 			const count = adjacent.filter(

@@ -731,7 +731,7 @@
 				"extraTargetAnyReach": "{count} more ({source})",
 				"noEligibleItems": "No weapon to attack with.",
 				"afterMoveWarnings": {
-					"adjacentToQuarry": "{name} is not next to their quarry.",
+					"adjacentToMarked": "{name} is not next to their {mark}.",
 					"adjacentEnemies": "{name} is not next to {min} enemies.",
 					"adjacentToCondition": "{name} is not next to a {condition} creature."
 				},
@@ -2674,10 +2674,14 @@
 					"hint": "What the card checks where the user stops. When the check fails, the line shows a warning. The Attack button stays.",
 					"choices": {
 						"none": "No check",
-						"adjacentToQuarry": "Adjacent to the quarry",
+						"adjacentToMarked": "Adjacent to a marked creature",
 						"adjacentEnemies": "Adjacent to enough enemies",
 						"adjacentToCondition": "Adjacent to a creature with a condition"
 					}
+				},
+				"afterMoveFlagKey": {
+					"label": "Mark",
+					"hint": "The name of the mark, as the Mark Target rule writes it. For example: quarry."
 				},
 				"afterMoveMinEnemies": {
 					"label": "Enemies",

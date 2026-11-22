@@ -39,7 +39,7 @@ The line is only for the Zephyr, even when an enemy is targeted. An Extra Target
 - **Check at the end of the move** → `Adjacent to enough enemies`
 - **Enemies** → `2`
 
-The item's card also has a Move node for the user. The line is only for the user, and shows once the move from the card ends, whether the user made it or moved another way. With **Movement Count** or **Pushes, Pulls and Moves for Free** off, it shows at once. Where the check fails at the end of the move, the line shows a warning, and the **Attack** button stays. The other checks are `Adjacent to the quarry` and `Adjacent to a creature with a condition` (pick the condition).
+The item's card also has a Move node for the user. The line is only for the user, and shows once the move from the card ends, whether the user made it or moved another way. With **Movement Count** or **Pushes, Pulls and Moves for Free** off, it shows at once. Where the check fails at the end of the move, the line shows a warning, and the **Attack** button stays. The other checks are `Adjacent to a marked creature` (name the **Mark**, such as `quarry`, as the Mark Target rule writes it) and `Adjacent to a creature with a condition` (pick the condition).
 
 **Needs an empty pool** names a charge pool. When the item is used while that pool has charges, a warning shows and the use goes on. Roll & Strike uses it for Thrill of the Hunt.
 

@@ -180,6 +180,16 @@ function usedWithOf(groups: ChoiceGroups, choice: string): GrantedActionOfferUse
 export function createGrantedActionOffersState(getMessage: () => NimbleChatMessage) {
 	let busy = $state(false);
 	const chosenByOffer = $state<Record<string, string>>({});
+	let tokenVersion = $state(0);
+
+	$effect(() => {
+		const hookId = Hooks.on('updateToken', () => {
+			tokenVersion += 1;
+		});
+		return () => {
+			Hooks.off('updateToken', hookId);
+		};
+	});
 
 	const offers = $derived(
 		(getMessage()?.reactive?.system as { grantedActionOffers?: GrantedActionOffer[] })
@@ -205,6 +215,7 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 	/** The warning of a line whose check failed where its user stopped, or null. */
 	function getAfterMoveWarning(offer: GrantedActionOffer): string | null {
 		if (!offer.afterMove) return null;
+		void tokenVersion;
 		const uuid = speakerTokenUuid(getMessage() as unknown as OfferCard);
 		const mover = uuid
 			? fromUuidSync(uuid as Parameters<typeof fromUuidSync>[0], { strict: false })

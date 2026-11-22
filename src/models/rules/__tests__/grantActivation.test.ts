@@ -45,6 +45,7 @@ describe('GrantActivationRule', () => {
 			expect(schema.includesTargets?.options.initial).toBe(true);
 			expect(schema.targetCount?.options.initial).toBe(0);
 			expect(schema.afterMoveCheck?.options.initial).toBe('none');
+			expect(schema.afterMoveFlagKey?.options.initial).toBe('quarry');
 			expect(schema.emptyPoolIdentifier?.options.initial).toBe('');
 		});
 
@@ -55,7 +56,7 @@ describe('GrantActivationRule', () => {
 			>;
 			expect(Object.keys(schema.afterMoveCheck?.choices ?? {})).toEqual([
 				'none',
-				'adjacentToQuarry',
+				'adjacentToMarked',
 				'adjacentEnemies',
 				'adjacentToCondition',
 			]);
@@ -63,6 +64,12 @@ describe('GrantActivationRule', () => {
 				(schema[field]?.options.showWhen as (d: object) => boolean)(data);
 			expect(shows('afterMoveCheck', { trigger: 'onActivation' })).toBe(false);
 			expect(shows('afterMoveCheck', { trigger: 'afterMove' })).toBe(true);
+			expect(
+				shows('afterMoveFlagKey', { trigger: 'afterMove', afterMoveCheck: 'adjacentToMarked' }),
+			).toBe(true);
+			expect(
+				shows('afterMoveFlagKey', { trigger: 'afterMove', afterMoveCheck: 'adjacentEnemies' }),
+			).toBe(false);
 			expect(
 				shows('afterMoveMinEnemies', { trigger: 'afterMove', afterMoveCheck: 'adjacentEnemies' }),
 			).toBe(true);

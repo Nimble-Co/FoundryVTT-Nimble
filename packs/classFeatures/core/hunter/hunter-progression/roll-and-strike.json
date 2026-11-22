@@ -25,7 +25,8 @@
 				"spendsReaction": false,
 				"ignoresRushed": false,
 				"condition": "If you end adjacent to your quarry, make a melee attack against them for free.",
-				"afterMoveCheck": "adjacentToQuarry",
+				"afterMoveCheck": "adjacentToMarked",
+				"afterMoveFlagKey": "quarry",
 				"afterMoveMinEnemies": 1,
 				"afterMoveStatus": "",
 				"emptyPoolIdentifier": "thrill-of-the-hunt"
