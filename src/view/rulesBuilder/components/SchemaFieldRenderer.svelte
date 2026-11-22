@@ -348,7 +348,7 @@
 				<i class="nimble-hint__icon fa-solid fa-circle-exclamation"></i>
 				<span>
 					Field <code>{name}</code> uses an unsupported ArrayField element type. The renderer's
-					closed widget catalog needs an extension to handle it — see
+					closed widget catalog needs an extension to handle it; see
 					<code>SchemaFieldRenderer.svelte</code>.
 				</span>
 			</div>

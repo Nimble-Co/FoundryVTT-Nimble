@@ -63,7 +63,7 @@ describe('collectSpeedBonuses', () => {
 		const items = [item('Barbarian', [{ type: 'speedBonus', value: '1', label: 'Fast Movement' }])];
 
 		expect(collectSpeedBonuses(items).walk).toEqual([
-			{ itemName: 'Barbarian — Fast Movement', value: 1 },
+			{ itemName: 'Barbarian: Fast Movement', value: 1 },
 		]);
 	});
 

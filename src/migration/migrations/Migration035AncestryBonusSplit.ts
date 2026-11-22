@@ -359,7 +359,7 @@ class Migration035AncestryBonusSplit extends MigrationBase {
 		if (descriptionIsStale) ancestry.system.description = strippedDescription;
 
 		console.log(
-			`Nimble Migration | ${source.name}: repaired ancestry "${ancestry.name}" against existing bonus "${existingBonus.name}" — dropped ${duplicated.length} duplicated rule(s)${
+			`Nimble Migration | ${source.name}: repaired ancestry "${ancestry.name}" against existing bonus "${existingBonus.name}": dropped ${duplicated.length} duplicated rule(s)${
 				orphaned.length > 0 ? `, kept ${orphaned.length} not found on it` : ''
 			}${descriptionIsStale ? ', stripped the trait description' : ''}`,
 		);

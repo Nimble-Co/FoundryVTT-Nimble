@@ -77,9 +77,15 @@ describe('GrantedActionOffers', () => {
 		});
 
 		const button = screen.getByRole('button');
-		expect(button.textContent).toContain('Weapon Attack');
-		expect(button.textContent).toContain('Granting Feature');
-		expect(button.textContent).toContain('Sir Brannon');
+		expect(button.textContent?.trim()).toBe('Sir Brannon: Weapon Attack (Granting Feature)');
+	});
+
+	it('leaves the source out of the label when the offer has none', () => {
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([{ ...createOffer(), label: '' }]) },
+		});
+
+		expect(screen.getByRole('button').textContent?.trim()).toBe('Sir Brannon: Weapon Attack');
 	});
 
 	it('expands into the recipient item list on click, with an empty state when no items qualify', async () => {

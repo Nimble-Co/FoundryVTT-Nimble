@@ -89,7 +89,7 @@ export function collectSpeedBonuses(
 			const labels = [...data.labels];
 			bonusesByType[movementType] ??= [];
 			bonusesByType[movementType].push({
-				itemName: labels.length > 0 ? `${item.name} — ${labels.join(', ')}` : item.name,
+				itemName: labels.length > 0 ? `${item.name}: ${labels.join(', ')}` : item.name,
 				value: data.value,
 			});
 		}

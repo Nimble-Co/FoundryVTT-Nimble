@@ -705,6 +705,8 @@
 			"grantedActionOffers": {
 				"heading": "Granted Actions",
 				"weaponAttack": "Weapon Attack",
+				"offerLabel": "{name}: {heading} ({source})",
+				"offerLabelNoSource": "{name}: {heading}",
 				"noEligibleItems": "No eligible items to use.",
 				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
 				"currentTarget": "Target: {name}",
@@ -1165,7 +1167,7 @@
 		"ancestryOptions": {
 			"stepHeader": "Step 2{step}. {label}",
 			"variant": "Ancestry Variant",
-			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is — they are the same in play, and your sheet takes the name you pick.",
+			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is; they are the same in play, and your sheet takes the name you pick.",
 			"editVariant": "Edit Ancestry Variant Selection",
 			"sizeCategory": "Size Category",
 			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
@@ -1218,7 +1220,7 @@
 			"sizeOptionsEdit": "Edit sizes…",
 			"sizeOptionsHint": "Choose every size this ancestry can be. Two or more becomes a player choice.",
 			"sizeOptionsRemove": "Remove {size}",
-			"sizeOptionsRestored": "An ancestry needs at least one size — restored to {sizes}.",
+			"sizeOptionsRestored": "An ancestry needs at least one size, so it is restored to {sizes}.",
 			"sizeSummaryAll": "Players will choose any size, {first} through {last}.",
 			"sizeSummaryChoice": "Players will choose {sizes} during character creation.",
 			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation.",
@@ -1935,7 +1937,7 @@
 			"poolPickerNoActor": "This item is not on an actor, so its pools cannot be listed",
 			"templateValueHintBefore": "Use",
 			"templateValueHintAfter": "to insert the formula result.",
-			"pickerMissingMetaTooltip": "Description missing — flag for review.",
+			"pickerMissingMetaTooltip": "Description missing: flag for review.",
 			"formulaPlaceholderDice": "e.g. 1d6 + @level",
 			"formulaPlaceholderFlat": "e.g. 2 or 1d6 or @level",
 			"predicateKeyPlaceholder": "pick or type a tag key",
@@ -1948,7 +1950,7 @@
 			"predicateRangeAnd": "and",
 			"predicateIntro": "Restrict when this rule fires. Every row below must match the actor's tags for the rule to apply. Leave empty to always apply.",
 			"predicateAddCondition": "Add condition",
-			"predicatePreviewAlways": "No conditions — always applies.",
+			"predicatePreviewAlways": "No conditions: always applies.",
 			"predicatePreviewIncomplete": "Conditions are incomplete.",
 			"predicatePreviewMatches": "Currently matches the parent actor.",
 			"predicatePreviewNoMatch": "Currently does not match the parent actor.",
@@ -2079,7 +2081,7 @@
 				}
 			},
 			"actionCost": {
-				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only — a free reaction is still limited to once per round.",
+				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only: a free reaction is still limited to once per round.",
 				"applies": {
 					"label": "Applies to",
 					"hint": "item: price matching item activations. heroicReaction: price the selected heroic reactions instead."
@@ -2110,7 +2112,7 @@
 				}
 			},
 			"actionDelta": {
-				"description": "Grant or remove raw actions when this item is used — immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
+				"description": "Grant or remove raw actions when this item is used, immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
 				"value": {
 					"label": "Actions",
 					"hint": "How many actions to grant. A flat number or formula (e.g. @level). Negative values remove actions."
@@ -2136,7 +2138,7 @@
 				},
 				"trigger": {
 					"label": "Trigger",
-					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc."
+					"hint": "When this condition is applied: on hit/crit, on save fail, on turn start, etc."
 				},
 				"effectId": {
 					"label": "Effect",
@@ -2430,7 +2432,7 @@
 				}
 			},
 			"conditionalBonus": {
-				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically — the activation dialog surfaces the choice.",
+				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically; the activation dialog surfaces the choice.",
 				"doubleFor": {
 					"label": "Doubled for",
 					"hint": "The attacks with an item in this list double the damage of this bonus.",
@@ -2859,7 +2861,7 @@
 				}
 			},
 			"modifyPool": {
-				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",
+				"description": "Override or scale an existing dice or charge pool (by identifier), typically attached to a level-up feature to upgrade die size or expand max.",
 				"poolType": {
 					"label": "Pool type",
 					"hint": "Which subsystem to target: dice pools (rolled faces) or charge pools (counters)."
@@ -5639,7 +5641,7 @@
 			"addOnSave": "Add on-save effect",
 			"poolNode": {
 				"defaultLabel": "Pool",
-				"noChange": "- no change",
+				"noChange": "(no change)",
 				"atMax": "(pool at max)",
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
@@ -5859,8 +5861,8 @@
 			"duplicateDerivedFrom": "from {source}",
 			"duplicatePackagedDefault": "packaged default",
 			"duplicateOutcomeNone": "Keeps only the copy you already have.",
-			"duplicateOutcomePending": "Nothing selected yet — choose which copy to keep.",
-			"duplicateOutcomeOne": "Adds 1 feature — {name}.",
+			"duplicateOutcomePending": "Nothing selected yet: choose which copy to keep.",
+			"duplicateOutcomeOne": "Adds 1 feature: {name}.",
 			"duplicateOutcomeAll": "Adds {count} features. This feature will appear {count} times.",
 			"diffField": {
 				"description": "description",
@@ -6080,14 +6082,14 @@
 				"hint": "Rename built-in languages, give them ancestry-specific alternate names, and add your own custom languages.",
 				"button": "Configure Languages",
 				"title": "Configure In-Game Languages",
-				"intro": "Rename a built-in language, change which ancestries speak it, or add your own languages. These start from the Nimble ancestry rules and override them at runtime — they never change the compendium itself, and Reset restores the rule defaults.",
+				"intro": "Rename a built-in language, change which ancestries speak it, or add your own languages. These start from the Nimble ancestry rules and override them at runtime; they never change the compendium itself, and Reset restores the rule defaults.",
 				"builtinSection": "Built-In Languages",
 				"customSection": "Custom Languages",
 				"label": "Name",
 				"rename": "Rename",
 				"tooltip": "Tooltip",
 				"spokenBy": "Spoken by",
-				"spokenByEveryone": "Spoken by every ancestry — Common is always known.",
+				"spokenByEveryone": "Spoken by every ancestry: Common is always known.",
 				"spokenByHint": "Each ancestry selected for a language learns that language if its Intelligence isn't negative.",
 				"enableAlternateNames": "Show ancestry names for languages",
 				"alternateNamesHint": "When on, a language shows the name its ancestry uses for it (e.g. a Gnome sees \"Dwarvish (Gnomish)\"). Turn off to always show the plain language name.",
@@ -6233,7 +6235,7 @@
 				"hint": "Add your own conditions alongside the built-in ones. They appear in the token HUD, condition lists, and anywhere a condition can be applied.",
 				"title": "Custom Conditions",
 				"manageButton": "Manage Conditions",
-				"intro": "Create conditions for your world — useful for statuses from content the system does not ship with. The name is what players see; the id is stored on each effect and is filled in for you. Pick an icon from your Foundry files.",
+				"intro": "Create conditions for your world, useful for statuses from content the system does not ship with. The name is what players see; the id is stored on each effect and is filled in for you. Pick an icon from your Foundry files.",
 				"empty": "No custom conditions yet. Add one to get started.",
 				"columnId": "Id",
 				"columnName": "Name",
@@ -6421,7 +6423,7 @@
 				"formulaLabel": "Formula",
 				"templateShapeLabel": "AoE template shape",
 				"weaponTypeLabel": "Weapon type",
-				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies — non-proficient wielders cannot crit. Pick from the suggestions or type your own to test edge cases.",
+				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies; non-proficient wielders cannot crit. Pick from the suggestions or type your own to test edge cases.",
 				"proficiencyLine": "Proficient with '{weaponType}': {state}",
 				"critSuppressedLine": "Crit will be suppressed for non-proficiency: {state}",
 				"proficiency": {
@@ -6774,7 +6776,7 @@
 		},
 		"devRebrand": {
 			"dialog": {
-				"title": "Nimble (Dev) — One-time Migration",
+				"title": "Nimble (Dev): One-time Migration",
 				"intro": "This world was originally created under the stable Nimble system. The Dev build installs under a separate system id (\"nimble-dev\"), so Foundry stores its flags and settings in a different namespace from the stable install.",
 				"body": "Click <strong>Continue</strong> to copy all existing Nimble flags and settings on this world into the Dev namespace so your characters, items, and settings work in the Dev build. This runs once per world.",
 				"warning": "After this runs, the original Nimble data is removed from this world. If you want to keep using the stable Nimble system with this world, cancel now and use a separate world for the Dev build instead.",

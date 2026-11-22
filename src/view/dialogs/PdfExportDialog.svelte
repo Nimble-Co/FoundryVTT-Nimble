@@ -310,7 +310,7 @@
 					class="pdf-export-dialog__toolbar-btn"
 					title="Decrease line spacing ({Math.round(state.activeColumnLineHeight)} → {Math.round(
 						state.activeColumnLineHeight - 1,
-					)}) — fits ~{state.activeSheetCapacityAt(
+					)}): fits ~{state.activeSheetCapacityAt(
 						state.activeColumnLineHeight - 1,
 					)} characters per column"
 					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight - 1)}
@@ -324,7 +324,7 @@
 					class="pdf-export-dialog__toolbar-btn"
 					title="Increase line spacing ({Math.round(state.activeColumnLineHeight)} → {Math.round(
 						state.activeColumnLineHeight + 1,
-					)}) — fits ~{state.activeSheetCapacityAt(
+					)}): fits ~{state.activeSheetCapacityAt(
 						state.activeColumnLineHeight + 1,
 					)} characters per column"
 					onclick={() => state.setActiveColumnLineHeight(state.activeColumnLineHeight + 1)}

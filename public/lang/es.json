@@ -156,7 +156,7 @@
 				},
 				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"defaultLabel": "Pool",
-				"noChange": "— no change",
+				"noChange": "(no change)",
 				"skipReasons": {
 					"allAtMax": "All dice already at maximum",
 					"invalidAction": "Skipped (invalid action for pool type)",
@@ -734,7 +734,7 @@
 			"sizeGrappleNote": "You can grapple creatures your size or smaller. Grab something larger and you ride it instead.",
 			"stepHeader": "Step 2{step}. {label}",
 			"variant": "Ancestry Variant",
-			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is — they are the same in play, and your sheet takes the name you pick."
+			"variantHint": "Your ancestry covers more than one kind of people. Choose the one your character is; they are the same in play, and your sheet takes the name you pick."
 		},
 		"ancestrySheet": {
 			"defaultBonus": "Default Bonus",
@@ -746,7 +746,7 @@
 			"sizeOptionsEdit": "Edit sizes…",
 			"sizeOptionsHint": "Choose every size this ancestry can be. Two or more becomes a player choice.",
 			"sizeOptionsRemove": "Remove {size}",
-			"sizeOptionsRestored": "An ancestry needs at least one size — restored to {sizes}.",
+			"sizeOptionsRestored": "An ancestry needs at least one size, so it is restored to {sizes}.",
 			"sizeSummaryAll": "Players will choose any size, {first} through {last}.",
 			"sizeSummaryChoice": "Players will choose {sizes} during character creation.",
 			"sizeSummaryFixed": "All characters will be {size}. No size step during character creation.",
@@ -1397,8 +1397,8 @@
 			"duplicateKeepRecommended": "Keep recommended",
 			"duplicateOutcomeAll": "Adds {count} features. This feature will appear {count} times.",
 			"duplicateOutcomeNone": "Keeps only the copy you already have.",
-			"duplicateOutcomeOne": "Adds 1 feature — {name}.",
-			"duplicateOutcomePending": "Nothing selected yet — choose which copy to keep.",
+			"duplicateOutcomeOne": "Adds 1 feature: {name}.",
+			"duplicateOutcomePending": "Nothing selected yet: choose which copy to keep.",
 			"duplicatePackagedDefault": "packaged default",
 			"duplicateRecommended": "Recommended",
 			"duplicateUseCopy": "Use the copy in {name}",
@@ -1778,7 +1778,7 @@
 				"cancel": "Cancel",
 				"confirm": "Continue",
 				"intro": "This world was originally created under the stable Nimble system. The Dev build installs under a separate system id (\"nimble-dev\"), so Foundry stores its flags and settings in a different namespace from the stable install.",
-				"title": "Nimble (Dev) — One-time Migration",
+				"title": "Nimble (Dev): One-time Migration",
 				"warning": "After this runs, the original Nimble data is removed from this world. If you want to keep using the stable Nimble system with this world, cancel now and use a separate world for the Dev build instead."
 			},
 			"notifications": {
@@ -1919,7 +1919,7 @@
 				},
 				"templateShapeLabel": "AoE template shape",
 				"title": "Roll Builder",
-				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies — non-proficient wielders cannot crit. Pick from the suggestions or type your own to test edge cases.",
+				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies; non-proficient wielders cannot crit. Pick from the suggestions or type your own to test edge cases.",
 				"weaponTypeLabel": "Weapon type"
 			},
 			"scenarios": {
@@ -2768,7 +2768,7 @@
 					"hint": "item: price matching item activations. heroicReaction: price the selected heroic reactions instead.",
 					"label": "Applies to"
 				},
-				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only — a free reaction is still limited to once per round.",
+				"description": "Change how many actions it costs to activate matching items or use heroic reactions. Adjust adds to the base cost (use a negative value to reduce it); Set replaces it. The final cost never drops below 0. Cost only: a free reaction is still limited to once per round.",
 				"itemIdentifier": {
 					"hint": "Only affect the item whose identifier matches this. Leave blank to affect all matching items.",
 					"label": "Item identifier"
@@ -2795,7 +2795,7 @@
 					"hint": "Also start the next turn with that many fewer actions, applied together with the immediate gain as a single adjustment.",
 					"label": "Borrow from next turn"
 				},
-				"description": "Grant or remove raw actions when this item is used — immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
+				"description": "Grant or remove raw actions when this item is used, immediately or at the recipient's next turn. Can also borrow: gain actions now and start the next turn with that many fewer. Applies to character combatants only.",
 				"target": {
 					"hint": "self: the actor using the item. targeted: the currently targeted tokens. allAllies: every allied hero in the combat.",
 					"label": "Target"
@@ -2814,9 +2814,9 @@
 					"hint": "The condition to apply.",
 					"label": "Condition"
 				},
-				"description": "Apply a status condition to a target (or self) when a trigger fires — on a hit, crit, miss, save fail, turn start, etc.",
+				"description": "Apply a status condition to a target (or self) when a trigger fires: on a hit, crit, miss, save fail, turn start, etc.",
 				"trigger": {
-					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc.",
+					"hint": "When this condition is applied: on hit/crit, on save fail, on turn start, etc.",
 					"label": "Trigger"
 				}
 			},
@@ -3124,7 +3124,7 @@
 					"hint": "Restrict to melee or ranged attacks. \"Any\" matches both.",
 					"label": "Delivery"
 				},
-				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically — the activation dialog surfaces the choice.",
+				"description": "Offer the wielder a per-attack choice of advantage or bonus damage when a target condition is met (e.g. a Hunter's quarry). Nothing applies automatically; the activation dialog surfaces the choice.",
 				"doubleFor": {
 					"hint": "The attacks with an item in this list double the damage of this bonus.",
 					"label": "Doubled for",
@@ -3826,7 +3826,7 @@
 						"hint": "How the value applies. On a dice pool: Add rolls that many new dice, Set rebuilds the pool to that many, Refill to max fills it, Set When Empty rebuilds it only when it is empty, and Empty the Pool removes every die. On a charge pool: Add gains that many, Set sets the pool to that many, and Refill to max fills it. A charge pool ignores Set When Empty and Empty the Pool."
 					}
 				},
-				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",
+				"description": "Override or scale an existing dice or charge pool (by identifier), typically attached to a level-up feature to upgrade die size or expand max.",
 				"dieSize": {
 					"hint": "Replace the target pool's die size. Leave blank to keep it unchanged.",
 					"label": "Die size override"
@@ -4510,7 +4510,7 @@
 			"noFurtherConfig": "No further configuration needed.",
 			"noRulesDefined": "No rules defined. Open the builder to add one.",
 			"openRulesBuilder": "Open Rules Builder",
-			"pickerMissingMetaTooltip": "Description missing — flag for review.",
+			"pickerMissingMetaTooltip": "Description missing: flag for review.",
 			"poolIdentifierPlaceholder": "Type a pool identifier",
 			"poolPickerNoActor": "This item is not on an actor, so its pools cannot be listed",
 			"predicateAddCondition": "Add condition",
@@ -4537,7 +4537,7 @@
 				"isExactly": "is exactly",
 				"isOneOf": "is one of"
 			},
-			"predicatePreviewAlways": "No conditions — always applies.",
+			"predicatePreviewAlways": "No conditions: always applies.",
 			"predicatePreviewError": "Evaluation failed.",
 			"predicatePreviewIncomplete": "Conditions are incomplete.",
 			"predicatePreviewMatches": "Currently matches the parent actor.",
@@ -4821,7 +4821,7 @@
 				"iconPickerFailed": "Could not open the file picker. See the console for details.",
 				"idLocked": "Ids are locked once saved: effects and rules store this value.",
 				"idPlaceholder": "e.g. hexed",
-				"intro": "Create conditions for your world — useful for statuses from content the system does not ship with. The name is what players see; the id is stored on each effect and is filled in for you. Pick an icon from your Foundry files.",
+				"intro": "Create conditions for your world, useful for statuses from content the system does not ship with. The name is what players see; the id is stored on each effect and is filled in for you. Pick an icon from your Foundry files.",
 				"manageButton": "Manage Conditions",
 				"name": "Custom Conditions",
 				"namePlaceholder": "e.g. Hexed",
@@ -4932,7 +4932,7 @@
 				"customSection": "Custom Languages",
 				"enableAlternateNames": "Show ancestry names for languages",
 				"hint": "Rename built-in languages, give them ancestry-specific alternate names, and add your own custom languages.",
-				"intro": "Rename a built-in language, change which ancestries speak it, or add your own languages. These start from the Nimble ancestry rules and override them at runtime — they never change the compendium itself, and Reset restores the rule defaults.",
+				"intro": "Rename a built-in language, change which ancestries speak it, or add your own languages. These start from the Nimble ancestry rules and override them at runtime; they never change the compendium itself, and Reset restores the rule defaults.",
 				"label": "Name",
 				"name": "In-Game Languages",
 				"newLanguage": "New Language",
@@ -4944,7 +4944,7 @@
 				"save": "Save Changes",
 				"selectAncestry": "Add an ancestry…",
 				"spokenBy": "Spoken by",
-				"spokenByEveryone": "Spoken by every ancestry — Common is always known.",
+				"spokenByEveryone": "Spoken by every ancestry: Common is always known.",
 				"spokenByHint": "Each ancestry selected for a language learns that language if its Intelligence isn't negative.",
 				"title": "Configure In-Game Languages",
 				"tooltip": "Tooltip"

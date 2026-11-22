@@ -214,7 +214,7 @@ describe('DuplicateSourceGroup', () => {
 		renderGroup();
 
 		expect(
-			screen.getByText('Nothing selected yet — choose which copy to keep.'),
+			screen.getByText('Nothing selected yet: choose which copy to keep.'),
 		).toBeInTheDocument();
 	});
 

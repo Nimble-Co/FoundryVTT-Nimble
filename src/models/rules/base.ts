@@ -321,7 +321,7 @@ abstract class NimbleBaseRule<
 		// eslint-disable-next-line no-console
 		console.warn(
 			`Nimble | Rule "${this.type}" (${this.label || this.id}) predicates on [${hits.join(', ')}], ` +
-				'which are computed after prePrepareData — the predicate will never match in that phase.',
+				'which are computed after prePrepareData, so the predicate will never match in that phase.',
 		);
 	}
 
