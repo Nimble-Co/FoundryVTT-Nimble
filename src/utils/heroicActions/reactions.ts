@@ -1,7 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import type { DefendWay } from '#types/defend.d.ts';
 import { getActiveCombatForCurrentScene } from '#utils/combat/combatState.js';
-import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
+import { collectInterposeOffers, spendLineCharges } from '#utils/combat/grantedActionOffers.js';
 import { openDefendWindowOnNewestCard } from '#utils/defend/openDefendWindow.js';
 import { getHeroicReactionUsageState } from '#utils/incomingReactions/getHeroicReactionUsageState.js';
 import {
@@ -213,13 +213,12 @@ async function executeChatReaction(
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid ?? '');
 
 	for (const msg of config.messages) {
+		const system = msg.buildSystem(actor, targetUuids);
 		await ChatMessage.create(
-			buildReactionChatData(
-				actor,
-				msg.type,
-				msg.buildSystem(actor, targetUuids),
-			) as ChatMessage.CreateData,
+			buildReactionChatData(actor, msg.type, system) as ChatMessage.CreateData,
 		);
+		const lines = system.grantedActionOffers;
+		if (Array.isArray(lines) && lines.length > 0) await spendLineCharges(lines);
 	}
 	return true;
 }
@@ -293,8 +292,8 @@ export async function useOpportunityAttack(
 			? Boolean(
 					await actor.activateItem(weaponId, {
 						rollMode: -1,
-						skipActionDeduction: true,
 						opportunityAttack: true,
+						skipActionDeduction: true,
 					}),
 				)
 			: rollUnarmedStrike(actor, { rollMode: -1, opportunityAttack: true }),

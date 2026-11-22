@@ -7,6 +7,8 @@ import { giveUnarmedHitRecovery } from '#utils/chargePool/itemUseRecovery.js';
 import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
+import { spendLineCharges } from '#utils/combat/grantedActionOffers.js';
+import { opportunityAttackLines } from '#utils/combat/opportunityAttackLines.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
 import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
 import { attackOriginName, attackOriginOf } from '#utils/damage/attackOrigin.js';
@@ -64,8 +66,6 @@ const UNARMED_STRIKE_IMG = 'icons/skills/melee/unarmed-punch-fist.webp';
 export interface RollUnarmedStrikeOptions {
 	/** Starting roll mode of the config dialog. */
 	rollMode?: number;
-	/** The strike is an opportunity attack; its card says so. */
-	opportunityAttack?: boolean;
 	/** The feature the strike is made through. */
 	originUuid?: string;
 	/** The strike spends no action. */
@@ -74,6 +74,8 @@ export interface RollUnarmedStrikeOptions {
 	ignoresRushed?: boolean;
 	/** Up to this many targets share one attack: one roll, each target's armor, miss and crit as normal. */
 	sharedTargets?: number;
+	/** The strike is an opportunity attack. The caller sets its disadvantage in `rollMode`. */
+	opportunityAttack?: boolean;
 }
 
 function buildRollFormula(
@@ -130,7 +132,8 @@ export async function rollUnarmedStrike(
 	options: RollUnarmedStrikeOptions = {},
 ): Promise<boolean> {
 	const origin = options.originUuid ? attackOriginOf({}, options.originUuid) : null;
-	const rollModeChange = attackRollModeOf(actor, origin);
+	const opportunityAttack = options.opportunityAttack === true;
+	const rollModeChange = attackRollModeOf(actor, origin, { opportunityAttack });
 	const rushed =
 		options.rollMode === undefined && !options.ignoresRushed && !rollModeChange.ignoreDisadvantage
 			? attacksMadeThisTurn(actor)
@@ -329,6 +332,7 @@ export async function rollUnarmedStrike(
 		...(await held.rollExtraDamage(actor.getRollData())),
 	];
 
+	const allyLines = opportunityAttack ? opportunityAttackLines(actor) : [];
 	const chatData = {
 		author: game.user?.id,
 		flavor: `${actor.name}: ${name}`,
@@ -336,12 +340,12 @@ export async function rollUnarmedStrike(
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
 		rolls: [roll, ...extraDamage.map((part) => part.roll)],
-		...(origin || options.opportunityAttack
+		...(origin || opportunityAttack
 			? {
 					flags: {
 						[SYSTEM_ID]: {
 							...(origin ? { origin } : {}),
-							...(options.opportunityAttack ? { opportunityAttack: true } : {}),
+							...(opportunityAttack ? { opportunityAttack: true } : {}),
 						},
 					},
 				}
@@ -377,11 +381,13 @@ export async function rollUnarmedStrike(
 			rerolls: postRoll.rerollHistory?.rerolls ?? [],
 			rollChanges: postRoll.rerollHistory?.rollChanges ?? [],
 			discardedCritTriggers: postRoll.rerollHistory?.discardedCritTriggers ?? false,
+			...(allyLines.length > 0 ? { grantedActionOffers: allyLines } : {}),
 		},
 		type: 'feature',
 	};
 
 	const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+	if (card && allyLines.length > 0) await spendLineCharges(allyLines);
 	void fireAttackEvents(actor, card);
 	await recordAttack(actor);
 	const recoveryFlags = await giveUnarmedHitRecovery(actor, roll, targets as never);

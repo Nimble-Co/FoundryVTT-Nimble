@@ -1,3 +1,4 @@
+import type { AttackKindContext } from '../../models/rules/attackRollMode.js';
 import { type AttackOrigin, rulesReachingAttack } from '../damage/attackOrigin.js';
 
 /** What the Attack Roll Mode rules that reach an attack do to one attack, all of them together. */
@@ -10,10 +11,11 @@ export interface AttackRollModeTotal {
 export function attackRollModeOf(
 	attacker: { rules?: unknown } | null | undefined,
 	origin: Partial<AttackOrigin> | null | undefined,
+	attack: AttackKindContext = {},
 ): AttackRollModeTotal {
 	const total: AttackRollModeTotal = { advantage: 0, ignoreDisadvantage: false };
 	for (const rule of rulesReachingAttack(attacker, 'attackRollMode', origin)) {
-		const change = rule.changeFor(origin?.identifier);
+		const change = rule.changeFor(origin?.identifier, attack);
 		if (!change) continue;
 		total.advantage += change.advantage;
 		total.ignoreDisadvantage ||= change.ignoreDisadvantage;

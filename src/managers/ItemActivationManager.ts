@@ -524,6 +524,7 @@ class ItemActivationManager {
 		this.#rollModeChange = attackRollModeOf(
 			this.actor as { rules?: unknown } | null,
 			this.#ruleOrigin,
+			{ opportunityAttack: options.opportunityAttack === true },
 		);
 		const rollOptions = {
 			domain: this.#getItemDomain(),
@@ -2048,6 +2049,8 @@ namespace ItemActivationManager {
 		rushedAttack?: number;
 		/** The attack takes no Rushed Attack disadvantage; it still counts as an attack of the turn. */
 		ignoresRushed?: boolean;
+		/** The attack is an opportunity attack. The caller sets its disadvantage in `rollMode`. */
+		opportunityAttack?: boolean;
 		/** Up to this many targets share one attack: one roll, each target's armor, miss and crit as normal. */
 		sharedTargets?: number;
 		/** False for a use inside another use, such as a free copy: it is not an attack of the turn. */
@@ -2090,8 +2093,6 @@ namespace ItemActivationManager {
 		confirmActions?: (changes: readonly ActionCostChange[]) => Promise<boolean>;
 		/** The attack card this use answers, as a reaction from the Defend window does. */
 		answersCardId?: string;
-		/** The use is an opportunity attack; its card says so. */
-		opportunityAttack?: boolean;
 	}
 
 	/** What a free use does not spend or check. `action` is always part of it. */

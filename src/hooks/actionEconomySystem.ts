@@ -4,8 +4,10 @@ import { buildActionDeltaSummary } from '#utils/combat/actionDeltaSummary.js';
 import {
 	collectGrantedActionOffers,
 	emptyPoolWarnings,
+	spendLineCharges,
 } from '#utils/combat/grantedActionOffers.js';
 import { isCombatantDead } from '#utils/combat/isCombatantDead.js';
+import { opportunityAttackLines } from '#utils/combat/opportunityAttackLines.js';
 import { requestCombatantActionDelta } from '#utils/combat/requestCombatantActionDelta.js';
 import type { ActionDeltaApplication, ActionDeltaRule } from '../models/rules/actionDelta.js';
 
@@ -134,6 +136,7 @@ function accumulateApplication(
 
 interface CardMessage {
 	system?: { grantedActionOffers?: unknown };
+	flags?: Record<string, { opportunityAttack?: boolean } | undefined>;
 	update?: (data: Record<string, unknown>) => Promise<unknown>;
 }
 
@@ -204,10 +207,14 @@ function collectOffersForCard(
 	// Only card types whose schema carries the offers field can persist them.
 	if (!Array.isArray(message?.system?.grantedActionOffers)) return [];
 
-	return collectGrantedActionOffers(
+	const own = collectGrantedActionOffers(
 		item as Parameters<typeof collectGrantedActionOffers>[0],
 		targets,
 	);
+	const allies = message?.flags?.[SYSTEM_ID]?.opportunityAttack
+		? opportunityAttackLines(item.actor)
+		: [];
+	return [...own, ...allies];
 }
 
 /**
@@ -246,6 +253,7 @@ function handleUseItem(item: unknown, chatMessage: unknown, context: unknown): v
 	if (Object.keys(cardUpdate).length < 1) return;
 
 	void message.update(cardUpdate);
+	if (offers.length > 0) void spendLineCharges(offers as Parameters<typeof spendLineCharges>[0]);
 }
 
 let didRegisterActionEconomySystemHooks = false;

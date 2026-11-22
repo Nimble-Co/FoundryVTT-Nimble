@@ -2,6 +2,7 @@ import {
 	appliedHealing,
 	damageBack,
 	defends,
+	grantedActionOffers,
 	incomingReactions,
 	metadata,
 	targets,
@@ -53,6 +54,7 @@ declare namespace NimbleMinionGroupAttackCardData {
 		ReturnType<typeof appliedHealing> &
 		ReturnType<typeof damageBack> &
 		ReturnType<typeof defends> &
+		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof incomingReactions> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof minionGroupAttackCardSchema> &
@@ -72,6 +74,7 @@ class NimbleMinionGroupAttackCardData extends foundry.abstract.TypeDataModel<
 			...appliedHealing(),
 			...damageBack(),
 			...defends(),
+			...grantedActionOffers(),
 			...incomingReactions(),
 			...metadata(),
 			...targets(),

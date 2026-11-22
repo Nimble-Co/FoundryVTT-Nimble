@@ -10,6 +10,7 @@ interface TriggerSystem {
 	moverName?: string;
 	spaces?: number;
 	spacesThisTurn?: number | null;
+	grantedActionOffers?: unknown[];
 }
 
 interface TriggerItem {
@@ -71,6 +72,7 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 
 	const item = $derived(resolve<TriggerItem>(system.itemUuid));
 	const canUse = $derived(item?.isOwner === true);
+	const hasLines = $derived((system.grantedActionOffers?.length ?? 0) > 0);
 	let using = $state(false);
 
 	function targetCardTokens(): void {
@@ -116,6 +118,10 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 		},
 		get canUse() {
 			return canUse;
+		},
+		/** The card carries attack lines, which take the place of the use button. */
+		get hasLines() {
+			return hasLines;
 		},
 		get using() {
 			return using;

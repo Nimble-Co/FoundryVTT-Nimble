@@ -1026,6 +1026,7 @@ describe('an attack roll mode for attacks made through one feature', () => {
 			advantage: 0,
 			ignoreDisadvantage: false,
 			attackOrigin: 'granting-feature',
+			attackKind: 'any',
 			predicate: new Predicate({}),
 			...config,
 		});
@@ -1098,6 +1099,25 @@ describe('an attack roll mode for attacks made through one feature', () => {
 		expect(dialog.opened).toMatchObject({ rollMode: -1, rushedAttack: 2 });
 		expect(dialog.opened?.ignoreDisadvantage).toBeFalsy();
 		expect(rollOptions(feature).rollMode).toBe(-1);
+	});
+	it('opens an opportunity attack without its disadvantage with a rule for opportunity attacks', async () => {
+		const { actor } = setup({ advantage: 1, attackOrigin: '', attackKind: 'opportunity' });
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ rollMode: -1, opportunityAttack: true });
+
+		expect(dialog.opened).toMatchObject({ rollMode: 0 });
+		expect(cardOf(feature).flags[SYSTEM_ID].opportunityAttack).toBe(true);
+	});
+
+	it('keeps the disadvantage of other attacks with a rule for opportunity attacks', async () => {
+		const { actor } = setup({ advantage: 1, attackOrigin: '', attackKind: 'opportunity' });
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ rollMode: -1 });
+
+		expect(dialog.opened).toMatchObject({ rollMode: -1 });
+		expect(cardOf(feature).flags[SYSTEM_ID].opportunityAttack).toBeUndefined();
 	});
 });
 

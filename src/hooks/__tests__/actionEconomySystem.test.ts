@@ -7,6 +7,10 @@ vi.mock('#system', () => ({
 vi.mock('#utils/combat/grantedActionOffers.js', () => ({
 	collectGrantedActionOffers: vi.fn(() => []),
 	emptyPoolWarnings: vi.fn(() => []),
+	spendLineCharges: vi.fn(async () => undefined),
+}));
+vi.mock('#utils/combat/opportunityAttackLines.js', () => ({
+	opportunityAttackLines: vi.fn(() => []),
 }));
 vi.mock('#utils/combat/requestCombatantActionDelta.js', () => ({
 	requestCombatantActionDelta: vi.fn(),
@@ -18,7 +22,9 @@ vi.mock('#utils/combat/isCombatantDead.js', () => ({
 import {
 	collectGrantedActionOffers,
 	emptyPoolWarnings,
+	spendLineCharges,
 } from '#utils/combat/grantedActionOffers.js';
+import { opportunityAttackLines } from '#utils/combat/opportunityAttackLines.js';
 import { handleUseItem, resolveTargetCombatants } from '../actionEconomySystem.js';
 
 const FRIENDLY = 1;
@@ -195,5 +201,36 @@ describe('handleUseItem', () => {
 
 		expect(warn).toHaveBeenCalledWith('Roll & Strike: Thrill is not empty.');
 		expect(update).toHaveBeenCalledTimes(1);
+	});
+	it("adds the lines of the attacker's allies to the card of an opportunity attack", () => {
+		vi.mocked(collectGrantedActionOffers).mockReturnValue([{ id: 'own' }] as never);
+		vi.mocked(opportunityAttackLines).mockReturnValue([{ id: 'ally' }] as never);
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+		const item = makeItem([]);
+
+		handleUseItem(
+			item,
+			{
+				system: { grantedActionOffers: [] },
+				flags: { nimble: { opportunityAttack: true } },
+				update,
+			},
+			{ targets: [] },
+		);
+
+		expect(opportunityAttackLines).toHaveBeenCalledWith(item.actor);
+		expect(update.mock.calls[0][0]).toEqual({
+			system: { grantedActionOffers: [{ id: 'own' }, { id: 'ally' }] },
+		});
+		expect(spendLineCharges).toHaveBeenCalledWith([{ id: 'own' }, { id: 'ally' }]);
+	});
+
+	it('adds no ally lines to the card of another attack', () => {
+		vi.mocked(opportunityAttackLines).mockClear();
+		const update = vi.fn(async (_data: Record<string, unknown>) => ({}));
+
+		handleUseItem(makeItem([]), { system: { grantedActionOffers: [] }, update }, { targets: [] });
+
+		expect(opportunityAttackLines).not.toHaveBeenCalled();
 	});
 });

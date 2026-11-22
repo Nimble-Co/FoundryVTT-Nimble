@@ -22,7 +22,7 @@
 				"armorBonus": "",
 				"useReroll": false,
 				"attackerEffectId": "",
-				"reminder": "The first time each round you block all of the damage, make a free opportunity attack against the attacker.",
+				"reminder": "",
 				"useItem": false,
 				"withInterpose": false,
 				"wholeRound": false,
@@ -32,6 +32,53 @@
 				"actionCost": 0,
 				"manaCost": 0,
 				"woundCost": 0
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "shield-expert-round",
+				"identifier": "shield-expert-round",
+				"label": "Shield Expert (first full block each round)",
+				"predicate": {},
+				"priority": 2,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": true,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "shield-expert-opportunity-attack",
+				"identifier": "",
+				"label": "Shield Expert",
+				"predicate": {},
+				"priority": 3,
+				"activationType": "weaponAttack",
+				"trigger": "onFullBlock",
+				"includesUser": false,
+				"includesTargets": true,
+				"weaponKind": "melee",
+				"allowsCantrips": false,
+				"free": true,
+				"spendsReaction": true,
+				"ignoresRushed": false,
+				"condition": "Against the attacker.",
+				"chargePoolIdentifier": "shield-expert-round"
 			}
 		],
 		"activation": {

@@ -1,5 +1,5 @@
 import type { ReactionPanelStateOptions } from '#types/components/ReactionPanel.d.ts';
-import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
+import { collectInterposeOffers, spendLineCharges } from '#utils/combat/grantedActionOffers.js';
 import { openDefendWindowOnNewestCard } from '#utils/defend/openDefendWindow.js';
 import showReactionConfirmation from '#utils/incomingReactions/showReactionConfirmation.js';
 import localize from '#utils/localize.js';
@@ -69,6 +69,7 @@ export function createInterposePanelState(options: ReactionPanelStateOptions) {
 
 		const actor = getActor();
 		const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
+		const lines = collectInterposeOffers(actor as never);
 
 		const chatData = {
 			author: game.user?.id,
@@ -82,10 +83,11 @@ export function createInterposePanelState(options: ReactionPanelStateOptions) {
 				rollMode: 0,
 				reactionType: 'interpose',
 				targets: targetUuids,
-				grantedActionOffers: collectInterposeOffers(actor as never),
+				grantedActionOffers: lines,
 			},
 		};
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		await spendLineCharges(lines);
 	}
 
 	return {

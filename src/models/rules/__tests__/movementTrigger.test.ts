@@ -339,6 +339,39 @@ describe('MovementTriggerRule', () => {
 			});
 		});
 
+		it("puts the lines of its item's rules for a Movement Trigger on the card", async () => {
+			const { rule, item } = makeRule();
+			Object.assign(item, {
+				rules: new Map([
+					[
+						'oa',
+						{
+							type: 'grantActivation',
+							id: 'oa',
+							trigger: 'onMovementTrigger',
+							spendsReaction: true,
+							weaponKind: 'melee',
+							appliesTo: () => true,
+						},
+					],
+				]),
+			});
+			const context = makeContext();
+			Object.assign(context.token, { actor: { uuid: 'Scene.s.Token.obs.Actor.observer' } });
+			vi.stubGlobal('fromUuidSync', () => null);
+
+			await rule.onMovementFinished(context as never);
+
+			expect((lastCard() as TriggerInput & { lines?: unknown[] }).lines).toEqual([
+				expect.objectContaining({
+					targetActorUuid: 'Scene.s.Token.obs.Actor.observer',
+					label: 'Chaos Lash',
+					spendsReaction: true,
+					weaponKind: 'melee',
+				}),
+			]);
+		});
+
 		it('posts a card for everyone when the rule does not whisper', async () => {
 			await makeRule({ whisper: false }).rule.onMovementFinished(makeContext() as never);
 			expect(lastCard().whisper).toBe(false);

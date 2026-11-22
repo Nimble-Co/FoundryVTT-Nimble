@@ -1,14 +1,21 @@
 <script lang="ts">
 	import type { MovementTriggerCardProps } from '#types/components/MovementTriggerCard.d.ts';
 
+	import { setContext, untrack } from 'svelte';
 	import localize from '#utils/localize.js';
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
+	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import { createMovementTriggerCardState } from './MovementTriggerCardState.svelte.ts';
 
 	const { messageDocument }: MovementTriggerCardProps = $props();
 
 	const card = createMovementTriggerCardState(() => messageDocument);
+
+	setContext(
+		'messageDocument',
+		untrack(() => messageDocument),
+	);
 </script>
 
 <CardHeader {messageDocument} />
@@ -38,13 +45,15 @@
 			</p>
 		{/if}
 
-		{#if card.canUse}
+		{#if card.canUse && !card.hasLines}
 			<button class="nimble-button" type="button" disabled={card.using} onclick={card.useItem}>
 				<i class="nimble-button__icon fa-solid fa-dice-d20" aria-hidden="true"></i>
 				{localize('NIMBLE.chat.movementTrigger.use', { name: card.system.name })}
 			</button>
 		{/if}
 	</section>
+
+	<GrantedActionOffers />
 </article>
 
 <style lang="scss">

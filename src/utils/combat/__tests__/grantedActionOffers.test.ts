@@ -438,6 +438,124 @@ describe('collectInterposeOffers', () => {
 	});
 });
 
+describe('the lines of the other triggers', () => {
+	function featureOf(actorUuid: string, rules: Record<string, unknown>[]) {
+		return {
+			uuid: `${actorUuid}.Item.feature`,
+			name: 'Feature',
+			rules: new Map(rules.map((rule) => [rule.id as string, { appliesTo: () => true, ...rule }])),
+		};
+	}
+
+	function creature(actorUuid: string, rules: Record<string, unknown>[]) {
+		return { uuid: actorUuid, items: [featureOf(actorUuid, rules)] };
+	}
+
+	const rule = (trigger: string, extra: Record<string, unknown> = {}) => ({
+		type: 'grantActivation',
+		id: `rule-${trigger}`,
+		trigger,
+		...extra,
+	});
+
+	describe('collectTriggerOffers', () => {
+		it('gives a creature a line from each of its rules for the trigger, and none for others', async () => {
+			const { collectTriggerOffers } = await loadModule();
+			const actor = creature('Actor.commander', [
+				rule('onFullBlock', { spendsReaction: true, free: true, weaponKind: 'melee' }),
+				rule('onInterpose'),
+			]);
+
+			const offers = collectTriggerOffers(actor, 'onFullBlock');
+
+			expect(offers).toHaveLength(1);
+			expect(offers[0]).toMatchObject({
+				targetActorUuid: 'Actor.commander',
+				ruleId: 'rule-onFullBlock',
+				spendsReaction: true,
+				free: true,
+				weaponKind: 'melee',
+			});
+		});
+
+		it('gives no line from a rule whose charge pool is empty', async () => {
+			const { collectTriggerOffers } = await loadModule();
+			const actor = creature('Actor.commander', [
+				rule('onFullBlock', { chargePoolIdentifier: 'no-such-pool' }),
+			]);
+
+			expect(collectTriggerOffers(actor, 'onFullBlock')).toHaveLength(0);
+		});
+	});
+
+	describe('spendLineCharges', () => {
+		it('spends 1 charge of the pool of each rule that put lines on the card', async () => {
+			const spendRuleCharge = vi.fn(async () => true);
+			vi.resetModules();
+			vi.doMock('../../chargePool/ruleChargeGate.js', () => ({
+				hasRuleCharge: () => true,
+				spendRuleCharge,
+			}));
+			const { spendLineCharges } = await import('../grantedActionOffers.js');
+			vi.doUnmock('../../chargePool/ruleChargeGate.js');
+			const actor = { uuid: 'Actor.commander' };
+			globals().fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.pooled'
+					? {
+							actor,
+							rules: new Map([['a', { id: 'rule-1', chargePoolIdentifier: 'once-a-round' }]]),
+						}
+					: { actor, rules: new Map([['b', { id: 'rule-1', chargePoolIdentifier: '' }]]) },
+			);
+
+			await spendLineCharges([
+				createOffer({ id: 'a', sourceItemUuid: 'Item.pooled' }),
+				createOffer({ id: 'b', sourceItemUuid: 'Item.pooled', targetActorUuid: 'Actor.other' }),
+				createOffer({ id: 'c', sourceItemUuid: 'Item.free' }),
+			]);
+
+			expect(spendRuleCharge).toHaveBeenCalledTimes(1);
+			expect(spendRuleCharge).toHaveBeenCalledWith(actor, 'once-a-round');
+		});
+	});
+
+	describe('collectAllyOpportunityOffers', () => {
+		const FRIENDLY = 1;
+		const HOSTILE = -1;
+		function token(id: string, disposition: number, actor: unknown) {
+			return { id, disposition, actor };
+		}
+
+		it('gives each ally of the attacker a line from their rules for an ally opportunity attack', async () => {
+			const { collectAllyOpportunityOffers } = await loadModule();
+			const fighter = creature('Actor.fighter', [rule('onAllyOpportunityAttack')]);
+			const hunter = creature('Actor.hunter', [
+				rule('onAllyOpportunityAttack', { spendsReaction: true, weaponKind: 'ranged' }),
+			]);
+			const goblin = creature('Actor.goblin', [rule('onAllyOpportunityAttack')]);
+			const attacker = token('fighter', FRIENDLY, fighter);
+
+			const offers = collectAllyOpportunityOffers(
+				attacker as never,
+				[attacker, token('hunter', FRIENDLY, hunter), token('goblin', HOSTILE, goblin)] as never,
+			);
+
+			expect(offers).toHaveLength(1);
+			expect(offers[0]).toMatchObject({
+				targetActorUuid: 'Actor.hunter',
+				spendsReaction: true,
+				weaponKind: 'ranged',
+			});
+		});
+
+		it('gives no lines without an attacker token', async () => {
+			const { collectAllyOpportunityOffers } = await loadModule();
+
+			expect(collectAllyOpportunityOffers(null, [])).toHaveLength(0);
+		});
+	});
+});
+
 describe('requestGrantedActionOfferUse', () => {
 	it('stamps the offer used directly for a GM user without emitting a socket request', async () => {
 		const { requestGrantedActionOfferUse } = await loadModule();

@@ -24,6 +24,7 @@ beforeAll(async () => {
 		default: dialogMock,
 	}));
 	vi.doMock('#utils/chargePool/ruleChargeGate.js', () => ({
+		hasRuleCharge: () => true,
 		spendRuleCharge: spendRuleChargeMock,
 	}));
 	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({
@@ -414,6 +415,105 @@ describe('rollUnarmedStrike', () => {
 			{},
 			expect.objectContaining({ rollMode: -1 }),
 		);
+	});
+
+	describe('an opportunity attack', () => {
+		function berserker() {
+			const actor = createHeroicCharacter();
+			Object.assign(actor, {
+				rules: [
+					{
+						type: 'attackRollMode',
+						changeFor: (_origin: string, attack: { opportunityAttack?: boolean } = {}) =>
+							attack.opportunityAttack
+								? { advantage: 1, ignoreDisadvantage: false, label: 'Frenzy' }
+								: null,
+					},
+				],
+			});
+			return actor;
+		}
+
+		it('opens the window with the change of the rules for opportunity attacks', async () => {
+			dialogResult({});
+
+			await rollUnarmedStrike(berserker(), { rollMode: -1, opportunityAttack: true });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ rollMode: 0 }),
+			);
+		});
+
+		it('keeps the disadvantage of an attack that is not an opportunity attack', async () => {
+			dialogResult({});
+
+			await rollUnarmedStrike(berserker(), { rollMode: -1 });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ rollMode: -1 }),
+			);
+		});
+
+		it("puts the lines of the striker's allies for an ally's opportunity attack on its card", async () => {
+			dialogResult({ rollMode: -1 });
+			globals.fromUuidSync = vi.fn(() => null);
+			const striker = createHeroicCharacter({ uuid: 'Actor.striker' });
+			const hunter = createHeroicCharacter({
+				id: 'hunter',
+				uuid: 'Actor.hunter',
+				items: [
+					{
+						uuid: 'Actor.hunter.Item.no-escape',
+						name: 'No Escape',
+						rules: new Map([
+							[
+								'r',
+								{
+									type: 'grantActivation',
+									id: 'r',
+									trigger: 'onAllyOpportunityAttack',
+									spendsReaction: true,
+									weaponKind: 'ranged',
+									appliesTo: () => true,
+								},
+							],
+						]),
+					},
+				],
+			});
+			const combat = setHeroicCombat(createHeroicCombatant(striker));
+			combat.combatants = [
+				{ id: 'a', token: { id: 't-striker', disposition: 1, actor: striker } },
+				{ id: 'b', token: { id: 't-hunter', disposition: 1, actor: hunter } },
+			] as never;
+
+			await rollUnarmedStrike(striker, { rollMode: -1, opportunityAttack: true });
+
+			const card = vi.mocked(ChatMessage.create).mock.calls[0]?.[0] as {
+				system: { grantedActionOffers?: unknown[] };
+			};
+			expect(card.system.grantedActionOffers).toEqual([
+				expect.objectContaining({ targetActorUuid: 'Actor.hunter', weaponKind: 'ranged' }),
+			]);
+		});
+
+		it('says on its card that it is an opportunity attack', async () => {
+			dialogResult({ rollMode: -1 });
+
+			await rollUnarmedStrike(createHeroicCharacter(), { rollMode: -1, opportunityAttack: true });
+
+			expect(ChatMessage.create).toHaveBeenCalledWith(
+				expect.objectContaining({
+					flags: { [SYSTEM_ID]: expect.objectContaining({ opportunityAttack: true }) },
+				}),
+			);
+		});
 	});
 
 	describe('a strike that a feature gives', () => {

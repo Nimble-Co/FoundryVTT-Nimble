@@ -80,6 +80,14 @@ describe('postMovementTriggerCard', () => {
 		expect(getSpeaker).toHaveBeenCalledWith({ actor, token: heroToken });
 	});
 
+	it('carries the attack lines it is given', async () => {
+		const line = { id: 'line-1' };
+		await postMovementTriggerCard(input({ lines: [line] as never }));
+
+		const system = (create.mock.calls[0][0] as { system: Record<string, unknown> }).system;
+		expect(system.grantedActionOffers).toEqual([line]);
+	});
+
 	it('speaks as the given token', async () => {
 		const otherToken = { id: 'other', parent: { id: 's2' } };
 		await postMovementTriggerCard(input({ token: otherToken as unknown as TokenDocument }));

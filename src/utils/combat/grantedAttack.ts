@@ -15,6 +15,7 @@ export interface GrantedAttackLine {
 	weaponKind: GrantedWeaponKind;
 	allowsCantrips: boolean;
 	free: boolean;
+	/** The attack is an opportunity attack. */
 	spendsReaction: boolean;
 	ignoresRushed: boolean;
 }
@@ -97,6 +98,8 @@ export function grantedAttackTargets(
 	return { count: extras.reduce((total, extra) => total + extra.count, 1), extras };
 }
 
+const OPPORTUNITY_ATTACK = { rollMode: -1, opportunityAttack: true } as const;
+
 async function attack(
 	actor: Recipient,
 	line: GrantedAttackLine,
@@ -110,10 +113,11 @@ async function attack(
 		...(line.ignoresRushed ? { ignoresRushed: true } : {}),
 		...(targets > 1 ? { sharedTargets: targets } : {}),
 	};
+	const opportunity = line.spendsReaction ? OPPORTUNITY_ATTACK : {};
 	if (choice === UNARMED_STRIKE) {
 		const hero = actor as NimbleCharacter;
 		return free
-			? rollUnarmedStrike(hero, { ...options, free: true })
+			? rollUnarmedStrike(hero, { ...options, free: true, ...opportunity })
 			: strikeUnarmed(hero, options);
 	}
 	const item = [...(actor.items ?? [])].find((each) => each.uuid === choice);
@@ -122,14 +126,16 @@ async function attack(
 		...options,
 		...(free ? { skipActionDeduction: true } : {}),
 		...(kind === 'free' ? { grantedFree: true } : {}),
+		...opportunity,
 	});
 	return Boolean(card);
 }
 
 /**
  * Makes the attack of a line with the chosen weapon, Unarmed Strike or cantrip, made through the
- * granting feature. A free line spends no action; a line that spends the reaction spends that in
- * place of an action. A free opportunity attack spends neither. True when the attack was made.
+ * granting feature. A free line spends no action. A line that spends the reaction is an
+ * opportunity attack: it spends the reaction in place of an action, or nothing when it is also
+ * free. True when the attack was made.
  */
 export async function makeGrantedAttack(
 	actor: Recipient,

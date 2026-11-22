@@ -10,9 +10,17 @@ const GRANTED_ACTIVATION_TYPES = ['weaponAttack'] as const;
 
 /**
  * When the line goes on a card: the item is used, its user's move from the item's card ends,
- * or its owner Interposes.
+ * its owner Interposes, its owner's Defend blocks all the damage of an attack, an ally of the
+ * owner makes an opportunity attack, or a Movement Trigger rule of the item posts its card.
  */
-const GRANTED_ACTIVATION_TRIGGERS = ['onActivation', 'afterMove', 'onInterpose'] as const;
+const GRANTED_ACTIVATION_TRIGGERS = [
+	'onActivation',
+	'afterMove',
+	'onInterpose',
+	'onFullBlock',
+	'onAllyOpportunityAttack',
+	'onMovementTrigger',
+] as const;
 
 /** What the card checks at the Stop of the move, to warn when it fails. */
 export const AFTER_MOVE_CHECKS = [
@@ -31,8 +39,6 @@ type GrantedWeaponKind = (typeof GRANTED_WEAPON_KINDS)[number];
 type AfterMoveCheck = (typeof AFTER_MOVE_CHECKS)[number];
 
 const afterMove = (data: Record<string, unknown>) => data.trigger === 'afterMove';
-const forUse = (data: Record<string, unknown>) =>
-	data.trigger !== 'onInterpose' && data.trigger !== 'afterMove';
 
 const key = (field: string, part: 'label' | 'hint') =>
 	`NIMBLE.rules.grantActivation.${field}.${part}`;
@@ -45,6 +51,9 @@ const flag = (field: string) =>
 		label: key(field, 'label'),
 		hint: key(field, 'hint'),
 	});
+
+const onActivation = (data: Record<string, unknown>) =>
+	(data.trigger ?? 'onActivation') === 'onActivation';
 
 function schema() {
 	const { fields } = foundry.data;
@@ -73,7 +82,7 @@ function schema() {
 				initial: false,
 				label: key('includesUser', 'label'),
 				hint: key('includesUser', 'hint'),
-				showWhen: forUse,
+				showWhen: onActivation,
 			}),
 		),
 		includesTargets: new fields.BooleanField(
@@ -83,7 +92,7 @@ function schema() {
 				initial: true,
 				label: key('includesTargets', 'label'),
 				hint: key('includesTargets', 'hint'),
-				showWhen: forUse,
+				showWhen: onActivation,
 			}),
 		),
 		targetCount: new fields.NumberField(
@@ -95,7 +104,8 @@ function schema() {
 				initial: 0,
 				label: key('targetCount', 'label'),
 				hint: key('targetCount', 'hint'),
-				showWhen: (data: Record<string, unknown>) => forUse(data) && data.includesTargets !== false,
+				showWhen: (data: Record<string, unknown>) =>
+					onActivation(data) && data.includesTargets !== false,
 			}),
 		),
 		weaponKind: new fields.StringField({
@@ -177,6 +187,16 @@ function schema() {
 				widget: 'chargePoolPicker',
 			}),
 		),
+		chargePoolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: key('chargePoolIdentifier', 'label'),
+				hint: key('chargePoolIdentifier', 'hint'),
+				widget: 'chargePoolPicker',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantActivation' }),
 	};
 }
@@ -187,12 +207,14 @@ declare namespace GrantActivationRule {
 
 /**
  * Gives creatures an attack line on a chat card: when the owning item is used
- * (its user, the user's current targets, or both), or when the owner Interposes
- * (the owner). Carries no lifecycle hooks: the card code collects the rules and
- * stamps the lines, where the recipient's owner (or a GM) uses them.
+ * (its user, the user's current targets, or both), or on one of the owner's
+ * triggers (the owner). Carries no lifecycle hooks: the card code collects the
+ * rules and stamps the lines, where the recipient's owner (or a GM) uses them.
  *
  * A line runs the recipient's normal activation. It spends an action unless
- * the rule makes it free or spends the reaction instead.
+ * the rule makes it free or spends the reaction instead. A line that spends
+ * the reaction is an opportunity attack. With a charge pool, the rule puts
+ * lines on a card only while the pool has a charge, and spends 1 each time.
  */
 class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	static override worksOnEffects = false;
@@ -217,6 +239,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	declare afterMoveMinEnemies: number;
 	declare afterMoveStatus: string;
 	declare emptyPoolIdentifier: string;
+	declare chargePoolIdentifier: string;
 
 	static override defineSchema(): GrantActivationRule.Schema {
 		return {
@@ -229,7 +252,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['activationType', '"weaponAttack"'],
-				['trigger', '"onActivation" | "afterMove" | "onInterpose"'],
+				['trigger', GRANTED_ACTIVATION_TRIGGERS.map((each) => `"${each}"`).join(' | ')],
 				['includesUser', 'boolean'],
 				['includesTargets', 'boolean'],
 				['targetCount', 'number'],
@@ -244,6 +267,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 				['afterMoveMinEnemies', 'number'],
 				['afterMoveStatus', 'string'],
 				['emptyPoolIdentifier', 'string'],
+				['chargePoolIdentifier', 'string'],
 			]),
 		);
 	}

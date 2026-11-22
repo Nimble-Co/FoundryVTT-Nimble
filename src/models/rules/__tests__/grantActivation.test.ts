@@ -29,6 +29,9 @@ describe('GrantActivationRule', () => {
 				'onActivation',
 				'afterMove',
 				'onInterpose',
+				'onFullBlock',
+				'onAllyOpportunityAttack',
+				'onMovementTrigger',
 			]);
 			expect(schema.free?.options.initial).toBe(false);
 			expect(schema.spendsReaction?.options.initial).toBe(false);
@@ -78,6 +81,7 @@ describe('GrantActivationRule', () => {
 			).toBe(false);
 			expect(shows('includesUser', { trigger: 'afterMove' })).toBe(false);
 			expect(shows('includesTargets', { trigger: 'afterMove' })).toBe(false);
+			expect(schema.chargePoolIdentifier?.options.initial).toBe('');
 		});
 	});
 

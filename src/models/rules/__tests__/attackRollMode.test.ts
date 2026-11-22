@@ -29,6 +29,7 @@ function makeRule(
 		advantage: 0,
 		ignoreDisadvantage: false,
 		attackOrigin: '',
+		attackKind: 'any',
 		predicate: new Predicate({}),
 		...config,
 	});
@@ -45,6 +46,7 @@ describe('AttackRollModeRule', () => {
 		expect(schema.advantage?.initial).toBe(0);
 		expect(schema.ignoreDisadvantage?.initial).toBe(false);
 		expect(schema.attackOrigin?.initial).toBe('');
+		expect(schema.attackKind?.initial).toBe('any');
 		expect(AttackRollModeRule.group).toBe('bonuses');
 	});
 
@@ -78,5 +80,22 @@ describe('AttackRollModeRule', () => {
 		expect(makeRule(raging, { tags: ['self:raging'] }).changeFor(undefined)).not.toBeNull();
 		expect(makeRule({ advantage: 1, disabled: true }).changeFor(undefined)).toBeNull();
 		expect(makeRule({ advantage: 1 }, { isEmbedded: false }).changeFor(undefined)).toBeNull();
+	});
+
+	it('changes only opportunity attacks when it is for them', () => {
+		const rule = makeRule({ advantage: 1, attackKind: 'opportunity' });
+		expect(rule.changeFor(undefined)).toBeNull();
+		expect(rule.changeFor(undefined, { opportunityAttack: false })).toBeNull();
+		expect(rule.changeFor(undefined, { opportunityAttack: true })).toEqual({
+			advantage: 1,
+			ignoreDisadvantage: false,
+			label: 'Steady Hands',
+		});
+	});
+
+	it('changes opportunity attacks too when it is for every attack', () => {
+		expect(makeRule({ advantage: 1 }).changeFor(undefined, { opportunityAttack: true })).not.toBe(
+			null,
+		);
 	});
 });

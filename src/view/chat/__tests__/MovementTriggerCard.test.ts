@@ -139,6 +139,34 @@ describe('MovementTriggerCard', () => {
 		expect(useButton()).toBeTruthy();
 	});
 
+	it('shows its attack lines in place of the use button', () => {
+		g.game.user = { ...(g.game.user ?? {}), isGM: true, targets: new Set() };
+		documents['Actor.hero'] = { id: 'hero', name: 'Hero', isOwner: true, system: {}, items: [] };
+		renderCard({
+			grantedActionOffers: [
+				{
+					id: 'line-1',
+					targetActorUuid: 'Actor.hero',
+					label: 'Opportunistic Frenzy',
+					activationType: 'weaponAttack',
+					ruleId: 'r',
+					sourceItemUuid: '',
+					free: false,
+					spendsReaction: true,
+					weaponKind: 'melee',
+					allowsCantrips: false,
+					ignoresRushed: false,
+					condition: '',
+					used: false,
+					usedBy: null,
+				},
+			],
+		});
+
+		expect(screen.getByText('Hero: Opportunity Attack (Opportunistic Frenzy)')).toBeTruthy();
+		expect(useButton()).toBeNull();
+	});
+
 	it('shows no use button to a user who does not own the item', () => {
 		documents['Actor.hero.Item.i1'] = createItem(false);
 		renderCard();

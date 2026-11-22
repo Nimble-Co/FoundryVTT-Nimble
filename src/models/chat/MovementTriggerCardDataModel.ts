@@ -1,4 +1,4 @@
-import { metadata, targets } from './common.js';
+import { grantedActionOffers, metadata, targets } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -25,6 +25,7 @@ const movementTriggerCardSchema = () => ({
 
 declare namespace NimbleMovementTriggerCardData {
 	type Schema = DataSchema &
+		ReturnType<typeof grantedActionOffers> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof targets> &
 		ReturnType<typeof movementTriggerCardSchema>;
@@ -41,6 +42,7 @@ class NimbleMovementTriggerCardData extends foundry.abstract.TypeDataModel<
 > {
 	static override defineSchema(): NimbleMovementTriggerCardData.Schema {
 		return {
+			...grantedActionOffers(),
 			...metadata(),
 			...targets(),
 			...movementTriggerCardSchema(),

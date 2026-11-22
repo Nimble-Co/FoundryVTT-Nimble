@@ -1,6 +1,10 @@
 import type { MovementTriggerOptions, TriggerCreature, TriggerGeometry } from '#types/movement.js';
 import localize from '#utils/localize.js';
 import { isInStartedCombat } from '#utils/movement/isInStartedCombat.js';
+import {
+	collectItemTriggerOffers,
+	spendLineCharges,
+} from '../../utils/combat/grantedActionOffers.js';
 import { matchMovementTrigger } from '../../utils/movement/matchMovementTrigger.js';
 import { postMovementTriggerCard } from '../../utils/movement/postMovementTriggerCard.js';
 import { withWidget } from './_widgetOption.js';
@@ -223,7 +227,8 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			.replaceAll('{spacesMovedThisTurn}', spacesThisTurn)
 			.replaceAll('{targets}', targetNames.join(', '));
 
-		await postMovementTriggerCard({
+		const lines = this.#lines(context.token);
+		const card = await postMovementTriggerCard({
 			actor: this.actor,
 			item: this.#usableItem(),
 			token: context.token,
@@ -233,7 +238,17 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			spaces: record.spaces,
 			spacesThisTurn: record.spacesThisTurn,
 			whisper: this.whisper,
+			...(lines.length > 0 ? { lines } : {}),
 		});
+		if (card && lines.length > 0) await spendLineCharges(lines);
+	}
+
+	/** The attack lines the item's own rules give the observer on this card. */
+	#lines(observer: TokenDocument) {
+		const { item } = this;
+		if (!item || item.actor !== this.actor) return [];
+		const actorUuid = observer.actor?.uuid ?? this.actor.uuid ?? '';
+		return collectItemTriggerOffers(item as never, actorUuid, 'onMovementTrigger');
 	}
 
 	/** The item the card offers to use: only an item of the creature with this rule. */

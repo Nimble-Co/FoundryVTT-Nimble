@@ -222,26 +222,47 @@ describe('an attack from a granted attack line', () => {
 		expect(activateItem).toHaveBeenCalledWith('Longsword', {
 			originUuid: 'Item.granting',
 			skipActionDeduction: true,
+			rollMode: -1,
+			opportunityAttack: true,
 		});
 		expect(useHeroicReactions).toHaveBeenCalledWith(combatant.id, ['opportunityAttack'], undefined);
 	});
 
-	it('spends no reaction and no action for a free opportunity attack, with no free attack note', async () => {
+	it('makes an Unarmed Strike opportunity attack at disadvantage', async () => {
+		const { actor } = hero([]);
+		const combatant = createHeroicCombatant(actor);
+		setHeroicCombat(combatant, { useHeroicReactions: vi.fn(async () => true) });
+
+		await grantedAttack.makeGrantedAttack(actor, line({ spendsReaction: true }), 'unarmedStrike');
+
+		expect(rollUnarmedStrikeMock).toHaveBeenCalledWith(actor, {
+			originUuid: 'Item.granting',
+			free: true,
+			rollMode: -1,
+			opportunityAttack: true,
+		});
+	});
+
+	it('makes a free opportunity attack that spends neither an action nor the reaction', async () => {
 		const sword = weapon('Longsword');
 		const { actor, activateItem } = hero([sword]);
 		const combatant = createHeroicCombatant(actor);
 		const useHeroicReactions = vi.fn(async () => true);
 		setHeroicCombat(combatant, { useHeroicReactions });
 
-		await grantedAttack.makeGrantedAttack(
-			actor,
-			line({ free: true, spendsReaction: true }),
-			sword.uuid,
-		);
+		expect(
+			await grantedAttack.makeGrantedAttack(
+				actor,
+				line({ spendsReaction: true, free: true }),
+				sword.uuid,
+			),
+		).toBe(true);
 
 		expect(activateItem).toHaveBeenCalledWith('Longsword', {
 			originUuid: 'Item.granting',
 			skipActionDeduction: true,
+			rollMode: -1,
+			opportunityAttack: true,
 		});
 		expect(useHeroicReactions).not.toHaveBeenCalled();
 	});

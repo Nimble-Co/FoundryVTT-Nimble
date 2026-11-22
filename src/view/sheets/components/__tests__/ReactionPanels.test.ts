@@ -369,8 +369,8 @@ describe('reaction panel confirmation wrappers', () => {
 
 		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', {
 			rollMode: -1,
-			skipActionDeduction: true,
 			opportunityAttack: true,
+			skipActionDeduction: true,
 		});
 		await waitFor(() => expect(onUseReaction).toHaveBeenCalledWith({ force: true }));
 	});
@@ -395,8 +395,8 @@ describe('reaction panel confirmation wrappers', () => {
 		expect(confirmDialog()).not.toHaveBeenCalled();
 		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', {
 			rollMode: -1,
-			skipActionDeduction: true,
 			opportunityAttack: true,
+			skipActionDeduction: true,
 		});
 		await waitFor(() => expect(onUseReaction).toHaveBeenCalledWith(undefined));
 	});
