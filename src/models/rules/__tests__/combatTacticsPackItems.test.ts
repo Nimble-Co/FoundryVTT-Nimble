@@ -113,7 +113,7 @@ describe('Lunging Strike', () => {
 		expect(rule().matchesAttack('ranged', 'weapon')).toBe(false);
 		expect(rule().startsChosen).toBe(false);
 		expect(rule().offersAdvantage()).toBe(false);
-		expect(rule().label).toBe('Using Lunging Strike (+1 Reach)');
+		expect(rule().label).toBe('Lunging Strike (+1 Reach)');
 	});
 
 	it('spends one Combat Die and adds 2x its roll', () => {

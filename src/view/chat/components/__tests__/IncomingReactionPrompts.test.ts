@@ -467,6 +467,45 @@ describe('IncomingReactionPrompts', () => {
 			expect(rollPlace().queryByRole('button', { name: /^Change This Roll/ })).toBeNull();
 		});
 
+		it('shows a charge spend as the same card button, and spends it with no dice to pick', async () => {
+			const g = globalThis as Record<string, any>;
+			const heavyStrike = {
+				id: 'item-heavy',
+				name: 'Heavy Strike',
+				rules: new Map([
+					['heavy-strike-spend', { id: 'heavy-strike-spend', type: 'chargeConsumer' }],
+				]),
+			};
+			g.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.heavy-strike' ? heavyStrike : { name: 'Cora', isOwner: true },
+			);
+			const message = createMessage([
+				spendEntry({
+					label: 'Heavy Strike',
+					itemUuid: 'Item.heavy-strike',
+					ruleId: 'heavy-strike-spend',
+					outcomeTrigger: 'hit',
+				}),
+			]);
+			Object.assign(message.system, { isCritical: false, isMiss: false });
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			const button = spendButton(/^Add Damage with Heavy Strike/);
+			expect(button?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Add Damage with Heavy Strike');
+			expect(rollPlace().queryByRole('button', { name: /^Change This Roll/ })).toBeNull();
+
+			await fireEvent.click(button as HTMLElement);
+
+			await vi.waitFor(() =>
+				expect(requestIncomingAttackReaction).toHaveBeenCalledWith({
+					messageId: 'message-1',
+					entryId: 'spend-1',
+				}),
+			);
+			expect(spendDialogMock().instances).toHaveLength(0);
+			await vi.waitFor(() => expect(spendButton(/^Add Damage with Heavy Strike/)).toBeNull());
+		});
+
 		it('takes the spend out of the count of Change This Roll', async () => {
 			useConsumer({ ruleId: 'death-blow-fury-consumer', itemId: 'item-death-blow' });
 			render(IncomingReactionPromptsTestHarness, {

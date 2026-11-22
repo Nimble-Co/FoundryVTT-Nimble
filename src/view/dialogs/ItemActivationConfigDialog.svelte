@@ -8,6 +8,7 @@
 	import { createDiceDivisionState } from './diceDivisionState.svelte.ts';
 	import { createItemActivationConfigDialogState } from './itemActivationConfigDialogState.svelte.ts';
 	import AmountStepper from './components/AmountStepper.svelte';
+	import { conditionalBonusTick } from './components/conditionalBonusTick.ts';
 	import DualWieldField from './components/DualWieldField.svelte';
 	import DamageMultiplierField from './components/DamageMultiplierField.svelte';
 	import HeldChangeLines from './components/HeldChangeLines.svelte';
@@ -127,15 +128,6 @@
 >
 	{#if attackNote}<p class="spends">{attackNote}</p>{/if}
 	{#if state.spendLine}<p class="spends">{state.spendLine}</p>{/if}
-	{#each state.chargeCosts as cost (cost.label)}
-		<p class="spends">
-			{localize('NIMBLE.rollWindow.spendsCharge', {
-				count: String(cost.amount),
-				pool: cost.label,
-				left: String(cost.current),
-			})}
-		</p>
-	{/each}
 
 	{#if state.needsWeapon}
 		<div class="fld">
@@ -231,12 +223,7 @@
 									)}
 							/>
 							<i class="fa-solid fa-plus" aria-hidden="true"></i>
-							<span
-								>{localize('NIMBLE.activationDialog.conditionalBonus.tick', {
-									label: option.label,
-									value: damageLabel,
-								})}</span
-							>
+							<span>{conditionalBonusTick(option.label, damageLabel)}</span>
 						</label>
 					{:else}
 						<div class="nimble-conditional-bonus__row">

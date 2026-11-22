@@ -882,6 +882,7 @@
 					"source": "{source}",
 					"reasonAndSource": "{reason} - {source}",
 					"usedUp": "This roll used it",
+					"spentOnHit": "Spent {count} from {pool} on this hit",
 					"usedByAction": "This action used it",
 					"lastsUntil": "{moment}"
 				},
@@ -4445,6 +4446,12 @@
 			"header": "Charges",
 			"temporaryUses": "{count} temporary: spent first, gone when the encounter ends.",
 			"temporaryUsesFrom": "{count} temporary from {source}: spent first, gone when the encounter ends.",
+			"cardLine": {
+				"spent": "{pool}: spent {count}, {left} left",
+				"regained": "{pool}: regained {count}, {left} left",
+				"left": "{pool}: {left} left",
+				"countOf": "{current} of {max}"
+			},
 			"hiddenPoolHint": "Not shown on the sheet. This pool gates or rate-limits the feature rather than being a resource you spend.",
 			"empty": "No charge pools configured.",
 			"allFull": "All charges full.",
@@ -5986,7 +5993,7 @@
 			"noWeapon": "You have no weapon of this kind.",
 			"noWeaponFor": "{item}: you have no weapon of this kind.",
 			"noCharge": "{pool}: none left.",
-			"spendsCharge": "{pool}: this roll spends {count} ({left} left).",
+			"spendCharge": "{count} from {pool} ({left} left after)",
 			"lessMana": "Spend 1 less mana",
 			"dualWield": {
 				"name": "Dual wield",
@@ -6052,7 +6059,8 @@
 				"damage": "+{value} damage",
 				"damageDoubled": "+{value} damage (doubled)",
 				"none": "None",
-				"tick": "{label}: +{value} damage"
+				"tick": "{label}: +{value} damage",
+				"tickWithNote": "{label}: +{value} damage ({note})"
 			}
 		},
 		"characterSettings": {

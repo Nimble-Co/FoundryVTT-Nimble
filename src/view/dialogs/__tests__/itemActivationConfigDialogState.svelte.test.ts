@@ -157,7 +157,7 @@ describe('the activation dialog bonus of an item damage', () => {
 describe('the activation dialog bonus that spends a charge', () => {
 	const lunging = {
 		key: 'Item.lunging:rule',
-		label: 'Using Lunging Strike: +1 Reach',
+		label: 'Lunging Strike (+1 Reach)',
 		advantage: 0,
 		damageValue: null,
 		damageFormula: '1d8*2',
@@ -200,7 +200,17 @@ describe('the activation dialog bonus that spends a charge', () => {
 
 		expect(state.consumedChargePools).toEqual([{ poolId: 'combat-dice', count: 1 }]);
 		expect(state.chargeCosts).toEqual([{ label: 'Combat Dice', amount: 1, current: 2 }]);
-		expect(state.modifiedFormulas[0].formula).toBe('1d8+1d8*2[Using Lunging Strike: +1 Reach]');
+		expect(state.modifiedFormulas[0].formula).toBe('1d8+1d8*2[Lunging Strike (+1 Reach)]');
+	});
+
+	it('puts the charge in the one spend line, with what is left after the roll', () => {
+		const state = open([lunging]);
+
+		expect(state.spendLine).toBe('');
+
+		state.setConditionalChoice(lunging.key, 'damage');
+
+		expect(state.spendLine).toBe('When you roll, it spends 1 from Combat Dice (1 left after).');
 	});
 
 	it('is not there when the use already spends from that pool by itself', () => {
@@ -219,6 +229,7 @@ describe('the activation dialog bonus that spends a charge', () => {
 
 		expect(state.consumedChargePools).toEqual([{ poolId: 'assist-round', count: 1 }]);
 		expect(state.chargeCosts).toEqual([]);
+		expect(state.spendLine).toBe('');
 	});
 });
 
@@ -234,7 +245,7 @@ describe('the activation dialog spend from a charge pool with a die', () => {
 	};
 	const lunging = {
 		key: 'Item.lunging:rule',
-		label: 'Using Lunging Strike: +1 Reach',
+		label: 'Lunging Strike (+1 Reach)',
 		advantage: 0,
 		damageValue: null,
 		damageFormula: '1d6',
@@ -285,7 +296,23 @@ describe('the activation dialog spend from a charge pool with a die', () => {
 		state.setConditionalChoice(lunging.key, 'damage');
 
 		expect(state.spendableChargePools).toEqual([]);
+		expect(state.hasSpendablePools).toBe(false);
 		expect(state.consumedChargePools).toEqual([{ poolId: 'combat-dice', count: 1 }]);
+	});
+
+	it('never shows a chosen bonus, its spend line and the pool row together for one pool', () => {
+		const state = open([lunging]);
+
+		state.setConditionalChoice(lunging.key, 'damage');
+		expect(state.conditionalBonusOptions.map((o) => o.key)).toEqual([lunging.key]);
+		expect(state.spendLine).toBe('When you roll, it spends 1 from Combat Dice (2 left after).');
+		expect(state.hasSpendablePools).toBe(false);
+
+		state.setConditionalChoice(lunging.key, 'none');
+		state.adjustChargeSpend('combat-dice', 1);
+		expect(state.conditionalBonusOptions).toEqual([]);
+		expect(state.spendLine).toBe('');
+		expect(state.spendableChargePools.map((pool) => pool.id)).toEqual(['combat-dice']);
 	});
 
 	it('hides the bonus that spends from that pool once the player spends from it', () => {
@@ -829,6 +856,15 @@ describe('the activation dialog spend line', () => {
 	it('keeps the actions line of a use with no cost', () => {
 		expect(open({ spendsActions: 2 }).spendLine).toBe('When you roll, it spends 2 actions.');
 		expect(open({}).spendLine).toBe('');
+	});
+
+	it('puts the charge a use spends by itself in the same line', () => {
+		fixedCosts.mockReturnValueOnce([
+			{ poolId: 'combat-dice', label: 'Combat Dice', amount: 1, current: 3 },
+		]);
+		expect(open({ spendsActions: 2 }).spendLine).toBe(
+			'When you roll, it spends 2 actions and 1 from Combat Dice (2 left after).',
+		);
 	});
 });
 

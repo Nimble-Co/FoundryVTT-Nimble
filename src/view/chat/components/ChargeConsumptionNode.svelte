@@ -1,103 +1,39 @@
 <script lang="ts">
 	import { SYSTEM_ID } from '#system';
-	import { ChargeUiConfig } from '#utils/chargePool/chargeUiConfig.js';
-	import { poolCountText } from '#utils/chargePool/poolHeading.js';
-	import localize from '#utils/localize.js';
+	import type { ChargeConsumptionDetail } from '#utils/chargePool/types.js';
+	import { chargeConsumptionLine } from './chargeConsumptionLine.ts';
 	import { getContext } from 'svelte';
 
-	let { node: _node } = $props();
-
-	const messageDocument = getContext('messageDocument');
+	const messageDocument = getContext<
+		{ reactive?: { flags?: Record<string, unknown> } } | undefined
+	>('messageDocument');
 	let consumption = $derived(
-		messageDocument?.reactive?.flags?.[SYSTEM_ID]?.chargeConsumption ?? [],
+		((messageDocument?.reactive?.flags?.[SYSTEM_ID] as { chargeConsumption?: unknown } | undefined)
+			?.chargeConsumption ?? []) as ChargeConsumptionDetail[],
 	);
-
-	function getChangeColor(change) {
-		return change < 0
-			? 'var(--nimble-roll-failure-color, hsl(1, 100%, 33%))'
-			: 'var(--nimble-roll-success-color, hsl(120, 45%, 55%))';
-	}
-
-	function formatSignedDelta(value: number): string {
-		return value < 0 ? String(value) : `+${value}`;
-	}
-
-	function formatRecoveryTrigger(trigger: string): string {
-		const localizationKey =
-			ChargeUiConfig.recoveryTriggerLocalizationKeys[
-				trigger as keyof typeof ChargeUiConfig.recoveryTriggerLocalizationKeys
-			];
-		if (!localizationKey) return trigger;
-		return localize(localizationKey);
-	}
+	let lines = $derived(consumption.map(chargeConsumptionLine));
 </script>
 
-{#if consumption.length > 0}
+{#if lines.length > 0}
 	<section class="nimble-charge-consumption">
-		{#each consumption as entry}
-			{@const recoveryDelta = entry.recovery
-				? entry.recovery.newValue - entry.recovery.previousValue
-				: 0}
-			{@const showDelta = entry.change !== 0 || recoveryDelta !== 0}
-			{@const useRecoveryDelta = entry.recovery && recoveryDelta !== entry.change}
-			<div class="nimble-charge-consumption__entry">
-				<span class="nimble-charge-consumption__values">
-					{#if showDelta}
-						<span
-							class={useRecoveryDelta
-								? 'nimble-charge-consumption__recovery'
-								: 'nimble-charge-consumption__change'}
-							style="color: {getChangeColor(useRecoveryDelta ? recoveryDelta : entry.change)}"
-							title={entry.recovery ? formatRecoveryTrigger(entry.recovery.trigger) : ''}
-						>
-							{useRecoveryDelta
-								? `(${formatSignedDelta(recoveryDelta)})`
-								: `(${formatSignedDelta(entry.change)})`}
-						</span>
-					{/if}
-					<span class="nimble-charge-consumption__label">{entry.poolLabel}</span>
-					({poolCountText(
-						entry.recovery?.newValue ?? entry.currentValue,
-						entry.maxValue,
-						entry.hideMax,
-					)})
-				</span>
-			</div>
+		{#each lines as line, index (index)}
+			<p class="nimble-charge-consumption__entry" data-tooltip={line.tooltip}>
+				{line.text}
+			</p>
 		{/each}
 	</section>
 {/if}
 
 <style lang="scss">
 	.nimble-charge-consumption {
-		padding: 0.5rem;
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+		padding: 0.5rem;
 	}
 
 	.nimble-charge-consumption__entry {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+		margin: 0;
 		font-size: var(--nimble-sm-text, 0.833rem);
-	}
-
-	.nimble-charge-consumption__label {
-		font-weight: 500;
-	}
-
-	.nimble-charge-consumption__values {
-		display: flex;
-		gap: 0.375rem;
-	}
-
-	.nimble-charge-consumption__change {
-		font-weight: 600;
-	}
-
-	.nimble-charge-consumption__recovery {
-		font-size: var(--nimble-xs-text, 0.75rem);
-		color: var(--nimble-roll-success-color, hsl(120, 45%, 55%));
-		font-style: italic;
 	}
 </style>

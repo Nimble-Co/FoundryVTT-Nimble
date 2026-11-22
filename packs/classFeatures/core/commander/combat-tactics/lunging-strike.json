@@ -11,7 +11,7 @@
 				"disabled": false,
 				"id": "lunging-strike-bonus",
 				"identifier": "",
-				"label": "Using Lunging Strike (+1 Reach)",
+				"label": "Lunging Strike (+1 Reach)",
 				"predicate": {},
 				"priority": 1,
 				"advantage": 0,

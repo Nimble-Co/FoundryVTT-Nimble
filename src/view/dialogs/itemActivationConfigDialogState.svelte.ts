@@ -95,11 +95,6 @@ export function createItemActivationConfigDialogState(
 	const resources = resourceAmounts(actor, options.resourceCosts ?? []);
 	const splits = useOptionSplits(actor, options.useOptionGroups ?? []);
 
-	const spendLine = $derived.by(() => {
-		const costParts = rollWindowCostParts([...resources.chosen(), ...splits.costs()]);
-		return rollSpendLine(options.spendsActions, costParts.spends, costParts.sacrifices);
-	});
-
 	const allRolledPools = extractRolledPools(actor);
 	const spendablePools: SpendablePool[] = allRolledPools.filter(
 		(pool) => pool.consumption !== 'autoBonus',
@@ -410,6 +405,22 @@ export function createItemActivationConfigDialogState(
 			.filter((charge) => !charge.hidden)
 			.map((charge) => ({ label: charge.label, amount: 1, current: charge.current })),
 	]);
+	// One line for every cost of the roll, charges with what is left after the roll.
+	const spendLine = $derived.by(() => {
+		const costParts = rollWindowCostParts([...resources.chosen(), ...splits.costs()]);
+		const charges = chargeCosts.map((cost) =>
+			localize('NIMBLE.rollWindow.spendCharge', {
+				count: String(cost.amount),
+				pool: cost.label,
+				left: String(Math.max(0, cost.current - cost.amount)),
+			}),
+		);
+		return rollSpendLine(
+			options.spendsActions,
+			[...costParts.spends, ...charges],
+			costParts.sacrifices,
+		);
+	});
 	const consumedChargePools = $derived([
 		...offeredChargeSpends,
 		...chosenCharges.map((charge) => ({ poolId: charge.poolId, count: 1 })),

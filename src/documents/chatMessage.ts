@@ -1,4 +1,4 @@
-import type { CardEvent } from '#types/cardEvent.d.ts';
+import type { CardEvent, CardEventText } from '#types/cardEvent.d.ts';
 import type { DefendEffect } from '#types/defend.d.ts';
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
@@ -2283,7 +2283,8 @@ class NimbleChatMessage extends ChatMessage {
 				picked.spentFaces.length,
 				picked.spentFaces.reduce((sum, face) => sum + face, 0),
 			),
-			patch: (bonusDamage) => this.#buildSpendDamagePatch(systemData, consumer, bonusDamage, entry.itemUuid ?? ''),
+			patch: (bonusDamage) =>
+				this.#buildSpendDamagePatch(systemData, consumer, bonusDamage, entry.itemUuid ?? ''),
 			// Charge the pool only if it actually accepted the write, otherwise the
 			// card would gain damage the player never paid for.
 			charge: () => setPoolFaces(actor, pool.id, picked.remainingFaces),
@@ -2356,7 +2357,12 @@ class NimbleChatMessage extends ChatMessage {
 			poolLabel: pool.label,
 			usedFaces: rolledFaces,
 		});
-		if (landed) await this.#offerCardPush(actor, item, rule.cardPush ?? null);
+		if (landed) {
+			await this.#offerCardPush(actor, item, rule.cardPush ?? null, {
+				key: 'NIMBLE.chat.events.cause.spentOnHit',
+				data: { count: String(cost), pool: pool.label },
+			});
+		}
 	}
 
 	/**
@@ -2462,6 +2468,7 @@ class NimbleChatMessage extends ChatMessage {
 		actor: Actor.Implementation,
 		item: Item.Implementation,
 		push: { distance: string; distanceBySize: Record<string, string> } | null,
+		reason: CardEventText,
 	): Promise<void> {
 		const targets = (this.system as { targets?: string[] }).targets ?? [];
 		const tokenUuid = speakerTokenUuid(this as unknown as OfferCard);
@@ -2477,7 +2484,7 @@ class NimbleChatMessage extends ChatMessage {
 				token,
 				name: item.name ?? '',
 				image: item.img ?? undefined,
-				reason: item.name ?? '',
+				reason,
 				node: {
 					kind: 'forced',
 					distance: push.distance,

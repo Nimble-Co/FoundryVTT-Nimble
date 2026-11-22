@@ -256,6 +256,10 @@ describe('a spend of a charge from the attack card', () => {
 		expect(offerMovement).toHaveBeenCalledWith(
 			expect.objectContaining({
 				name: 'Heavy Strike',
+				reason: {
+					key: 'NIMBLE.chat.events.cause.spentOnHit',
+					data: { count: '1', pool: 'Combat Dice' },
+				},
 				node: expect.objectContaining({
 					kind: 'forced',
 					direction: 'away',
