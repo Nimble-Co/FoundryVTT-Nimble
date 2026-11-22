@@ -25,7 +25,7 @@ export interface GrantedAttackChoice {
 	name: string;
 }
 
-/** A group of the dropdown. The label is null for the weapons when they are one group. */
+/** A group of the dropdown. The label is null for the weapons when they are the only group. */
 export interface GrantedAttackGroup {
 	label: string | null;
 	choices: GrantedAttackChoice[];
@@ -50,20 +50,25 @@ interface Recipient {
 const isCantrip = (item: RecipientItem) =>
 	item.type === 'spell' && (item.system as { tier?: number } | undefined)?.tier === 0;
 
-/** The dropdown of a line: the fitting weapons as the weapon pick groups them, then the cantrips. */
+/**
+ * The dropdown of a line: the fitting weapons as the weapon pick groups them, then the cantrips.
+ * With cantrips, every group has its heading.
+ */
 export function grantedAttackGroups(
 	actor: Recipient,
 	line: Pick<GrantedAttackLine, 'weaponKind' | 'allowsCantrips'>,
 ): GrantedAttackGroup[] {
-	const weapons = groupWeapons(weaponOptionsFor(actor as never, line.weaponKind)).map((group) => ({
-		label: group.label,
-		choices: group.weapons.map((weapon) => ({ value: weapon.uuid, name: weapon.name })),
-	}));
 	const cantrips = line.allowsCantrips
 		? [...(actor.items ?? [])]
 				.filter(isCantrip)
 				.map((spell) => ({ value: spell.uuid ?? '', name: spell.name ?? '' }))
 		: [];
+	const weapons = groupWeapons(weaponOptionsFor(actor as never, line.weaponKind), {
+		headed: cantrips.length > 0,
+	}).map((group) => ({
+		label: group.label,
+		choices: group.weapons.map((weapon) => ({ value: weapon.uuid, name: weapon.name })),
+	}));
 	if (cantrips.length < 1) return weapons;
 	return [
 		...weapons,

@@ -138,17 +138,23 @@ export interface WeaponGroup {
 	weapons: WeaponOption[];
 }
 
-/** The weapons as the groups "Equipped" and "Not equipped", or as one group when one is empty. */
-export function groupWeapons(weapons: WeaponOption[]): WeaponGroup[] {
+/**
+ * The weapons as the groups "Equipped" and "Not equipped". When one is empty, they are one group
+ * with no heading, unless `headed` asks for the heading because other groups follow.
+ */
+export function groupWeapons(
+	weapons: WeaponOption[],
+	{ headed = false }: { headed?: boolean } = {},
+): WeaponGroup[] {
 	const equipped = weapons.filter((weapon) => weapon.equipped);
 	const notEquipped = weapons.filter((weapon) => !weapon.equipped);
-	if (equipped.length === 0 || notEquipped.length === 0) {
+	if (!headed && (equipped.length === 0 || notEquipped.length === 0)) {
 		return weapons.length > 0 ? [{ label: null, weapons }] : [];
 	}
 	return [
 		{ label: localize('NIMBLE.rollWindow.weaponsEquipped'), weapons: equipped },
 		{ label: localize('NIMBLE.rollWindow.weaponsNotEquipped'), weapons: notEquipped },
-	];
+	].filter((group) => group.weapons.length > 0);
 }
 
 interface EffectTreeNode {

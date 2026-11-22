@@ -237,7 +237,7 @@ describe('GrantedActionOffers', () => {
 		expect(dropdown().value).toBe('Actor.ally.Item.sword');
 	});
 
-	it('adds a Cantrips group when the line allows cantrips', () => {
+	it('adds a Cantrips group when the line allows cantrips, and heads the weapons too', () => {
 		const g = globalThis as Record<string, any>;
 		g.fromUuidSync = vi.fn(() =>
 			createRecipient({
@@ -258,7 +258,7 @@ describe('GrantedActionOffers', () => {
 			props: { messageDocument: createMessage([createOffer({ allowsCantrips: true })]) },
 		});
 
-		expect(groupNames()).toEqual(['Cantrips']);
+		expect(groupNames()).toEqual(['Equipped', 'Cantrips']);
 		expect(optionNames()).toEqual(['Longsword', 'Fire Bolt']);
 	});
 

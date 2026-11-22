@@ -86,17 +86,36 @@ describe('the choices of a granted attack line', () => {
 		]);
 	});
 
-	it('adds the cantrips of the recipient as a group when the line allows them', () => {
+	it('adds the cantrips of the recipient as a group when the line allows them, and heads the weapons', () => {
 		const { actor } = hero([weapon('Longsword'), spell('Fire Bolt', 0), spell('Fireball', 3)]);
 
 		expect(names(grantedAttack.grantedAttackGroups(actor, line({ allowsCantrips: true })))).toEqual(
 			[
-				[null, ['Longsword', 'Unarmed Strike']],
+				['Equipped', ['Longsword', 'Unarmed Strike']],
 				['Cantrips', ['Fire Bolt']],
 			],
 		);
 		expect(names(grantedAttack.grantedAttackGroups(actor, line()))).toEqual([
 			[null, ['Longsword', 'Unarmed Strike']],
+		]);
+	});
+
+	it('heads the weapons that are not equipped when they are the only weapons beside cantrips', () => {
+		const { actor } = hero([
+			weapon('Shortbow', { equipped: false, attackType: 'range' }),
+			spell('Fire Bolt', 0),
+		]);
+
+		expect(
+			names(
+				grantedAttack.grantedAttackGroups(
+					actor,
+					line({ weaponKind: 'ranged', allowsCantrips: true }),
+				),
+			),
+		).toEqual([
+			['Not equipped', ['Shortbow']],
+			['Cantrips', ['Fire Bolt']],
 		]);
 	});
 
