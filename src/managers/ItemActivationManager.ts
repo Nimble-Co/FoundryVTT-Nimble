@@ -79,6 +79,8 @@ import type { DiceShare } from '../utils/damage/evenDiceShares.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
+	attackDistanceWith,
+	halfRangeOf,
 	UNARMED_STRIKE,
 	useWeaponDamage,
 	type WeaponOption,
@@ -361,10 +363,11 @@ class ItemActivationManager {
 				? null
 				: (fromUuidSync(weapon.uuid as never) as NimbleBaseItem | null);
 		this.#weapon = item;
+		const distance = attackDistanceWith(weapon, halfRangeOf(this.#item));
 		this.activationData.targets = {
 			...this.activationData.targets,
 			attackType: weapon.attackType,
-			...(weapon.distance === undefined ? {} : { distance: weapon.distance }),
+			...(distance === undefined ? {} : { distance }),
 		};
 		useWeaponDamage(this.activationData.effects ?? [], weapon);
 		const weaponEffects = (item?.system as { activation?: { effects?: unknown[] } } | undefined)

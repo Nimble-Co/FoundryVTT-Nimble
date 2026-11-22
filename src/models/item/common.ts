@@ -78,6 +78,11 @@ export const activation = () => ({
 			initial: '',
 			choices: WEAPON_ATTACKS,
 		}),
+		halfRange: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+		}),
 		targets: new fields.SchemaField({
 			count: new fields.NumberField({
 				required: true,

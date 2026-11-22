@@ -158,6 +158,7 @@
 					{/if}
 				{/each}
 			</select>
+			{#if state.rangeLine}<p class="range">{state.rangeLine}</p>{/if}
 		</div>
 	{/if}
 
@@ -519,7 +520,8 @@
 </RollWindow>
 
 <style lang="scss">
-	.spends {
+	.spends,
+	.range {
 		margin: 0;
 		font-size: 0.781rem;
 		font-weight: 600;

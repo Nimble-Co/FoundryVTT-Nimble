@@ -5957,6 +5957,7 @@
 				"increment": "One more die for {name}"
 			},
 			"weapon": "Weapon",
+			"halfRange": "Range {distance} (half range)",
 			"weaponsEquipped": "Equipped",
 			"weaponsNotEquipped": "Not equipped",
 			"noWeapon": "You have no weapon of this kind.",
@@ -6206,6 +6207,8 @@
 				"ranged": "A ranged weapon",
 				"unarmed": "An Unarmed Strike"
 			},
+			"halfRange": "Half range",
+			"halfRangeHint": "The attack has half the range of the weapon, rounded down. The roll window and the card show it. Nothing checks the distance to the target.",
 			"singleTargetAttack": "Extra targets share one attack",
 			"singleTargetAttackHint": "The extra targets do not make this a Multi-target Attack: it can miss and crit, and the first target decides the rules that read the target.",
 			"attackType": "Attack Type",
