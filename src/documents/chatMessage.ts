@@ -41,6 +41,7 @@ import { maximizedPackets } from '#utils/heldChange/areaMaximize.js';
 import {
 	heldMaximizeOnAreaTarget,
 	heldVulnerabilityTo,
+	isAttackRoll,
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
@@ -893,6 +894,16 @@ function isAreaActivation(activation: Record<string, unknown>): boolean {
 	return !!activation.acquireTargetsFromTemplate && shape !== '';
 }
 
+/** Whether the card's activation makes an attack roll, which can hit, crit or miss. */
+function hasAttackRoll(activation: ActivationCardSystemData['activation']): boolean {
+	if (!activation) return false;
+	const targets = activation.targets as { attackType?: string } | undefined;
+	const damage = flattenEffectsTree((activation.effects ?? []) as EffectNode[]).find(
+		(node) => node.type === 'damage',
+	) as { canCrit?: boolean; canMiss?: boolean } | undefined;
+	return isAttackRoll(targets?.attackType, damage);
+}
+
 /** Whether a deferred roll became the card's primary damage roll. Never for an area activation. */
 function isPrimaryDeferredRoll(activation: Record<string, unknown>, nodeId: string): boolean {
 	if (isAreaActivation(activation)) return false;
@@ -1090,6 +1101,7 @@ class NimbleChatMessage extends ChatMessage {
 		const ruleNodes = this.#collectRuleActivationCardNodes({
 			isCritical: systemData.isCritical,
 			isMiss: systemData.isMiss,
+			isAttack: hasAttackRoll(systemData.activation),
 			sourceItem: this.#cardSourceItem(),
 			origin: originIdentifierOfCard(this),
 		});
@@ -1110,6 +1122,7 @@ class NimbleChatMessage extends ChatMessage {
 	#collectRuleActivationCardNodes(context: {
 		isCritical: boolean;
 		isMiss: boolean;
+		isAttack: boolean;
 		sourceItem: { type?: string } | null;
 		origin: string | undefined;
 	}): EffectNode[] {

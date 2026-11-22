@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import { ApplyConditionRule } from '../../models/rules/applyCondition.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
 type TestGlobals = {
@@ -3072,5 +3073,94 @@ describe('healing that goes to the one who used the item', () => {
 
 		expect(actor.applyHealing).not.toHaveBeenCalled();
 		expect(message.update).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleChatMessage.effectNodes — a hit step scoped to one feature', () => {
+	const weaponDamage = {
+		id: 'dmg',
+		type: 'damage',
+		formula: '1d8',
+		damageType: 'slashing',
+		canCrit: true,
+		canMiss: true,
+		parentNode: null,
+		parentContext: null,
+		on: {},
+	};
+
+	function grantingFeatureRule() {
+		const actor = { uuid: 'Actor.hero' };
+		const item = { actor, isEmbedded: true, name: 'Feature', uuid: 'Actor.hero.Item.f' };
+		const rule = new ApplyConditionRule(
+			{
+				type: 'applyCondition',
+				id: 'scoped',
+				label: 'Scoped',
+				condition: 'smoldering',
+				trigger: 'onHit',
+				attackOrigin: 'rally',
+			} as never,
+			{ parent: item as never, strict: false },
+		);
+		Object.assign(rule, {
+			id: 'scoped',
+			condition: 'smoldering',
+			trigger: 'onHit',
+			attackOrigin: 'rally',
+		});
+		return rule;
+	}
+
+	function card(type: string, origin: string | null, activation: Record<string, unknown>) {
+		return new NimbleChatMessage({
+			type,
+			speaker: { actor: 'hero' },
+			flags: origin ? { [SYSTEM_ID]: { origin: { uuid: 'Item.x', identifier: origin } } } : {},
+			system: { targets: [], isCritical: false, isMiss: false, activation },
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	function stepIds(message: NimbleChatMessage): string[] {
+		return message.effectNodes
+			.flat()
+			.filter((node) => node.type === 'applyEffect')
+			.map((node) => node.id);
+	}
+
+	beforeEach(() => {
+		const rule = grantingFeatureRule();
+		(globalThis as unknown as { game: Record<string, unknown> }).game.actors = {
+			get: (id: string) => (id === 'hero' ? { rules: [rule] } : null),
+		};
+		globals().fromUuidSync = vi.fn().mockReturnValue(null);
+	});
+
+	afterEach(() => {
+		delete (globalThis as unknown as { game: Record<string, unknown> }).game.actors;
+	});
+
+	it('gives the feature card itself, with no attack roll, no step', () => {
+		const message = card('feature', 'rally', { effects: [], targets: { count: 1 } });
+
+		expect(stepIds(message)).toEqual([]);
+	});
+
+	it('gives the card of an attack made through the feature that hits the step', () => {
+		const message = card('object', 'rally', {
+			effects: [weaponDamage],
+			targets: { count: 1, attackType: 'reach' },
+		});
+
+		expect(stepIds(message)).toEqual(['apply-condition-scoped']);
+	});
+
+	it('gives a plain attack that hits no step', () => {
+		const message = card('object', null, {
+			effects: [weaponDamage],
+			targets: { count: 1, attackType: 'reach' },
+		});
+
+		expect(stepIds(message)).toEqual([]);
 	});
 });

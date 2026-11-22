@@ -238,6 +238,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {
 		if (!this.#isAttackTrigger()) return [];
+		if (context.isAttack === false) return [];
 		if (!this.#matchesAttackContext(context)) return [];
 		if (!this.#matchesSource(context.sourceItem)) return [];
 		if (!isMadeThrough(this.attackOrigin, context.origin)) return [];
