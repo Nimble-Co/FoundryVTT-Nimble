@@ -32,6 +32,10 @@ describe('placeOf', () => {
 		expect(placeOf(feature({}, [rule('diceConsumer', { mode: 'manual' })]))).toBe('action');
 	});
 
+	it('keeps a feature whose charges are spent from a chat card button passive', () => {
+		expect(placeOf(feature({}, [rule('chargeConsumer', { cardOffer: 'hit' })]))).toBe('passive');
+	});
+
 	it('puts a feature with a Spend or Sacrifice cost on Actions', () => {
 		expect(placeOf(feature({}, [rule('resourceCost')]))).toBe('action');
 	});

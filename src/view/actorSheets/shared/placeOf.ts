@@ -20,7 +20,7 @@ function givesSelfEffect(item: ItemLike): boolean {
 /**
  * A reaction cost puts the item in Reactions. An action cost, a consumer that you spend
  * by hand, a rule that you aim, or a step that gives you an effect puts it on Actions.
- * All else is passive.
+ * A consumer spent from a chat card button is not spent by hand. All else is passive.
  */
 export function placeOf(item: ItemLike): ItemPlace {
 	const cost = activationCost(item);
@@ -28,7 +28,7 @@ export function placeOf(item: ItemLike): ItemPlace {
 	if (cost.type === 'action') return 'action';
 	const acts = enabledRules(item).some(
 		(rule) =>
-			ACT_RULES.has(rule.type) ||
+			(ACT_RULES.has(rule.type) && !(rule.type === 'chargeConsumer' && rule.fields.cardOffer)) ||
 			(rule.type === 'diceConsumer' && (rule.fields.mode ?? 'manual') === 'manual'),
 	);
 	return acts || givesSelfEffect(item) ? 'action' : 'passive';
