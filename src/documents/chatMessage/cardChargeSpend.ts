@@ -1,7 +1,13 @@
 import type { CardEventText } from '#types/cardEvent.d.ts';
 import type { OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
+import {
+	buildChargePoolId,
+	resolveFormulaToInteger,
+	toChargePoolScope,
+} from '#utils/chargePool/helpers.js';
 import { hasRuleCharge, rulePoolState, spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
+import type { CharacterActorLike } from '#utils/chargePool/types.js';
 import {
 	type AttackDelivery,
 	type AttackSource,
@@ -24,6 +30,7 @@ type ChargeCardOfferRule = Pick<
 	| 'type'
 	| 'disabled'
 	| 'poolIdentifier'
+	| 'poolScope'
 	| 'cost'
 	| 'cardOffer'
 	| 'effectFormula'
@@ -131,8 +138,12 @@ export class CardChargeSpend {
 			!host.spendsPoolAgain(entry);
 		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
 
-		const identifier = String(rule.poolIdentifier ?? '');
-		const cost = Math.max(1, Math.trunc(Number(rule.cost) || 1));
+		const identifier = buildChargePoolId(
+			toChargePoolScope(rule.poolScope),
+			String(rule.poolIdentifier ?? ''),
+			'',
+		);
+		const cost = Math.max(1, resolveFormulaToInteger(actor as CharacterActorLike, rule.cost));
 		const pool = rulePoolState(actor, identifier);
 		if (!pool) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
 		if (!hasRuleCharge(actor, identifier, cost)) {

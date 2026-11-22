@@ -329,6 +329,29 @@ describe('a spend of a charge from the attack card', () => {
 		expect(offerMovement).not.toHaveBeenCalled();
 	});
 
+	it('spends the cost that its formula gives', async () => {
+		const actor = createActor(3, consumerRule({ cost: '@strength' }));
+		useActor(actor);
+		const message = createMessage();
+
+		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
+
+		const written = actor._pools.update.mock.calls[0][0] as Record<string, unknown>;
+		const stored = written[`flags.${SYSTEM_ID}.chargePools`] as Record<string, { current: number }>;
+		expect(stored['combat-dice'].current).toBe(0);
+	});
+
+	it('spends from the pool of its scope only', async () => {
+		const actor = createActor(2, consumerRule({ poolScope: 'actor' }));
+		useActor(actor);
+		const message = createMessage();
+
+		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
+
+		expect(actor._pools.update).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
 	it('refuses with no charge left', async () => {
 		const actor = createActor(0);
 		useActor(actor);
