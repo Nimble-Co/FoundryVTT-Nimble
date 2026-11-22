@@ -4,6 +4,7 @@ import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js'
 const conditionalBonuses = vi.fn(() => []);
 const dicePools = vi.fn((): unknown[] => []);
 const fixedCosts = vi.fn((): unknown[] => []);
+const chargePools = vi.fn((): unknown[] => []);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let createState: typeof import('../itemActivationConfigDialogState.svelte.ts').createItemActivationConfigDialogState;
@@ -18,6 +19,10 @@ beforeAll(async () => {
 		getActiveConditionalBonuses: conditionalBonuses,
 	}));
 	vi.doMock('#utils/chargePool/fixedChargeCosts.js', () => ({ fixedChargeCostsOf: fixedCosts }));
+	vi.doMock('#utils/chargePool/chargePoolSync.js', async (importOriginal) => ({
+		...(await importOriginal<object>()),
+		getPools: chargePools,
+	}));
 	vi.doMock('#utils/dicePool/dicePoolSync.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
 		getPools: dicePools,
@@ -214,6 +219,92 @@ describe('the activation dialog bonus that spends a charge', () => {
 
 		expect(state.consumedChargePools).toEqual([{ poolId: 'assist-round', count: 1 }]);
 		expect(state.chargeCosts).toEqual([]);
+	});
+});
+
+describe('the activation dialog spend from a charge pool with a die', () => {
+	const combatDice = {
+		id: 'combat-dice',
+		identifier: 'combat-dice',
+		label: 'Combat Dice',
+		dieSize: 'd6',
+		current: 3,
+		max: 3,
+		hidden: false,
+	};
+	const lunging = {
+		key: 'Item.lunging:rule',
+		label: 'Using Lunging Strike: +1 Reach',
+		advantage: 0,
+		damageValue: null,
+		damageFormula: '1d6',
+		damageType: '',
+		startsChosen: false,
+		charge: { poolId: 'combat-dice', label: 'Combat Dice', current: 3, hidden: false },
+	};
+
+	function open(options: object[] = []) {
+		user.targets = new Set();
+		chargePools.mockReturnValue([combatDice]);
+		conditionalBonuses.mockReturnValueOnce(options as never);
+		return createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () =>
+				({
+					type: 'weapon',
+					system: { activation: { effects: [{ id: 'd', type: 'damage', formula: '1d8' }] } },
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	afterEach(() => {
+		chargePools.mockReset();
+		chargePools.mockReturnValue([]);
+	});
+
+	it('is offered on an attack that spends nothing from the pool', () => {
+		const state = open();
+
+		expect(state.spendableChargePools.map((pool) => pool.id)).toEqual(['combat-dice']);
+	});
+
+	it('is not offered when the use already spends from that pool by itself', () => {
+		fixedCosts.mockReturnValueOnce([
+			{ poolId: 'combat-dice', label: 'Combat Dice', amount: 1, current: 3 },
+		]);
+		const state = open();
+
+		expect(state.spendableChargePools).toEqual([]);
+		expect(state.hasSpendablePools).toBe(false);
+	});
+
+	it('is not offered while a chosen bonus spends from that pool', () => {
+		const state = open([lunging]);
+
+		state.setConditionalChoice(lunging.key, 'damage');
+
+		expect(state.spendableChargePools).toEqual([]);
+		expect(state.consumedChargePools).toEqual([{ poolId: 'combat-dice', count: 1 }]);
+	});
+
+	it('hides the bonus that spends from that pool once the player spends from it', () => {
+		const assist = {
+			...lunging,
+			key: 'Item.assist:rule',
+			charge: { poolId: 'assist-round', label: 'Assist Me', current: 1, hidden: true },
+		};
+		const state = open([lunging, assist]);
+
+		state.adjustChargeSpend('combat-dice', 1);
+
+		expect(state.conditionalBonusOptions.map((o) => o.key)).toEqual([assist.key]);
+		expect(state.consumedChargePools).toEqual([{ poolId: 'combat-dice', count: 1 }]);
+		expect(state.modifiedFormulas[0].formula).toBe('1d8+1d6[Combat Dice]');
+
+		state.adjustChargeSpend('combat-dice', -1);
+
+		expect(state.conditionalBonusOptions.map((o) => o.key)).toEqual([lunging.key, assist.key]);
 	});
 });
 

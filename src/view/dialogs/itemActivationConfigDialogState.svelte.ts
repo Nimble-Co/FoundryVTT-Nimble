@@ -104,7 +104,7 @@ export function createItemActivationConfigDialogState(
 	const spendablePools: SpendablePool[] = allRolledPools.filter(
 		(pool) => pool.consumption !== 'autoBonus',
 	);
-	const spendableChargePools: SpendableChargePool[] = extractSpendableChargePools(actor);
+	const chargePoolsWithDie: SpendableChargePool[] = extractSpendableChargePools(actor);
 	const variableChargeSpends: VariableChargeSpend[] = extractVariableChargeSpends(actor, item);
 
 	// The actor that target tests read, taken when the dialog opens. None with two or more
@@ -276,7 +276,7 @@ export function createItemActivationConfigDialogState(
 
 	// Per-charge-pool count of charges the player has chosen to spend.
 	let chargeSpendCounts = $state<Record<string, number>>(
-		Object.fromEntries(spendableChargePools.map((p) => [p.id, 0])),
+		Object.fromEntries(chargePoolsWithDie.map((p) => [p.id, 0])),
 	);
 
 	// Variable spends open at their minimum rather than at 0: the activation is
@@ -316,7 +316,7 @@ export function createItemActivationConfigDialogState(
 	}
 
 	function adjustChargeSpend(poolId: string, delta: number) {
-		const pool = spendableChargePools.find((p) => p.id === poolId);
+		const pool = offeredChargePools.find((p) => p.id === poolId);
 		if (!pool) return;
 		const next = Math.max(0, Math.min(pool.current, (chargeSpendCounts[poolId] ?? 0) + delta));
 		chargeSpendCounts = { ...chargeSpendCounts, [poolId]: next };
@@ -341,7 +341,7 @@ export function createItemActivationConfigDialogState(
 	// per pool: "+2d6[Combat Dice]" rather than two separate "+1d6" terms.
 	const chargeBonusFragments = $derived.by<ChargeBonusFragment[]>(() => {
 		const fragments: ChargeBonusFragment[] = [];
-		for (const pool of spendableChargePools) {
+		for (const pool of offeredChargePools) {
 			const count = chargeSpendCounts[pool.id] ?? 0;
 			if (count < 1) continue;
 			fragments.push({
@@ -362,10 +362,6 @@ export function createItemActivationConfigDialogState(
 			chargeBonusFragments.map((f) => f.formula).join(''),
 	);
 
-	const hasSpendablePools = $derived(
-		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
-	);
-
 	// The variable spends in the shape the manager deducts from.
 	const consumedVariableCharges = $derived(
 		variableChargeSpends
@@ -379,13 +375,34 @@ export function createItemActivationConfigDialogState(
 		conditionalChoices = { ...conditionalChoices, [key]: choice };
 	}
 
-	const hasConditionalBonuses = $derived(conditionalBonusOptions.length > 0);
-
 	// A chosen bonus that spends a charge takes one when the roll is made.
 	const chosenCharges = $derived(
 		conditionalBonusOptions
 			.filter((o) => o.charge && (conditionalChoices[o.key] ?? 'none') !== 'none')
 			.map((o) => o.charge as NonNullable<ConditionalBonusOption['charge']>),
+	);
+	// One spend of a pool per attack: the stepper and a chosen bonus never both spend from one pool.
+	const offeredChargePools = $derived(
+		chargePoolsWithDie.filter(
+			(pool) =>
+				!poolsSpentByUse.has(pool.id) && !chosenCharges.some((charge) => charge.poolId === pool.id),
+		),
+	);
+	const offeredChargeSpends = $derived(
+		offeredChargePools
+			.map((pool) => ({ poolId: pool.id, count: chargeSpendCounts[pool.id] ?? 0 }))
+			.filter((entry) => entry.count > 0),
+	);
+	const shownBonusOptions = $derived(
+		conditionalBonusOptions.filter(
+			(option) =>
+				!option.charge ||
+				!offeredChargeSpends.some((spend) => spend.poolId === option.charge?.poolId),
+		),
+	);
+	const hasConditionalBonuses = $derived(shownBonusOptions.length > 0);
+	const hasSpendablePools = $derived(
+		spendablePools.length > 0 || offeredChargePools.length > 0 || autoBonusPools.length > 0,
 	);
 	const chargeCosts = $derived([
 		...fixedChargeCosts,
@@ -394,9 +411,7 @@ export function createItemActivationConfigDialogState(
 			.map((charge) => ({ label: charge.label, amount: 1, current: charge.current })),
 	]);
 	const consumedChargePools = $derived([
-		...Object.entries(chargeSpendCounts)
-			.filter(([, count]) => count > 0)
-			.map(([poolId, count]) => ({ poolId, count })),
+		...offeredChargeSpends,
 		...chosenCharges.map((charge) => ({ poolId: charge.poolId, count: 1 })),
 	]);
 
@@ -658,13 +673,15 @@ export function createItemActivationConfigDialogState(
 
 		// Pool snapshots (immutable).
 		spendablePools,
-		spendableChargePools,
 		variableChargeSpends,
+		get spendableChargePools() {
+			return offeredChargePools;
+		},
 		get autoBonusSummaries() {
 			return autoBonusSummaries;
 		},
 		get conditionalBonusOptions() {
-			return conditionalBonusOptions;
+			return shownBonusOptions;
 		},
 
 		// Conditional-bonus choices.
