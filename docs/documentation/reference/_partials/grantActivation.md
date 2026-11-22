@@ -3,6 +3,7 @@
 - **Label** → `Coordinated Strike`
 - **When** → `When this item is used`
 - **Also for the user** → on
+- **Targets it reaches** → `1`
 - **Weapon** → `Any weapon`
 - **Cantrips too** → on
 - **Free** → on
@@ -32,5 +33,7 @@ The line is only for the Zephyr, even when an enemy is targeted. An Extra Target
 **Free** spends no action. **Spends the reaction** spends the Opportunity Attack reaction in place of an action, after the attack. With neither, the attack spends an action as usual.
 
 A free attack still counts as an attack of the turn, so it takes Rushed Attack disadvantage and adds to the count. **Ignores Rushed Attacks** removes only that disadvantage. The attack still counts.
+
+**Targets it reaches** is reported, not enforced. With 2 allies targeted for Coordinated Strike!, both get a line, and the card says "Coordinated Strike reaches 1 creature. 2 are targeted." The table picks who attacks. A Grant Activation Targets rule raises the count.
 
 **Condition** is text under the line's label, for a condition the table checks, such as "If you end adjacent to your quarry". The player can use the line either way.

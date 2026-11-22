@@ -40,6 +40,8 @@ describe('grantedActionOffers schema factory', () => {
 			'allowsCantrips',
 			'ignoresRushed',
 			'condition',
+			'targetCount',
+			'targetedCount',
 			'used',
 			'usedBy',
 		]);

@@ -73,6 +73,98 @@ export function stepApplying(item: Json, effectId: string): Json {
 export const rulesOfType = (rules: Json[], type: string): Json[] =>
 	rules.filter((rule) => rule.type === type);
 
+// Rule schema checks
+
+type FieldLike = Json & { options?: Json };
+
+const optionOf = (field: FieldLike, key: string): unknown => field.options?.[key];
+
+function choicesOf(field: FieldLike): string[] | null {
+	const raw = optionOf(field, 'choices');
+	if (raw == null) return null;
+	const choices = typeof raw === 'function' ? (raw as () => unknown)() : raw;
+	return Array.isArray(choices) ? choices.map(String) : Object.keys(choices as Json);
+}
+
+/**
+ * The reasons a value fails its field, as Foundry casts and validates it. The unit tests
+ * mock the field classes, so this applies Foundry's checks to the options of the real schema.
+ */
+function fieldFailures(field: FieldLike, value: unknown, at: string): string[] {
+	const { fields } = foundry.data;
+	if (value === undefined) {
+		const initial = optionOf(field, 'initial');
+		if (initial === undefined) return [];
+		return fieldFailures(field, typeof initial === 'function' ? initial({}) : initial, at);
+	}
+	if (value === null) {
+		const nullable = optionOf(field, 'nullable') ?? field instanceof fields.NumberField;
+		return nullable ? [] : [`${at}: may not be null`];
+	}
+	if (field instanceof fields.StringField) {
+		const text = String(value).trim();
+		const choices = choicesOf(field);
+		const blank = optionOf(field, 'blank') ?? !choices;
+		if (text === '') return blank ? [] : [`${at}: may not be a blank string`];
+		return choices && !choices.includes(text) ? [`${at}: ${text} is not a valid choice`] : [];
+	}
+	if (field instanceof fields.NumberField) {
+		if (value === '' && optionOf(field, 'nullable') !== false) return [];
+		const number = Number(value);
+		if (Number.isNaN(number)) return [`${at}: must be a number`];
+		const min = optionOf(field, 'min') as number | undefined;
+		const max = optionOf(field, 'max') as number | undefined;
+		if (optionOf(field, 'integer') && !Number.isInteger(number))
+			return [`${at}: must be an integer`];
+		if (min !== undefined && number < min) return [`${at}: must be at least ${min}`];
+		if (max !== undefined && number > max) return [`${at}: must be at most ${max}`];
+		return [];
+	}
+	if (field instanceof fields.ArrayField || field instanceof fields.SetField) {
+		if (!Array.isArray(value)) return [`${at}: must be an array`];
+		return value.flatMap((each, index) => fieldFailures(field.element, each, `${at}.${index}`));
+	}
+	if (field instanceof fields.SchemaField) {
+		if (typeof value !== 'object') return [`${at}: must be an object`];
+		return Object.entries(field.fields as Record<string, FieldLike>).flatMap(([key, inner]) =>
+			fieldFailures(inner, (value as Json)[key], `${at}.${key}`),
+		);
+	}
+	return [];
+}
+
+/** Every rule of the document, of its effects and of the items an actor holds. */
+function packRules(document: Json): Json[] {
+	const effectRules = ((document.effects ?? []) as Json[]).flatMap(
+		(effect) => (effect.system?.rules ?? []) as Json[],
+	);
+	return [
+		...((document.system?.rules ?? []) as Json[]),
+		...effectRules,
+		...((document.items ?? []) as Json[]).flatMap(packRules),
+	];
+}
+
+/**
+ * Each rule of the pack document built through the schema of its rule type: the reasons
+ * a rule would be invalid, and so disabled, when an actor holds it. Empty when all pass.
+ */
+export async function packRuleFailures(document: Json): Promise<string[]> {
+	const { RULE_CLASSES } = await import('../../src/config/ruleClasses.js');
+	return packRules(document).flatMap((rule) => {
+		const ruleClass = RULE_CLASSES[rule.type as keyof typeof RULE_CLASSES];
+		if (!ruleClass) return [`${rule.id}: ${rule.type} is not a rule type`];
+		const schema = ruleClass.defineSchema() as Record<string, FieldLike>;
+		const unknown = Object.keys(rule).filter((key) => !(key in schema));
+		return [
+			...unknown.map((key) => `${rule.id}.${key}: not a field of ${rule.type}`),
+			...Object.entries(schema).flatMap(([key, field]) =>
+				fieldFailures(field, rule[key], `${rule.id}.${key}`),
+			),
+		];
+	});
+}
+
 // Effect finders
 
 export function effectById(item: Json, id: string): Json {

@@ -236,6 +236,7 @@ describe('rule types that need an item', () => {
 				'grantActivation',
 				'grantItem',
 				'grantSpells',
+				'grantTargetBonus',
 				'hitCondition',
 				'holdOnTarget',
 				'initiativeMessage',

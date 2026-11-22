@@ -728,7 +728,9 @@
 				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
 				"currentTarget": "Target: {name}",
 				"usedBy": "Granted action used by {name}",
-				"usedByVia": "Granted action used by {name} via {label}"
+				"usedByVia": "Granted action used by {name} via {label}",
+				"targetCountOne": "{source} reaches 1 creature. {targeted} are targeted.",
+				"targetCountMany": "{source} reaches {count} creatures. {targeted} are targeted."
 			},
 			"damageBack": {
 				"dealt": "{label}: {name} takes {amount} damage, ignoring armor",
@@ -2082,6 +2084,7 @@
 			"turnDamage": "Damage each turn",
 			"escapeDamage": "Damage on escape",
 			"extraTargets": "Extra Targets",
+			"grantTargetBonus": "Grant Activation Targets",
 			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
@@ -2617,6 +2620,10 @@
 				"includesTargets": {
 					"label": "For the targets",
 					"hint": "Each targeted creature gets a line. Off: only the user gets one, with Also for the user on."
+				},
+				"targetCount": {
+					"label": "Targets it reaches",
+					"hint": "How many targeted creatures the item reaches. 0: no limit. With more targeted, each still gets a line and the card shows a warning."
 				},
 				"weaponKind": {
 					"label": "Weapon",
@@ -3893,6 +3900,17 @@
 				"reach": {
 					"label": "Within Reach",
 					"hint": "The reach the extra targets must be within, shown on the line. 0: no reach is shown."
+				}
+			},
+			"grantTargetBonus": {
+				"description": "The Grant Activation rules of another item reach more targeted creatures. Only a rule with a target count is raised.",
+				"grantIdentifier": {
+					"label": "Item",
+					"hint": "The identifier of the item with the Grant Activation rule (e.g. coordinated-strike)."
+				},
+				"count": {
+					"label": "More targets",
+					"hint": "How many more targeted creatures the rule reaches."
 				}
 			},
 			"zeroHpAtEnd": {

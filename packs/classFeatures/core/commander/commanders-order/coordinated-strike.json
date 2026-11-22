@@ -132,6 +132,7 @@
 				"activationType": "weaponAttack",
 				"trigger": "onActivation",
 				"includesUser": true,
+				"targetCount": 1,
 				"weaponKind": "any",
 				"allowsCantrips": true,
 				"free": true,

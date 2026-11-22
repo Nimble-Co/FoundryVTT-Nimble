@@ -40,6 +40,7 @@ import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.js';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
+import { GrantTargetBonusRule } from '../models/rules/grantTargetBonus.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HeldRollRule } from '../models/rules/heldRoll.js';
 import { HitConditionRule } from '../models/rules/hitCondition.js';
@@ -124,6 +125,7 @@ export const RULE_CLASSES = {
 	freeMove: FreeMoveRule,
 	freeSpellCost: FreeSpellCostRule,
 	grantActivation: GrantActivationRule,
+	grantTargetBonus: GrantTargetBonusRule,
 	grantMovement: GrantMovementRule,
 	diceConsumer: DiceConsumerRule,
 	dicePool: DicePoolRule,

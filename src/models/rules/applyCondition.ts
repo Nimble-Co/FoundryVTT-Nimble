@@ -110,6 +110,7 @@ function schema() {
 		condition: new fields.StringField({
 			required: true,
 			nullable: false,
+			blank: true,
 			initial: '',
 			label: 'NIMBLE.rules.applyCondition.condition.label',
 			hint: 'NIMBLE.rules.applyCondition.condition.hint',

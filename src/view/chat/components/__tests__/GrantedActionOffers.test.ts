@@ -12,12 +12,15 @@ interface OfferOptions {
 	allowsCantrips?: boolean;
 	ignoresRushed?: boolean;
 	condition?: string;
+	targetActorUuid?: string;
+	targetCount?: number;
+	targetedCount?: number;
 }
 
 function createOffer(options: OfferOptions = {}) {
 	return {
 		id: options.id ?? 'offer-1',
-		targetActorUuid: 'Actor.ally',
+		targetActorUuid: options.targetActorUuid ?? 'Actor.ally',
 		label: options.label ?? 'Granting Feature',
 		activationType: 'weaponAttack',
 		ruleId: 'rule-1',
@@ -28,6 +31,8 @@ function createOffer(options: OfferOptions = {}) {
 		allowsCantrips: options.allowsCantrips ?? false,
 		ignoresRushed: options.ignoresRushed ?? false,
 		condition: options.condition ?? '',
+		targetCount: options.targetCount ?? 0,
+		targetedCount: options.targetedCount ?? 0,
 		used: options.used ?? false,
 		usedBy: options.used ? 'player-1' : null,
 	};
@@ -365,6 +370,37 @@ describe('GrantedActionOffers', () => {
 		expect(screen.queryByText(/Currently targeting Sir Brannon/)).toBeNull();
 		expect(screen.getByText(/Goblin Cutthroat/)).toBeTruthy();
 		expect(attackButton().disabled).toBe(false);
+	});
+
+	it('warns once when more creatures are targeted than the rule reaches, and leaves every line usable', () => {
+		const over = { label: 'Coordinated Strike', targetCount: 1, targetedCount: 2 };
+		render(GrantedActionOffersTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createOffer({ ...over, id: 'offer-1', targetActorUuid: 'Actor.ally' }),
+					createOffer({ ...over, id: 'offer-2', targetActorUuid: 'Actor.other' }),
+				]),
+			},
+		});
+
+		expect(
+			screen.getAllByText('Coordinated Strike reaches 1 creature. 2 are targeted.'),
+		).toHaveLength(1);
+		const buttons = screen.getAllByRole('button', { name: /Attack/ }) as HTMLButtonElement[];
+		expect(buttons.map((button) => button.disabled)).toEqual([false, false]);
+	});
+
+	it('gives no warning while the targets fit the count, or when the rule has none', () => {
+		render(GrantedActionOffersTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createOffer({ id: 'offer-1', targetCount: 2, targetedCount: 2 }),
+					createOffer({ id: 'offer-2', ruleId: 'rule-2', targetedCount: 3 } as never),
+				]),
+			},
+		});
+
+		expect(screen.queryByText(/are targeted/)).toBeNull();
 	});
 
 	it('hides pending lines from non-owners who are not GMs', () => {

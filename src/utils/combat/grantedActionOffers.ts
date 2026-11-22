@@ -4,7 +4,8 @@ import type {
 	GrantedActivationType,
 	GrantedWeaponKind,
 } from '../../models/rules/grantActivation.js';
-import { ruleLabel } from '../actor/actorRules.js';
+import { ruleLabel, rulesOfType } from '../actor/actorRules.js';
+import { identifierOf } from '../documents/itemIdentifier.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 
 /**
@@ -46,6 +47,10 @@ interface GrantedActionOffer {
 	ignoresRushed: boolean;
 	/** Text under the label, for a condition the table checks. */
 	condition: string;
+	/** How many targeted creatures the rule reaches. 0: no limit. */
+	targetCount: number;
+	/** How many targeted creatures got a line from the rule. More than the count: the card warns. */
+	targetedCount: number;
 	used: boolean;
 	/** Id of the user who consumed the offer */
 	usedBy: string | null;
@@ -72,13 +77,16 @@ interface GrantActivationRuleLike {
 	spendsReaction?: boolean;
 	ignoresRushed?: boolean;
 	condition?: string;
+	targetCount?: number;
 	appliesTo?: () => boolean;
 }
 
 interface OfferGrantingItem {
 	uuid?: string;
 	name?: string;
-	actor?: { uuid?: string } | null;
+	identifier?: string;
+	system?: { identifier?: string };
+	actor?: { uuid?: string; rules?: unknown } | null;
 	rules?: Map<string, GrantActivationRuleLike> | null;
 }
 
@@ -104,7 +112,10 @@ function offerOf(
 	rule: GrantActivationRuleLike,
 	item: OfferGrantingItem,
 	targetActorUuid: string,
+	targeted = 0,
+	extraTargets = 0,
 ): GrantedActionOffer {
+	const targetCount = Math.max(0, Math.trunc(Number(rule.targetCount) || 0));
 	return {
 		id: foundry.utils.randomID(),
 		targetActorUuid,
@@ -118,6 +129,8 @@ function offerOf(
 		allowsCantrips: rule.allowsCantrips === true,
 		ignoresRushed: rule.ignoresRushed === true,
 		condition: rule.condition ?? '',
+		targetCount: targetCount > 0 ? targetCount + extraTargets : 0,
+		targetedCount: targeted,
 		used: false,
 		usedBy: null,
 	};
@@ -127,7 +140,8 @@ function offerOf(
  * Build the granted-activation offers a used item extends to the user's
  * current targets, one offer per (rule, target actor). The activating actor
  * gets an offer from their own activation only when the rule says so, and the
- * targets get none when the rule is not for them.
+ * targets get none when the rule is not for them. A rule's target count is
+ * reported on its lines, not enforced: every target still gets a line.
  */
 export function collectGrantedActionOffers(
 	item: OfferGrantingItem,
@@ -137,10 +151,20 @@ export function collectGrantedActionOffers(
 	if (grantRules.length < 1) return [];
 
 	const sourceActorUuid = item.actor?.uuid ?? '';
+	const identifier = identifierOf(item);
+	const extraTargets = rulesOfType(item.actor, 'grantTargetBonus').reduce(
+		(total, bonus) => total + bonus.bonusFor(identifier),
+		0,
+	);
 	const offersByKey = new Map<string, GrantedActionOffer>();
 
 	for (const rule of grantRules) {
 		const ruleTargets = rule.includesTargets === false ? [] : targets;
+		const targeted = new Set(
+			ruleTargets
+				.map((target) => target.actor?.uuid ?? '')
+				.filter((uuid) => uuid && uuid !== sourceActorUuid),
+		).size;
 		const recipients = rule.includesUser ? [{ actor: item.actor }, ...ruleTargets] : ruleTargets;
 		for (const target of recipients) {
 			const targetActorUuid = target.actor?.uuid ?? '';
@@ -150,7 +174,7 @@ export function collectGrantedActionOffers(
 			const key = `${rule.id ?? ''}:${targetActorUuid}`;
 			if (offersByKey.has(key)) continue;
 
-			offersByKey.set(key, offerOf(rule, item, targetActorUuid));
+			offersByKey.set(key, offerOf(rule, item, targetActorUuid, targeted, extraTargets));
 		}
 	}
 

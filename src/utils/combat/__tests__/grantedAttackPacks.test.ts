@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { packRuleFailures, readItem } from '../../../../tests/fixtures/packContent.js';
+import { Predicate } from '../../../etc/Predicate.js';
+import { GrantTargetBonusRule } from '../../../models/rules/grantTargetBonus.js';
 import { collectGrantedActionOffers, collectInterposeOffers } from '../grantedActionOffers.js';
 
 interface PackRule {
@@ -18,6 +21,7 @@ function packFeature(path: string, actorUuid: string) {
 	return {
 		uuid: `${actorUuid}.Item.${source._id}`,
 		name: source.name as string,
+		system: { identifier: source.system.identifier as string },
 		actor: { uuid: actorUuid },
 		rules: new Map(rules.map((rule) => [rule.id, rule])),
 		ruleTypes: rules.map((rule) => rule.type),
@@ -43,6 +47,52 @@ describe('Coordinated Strike!', () => {
 				ignoresRushed: false,
 			});
 		}
+	});
+
+	it('reaches 1 ally; with 2 targeted, both still get a line and the lines say so', () => {
+		const lines = collectGrantedActionOffers(feature, [
+			{ actor: { uuid: 'Actor.ally' } },
+			{ actor: { uuid: 'Actor.other-ally' } },
+		]);
+
+		expect(lines.map((line) => line.targetActorUuid)).toEqual([
+			'Actor.wren',
+			'Actor.ally',
+			'Actor.other-ally',
+		]);
+		for (const line of lines) expect(line).toMatchObject({ targetCount: 1, targetedCount: 2 });
+	});
+
+	it('reaches 1 more ally with Experienced Commander', () => {
+		const experienced = JSON.parse(
+			readFileSync(
+				resolve(
+					__dirname,
+					'../../../../packs',
+					'classFeatures/core/commander/commander-subclasses/champion-of-the-vanguard/experienced-commander.json',
+				),
+				'utf8',
+			),
+		);
+		const [data, ...more] = (experienced.system.rules as PackRule[]).filter(
+			(rule) => rule.type === 'grantTargetBonus',
+		);
+		expect(more).toEqual([]);
+		const parent = {
+			isEmbedded: true,
+			actor: { uuid: 'Actor.wren', getDomain: () => new Set<string>() },
+			getDomain: () => new Set<string>(),
+		};
+		const bonus = new GrantTargetBonusRule(data as never, { parent, strict: false } as never);
+		Object.assign(bonus, { ...data, predicate: new Predicate({}) });
+		Object.defineProperty(bonus, 'parent', { get: () => parent, configurable: true });
+
+		const lines = collectGrantedActionOffers(
+			{ ...feature, actor: { uuid: 'Actor.wren', rules: [bonus] } },
+			[{ actor: { uuid: 'Actor.ally' } }, { actor: { uuid: 'Actor.other-ally' } }],
+		);
+
+		for (const line of lines) expect(line).toMatchObject({ targetCount: 2, targetedCount: 2 });
 	});
 
 	it('gives no action back for the attacks', () => {
@@ -228,5 +278,24 @@ describe('Kobolds: Nooooo!', () => {
 			'When an ally within 2 spaces dies, attack once for free.',
 		);
 		expect(nooooo?.system.rules).toEqual([]);
+	});
+});
+
+describe('the rules of the pack documents these lines change', () => {
+	it.each([
+		'classFeatures/core/commander/commander-progression/master-commander.json',
+		'classFeatures/core/commander/commander-subclasses/champion-of-the-bulwark/juggernaut.json',
+		'classFeatures/core/commander/commander-subclasses/champion-of-the-vanguard/experienced-commander.json',
+		'classFeatures/core/commander/commander-subclasses/champion-of-the-vanguard/as-one.json',
+		'classFeatures/core/commander/commander-subclasses/spellblade/withering-strike.json',
+		'classFeatures/core/commander/commanders-order/coordinated-strike.json',
+		`${ZEPHYR}/martial-arts-ability/quickstrike.json`,
+		`${ZEPHYR}/zephyr-progression/burst-of-speed.json`,
+		`${ZEPHYR}/zephyr-subclasses/way-of-pain/echoed-agony.json`,
+		`${ZEPHYR}/zephyr-subclasses/way-of-pain/share-my-pain.json`,
+		'legendaryMonsters/core/ulvek-psionic-despot.json',
+		'monsters/core/kobolds/kobold-clanger.json',
+	])('%s passes the schema of each rule type', async (path) => {
+		expect(await packRuleFailures(readItem(`packs/${path}`))).toEqual([]);
 	});
 });

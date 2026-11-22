@@ -39,6 +39,7 @@ describe('GrantActivationRule', () => {
 			expect(schema.ignoresRushed?.options.initial).toBe(false);
 			expect(schema.condition?.options.initial).toBe('');
 			expect(schema.includesTargets?.options.initial).toBe(true);
+			expect(schema.targetCount?.options.initial).toBe(0);
 		});
 	});
 

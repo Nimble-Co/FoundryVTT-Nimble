@@ -70,6 +70,19 @@ function schema() {
 				showWhen: (data: Record<string, unknown>) => data.trigger !== 'onInterpose',
 			}),
 		),
+		targetCount: new fields.NumberField(
+			withWidget({
+				required: true,
+				nullable: false,
+				integer: true,
+				min: 0,
+				initial: 0,
+				label: key('targetCount', 'label'),
+				hint: key('targetCount', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					data.trigger !== 'onInterpose' && data.includesTargets !== false,
+			}),
+		),
 		weaponKind: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -117,6 +130,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 	declare trigger: GrantedActivationTrigger;
 	declare includesUser: boolean;
 	declare includesTargets: boolean;
+	declare targetCount: number;
 	declare weaponKind: GrantedWeaponKind;
 	declare allowsCantrips: boolean;
 	declare free: boolean;
@@ -138,7 +152,8 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 				['trigger', '"onActivation" | "onInterpose"'],
 				['includesUser', 'boolean'],
 				['includesTargets', 'boolean'],
-				['weaponKind', '"any" | "melee" | "ranged" | "unarmed"'],
+				['targetCount', 'number'],
+				['weaponKind', GRANTED_WEAPON_KINDS.map((each) => `"${each}"`).join(' | ')],
 				['allowsCantrips', 'boolean'],
 				['free', 'boolean'],
 				['spendsReaction', 'boolean'],
@@ -150,6 +165,7 @@ class GrantActivationRule extends NimbleBaseRule<GrantActivationRule.Schema> {
 }
 
 export {
+	GRANTED_WEAPON_KINDS,
 	GrantActivationRule,
 	type GrantedActivationTrigger,
 	type GrantedActivationType,

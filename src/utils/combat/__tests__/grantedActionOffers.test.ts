@@ -40,6 +40,8 @@ function createOffer(overrides: Partial<GrantedActionOffer> = {}): GrantedAction
 		allowsCantrips: false,
 		ignoresRushed: false,
 		condition: '',
+		targetCount: 0,
+		targetedCount: 0,
 		used: false,
 		usedBy: null,
 		...overrides,
@@ -243,6 +245,52 @@ describe('collectGrantedActionOffers', () => {
 		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.enemy' } }]);
 
 		expect(offers.map((offer) => offer.targetActorUuid)).toEqual(['Actor.commander']);
+	});
+
+	it('still gives every target a line when more are targeted than the rule reaches, and says how many', async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([
+			{ type: 'grantActivation', id: 'rule-1', includesUser: true, targetCount: 1 } as never,
+		]);
+
+		const offers = collectGrantedActionOffers(item, [
+			{ actor: { uuid: 'Actor.commander' } },
+			{ actor: { uuid: 'Actor.ally' } },
+			{ actor: { uuid: 'Actor.other-ally' } },
+		]);
+
+		expect(offers.map((offer) => offer.targetActorUuid)).toEqual([
+			'Actor.commander',
+			'Actor.ally',
+			'Actor.other-ally',
+		]);
+		for (const offer of offers) expect(offer).toMatchObject({ targetCount: 1, targetedCount: 2 });
+	});
+
+	it("reaches more targets with the user's rules that raise the count for the item", async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const bonus = (identifier: string, count: number) => ({
+			type: 'grantTargetBonus',
+			bonusFor: (wanted: string) => (wanted === identifier ? count : 0),
+		});
+		const item = {
+			...createGrantingItem([
+				{ type: 'grantActivation', id: 'rule-1', targetCount: 1 } as never,
+				{ type: 'grantActivation', id: 'rule-2' },
+			]),
+			system: { identifier: 'granting-item' },
+			actor: {
+				uuid: 'Actor.commander',
+				rules: [bonus('granting-item', 1), bonus('other-item', 3)],
+			},
+		};
+
+		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
+
+		expect(offers.map((offer) => [offer.ruleId, offer.targetCount])).toEqual([
+			['rule-1', 2],
+			['rule-2', 0],
+		]);
 	});
 
 	it('gives no line on use for a rule that waits for an Interpose', async () => {
