@@ -65,13 +65,14 @@ import {
 	isMovementOffersAutomationEnabled,
 	isRuleAutomationEnabled,
 } from '../settings/automationSettings.js';
+import { spendsPoolAgain } from '../utils/chargePool/attackPoolSpends.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
+import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
 import {
 	hasRuleCharge,
 	rulePoolState,
 	spendRuleCharge,
 } from '../utils/chargePool/ruleChargeGate.js';
-import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
 import { mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
 import {
 	clearBankedDamageReduction,
@@ -2168,6 +2169,17 @@ class NimbleChatMessage extends ChatMessage {
 		);
 	}
 
+	/** Whether using the entry would spend again from a charge pool this attack spent from. */
+	spendsPoolAgain(entry: IncomingReactionEntry): boolean {
+		const flags = (this.flags as Record<string, { chargeConsumption?: unknown } | undefined>)?.[
+			SYSTEM_ID
+		];
+		return spendsPoolAgain(entry, {
+			consumption: flags?.chargeConsumption,
+			entries: this.#incomingReactionEntries(),
+		});
+	}
+
 	/** How this card's attack is delivered. */
 	#attackDelivery(): AttackDelivery {
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -2209,17 +2221,9 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return;
 		if (!selection?.faceIndices?.length) return;
 
-		const lockKey = `${this.id}:${entryId}`;
-		if (inFlightSpendOffers.has(lockKey)) return;
-		inFlightSpendOffers.add(lockKey);
-
-		try {
-			await queueReactionWrite(this.id ?? '', () =>
-				this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket),
-			);
-		} finally {
-			inFlightSpendOffers.delete(lockKey);
-		}
+		await this.#queueSpendOffer(entryId, () =>
+			this.#applySpendPoolForDamageOffer(entryId, requestingUserId, selection, viaSocket),
+		);
 	}
 
 	async #applySpendPoolForDamageOffer(
@@ -2228,23 +2232,7 @@ class NimbleChatMessage extends ChatMessage {
 		selection: PoolSpendSelection,
 		viaSocket: boolean,
 	): Promise<void> {
-		// Every refusal below reports back to whoever asked. The executor runs on
-		// the GM's client, so a bare `return` would leave the spending player
-		// watching their button come back unexplained when its hold lapses.
-		const reject = (reasonKey: string) =>
-			rejectCardRequest({
-				messageId: this.id ?? '',
-				entryId,
-				userId: requestingUserId,
-				reasonKey,
-			});
-
-		const entry = this.#validateIncomingReaction(
-			entryId,
-			'spendPoolForDamage',
-			requestingUserId,
-			viaSocket,
-		);
+		const { entry, reject } = this.#spendOfferEntry(entryId, requestingUserId, viaSocket);
 		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
@@ -2288,46 +2276,20 @@ class NimbleChatMessage extends ChatMessage {
 		const picked = resolvePoolSpendSelection(pool.faces, selection);
 		if (!picked) return reject('NIMBLE.chat.incomingReactions.poolSpendStale');
 
-		const effectRoll = new Roll(
-			substituteSpendFormula(
+		await this.#landSpendForDamage(entry, reject, {
+			actor,
+			formula: substituteSpendFormula(
 				consumer.effectFormula,
 				picked.spentFaces.length,
 				picked.spentFaces.reduce((sum, face) => sum + face, 0),
 			),
-			(actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
-		);
-		await effectRoll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
-
-		const bonusDamage = Math.floor(Number(effectRoll.total ?? 0));
-		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) {
-			return reject('NIMBLE.chat.incomingReactions.useFailed');
-		}
-
-		const patched = await this.#buildSpendDamagePatch(
-			systemData,
-			consumer,
-			bonusDamage,
-			entry.itemUuid ?? '',
-		);
-		if (!patched) return reject('NIMBLE.chat.incomingReactions.useFailed');
-
-		// Charge the pool only once the patch is known to be possible, and only
-		// if the pool actually accepted the write — otherwise the card would
-		// gain damage the player never paid for.
-		const spent = await setPoolFaces(actor, pool.id, picked.remainingFaces);
-		if (!spent) return reject('NIMBLE.chat.incomingReactions.useFailed');
-
-		await this.update({
-			rolls: patched.rolls,
-			system: {
-				activation: patched.activation,
-				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
-					usedAmount: bonusDamage,
-					usedPoolLabel: pool.label,
-					usedFaces: picked.spentFaces,
-				}),
-			},
-		} as Record<string, unknown>);
+			patch: (bonusDamage) => this.#buildSpendDamagePatch(systemData, consumer, bonusDamage, entry.itemUuid ?? ''),
+			// Charge the pool only if it actually accepted the write, otherwise the
+			// card would gain damage the player never paid for.
+			charge: () => setPoolFaces(actor, pool.id, picked.remainingFaces),
+			poolLabel: pool.label,
+			usedFaces: () => picked.spentFaces,
+		});
 	}
 
 	/**
@@ -2343,17 +2305,9 @@ class NimbleChatMessage extends ChatMessage {
 		if (!game.user?.isGM) return;
 		if (!this.isActivationCard()) return;
 
-		const lockKey = `${this.id}:${entryId}`;
-		if (inFlightSpendOffers.has(lockKey)) return;
-		inFlightSpendOffers.add(lockKey);
-
-		try {
-			await queueReactionWrite(this.id ?? '', () =>
-				this.#applySpendChargeForDamageOffer(entryId, requestingUserId, viaSocket),
-			);
-		} finally {
-			inFlightSpendOffers.delete(lockKey);
-		}
+		await this.#queueSpendOffer(entryId, () =>
+			this.#applySpendChargeForDamageOffer(entryId, requestingUserId, viaSocket),
+		);
 	}
 
 	async #applySpendChargeForDamageOffer(
@@ -2361,20 +2315,7 @@ class NimbleChatMessage extends ChatMessage {
 		requestingUserId: string,
 		viaSocket: boolean,
 	): Promise<void> {
-		const reject = (reasonKey: string) =>
-			rejectCardRequest({
-				messageId: this.id ?? '',
-				entryId,
-				userId: requestingUserId,
-				reasonKey,
-			});
-
-		const entry = this.#validateIncomingReaction(
-			entryId,
-			'spendPoolForDamage',
-			requestingUserId,
-			viaSocket,
-		);
+		const { entry, reject } = this.#spendOfferEntry(entryId, requestingUserId, viaSocket);
 		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
@@ -2389,7 +2330,8 @@ class NimbleChatMessage extends ChatMessage {
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		const stillOffered =
 			rule.providesCardOffer?.({ delivery: this.#attackDelivery() }) === true &&
-			rerollTriggerMatches(rule.cardOffer ?? undefined, systemData);
+			rerollTriggerMatches(rule.cardOffer ?? undefined, systemData) &&
+			!this.spendsPoolAgain(entry);
 		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
 
 		const identifier = String(rule.poolIdentifier ?? '');
@@ -2400,28 +2342,105 @@ class NimbleChatMessage extends ChatMessage {
 			return reject('NIMBLE.chat.incomingReactions.chargeSpendEmpty');
 		}
 
+		const landed = await this.#landSpendForDamage(entry, reject, {
+			actor,
+			formula: String(rule.effectFormula ?? ''),
+			patch: async (bonusDamage) =>
+				foldBonusIntoPrimaryDamage(
+					(systemData.activation ?? { effects: [] }) as Record<string, unknown>,
+					((this._source as { rolls?: string[] }).rolls ?? []) as string[],
+					bonusDamage,
+					item.name ?? '',
+				),
+			charge: () => spendRuleCharge(actor, identifier, cost),
+			poolLabel: pool.label,
+			usedFaces: rolledFaces,
+		});
+		if (landed) await this.#offerCardPush(actor, item, rule.cardPush ?? null);
+	}
+
+	/**
+	 * Run a spend from the card once at a time per entry, and after any other
+	 * reaction write on this card (see `queueReactionWrite`).
+	 */
+	async #queueSpendOffer(entryId: string, apply: () => Promise<void>): Promise<void> {
+		const lockKey = `${this.id}:${entryId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+
+		try {
+			await queueReactionWrite(this.id ?? '', apply);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	/** The spend entry the request names, if it still stands, and how to refuse the request. */
+	#spendOfferEntry(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): { entry: IncomingReactionEntry | null; reject: (reasonKey: string) => void } {
+		// Every refusal reports back to whoever asked. The executor runs on the
+		// GM's client, so a bare `return` would leave the spending player
+		// watching their button come back unexplained when its hold lapses.
+		const reject = (reasonKey: string) =>
+			rejectCardRequest({
+				messageId: this.id ?? '',
+				entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+		const entry = this.#validateIncomingReaction(
+			entryId,
+			'spendPoolForDamage',
+			requestingUserId,
+			viaSocket,
+		);
+		return { entry, reject };
+	}
+
+	/**
+	 * The last steps of a spend from the card, after its gates pass: roll the
+	 * spend's damage, build the card change, charge the pool, then write the
+	 * damage and mark the entry used. Charges only once the change is known to
+	 * be possible. Resolves whether the spend landed.
+	 */
+	async #landSpendForDamage(
+		entry: IncomingReactionEntry,
+		reject: (reasonKey: string) => void,
+		spend: {
+			actor: Actor.Implementation;
+			formula: string;
+			patch: (
+				bonusDamage: number,
+			) => Promise<{ activation: Record<string, unknown>; rolls: string[] } | null>;
+			charge: () => Promise<boolean>;
+			poolLabel: string;
+			usedFaces: (roll: { terms?: unknown[] }) => number[];
+		},
+	): Promise<boolean> {
 		const roll = new Roll(
-			String(rule.effectFormula ?? ''),
-			(actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
+			spend.formula,
+			(spend.actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
 		);
 		await roll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+
 		const bonusDamage = Math.floor(Number(roll.total ?? 0));
 		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) {
-			return reject('NIMBLE.chat.incomingReactions.useFailed');
+			reject('NIMBLE.chat.incomingReactions.useFailed');
+			return false;
 		}
 
-		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
-		const rollsSource = ((this._source as { rolls?: string[] }).rolls ?? []) as string[];
-		const patched = foldBonusIntoPrimaryDamage(
-			activation,
-			rollsSource,
-			bonusDamage,
-			item.name ?? '',
-		);
-		if (!patched) return reject('NIMBLE.chat.incomingReactions.useFailed');
+		const patched = await spend.patch(bonusDamage);
+		if (!patched) {
+			reject('NIMBLE.chat.incomingReactions.useFailed');
+			return false;
+		}
 
-		if (!(await spendRuleCharge(actor, identifier, cost))) {
-			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		if (!(await spend.charge())) {
+			reject('NIMBLE.chat.incomingReactions.useFailed');
+			return false;
 		}
 
 		await this.update({
@@ -2430,13 +2449,12 @@ class NimbleChatMessage extends ChatMessage {
 				activation: patched.activation,
 				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
 					usedAmount: bonusDamage,
-					usedPoolLabel: pool.label,
-					usedFaces: rolledFaces(roll),
+					usedPoolLabel: spend.poolLabel,
+					usedFaces: spend.usedFaces(roll),
 				}),
 			},
 		} as Record<string, unknown>);
-
-		await this.#offerCardPush(actor, item, rule.cardPush ?? null);
+		return true;
 	}
 
 	/** The targets of the card get a forced move away from the attacker, as a line on the card. */

@@ -127,11 +127,14 @@ type MockedMessage = InstanceType<typeof NimbleChatMessage> & {
 	update: ReturnType<typeof vi.fn>;
 };
 
-function createMessage(card: { isMiss?: boolean; targets?: string[] } = {}) {
+function createMessage(
+	card: { isMiss?: boolean; targets?: string[]; chargeConsumption?: object[] } = {},
+) {
 	const roll = damageRoll();
 	const message = new NimbleChatMessage({
 		type: 'feature',
 		speaker: { scene: 'scene', token: 'wren', actor: 'commander' },
+		flags: { [SYSTEM_ID]: { chargeConsumption: card.chargeConsumption ?? [] } },
 		system: {
 			targets: card.targets ?? ['Scene.scene.Token.goblin'],
 			isCritical: false,
@@ -289,6 +292,19 @@ describe('a spend of a charge from the attack card', () => {
 		const actor = createActor(2);
 		useActor(actor);
 		const message = createMessage({ isMiss: true });
+
+		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
+
+		expect(actor._pools.update).not.toHaveBeenCalled();
+		expect(message.update).not.toHaveBeenCalled();
+	});
+
+	it('refuses when the attack already spent from the pool in the roll window', async () => {
+		const actor = createActor(2);
+		useActor(actor);
+		const message = createMessage({
+			chargeConsumption: [{ poolId: 'combat-dice', poolLabel: 'Combat Dice', change: -1 }],
+		});
 
 		await message.resolveSpendChargeForDamageOffer('spend-1', 'gm-user');
 

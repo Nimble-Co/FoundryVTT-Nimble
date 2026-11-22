@@ -2543,7 +2543,7 @@
 				},
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
-					"hint": "Choosing the bonus spends one charge of this pool when you roll. With no charge left, the bonus is not offered. Leave blank for a bonus that costs nothing."
+					"hint": "Choosing the bonus spends one charge of this pool when you roll. The roll window does not show the bonus when the pool has no charge left, or when the use itself already spends from this pool. Leave blank for a bonus that costs nothing."
 				}
 			},
 			"damageBonus": {

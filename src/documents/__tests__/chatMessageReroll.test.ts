@@ -1619,6 +1619,75 @@ describe('resolveRerollReaction', () => {
 			expect(message.cardRerolls.canStillUseReroll(rerollEntry() as never)).toBe(false);
 		});
 
+		describe('a roller reroll that spends from a charge pool', () => {
+			/** The attacker holds 2 of 3 Combat Dice; the rule spends one. */
+			function withCombatDice() {
+				const world = setupWorld({
+					chargePoolIdentifier: 'combat-dice',
+					offersUseOn: vi.fn((context: { side: string }) => context.side === 'roller'),
+				});
+				const pools = {
+					id: 'fit',
+					flags: {
+						nimble: { chargePools: { 'combat-dice': { current: 2, max: 3, seeded: true } } },
+					},
+					rules: new Map([
+						[
+							'pool',
+							{
+								type: 'chargePool',
+								id: 'pool',
+								identifier: 'combat-dice',
+								label: 'Combat Dice',
+								disabled: false,
+								scope: 'item',
+								max: '3',
+								initial: 'max',
+								recoveries: [],
+							},
+						],
+					]),
+				};
+				Object.assign(world.attacker, {
+					flags: {},
+					items: { contents: [pools], get: () => pools },
+					getRollData: () => ({}),
+				});
+				return world;
+			}
+			const rollerEntry = () =>
+				rerollEntry({ actorUuid: 'Actor.attacker', targetTokenUuid: null, side: 'roller' });
+
+			it('is true when the attack spent nothing from that pool', () => {
+				withCombatDice();
+				const message = createMessage({ entries: [rollerEntry()] });
+
+				expect(message.cardRerolls.canStillUseReroll(rollerEntry() as never)).toBe(true);
+			});
+
+			it('is false when the attack already spent from that pool in the roll window', () => {
+				withCombatDice();
+				const message = createMessage({
+					entries: [rollerEntry()],
+					flags: { chargeConsumption: [{ poolId: 'combat-dice', change: -1 }] },
+				});
+
+				expect(message.cardRerolls.canStillUseReroll(rollerEntry() as never)).toBe(false);
+			});
+
+			it('refuses the reroll when the attack already spent from that pool', async () => {
+				withCombatDice();
+				const message = createMessage({
+					entries: [rollerEntry()],
+					flags: { chargeConsumption: [{ poolId: 'combat-dice', change: -1 }] },
+				});
+
+				await message.cardRerolls.resolveRerollReaction('entry-1', 'gm-user');
+
+				expect(message.update).not.toHaveBeenCalled();
+			});
+		});
+
 		it('is false for a used entry and for a roll that misses by force', () => {
 			setupWorld();
 

@@ -3,6 +3,7 @@ import { taggedCreature } from '../../../../tests/fixtures/conditionCreature.js'
 
 const conditionalBonuses = vi.fn(() => []);
 const dicePools = vi.fn((): unknown[] => []);
+const fixedCosts = vi.fn((): unknown[] => []);
 
 // Setup loads this module through game.ts, so a hoisted vi.mock would miss it.
 let createState: typeof import('../itemActivationConfigDialogState.svelte.ts').createItemActivationConfigDialogState;
@@ -16,6 +17,7 @@ beforeAll(async () => {
 	vi.doMock('#utils/actor/conditionalBonuses.js', () => ({
 		getActiveConditionalBonuses: conditionalBonuses,
 	}));
+	vi.doMock('#utils/chargePool/fixedChargeCosts.js', () => ({ fixedChargeCostsOf: fixedCosts }));
 	vi.doMock('#utils/dicePool/dicePoolSync.js', async (importOriginal) => ({
 		...(await importOriginal<object>()),
 		getPools: dicePools,
@@ -194,6 +196,15 @@ describe('the activation dialog bonus that spends a charge', () => {
 		expect(state.consumedChargePools).toEqual([{ poolId: 'combat-dice', count: 1 }]);
 		expect(state.chargeCosts).toEqual([{ label: 'Combat Dice', amount: 1, current: 2 }]);
 		expect(state.modifiedFormulas[0].formula).toBe('1d8+1d8*2[Using Lunging Strike: +1 Reach]');
+	});
+
+	it('is not there when the use already spends from that pool by itself', () => {
+		fixedCosts.mockReturnValueOnce([
+			{ poolId: 'combat-dice', label: 'Combat Dice', amount: 1, current: 2 },
+		]);
+		const state = open([lunging, assist]);
+
+		expect(state.conditionalBonusOptions.map((o) => o.key)).toEqual([assist.key]);
 	});
 
 	it('spends the charge of a hidden pool with no line for it', () => {

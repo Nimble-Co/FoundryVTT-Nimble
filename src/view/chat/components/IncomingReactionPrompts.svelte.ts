@@ -258,7 +258,7 @@ export function createIncomingReactionPromptsState(
 
 	function rowStateOf(entry: IncomingReactionEntry): 'usable' | 'naturalOne' | 'hidden' {
 		if (!mayActHere(text.reactingActor(entry))) return 'hidden';
-		if (entry.kind !== 'reroll') return 'usable';
+		if (entry.kind !== 'reroll') return message?.spendsPoolAgain(entry) ? 'hidden' : 'usable';
 		const cardRerolls = message?.cardRerolls;
 		if (!cardRerolls) return 'hidden';
 		if (cardRerolls.canStillUseReroll(entry)) return 'usable';

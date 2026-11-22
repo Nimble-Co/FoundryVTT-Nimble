@@ -114,6 +114,7 @@ function createMessage(
 		speakerActor: speakerUuid ? { uuid: speakerUuid } : null,
 		system: { incomingReactions: entries, rerolls },
 		reactive: null as unknown,
+		spendsPoolAgain: vi.fn(() => false),
 		cardRerolls: {
 			canStillUseReroll: vi.fn(() => true),
 			blockedReroll: vi.fn(() => null),
@@ -499,6 +500,17 @@ describe('IncomingReactionPrompts', () => {
 			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
 
 			expect(spendButton()).toBeTruthy();
+		});
+
+		it('hides a spend from a pool this attack already spent from', async () => {
+			const message = createMessage([spendEntry()]);
+			message.spendsPoolAgain.mockReturnValue(true);
+			render(IncomingReactionPromptsTestHarness, { props: { messageDocument: message } });
+
+			expect(spendButton()).toBeNull();
+			expect(message.spendsPoolAgain).toHaveBeenCalledWith(
+				expect.objectContaining({ id: 'spend-1' }),
+			);
 		});
 
 		it('shows a used spend with no line of its own: the damage box shows its result', () => {

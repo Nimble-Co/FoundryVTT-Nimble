@@ -219,6 +219,8 @@ export function createItemActivationConfigDialogState(
 	// Snapshot what applies against the target at dialog-open time; with two or more
 	// targets, a bonus that tests the target is not offered. If the player retargets while
 	// the dialog is open, the choice is not checked again at submit.
+	// One spend of a pool per attack: a bonus does not spend from a pool the use already spends from.
+	const poolsSpentByUse = new Set(fixedChargeCosts.map((cost) => cost.poolId));
 	const conditionalBonusesFor = (weapon: WeaponOption | null) =>
 		getActiveConditionalBonuses(
 			actor as unknown as { rules?: unknown[]; getFlag(scope: string, key: string): unknown },
@@ -230,7 +232,7 @@ export function createItemActivationConfigDialogState(
 			firstTargetActor,
 			weaponItemOf(weapon?.uuid),
 			options.attackOrigin,
-		);
+		).filter((option) => !option.charge || !poolsSpentByUse.has(option.charge.poolId));
 	const initialConditionalBonusOptions = conditionalBonusesFor(weapons[0] ?? null);
 	let conditionalBonusOptions = $state<ConditionalBonusOption[]>(initialConditionalBonusOptions);
 	const conditionOptions = $derived(conditionRollModeOptions(conditionLines));

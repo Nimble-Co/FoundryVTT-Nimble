@@ -137,7 +137,7 @@ describe('Sweeping Strike', () => {
 		const { actor, item } = commanderWith(readItem(`${TACTICS}/sweeping-strike.json`));
 
 		expect(fixedChargeCostsOf(actor, item)).toEqual([
-			{ label: 'Combat Dice', amount: 1, current: 0 },
+			{ poolId: 'combat-dice', label: 'Combat Dice', amount: 1, current: 0 },
 		]);
 	});
 });
