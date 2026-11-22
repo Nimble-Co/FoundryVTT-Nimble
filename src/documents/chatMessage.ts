@@ -62,6 +62,7 @@ import { asksSave, requestSaves } from '#utils/saveRequest/saveRequests.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
+import type { CardPush, ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
 import {
 	isMovementOffersAutomationEnabled,
@@ -88,7 +89,6 @@ import type { PoolSpendSelection } from '../utils/incomingReactions/incomingAtta
 import {
 	type IncomingReactionEntry,
 	type RerollRecord,
-	type RerollTrigger,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
@@ -140,17 +140,18 @@ interface ActivationCardSystemData {
 }
 
 /** The parts of a `chargeConsumer` rule that a spend from the card reads. */
-type ChargeCardOfferRule = {
-	id?: string;
-	type?: string;
-	disabled?: boolean;
-	poolIdentifier?: string;
-	cost?: string;
-	cardOffer?: RerollTrigger | null;
-	effectFormula?: string;
-	cardPush?: { distance: string; distanceBySize: Record<string, string> } | null;
-	providesCardOffer?: (context: { delivery: AttackDelivery; source: AttackSource }) => boolean;
-};
+type ChargeCardOfferRule = Pick<
+	ChargeConsumerRule,
+	| 'id'
+	| 'type'
+	| 'disabled'
+	| 'poolIdentifier'
+	| 'cost'
+	| 'cardOffer'
+	| 'effectFormula'
+	| 'cardPush'
+	| 'providesCardOffer'
+>;
 
 /** The kept die results of an evaluated roll. */
 function rolledFaces(roll: { terms?: unknown[] }): number[] {
@@ -2483,7 +2484,7 @@ class NimbleChatMessage extends ChatMessage {
 	async #offerCardPush(
 		actor: Actor.Implementation,
 		item: Item.Implementation,
-		push: { distance: string; distanceBySize: Record<string, string> } | null,
+		push: CardPush | null,
 		reason: CardEventText,
 	): Promise<void> {
 		const targets = (this.system as { targets?: string[] }).targets ?? [];

@@ -13,6 +13,9 @@ const WORDS = 'NIMBLE.rules.chargeConsumer';
 
 const offeredOnCard = (data: Record<string, unknown>) => !!data.cardOffer;
 
+/** The push a spend from the card gives the targets: a formula, and one for each size. */
+type CardPush = { distance: string; distanceBySize: Record<string, string> };
+
 /** The push for each size. Blank uses the push distance. */
 function pushBySizeField() {
 	const { fields } = foundry.data;
@@ -258,7 +261,7 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 	}
 
 	/** The push a spend from the card gives the targets, or null for none. */
-	get cardPush(): { distance: string; distanceBySize: Record<string, string> } | null {
+	get cardPush(): CardPush | null {
 		const distanceBySize = Object.fromEntries(
 			Object.entries(this.pushDistanceBySize ?? {}).filter(([, formula]) =>
 				String(formula ?? '').trim(),
@@ -276,4 +279,4 @@ class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 	}
 }
 
-export { ChargeConsumerRule };
+export { type CardPush, ChargeConsumerRule };
