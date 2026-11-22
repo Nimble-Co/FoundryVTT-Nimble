@@ -97,19 +97,21 @@ describe('planItemTransfer', () => {
 		).toHaveLength(1);
 	});
 
-	it('still splits a stack whose size does not auto-merge', () => {
-		const source = [object('torch', { quantity: 4 }, 'Torch')];
+	it('moves a slot-sized object whole, and does not split or merge it', () => {
+		const source = [object('rope', { quantity: 5, objectSizeType: 'slots' }, 'Rope')];
 
 		const plan = planItemTransfer(
 			source,
-			[object('other', { quantity: 1 }, 'Torch')],
-			{ itemId: 'torch', quantity: 1 },
-			() => 'part',
+			[object('other', { quantity: 1, objectSizeType: 'slots' }, 'Rope')],
+			{ itemId: 'rope', quantity: 1 },
+			refuseNewId,
 		);
 
 		expect(plan?.merge).toBeNull();
-		expect(plan?.sourceQuantity).toEqual({ id: 'torch', quantity: 3 });
-		expect(plan?.add[0]?._id).toBe('part');
+		expect(plan?.sourceQuantity).toBeNull();
+		expect(plan?.removeIds).toEqual(['rope']);
+		expect(plan?.moved).toBe(5);
+		expect(plan?.add[0]).toMatchObject({ _id: 'rope', system: { quantity: 5 } });
 	});
 
 	it('takes a stored object out of its container', () => {
@@ -122,7 +124,7 @@ describe('planItemTransfer', () => {
 	});
 
 	it('moves the whole stack when the count is larger than the stack, and floors the count', () => {
-		const source = [object('torch', { quantity: 3 }, 'Torch')];
+		const source = [object('torch', { quantity: 3, objectSizeType: 'stackable' }, 'Torch')];
 
 		expect(planItemTransfer(source, [], { itemId: 'torch', quantity: 9 }, refuseNewId)?.moved).toBe(
 			3,

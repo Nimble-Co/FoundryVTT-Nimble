@@ -18,7 +18,7 @@ function partyContext(overrides: Partial<HeroSheetContext['party']> = {}): HeroS
 	return heroContext({
 		party: {
 			currency: { gp: 40, sp: 0, cp: 0 },
-			items: [objectItem('torch', 'Torch', { quantity: 3 })],
+			items: [objectItem('torch', 'Torch', { quantity: 3, objectSizeType: 'stackable' })],
 			characters: [{ id: 'bob', name: 'Bob' }],
 			canGive: true,
 			canTake: true,
@@ -143,6 +143,8 @@ describe('HeroInventoryTab', () => {
 		await fireEvent.blur(quantity);
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'setQuantity', itemId: 'torch', value: 5 });
+		expect(within(rowEl('rope')!).queryByRole('spinbutton')).toBeNull();
+		expect(within(rowEl('leather')!).queryByRole('spinbutton')).toBeNull();
 	});
 
 	it('keeps a single quantity field in edit mode', () => {
@@ -311,7 +313,9 @@ describe('HeroInventoryTab', () => {
 			await fireEvent.click(
 				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
 			);
-			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.moveToParty` }));
+			expect(screen.getByText(`${INV}.moveTo`)).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: `${INV}.moveTo` })).toBeNull();
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.party` }));
 
 			expect(perform).toHaveBeenCalledOnce();
 			expect(perform).toHaveBeenCalledWith({
@@ -320,6 +324,21 @@ describe('HeroInventoryTab', () => {
 				source: 'actor',
 				sourceActorId: 'containerHero0001',
 				destination: { kind: 'stash' },
+			});
+		});
+
+		it('stores an object in a container from Move to', async () => {
+			const { perform } = renderTab();
+
+			await fireEvent.click(
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
+			);
+			await fireEvent.click(screen.getByRole('menuitem', { name: 'Backpack' }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'storeIn',
+				itemId: 'torch',
+				containerId: 'backpack',
 			});
 		});
 
@@ -378,7 +397,7 @@ describe('HeroInventoryTab', () => {
 			await fireEvent.click(
 				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
 			);
-			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.moveToMine` }));
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.mine` }));
 
 			expect(perform).toHaveBeenCalledWith({
 				kind: 'transferObject',

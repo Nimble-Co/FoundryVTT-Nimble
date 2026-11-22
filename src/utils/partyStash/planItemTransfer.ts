@@ -3,6 +3,8 @@
  * Nothing here reads Foundry: the same rules cover a character and the party stash.
  */
 
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantity.js';
+
 /** A plain item, as `toObject()` stores it or as the party stash holds it. */
 export interface TransferItem {
 	_id: string;
@@ -26,9 +28,6 @@ export interface ItemTransferPlan {
 	moved: number;
 }
 
-/** Same sizes as `OBJECT_SIZE_TYPES_WITH_QUANTITY` on the object item. */
-const QUANTITY_SIZES = new Set(['stackable', 'smallSized']);
-
 function systemOf(item: TransferItem): Record<string, unknown> {
 	return item.system ?? {};
 }
@@ -48,7 +47,7 @@ function quantityOf(item: TransferItem): number {
 }
 
 function carriesQuantity(item: TransferItem): boolean {
-	return QUANTITY_SIZES.has(String(systemOf(item).objectSizeType ?? ''));
+	return OBJECT_SIZE_TYPES_WITH_QUANTITY.has(String(systemOf(item).objectSizeType ?? ''));
 }
 
 function prepared(
@@ -88,7 +87,7 @@ export function planItemTransfer(
 		? sourceItems.filter((item) => item._id !== root._id && containerIdOf(item) === root._id)
 		: [];
 	const have = quantityOf(root);
-	const split = !container && asked < have;
+	const split = !container && carriesQuantity(root) && asked < have;
 	const moved = split ? asked : have;
 
 	const addedRoot = prepared(root, {

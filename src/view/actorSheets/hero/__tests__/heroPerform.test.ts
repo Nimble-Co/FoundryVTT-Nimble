@@ -107,9 +107,14 @@ const actorEffects = new Map([
 	[rageEffect.id, rageEffect],
 	[customEffect.id, customEffect],
 ]);
-const torch = { id: 'torch', system: { containerId: '' }, toggleEquipment: vi.fn() };
-const rope = { id: 'rope', system: { containerId: 'backpack' } };
-const items = [item, torch, rope];
+const torch = {
+	id: 'torch',
+	system: { containerId: '', objectSizeType: 'stackable' },
+	toggleEquipment: vi.fn(),
+};
+const rope = { id: 'rope', system: { containerId: 'backpack', objectSizeType: 'stackable' } };
+const leather = { id: 'leather', system: { containerId: '', objectSizeType: 'slots' } };
+const items = [item, torch, rope, leather];
 
 function mockActor() {
 	const actor: Record<string, unknown> = {
@@ -397,6 +402,13 @@ describe('createHeroPerform', () => {
 
 			expect(actor.updateStoredObjectQuantity).toHaveBeenCalledWith('rope', 4);
 			expect(actor.updateItem).not.toHaveBeenCalled();
+		});
+
+		it('does not write a quantity onto a single object', async () => {
+			await perform({ kind: 'setQuantity', itemId: 'leather', value: 4 });
+
+			expect(actor.updateItem).not.toHaveBeenCalled();
+			expect(actor.updateStoredObjectQuantity).not.toHaveBeenCalled();
 		});
 
 		it('stores an object in a container, and takes it out with Loose', async () => {

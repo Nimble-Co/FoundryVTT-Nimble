@@ -208,16 +208,19 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 							tabindex="-1"
 							onpointerdown={(event) => event.stopPropagation()}
 						>
-							{#each share.entries as entry (entry.id)}
-								<button
-									type="button"
-									class="nimble-u-reset-button"
-									role="menuitem"
-									onclick={() => choose(entry.intent)}
-								>
-									{entry.label}
-								</button>
-							{/each}
+							{#if share.move}
+								<div class="menu-label">{share.move.label}</div>
+								{#each share.move.entries as entry (entry.id)}
+									<button
+										type="button"
+										class="nimble-u-reset-button sub"
+										role="menuitem"
+										onclick={() => choose(entry.intent)}
+									>
+										{entry.label}
+									</button>
+								{/each}
+							{/if}
 							{#if share.give}
 								<div class="menu-label">{share.give.label}</div>
 								{#each share.give.entries as entry (entry.id)}

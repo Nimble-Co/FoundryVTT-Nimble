@@ -8,8 +8,11 @@ import { getSpellScrollData } from '#utils/spell/createScrollFromSpell.js';
 import knowsSpellSchool from '#utils/spell/knowsSpellSchool.js';
 import { getSpellSchoolLabel } from '#utils/spell/spellLabels.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantity.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
+
+export { OBJECT_SIZE_TYPES_WITH_QUANTITY };
 
 /** The check a scroll's wielder must pass when they know no spell of its school. */
 const SPELL_SCROLL_ARCANA_DC = 10;
@@ -69,15 +72,6 @@ function syncRuleSourcesToEquippedState(item: NimbleObjectItem): void {
 		'system.rules': updatedRules,
 	} as Record<string, unknown>);
 }
-
-/**
- * Object sizes that carry a quantity, and so fold into an item of the same name
- * already carried instead of creating a second document.
- */
-export const OBJECT_SIZE_TYPES_WITH_QUANTITY: ReadonlySet<string> = new Set([
-	'stackable',
-	'smallSized',
-]);
 
 export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	declare system: NimbleObjectData;

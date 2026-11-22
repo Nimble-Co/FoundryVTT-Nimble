@@ -87,7 +87,7 @@ describe('transferObject', () => {
 			id: 'torch',
 			name: 'Torch',
 			type: 'object',
-			system: { quantity: 3, equipped: false },
+			system: { quantity: 3, equipped: false, objectSizeType: 'stackable' },
 		});
 
 		await transferObject(actor, move);
@@ -109,7 +109,7 @@ describe('transferObject', () => {
 			id: 'torch',
 			name: 'Torch',
 			type: 'object',
-			system: { quantity: 3, equipped: true },
+			system: { quantity: 3, equipped: true, objectSizeType: 'stackable' },
 		});
 
 		await transferObject(actor, move);
@@ -124,7 +124,7 @@ describe('transferObject', () => {
 			id: 'torch',
 			name: 'Torch',
 			type: 'object',
-			system: { quantity: 3, equipped: true },
+			system: { quantity: 3, equipped: true, objectSizeType: 'stackable' },
 		});
 
 		await transferObject(actor, move);
@@ -172,13 +172,28 @@ describe('transferObject', () => {
 			id: 'torch',
 			name: 'Torch',
 			type: 'object',
-			system: { quantity: 3, equipped: true },
+			system: { quantity: 3, equipped: true, objectSizeType: 'stackable' },
 		});
 
 		await transferObject(actor, move);
 
 		expect(dialog().confirm).not.toHaveBeenCalled();
 		expect(request).toHaveBeenCalledWith(expect.objectContaining({ quantity: 3 }));
+	});
+
+	it('moves a single object whole, without a quantity question', async () => {
+		dialog().confirm.mockResolvedValue(true);
+		const actor = actorWith({
+			id: 'rope',
+			name: 'Rope',
+			type: 'object',
+			system: { quantity: 5, equipped: false, objectSizeType: 'slots' },
+		});
+
+		await transferObject(actor, { ...move, itemId: 'rope' });
+
+		expect(dialog().wait).toBeUndefined();
+		expect(request).toHaveBeenCalledWith(expect.objectContaining({ itemId: 'rope', quantity: 5 }));
 	});
 
 	it('moves a container whole, without a quantity question', async () => {
@@ -202,7 +217,7 @@ describe('transferObject', () => {
 			id: 'torch',
 			name: 'Torch',
 			type: 'object',
-			system: { quantity: 3 },
+			system: { quantity: 3, objectSizeType: 'stackable' },
 		});
 
 		await transferObject(actor, move);

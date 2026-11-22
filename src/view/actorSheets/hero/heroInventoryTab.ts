@@ -1,3 +1,4 @@
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { byName } from '../shared/rowOrder.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
@@ -60,6 +61,8 @@ const quantityOf = (item: ItemLike) => {
 	const quantity = Number(item.system.quantity ?? 1);
 	return Number.isFinite(quantity) ? quantity : 1;
 };
+const carriesQuantity = (item: ItemLike) =>
+	OBJECT_SIZE_TYPES_WITH_QUANTITY.has(String(item.system.objectSizeType ?? ''));
 
 /**
  * Weapons, armor and shields have the EQUIP tag, and so does each object whose rules the tag
@@ -99,28 +102,40 @@ function canSendToOthers(context: HeroSheetContext, source: 'actor' | 'stash'): 
 	return context.party.canGiveAway && (source === 'stash' || context.party.canGive);
 }
 
-/** Move to the stash, back onto this sheet, or straight to another character. */
+/** Move to the stash, a container, or back onto this sheet. Give to is the other characters. */
 function shareMenu(
 	actor: HeroActorLike,
 	item: ItemLike,
 	context: HeroSheetContext,
 	source: 'actor' | 'stash',
+	containers: ItemLike[],
 ): HeroRowView['share'] {
 	const { localize, format } = context;
-	const entries: { id: string; label: string; intent: HeroIntent }[] = [];
+	const moveEntries: { id: string; label: string; intent: HeroIntent }[] = [];
 	if (source === 'actor' && context.party.canGive) {
-		entries.push({
+		moveEntries.push({
 			id: 'party',
-			label: localize(`${INV}.moveToParty`),
+			label: localize(`${INV}.party`),
 			intent: transferIntent(actor, item.id, 'actor', { kind: 'stash' }),
 		});
 	}
 	if (source === 'stash' && context.party.canTake) {
-		entries.push({
+		moveEntries.push({
 			id: 'mine',
-			label: localize(`${INV}.moveToMine`),
+			label: localize(`${INV}.mine`),
 			intent: transferIntent(actor, item.id, 'stash', { kind: 'actor', actorId: actor.id }),
 		});
+	}
+	if (source === 'actor') {
+		const heldIn = storedIn(item);
+		for (const container of containers) {
+			if (container.id === item.id || container.id === heldIn) continue;
+			moveEntries.push({
+				id: container.id,
+				label: container.name,
+				intent: { kind: 'storeIn', itemId: item.id, containerId: container.id },
+			});
+		}
 	}
 	const giveEntries = canSendToOthers(context, source)
 		? context.party.characters.map((character) => ({
@@ -129,10 +144,10 @@ function shareMenu(
 				intent: transferIntent(actor, item.id, source, { kind: 'actor', actorId: character.id }),
 			}))
 		: [];
-	if (!entries.length && !giveEntries.length) return undefined;
+	if (!moveEntries.length && !giveEntries.length) return undefined;
 	return {
 		label: format(`${INV}.actions`, { name: item.name }),
-		entries,
+		move: moveEntries.length ? { label: localize(`${INV}.moveTo`), entries: moveEntries } : null,
 		give: giveEntries.length ? { label: localize(`${INV}.giveTo`), entries: giveEntries } : null,
 	};
 }
@@ -147,6 +162,7 @@ function objectRow(
 	const row = itemRow(actor, item, context);
 	const name = item.name;
 	const quantity = quantityOf(item);
+	const counted = !isContainer(item) && carriesQuantity(item);
 	const facts = [...row.facts];
 	let text: string | undefined;
 	let summary = row.summary;
@@ -173,7 +189,7 @@ function objectRow(
 				}),
 			};
 		}
-	} else {
+	} else if (counted) {
 		if (quantity !== 1) text = format(`${INV}.quantity`, { count: String(quantity) });
 		facts.push([localize(`${INV}.facts.quantity`), String(quantity)]);
 	}
@@ -210,9 +226,8 @@ function objectRow(
 			: undefined,
 		dropInto: isContainer(item) ? item.id : storedIn(item),
 		remove,
-		fields: isContainer(item)
-			? row.fields
-			: [
+		fields: counted
+			? [
 					{
 						kind: 'quantity',
 						itemId: item.id,
@@ -220,8 +235,9 @@ function objectRow(
 						value: quantity,
 					},
 					...row.fields,
-				],
-		share: shareMenu(actor, item, context, options.party ? 'stash' : 'actor'),
+				]
+			: row.fields,
+		share: shareMenu(actor, item, context, options.party ? 'stash' : 'actor', options.containers),
 	};
 	// A stash row is data, not an item on this actor: it cannot be used, equipped, or edited.
 	if (!options.party) return view;

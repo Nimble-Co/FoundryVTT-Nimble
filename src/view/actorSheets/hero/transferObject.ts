@@ -1,6 +1,7 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import localize from '#utils/localize.ts';
 import { requestItemTransfer } from '#utils/partyStash/requestItemTransfer.ts';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { readPartyStash } from '../../../settings/partyStashSetting.ts';
 import type { HeroIntent } from './heroIntent.ts';
 
@@ -19,6 +20,10 @@ function escapeHtml(value: string): string {
 function quantityOf(system: Record<string, unknown>): number {
 	const value = Math.floor(Number(system.quantity ?? 1));
 	return Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+function carriesQuantity(system: Record<string, unknown>): boolean {
+	return OBJECT_SIZE_TYPES_WITH_QUANTITY.has(String(system.objectSizeType ?? ''));
 }
 
 function isContainer(system: Record<string, unknown>): boolean {
@@ -159,7 +164,7 @@ export async function transferObject(
 		? localize(`${INV}.unequipToGive`, { name: escapeHtml(held.name), destination })
 		: null;
 	let quantity: number | null = have;
-	if (!container && have > 1) {
+	if (!container && carriesQuantity(held.system) && have > 1) {
 		quantity = await askQuantity(held.name, have, equippedNote);
 	} else if (equippedNote) {
 		const accepted = await confirmText(

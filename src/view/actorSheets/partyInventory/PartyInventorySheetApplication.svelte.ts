@@ -8,6 +8,7 @@ import type {
 } from '#types/components/actorSheets/PartyInventorySheet.d.ts';
 import localize from '#utils/localize.js';
 import type { TransferItem } from '#utils/partyStash/planItemTransfer.ts';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { readPartyStash } from '../../../settings/partyStashSetting.js';
 import PartyInventorySheetComponent from './PartyInventorySheet.svelte';
 
@@ -16,6 +17,10 @@ const COINS = ['gp', 'sp', 'cp'] as const;
 function quantityOf(item: TransferItem): number {
 	const number = Math.floor(Number(item.system?.quantity));
 	return Number.isFinite(number) && number > 0 ? number : 1;
+}
+
+function carriesQuantity(item: TransferItem): boolean {
+	return OBJECT_SIZE_TYPES_WITH_QUANTITY.has(String(item.system?.objectSizeType ?? ''));
 }
 
 function storedItems(stash: ReturnType<typeof readPartyStash>): PartyInventorySheetItem[] {
@@ -37,7 +42,7 @@ function storedItems(stash: ReturnType<typeof readPartyStash>): PartyInventorySh
 				name,
 				img: item.img || 'icons/svg/item-bag.svg',
 				quantity:
-					quantity > 1
+					carriesQuantity(item) && quantity > 1
 						? localize('NIMBLE.actorSheet.hero.inventory.quantity', { count: String(quantity) })
 						: '',
 			},

@@ -23,6 +23,7 @@ import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
 import { requestPartyCurrency } from '#utils/partyStash/requestItemTransfer.ts';
 import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 import { isSheetIntent } from '../shared/sheetIntent.ts';
 import { performSheetIntent } from '../shared/sheetPerform.ts';
@@ -181,7 +182,9 @@ const NEW_ITEM_NAMES: Record<Extract<HeroIntent, { kind: 'createItem' }>['itemTy
 async function setQuantity(actor: NimbleCharacter, itemId: string, value: number): Promise<void> {
 	const item = actor.items.get(itemId);
 	if (!item) return;
-	if ((item.system as { containerId?: string }).containerId) {
+	const system = item.system as { containerId?: string; objectSizeType?: string };
+	if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(system.objectSizeType ?? '')) return;
+	if (system.containerId) {
 		await actor.updateStoredObjectQuantity(itemId, value);
 		return;
 	}
