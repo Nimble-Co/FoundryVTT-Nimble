@@ -67,7 +67,11 @@ export function createMovementTriggerCardState(getMessageDocument: () => Trigger
 			.map((uuid) => resolve<TargetTokenDocument>(uuid))
 			.filter((token): token is TargetTokenDocument => token !== null),
 	);
-	const targetNames = $derived(targetTokens.map((token) => token.name).join(', '));
+	/** The creatures, unless the card names its only one already as the mover. */
+	const targetNames = $derived.by(() => {
+		const names = targetTokens.map((token) => token.name);
+		return names.length === 1 && names[0] === system.moverName ? '' : names.join(', ');
+	});
 	const movement = $derived(movementText(system));
 
 	const item = $derived(resolve<TriggerItem>(system.itemUuid));

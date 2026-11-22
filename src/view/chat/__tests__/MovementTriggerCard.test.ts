@@ -93,6 +93,11 @@ describe('MovementTriggerCard', () => {
 		expect(screen.getByText('Creatures: Goblin, Ogre')).toBeTruthy();
 	});
 
+	it('leaves out the creatures line when its one creature is the mover', () => {
+		renderCard({ targets: ['Scene.s.Token.gob'] });
+		expect(screen.queryByText(/^Creatures:/)).toBeNull();
+	});
+
 	it("shows the mover, this Movement's spaces and the spaces moved this turn", () => {
 		renderCard({ spaces: 3, spacesThisTurn: 5 });
 		expect(screen.getByText('Goblin moved 3 spaces, 5 spaces this turn.')).toBeTruthy();
@@ -163,7 +168,7 @@ describe('MovementTriggerCard', () => {
 			],
 		});
 
-		expect(screen.getByText('Hero: Opportunity Attack (Opportunistic Frenzy)')).toBeTruthy();
+		expect(screen.getByRole('heading', { name: 'Opportunity Attack (reaction)' })).toBeTruthy();
 		expect(useButton()).toBeNull();
 	});
 
