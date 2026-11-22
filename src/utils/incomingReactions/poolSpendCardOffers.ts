@@ -3,7 +3,7 @@ import type { AttackDelivery } from '../damage/attackDelivery.js';
 import type { AttackOrigin } from '../damage/attackOrigin.js';
 import type { IncomingReactionEntry } from './incomingReactionEntry.js';
 
-const DICE_CONSUMER_RULE_TYPE = 'diceConsumer';
+const CARD_OFFER_RULE_TYPES = new Set(['diceConsumer', 'chargeConsumer']);
 
 /** What the attack about to be posted looks like, for rules that filter on it. */
 export interface CardOfferContext {
@@ -36,8 +36,8 @@ export interface OfferingActor {
 }
 
 /**
- * Build the spend offers an attacker's own `diceConsumer` rules extend to the
- * attack card they are about to post — one per opted-in rule.
+ * Build the spend offers an attacker's own `diceConsumer` and `chargeConsumer`
+ * rules extend to the attack card they are about to post, one per opted-in rule.
  *
  * These are stamped alongside the defender-side reaction entries and filtered
  * against the resolved outcome before they reach the card, so a `criticalHit`
@@ -55,7 +55,7 @@ export function collectPoolSpendCardOffers(
 	const offers: IncomingReactionEntry[] = [];
 
 	for (const rule of actor.rules) {
-		if (rule?.type !== DICE_CONSUMER_RULE_TYPE) continue;
+		if (!CARD_OFFER_RULE_TYPES.has(rule?.type ?? '')) continue;
 		if (rule.providesCardOffer?.(context) !== true) continue;
 
 		offers.push({

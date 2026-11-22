@@ -585,6 +585,7 @@ function getChargeConsumers(
 		// activation keep working once its optional charge-gated rider is spent,
 		// instead of the empty pool blocking the whole use.
 		if (consumerRule.appliesTo?.() === false) continue;
+		if (consumerRule.cardOffer) continue;
 		const poolIdentifier = normalizeIdentifier(
 			consumerRule.poolIdentifier || consumerRule.identifier || consumerRule.id,
 		);

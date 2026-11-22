@@ -641,6 +641,40 @@ describe('NimbleChatMessage.applyDamage', () => {
 		expect(actor.applyDamage).toHaveBeenCalledWith(19);
 	});
 
+	it('counts a die times a number as that many times the die, for medium armor', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: { attributes: { armor: 'medium', hp: { value: 50, temp: 0, max: 50 } } },
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		// 1d8 (rolled 4) + 3 + 1d8 (rolled 5) * 2[Lunging Strike] = 17. Medium armor keeps the
+		// dice: 4 + 5 * 2 = 14.
+		const roll = {
+			class: 'DamageRoll',
+			formula: '1d8 + 3 + 1d8 * 2',
+			total: 17,
+			isCritical: false,
+			excludedPrimaryDieValue: 0,
+			terms: [
+				{ number: 1, faces: 8, results: [{ result: 4, active: true, discarded: false }] },
+				{ operator: '+' },
+				{ number: 3 },
+				{ operator: '+' },
+				{ number: 1, faces: 8, results: [{ result: 5, active: true, discarded: false }] },
+				{ operator: '*' },
+				{ number: 2, options: { flavor: 'Lunging Strike' } },
+			],
+		};
+
+		const message = createActivationMessage();
+		await message.applyDamage(17, { outcome: 'fullDamage', roll });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(14);
+	});
+
 	it('halves banked dice-pool bonuses (Fury Dice) with the dice for heavy armor', async () => {
 		const actor = {
 			applyDamage: vi.fn().mockResolvedValue(undefined),

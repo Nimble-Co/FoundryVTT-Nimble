@@ -136,7 +136,8 @@ export function createItemActivationConfigDialogState(
 	let dualWield = $state(false);
 	let dualWieldExtraDieOn = $state<'activated' | 'other'>('activated');
 
-	const chargeCosts = isResourceSpendingAutomationEnabled() ? fixedChargeCostsOf(actor, item) : [];
+	const spendsCharges = isResourceSpendingAutomationEnabled();
+	const fixedChargeCosts = spendsCharges ? fixedChargeCostsOf(actor, item) : [];
 	const held = heldChangeChoice(actor, item, options.ignoresDisadvantage, {
 		get: () => selectedRollMode,
 		set: (mode) => {
@@ -378,6 +379,25 @@ export function createItemActivationConfigDialogState(
 
 	const hasConditionalBonuses = $derived(conditionalBonusOptions.length > 0);
 
+	// A chosen bonus that spends a charge takes one when the roll is made.
+	const chosenCharges = $derived(
+		conditionalBonusOptions
+			.filter((o) => o.charge && (conditionalChoices[o.key] ?? 'none') !== 'none')
+			.map((o) => o.charge as NonNullable<ConditionalBonusOption['charge']>),
+	);
+	const chargeCosts = $derived([
+		...fixedChargeCosts,
+		...(spendsCharges ? chosenCharges : [])
+			.filter((charge) => !charge.hidden)
+			.map((charge) => ({ label: charge.label, amount: 1, current: charge.current })),
+	]);
+	const consumedChargePools = $derived([
+		...Object.entries(chargeSpendCounts)
+			.filter(([, count]) => count > 0)
+			.map(([poolId, count]) => ({ poolId, count })),
+		...chosenCharges.map((charge) => ({ poolId: charge.poolId, count: 1 })),
+	]);
+
 	// Net advantage stacks contributed by choices set to "advantage".
 	const conditionalAdvantageTotal = $derived(
 		conditionalBonusOptions.reduce(
@@ -547,7 +567,9 @@ export function createItemActivationConfigDialogState(
 		get rangeLine() {
 			return rangeLine;
 		},
-		chargeCosts,
+		get chargeCosts() {
+			return chargeCosts;
+		},
 		get cannotRollReason() {
 			if (weaponAttack !== '' && !chosenWeapon) return localize('NIMBLE.rollWindow.noWeapon');
 			const unpaid = chargeCosts.find((cost) => cost.current < cost.amount);
@@ -658,6 +680,10 @@ export function createItemActivationConfigDialogState(
 		// Selection getters.
 		get chargeSpendCounts() {
 			return chargeSpendCounts;
+		},
+		/** The charges the roll spends: the ones the player added, and those of chosen bonuses. */
+		get consumedChargePools() {
+			return consumedChargePools;
 		},
 		get variableSpendCounts() {
 			return variableSpendCounts;

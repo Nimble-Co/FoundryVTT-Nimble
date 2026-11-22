@@ -1,4 +1,5 @@
 import type { ConditionalBonusRule } from '../../models/rules/conditionalBonus.js';
+import { hasRuleCharge, rulePoolState } from '../chargePool/ruleChargeGate.js';
 import {
 	type AttackActivation,
 	type AttackDelivery,
@@ -37,10 +38,21 @@ interface ConditionalBonusOption {
 	fromItemIdentifier?: string;
 	/** The roll window starts on this bonus. */
 	startsChosen: boolean;
+	/** The charge pool that choosing the bonus spends one charge of. */
+	charge?: ConditionalBonusCharge;
+}
+
+interface ConditionalBonusCharge {
+	poolId: string;
+	label: string;
+	current: number;
+	/** The sheet hides the pool, so the window shows no spend line for it. */
+	hidden: boolean;
 }
 
 interface AttackingActor {
 	type?: string | null;
+	items?: unknown;
 	rules?: unknown[];
 	getFlag(scope: string, key: string): unknown;
 }
@@ -91,6 +103,20 @@ function doublesDamage(
 	return armor !== 'medium' && armor !== 'heavy';
 }
 
+/** The pool a bonus spends a charge of, null for none, false when it has no charge left. */
+function chargeOf(
+	attacker: AttackingActor,
+	identifier: string | undefined,
+): ConditionalBonusCharge | null | false {
+	const id = identifier?.trim() ?? '';
+	if (!id) return null;
+	const actor = attacker as unknown as Actor;
+	if (!hasRuleCharge(actor, id)) return false;
+	const pool = rulePoolState(actor, id);
+	if (!pool) return null;
+	return { poolId: pool.key, label: pool.label, current: pool.current, hidden: pool.hidden };
+}
+
 /**
  * Returns the conditional bonuses currently offered to `attacker` for an attack with
  * `item` against `targetActor`. A bonus is offered when its self-predicate passes, its
@@ -123,6 +149,8 @@ function getActiveConditionalBonuses(
 		if (!rule.matchesAttack(delivery, source, origin ?? identifierOf(item))) continue;
 		if (!rule.matchesTarget(targetDomain)) continue;
 		if (!rule.offersAdvantage() && !rule.offersDamage()) continue;
+		const charge = chargeOf(attacker, rule.chargePoolIdentifier);
+		if (charge === false) continue;
 
 		const damage = rule.resolveDamage();
 		const doubled = doublesDamage(rule, item, targetActor, weapon);
@@ -138,10 +166,16 @@ function getActiveConditionalBonuses(
 			...(doubled ? { doubled } : {}),
 			...(damage.fromItemIdentifier ? { fromItemIdentifier: damage.fromItemIdentifier } : {}),
 			startsChosen: rule.startsChosen !== false,
+			...(charge ? { charge } : {}),
 		});
 	}
 
 	return options;
 }
 
-export { type ConditionalBonusOption, buildTargetDomain, getActiveConditionalBonuses };
+export {
+	type ConditionalBonusCharge,
+	type ConditionalBonusOption,
+	buildTargetDomain,
+	getActiveConditionalBonuses,
+};

@@ -1,4 +1,5 @@
 import PoolSpendOfferDialog from '#documents/dialogs/PoolSpendOfferDialog.svelte.ts';
+import { runningRule } from '#utils/actor/actorRules.js';
 import { getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import { requestIncomingAttackReaction } from '#utils/incomingReactions/incomingAttackReactions.js';
@@ -46,6 +47,16 @@ export async function requestPoolSpendOffer(
 	},
 ): Promise<void> {
 	const { actor } = options;
+	// A charge has no dice to pick: the spend goes at once.
+	if (
+		runningRule<{ id?: string; type?: string }>(entry.itemUuid, entry.ruleId)?.type ===
+		'chargeConsumer'
+	) {
+		options.hold(entry.id);
+		await requestIncomingAttackReaction({ messageId: options.messageId, entryId: entry.id });
+		return;
+	}
+
 	const target = findOfferTarget(actor, entry);
 	if (!target) {
 		ui.notifications?.warn(localize('NIMBLE.chat.incomingReactions.poolSpendUnavailable'));

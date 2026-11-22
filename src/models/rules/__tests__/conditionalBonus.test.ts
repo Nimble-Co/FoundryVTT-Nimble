@@ -165,6 +165,21 @@ describe('ConditionalBonusRule', () => {
 			expect(rule.resolveDamage()).toEqual({ value: null, formula: '(2)d6' });
 		});
 
+		it('keeps a die whose size is a number of the attacker, with that number', () => {
+			const roll = Roll as unknown as { replaceFormulaData?: unknown };
+			const ownReplace = roll.replaceFormulaData;
+			roll.replaceFormulaData = (formula: string, data: Record<string, unknown>) =>
+				formula.replace(/@([\w.-]+)/g, (_: string, path: string) =>
+					String(foundry.utils.getProperty(data, path) ?? 0),
+				);
+			const rule = createRule(
+				{ damageBonus: '1d@pools.combat-dice.faces*2' },
+				createMockActor({ pools: { 'combat-dice': { faces: 8 } } }),
+			);
+			expect(rule.resolveDamage()).toEqual({ value: null, formula: '1d8*2' });
+			roll.replaceFormulaData = ownReplace;
+		});
+
 		it('returns nulls when no damage is offered', () => {
 			const rule = createRule({ damageBonus: '' }, createMockActor());
 			expect(rule.resolveDamage()).toEqual({ value: null, formula: null });

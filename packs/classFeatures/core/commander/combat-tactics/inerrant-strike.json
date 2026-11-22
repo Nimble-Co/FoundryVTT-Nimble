@@ -42,7 +42,7 @@
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "action",
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {

@@ -5,7 +5,23 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "sweeping-strike-spend",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "combat-dice",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": "",
+				"allowFree": false
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

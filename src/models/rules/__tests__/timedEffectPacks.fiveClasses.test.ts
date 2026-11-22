@@ -341,6 +341,7 @@ describe('Assist Me, My Friend!', () => {
 
 	it("offers the Lifebinding Spirit's damage on a melee attack, unticked", () => {
 		expect(item.system.rules).toEqual([
+			expect.objectContaining({ type: 'chargePool' }),
 			expect.objectContaining({
 				type: 'conditionalBonus',
 				advantage: 0,

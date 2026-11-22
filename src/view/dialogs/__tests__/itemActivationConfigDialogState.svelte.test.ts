@@ -147,6 +147,65 @@ describe('the activation dialog bonus of an item damage', () => {
 	});
 });
 
+describe('the activation dialog bonus that spends a charge', () => {
+	const lunging = {
+		key: 'Item.lunging:rule',
+		label: 'Using Lunging Strike: +1 Reach',
+		advantage: 0,
+		damageValue: null,
+		damageFormula: '1d8*2',
+		damageType: '',
+		startsChosen: false,
+		charge: { poolId: 'combat-dice', label: 'Combat Dice', current: 2, hidden: false },
+	};
+	const assist = {
+		...lunging,
+		key: 'Item.assist:rule',
+		label: 'Using Assist Me, My Friend! (1/round)',
+		charge: { poolId: 'assist-round', label: 'Assist Me (1/round)', current: 1, hidden: true },
+	};
+
+	function open(options: object[]) {
+		user.targets = new Set();
+		conditionalBonuses.mockReturnValueOnce(options as never);
+		return createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () =>
+				({
+					type: 'weapon',
+					system: { activation: { effects: [{ id: 'd', type: 'damage', formula: '1d8' }] } },
+				}) as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('spends nothing until it is chosen', () => {
+		const state = open([lunging]);
+
+		expect(state.consumedChargePools).toEqual([]);
+		expect(state.chargeCosts).toEqual([]);
+	});
+
+	it('spends one charge, and says so, once it is chosen', () => {
+		const state = open([lunging]);
+
+		state.setConditionalChoice(lunging.key, 'damage');
+
+		expect(state.consumedChargePools).toEqual([{ poolId: 'combat-dice', count: 1 }]);
+		expect(state.chargeCosts).toEqual([{ label: 'Combat Dice', amount: 1, current: 2 }]);
+		expect(state.modifiedFormulas[0].formula).toBe('1d8+1d8*2[Using Lunging Strike: +1 Reach]');
+	});
+
+	it('spends the charge of a hidden pool with no line for it', () => {
+		const state = open([assist]);
+
+		state.setConditionalChoice(assist.key, 'damage');
+
+		expect(state.consumedChargePools).toEqual([{ poolId: 'assist-round', count: 1 }]);
+		expect(state.chargeCosts).toEqual([]);
+	});
+});
+
 describe('the activation dialog Max Damage tick', () => {
 	function openWithRule(rule: object, effects: object[]) {
 		user.targets = new Set();

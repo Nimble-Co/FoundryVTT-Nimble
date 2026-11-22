@@ -5,13 +5,40 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "heavy-strike-spend",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"poolIdentifier": "combat-dice",
+				"poolScope": "item",
+				"costMode": "fixed",
+				"cost": "1",
+				"maxCost": "",
+				"allowFree": false,
+				"cardOffer": "hit",
+				"effectFormula": "1d@pools.combat-dice.faces",
+				"pushDistance": "0",
+				"pushDistanceBySize": {
+					"tiny": "@strength*2",
+					"small": "@strength*2",
+					"medium": "@strength",
+					"large": "@strength/2",
+					"huge": "",
+					"gargantuan": ""
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "action",
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {

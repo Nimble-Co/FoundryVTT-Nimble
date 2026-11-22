@@ -49,15 +49,28 @@ import {
 	spendHeldChanges,
 } from '#utils/heldChange/heldChange.js';
 import localize from '#utils/localize.ts';
-import { reconcileMovementOffers, withEventOffers } from '#utils/movement/movementOffers.js';
+import {
+	reconcileMovementOffers,
+	speakerTokenUuid,
+	withEventOffers,
+} from '#utils/movement/movementOffers.js';
+import { offerMovement } from '#utils/movement/postMovementOfferCard.js';
 import { SKIP_DICE_SO_NICE, showDiceAnimation } from '#utils/rolls/showDiceAnimation.js';
 import { asksSave, requestSaves } from '#utils/saveRequest/saveRequests.js';
 import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
-import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
+import {
+	isMovementOffersAutomationEnabled,
+	isRuleAutomationEnabled,
+} from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
+import {
+	hasRuleCharge,
+	rulePoolState,
+	spendRuleCharge,
+} from '../utils/chargePool/ruleChargeGate.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
 import { mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
 import {
@@ -72,6 +85,7 @@ import type { PoolSpendSelection } from '../utils/incomingReactions/incomingAtta
 import {
 	type IncomingReactionEntry,
 	type RerollRecord,
+	type RerollTrigger,
 	rerollTriggerMatches,
 } from '../utils/incomingReactions/incomingReactionEntry.js';
 import type { RerollingActor } from '../utils/reroll/rerollEntries.js';
@@ -120,6 +134,27 @@ interface ActivationCardSystemData {
 	};
 	appliedHealing?: Record<string, AppliedHealingRecord>;
 	[key: string]: unknown;
+}
+
+/** The parts of a `chargeConsumer` rule that a spend from the card reads. */
+type ChargeCardOfferRule = {
+	id?: string;
+	type?: string;
+	disabled?: boolean;
+	poolIdentifier?: string;
+	cost?: string;
+	cardOffer?: RerollTrigger | null;
+	effectFormula?: string;
+	cardPush?: { distance: string; distanceBySize: Record<string, string> } | null;
+	providesCardOffer?: (context: { delivery: AttackDelivery }) => boolean;
+};
+
+/** The kept die results of an evaluated roll. */
+function rolledFaces(roll: { terms?: unknown[] }): number[] {
+	return ((roll.terms ?? []) as Array<{ results?: Array<{ result: number; active?: boolean }> }>)
+		.flatMap((term) => term.results ?? [])
+		.filter((result) => result.active !== false)
+		.map((result) => result.result);
 }
 
 type HpMutableActor = Actor.Implementation &
@@ -268,12 +303,36 @@ function getTermFlavor(term: unknown): string {
 function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number | null {
 	let diceDamage = 0;
 	let hasDiceTerm = false;
+	// A die times a number counts as that many times the die.
+	let lastDieValue: number | null = null;
+	let multipliesLastDie = false;
 
 	if (!Array.isArray(serializedRoll.terms)) return null;
 
 	for (const term of serializedRoll.terms) {
-		const serializedTerm = term as { faces?: unknown; results?: unknown; number?: unknown };
+		const serializedTerm = term as {
+			faces?: unknown;
+			results?: unknown;
+			number?: unknown;
+			operator?: unknown;
+		};
 		const faces = Number(serializedTerm.faces);
+
+		if (serializedTerm.operator !== undefined) {
+			multipliesLastDie = serializedTerm.operator === '*' && lastDieValue !== null;
+			if (!multipliesLastDie) lastDieValue = null;
+			continue;
+		}
+
+		if (multipliesLastDie && (!Number.isFinite(faces) || faces <= 0)) {
+			const factor = Number(serializedTerm.number);
+			if (Number.isFinite(factor)) diceDamage += (lastDieValue ?? 0) * (factor - 1);
+			multipliesLastDie = false;
+			lastDieValue = null;
+			continue;
+		}
+		multipliesLastDie = false;
+		lastDieValue = null;
 
 		if (!Number.isFinite(faces) || faces <= 0) {
 			// Banked dice-pool faces (Fury Dice etc.) ship as flavored numeric
@@ -291,6 +350,7 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 		hasDiceTerm = true;
 
 		if (!Array.isArray(serializedTerm.results)) continue;
+		let dieValue = 0;
 		for (const result of serializedTerm.results) {
 			const serializedResult = result as {
 				result?: unknown;
@@ -301,8 +361,10 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 
 			const resultValue = Number(serializedResult.result);
 			if (!Number.isFinite(resultValue)) continue;
-			diceDamage += resultValue;
+			dieValue += resultValue;
 		}
+		diceDamage += dieValue;
+		lastDieValue = dieValue;
 	}
 
 	if (!hasDiceTerm) return null;
@@ -2266,6 +2328,150 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			},
 		} as Record<string, unknown>);
+	}
+
+	/**
+	 * Spend charges of a charge pool from this card: roll the consumer's damage
+	 * formula, add it to the attack's damage, and push the targets when the rule
+	 * says so. Runs on the primary GM's client, like the dice pool spend.
+	 */
+	async resolveSpendChargeForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket = false,
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!this.isActivationCard()) return;
+
+		const lockKey = `${this.id}:${entryId}`;
+		if (inFlightSpendOffers.has(lockKey)) return;
+		inFlightSpendOffers.add(lockKey);
+
+		try {
+			await queueReactionWrite(this.id ?? '', () =>
+				this.#applySpendChargeForDamageOffer(entryId, requestingUserId, viaSocket),
+			);
+		} finally {
+			inFlightSpendOffers.delete(lockKey);
+		}
+	}
+
+	async #applySpendChargeForDamageOffer(
+		entryId: string,
+		requestingUserId: string,
+		viaSocket: boolean,
+	): Promise<void> {
+		const reject = (reasonKey: string) =>
+			rejectCardRequest({
+				messageId: this.id ?? '',
+				entryId,
+				userId: requestingUserId,
+				reasonKey,
+			});
+
+		const entry = this.#validateIncomingReaction(
+			entryId,
+			'spendPoolForDamage',
+			requestingUserId,
+			viaSocket,
+		);
+		if (!entry) return reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		const actor = fromUuidSync(entry.actorUuid as `Actor.${string}`) as Actor.Implementation | null;
+		const rule = runningRule<ChargeCardOfferRule>(entry.itemUuid, entry.ruleId);
+		const item = entry.itemUuid
+			? (fromUuidSync(entry.itemUuid as `Item.${string}`) as Item.Implementation | null)
+			: null;
+		if (!actor || !item || rule?.type !== 'chargeConsumer') {
+			return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
+		}
+
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		const stillOffered =
+			rule.providesCardOffer?.({ delivery: this.#attackDelivery() }) === true &&
+			rerollTriggerMatches(rule.cardOffer ?? undefined, systemData);
+		if (!stillOffered) return reject('NIMBLE.chat.incomingReactions.poolSpendNoLongerOffered');
+
+		const identifier = String(rule.poolIdentifier ?? '');
+		const cost = Math.max(1, Math.trunc(Number(rule.cost) || 1));
+		const pool = rulePoolState(actor, identifier);
+		if (!pool) return reject('NIMBLE.chat.incomingReactions.poolSpendUnavailable');
+		if (!hasRuleCharge(actor, identifier, cost)) {
+			return reject('NIMBLE.chat.incomingReactions.chargeSpendEmpty');
+		}
+
+		const roll = new Roll(
+			String(rule.effectFormula ?? ''),
+			(actor as unknown as { getRollData: () => Record<string, unknown> }).getRollData(),
+		);
+		await roll.evaluate({ allowInteractive: false } as Parameters<Roll['evaluate']>[0]);
+		const bonusDamage = Math.floor(Number(roll.total ?? 0));
+		if (!Number.isFinite(bonusDamage) || bonusDamage <= 0) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
+		const rollsSource = ((this._source as { rolls?: string[] }).rolls ?? []) as string[];
+		const patched = foldBonusIntoPrimaryDamage(
+			activation,
+			rollsSource,
+			bonusDamage,
+			item.name ?? '',
+		);
+		if (!patched) return reject('NIMBLE.chat.incomingReactions.useFailed');
+
+		if (!(await spendRuleCharge(actor, identifier, cost))) {
+			return reject('NIMBLE.chat.incomingReactions.useFailed');
+		}
+
+		await this.update({
+			rolls: patched.rolls,
+			system: {
+				activation: patched.activation,
+				incomingReactions: this.#markIncomingReactionsUsed((e) => e.id === entry.id, {
+					usedAmount: bonusDamage,
+					usedPoolLabel: pool.label,
+					usedFaces: rolledFaces(roll),
+				}),
+			},
+		} as Record<string, unknown>);
+
+		await this.#offerCardPush(actor, item, rule.cardPush ?? null);
+	}
+
+	/** The targets of the card get a forced move away from the attacker, as a line on the card. */
+	async #offerCardPush(
+		actor: Actor.Implementation,
+		item: Item.Implementation,
+		push: { distance: string; distanceBySize: Record<string, string> } | null,
+	): Promise<void> {
+		const targets = (this.system as { targets?: string[] }).targets ?? [];
+		const tokenUuid = speakerTokenUuid(this as unknown as OfferCard);
+		const token = tokenUuid
+			? (fromUuidSync(tokenUuid as Parameters<typeof fromUuidSync>[0], {
+					strict: false,
+				}) as TokenDocument | null)
+			: null;
+		if (!push || targets.length === 0 || !token || !isMovementOffersAutomationEnabled()) return;
+		await offerMovement(
+			{
+				actor,
+				token,
+				name: item.name ?? '',
+				image: item.img ?? undefined,
+				reason: item.name ?? '',
+				node: {
+					kind: 'forced',
+					distance: push.distance,
+					distanceBySize: push.distanceBySize,
+					direction: 'away',
+					ignoreDifficultTerrain: true,
+				},
+				recipients: [...targets],
+				whisper: false,
+			},
+			{ card: this as unknown as ChatMessage },
+		);
 	}
 
 	/**

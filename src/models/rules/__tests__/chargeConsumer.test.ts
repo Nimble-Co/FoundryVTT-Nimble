@@ -49,6 +49,82 @@ describe('ChargeConsumerRule', () => {
 		});
 	});
 
+	describe('a spend from the attack card', () => {
+		function consumer(data: Record<string, unknown>, actorType = 'character') {
+			const item = {
+				isEmbedded: true,
+				name: 'Heavy Strike',
+				uuid: 'Item.heavy',
+				actor: { uuid: 'Actor.hero', type: actorType, getDomain: () => new Set<string>() },
+			};
+			const rule = new ChargeConsumerRule(
+				{ type: 'chargeConsumer' } as never,
+				{
+					parent: item,
+					strict: false,
+				} as never,
+			);
+			Object.assign(rule as object, {
+				poolIdentifier: 'combat-dice',
+				cost: '1',
+				cardOffer: null,
+				effectFormula: '',
+				pushDistance: '',
+				pushDistanceBySize: {},
+				disabled: false,
+				...data,
+			});
+			Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
+			Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
+			return rule;
+		}
+
+		it('is offered after the outcome it names, with damage to add', () => {
+			expect(
+				consumer({
+					cardOffer: 'hit',
+					effectFormula: '1d@pools.combat-dice.faces',
+				}).providesCardOffer(),
+			).toBe(true);
+		});
+
+		it('is not offered with no outcome, no damage, or for a creature that is not a hero', () => {
+			expect(consumer({ effectFormula: '1d6' }).providesCardOffer()).toBe(false);
+			expect(consumer({ cardOffer: 'hit', effectFormula: ' ' }).providesCardOffer()).toBe(false);
+			expect(consumer({ cardOffer: 'hit', effectFormula: '1d6' }, 'npc').providesCardOffer()).toBe(
+				false,
+			);
+		});
+
+		it('pushes the targets by the distance of their size, else the distance', () => {
+			const rule = consumer({
+				cardOffer: 'hit',
+				effectFormula: '1d6',
+				pushDistance: '@strength',
+				pushDistanceBySize: { small: '@strength*2', large: '', huge: '0' },
+			});
+
+			expect(rule.cardPush).toEqual({
+				distance: '@strength',
+				distanceBySize: { small: '@strength*2', huge: '0' },
+			});
+		});
+
+		it('pushes nothing when no distance is set', () => {
+			expect(consumer({ cardOffer: 'hit', effectFormula: '1d6' }).cardPush).toBeNull();
+		});
+
+		it('shows the spend fields only for a spend from the card', () => {
+			const schema = ChargeConsumerRule.defineSchema() as any;
+
+			expect(schema.cardOffer.initial).toBeNull();
+			for (const field of ['effectFormula', 'pushDistance', 'pushDistanceBySize']) {
+				expect(schema[field].options.showWhen({ cardOffer: 'hit' })).toBe(true);
+				expect(schema[field].options.showWhen({ cardOffer: null })).toBe(false);
+			}
+		});
+	});
+
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ChargeConsumerRule.group).toBe('resource');

@@ -109,6 +109,8 @@ type ChargeConsumerRuleLike = {
 	maxCost?: string;
 	allowFree?: boolean;
 	oncePerTurn?: boolean;
+	/** Spent from a button on the owner's attack card, not when the item is used. */
+	cardOffer?: string | null;
 	/**
 	 * Optional because the structural type is also satisfied by plain objects in
 	 * tests; real rule instances always inherit it from the base rule class.

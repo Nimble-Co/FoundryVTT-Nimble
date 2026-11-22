@@ -5,13 +5,34 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "conditionalBonus",
+				"disabled": false,
+				"id": "lunging-strike-bonus",
+				"identifier": "",
+				"label": "Using Lunging Strike (+1 Reach)",
+				"predicate": {},
+				"priority": 1,
+				"advantage": 0,
+				"damageBonus": "1d@pools.combat-dice.faces*2",
+				"damageType": "",
+				"damageOfItem": "",
+				"startsChosen": false,
+				"delivery": "melee",
+				"source": "weapon",
+				"attackOrigin": "",
+				"chargePoolIdentifier": "combat-dice",
+				"targetCondition": {},
+				"doubleFor": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "action",
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {
