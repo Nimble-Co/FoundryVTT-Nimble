@@ -41,7 +41,7 @@ export default async function confirmSpellOverdraft(
 	paragraphs.push(localize(`${confirmKey}.confirmQuestion`, { name: spellName }));
 
 	const confirmed = await foundry.applications.api.DialogV2.confirm({
-		window: { title: localize(`${confirmKey}.title`) },
+		window: { title: localize(`${confirmKey}.title`, { pool: cost.poolLabel }) },
 		content: paragraphs.map((paragraph) => `<p>${paragraph}</p>`).join(''),
 		yes: { label: localize(`${confirmKey}.confirm`) },
 		no: { label: localize(`${confirmKey}.cancel`) },
