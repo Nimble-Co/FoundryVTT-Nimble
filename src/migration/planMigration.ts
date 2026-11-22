@@ -112,6 +112,10 @@ class RootRun {
 		const before = this.#snapshot();
 		await this.#alwaysHooks(migration);
 		const kept = migration.kind === 'content' ? this.#keepOut() : null;
+		const known =
+			migration.kind === 'content' && this.root.kind === 'actor'
+				? new Set(itemsOf(this.data).map((item) => item._id))
+				: null;
 		if (this.root.kind === 'actor') await this.#actorHooks(migration);
 		else if (this.root.kind === 'item') await this.#itemHooks(migration, this.data, undefined);
 		else {
@@ -120,7 +124,17 @@ class RootRun {
 			);
 		}
 		if (kept) this.#restore(kept);
+		if (known) this.#dropExcludedAdditions(known);
 		this.#record(migration, before);
+	}
+
+	/** An item that a content migration adds stays out when the GM keeps its row out. */
+	#dropExcludedAdditions(known: ReadonlySet<string>): void {
+		const items = itemsOf(this.data);
+		const kept = items.filter(
+			(item) => known.has(item._id) || !this.excluded.has(this.#itemUuid(item._id)),
+		);
+		if (kept.length !== items.length) this.data.items = kept;
 	}
 
 	async #alwaysHooks(migration: MigrationBase): Promise<void> {

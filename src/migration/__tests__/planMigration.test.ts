@@ -169,6 +169,33 @@ describe('planMigration', () => {
 			});
 		});
 
+		describe('an item that a content migration adds', () => {
+			const addItem = migration(97, 'content', {
+				async updateActor(source: any) {
+					source.items.push(item('added', 'Added'));
+				},
+			});
+
+			it('stays out when the GM keeps its row out', async () => {
+				const plan = await planMigration([actorRoot([packItem('parry', 'Parry')])], [addItem], {
+					excluded: new Set(['Actor.gorm.Item.added']),
+				});
+
+				expect(plan.roots[0].after.items.map((entry: any) => entry._id)).toEqual(['parry']);
+			});
+
+			it('is added when its row stays in', async () => {
+				const plan = await planMigration([actorRoot([packItem('parry', 'Parry')])], [addItem], {
+					excluded: new Set(),
+				});
+
+				expect(plan.roots[0].after.items.map((entry: any) => entry._id)).toEqual([
+					'parry',
+					'added',
+				]);
+			});
+		});
+
 		it('keeps an actor out without keeping its Nimble items out', async () => {
 			const renameActor = migration(96, 'content', {
 				async updateActor(source: any) {
