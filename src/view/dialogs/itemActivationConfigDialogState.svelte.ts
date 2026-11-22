@@ -225,9 +225,8 @@ export function createItemActivationConfigDialogState(
 			weaponItemOf(weapon?.uuid),
 			options.attackOrigin,
 		);
-	let conditionalBonusOptions = $state<ConditionalBonusOption[]>(
-		conditionalBonusesFor(weapons[0] ?? null),
-	);
+	const initialConditionalBonusOptions = conditionalBonusesFor(weapons[0] ?? null);
+	let conditionalBonusOptions = $state<ConditionalBonusOption[]>(initialConditionalBonusOptions);
 	const conditionOptions = $derived(conditionRollModeOptions(conditionLines));
 	const opened = openRollModeTicks(
 		initialRollMode,
@@ -255,7 +254,9 @@ export function createItemActivationConfigDialogState(
 		);
 	}
 	let conditionalChoices = $state<Record<string, ConditionalChoice>>(
-		Object.fromEntries(conditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)])),
+		Object.fromEntries(
+			initialConditionalBonusOptions.map((o) => [o.key, defaultConditionalChoice(o)]),
+		),
 	);
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state<number | null | undefined>();
