@@ -91,6 +91,8 @@ interface ActivationCardContext {
 	isMiss: boolean;
 	/** The item the card was made with, when it can be found. */
 	sourceItem?: { type?: string } | null;
+	/** The identifier of the feature the attack was made through. */
+	origin?: string;
 }
 
 // Context passed to onItemActivated — fires once when an item is used, regardless of

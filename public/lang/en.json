@@ -1995,6 +1995,7 @@
 			"armorClass": "Armor Class",
 			"auraReach": "Aura Reach",
 			"attackOutcome": "Attack Outcome",
+			"attackRollMode": "Attack Roll Mode",
 			"chargeConsumer": "Charge Consumer",
 			"resourceCost": "Spend or Sacrifice",
 			"useOption": "Spell or Attack Option",
@@ -3618,7 +3619,11 @@
 				},
 				"damage": {
 					"label": "Extra damage",
-					"hint": "A formula. The damage has the type of the attack."
+					"hint": "A formula. The damage has the type of the attack, unless Damage type is set."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "Blank: the damage is part of the attack's own damage. Set: the damage has this type and goes on the card as its own damage. With Feature Effects off, the row does not add it."
 				},
 				"primaryDie": {
 					"label": "Primary Die bonus",
@@ -3755,6 +3760,17 @@
 						"ranged": "Ranged attacks",
 						"any": "All attacks"
 					}
+				}
+			},
+			"attackRollMode": {
+				"description": "Changes the roll mode of your attacks: advantage, and all disadvantage ignored, Rushed Attacks too. The roll window opens with the change. Set Only attacks made through to limit it to the attacks of one feature.",
+				"advantage": {
+					"label": "Advantage",
+					"hint": "Steps of advantage the attack gets. 0 gives none."
+				},
+				"ignoreDisadvantage": {
+					"label": "Ignore all disadvantage",
+					"hint": "The attack takes no disadvantage: not from Rushed Attacks, conditions or the target."
 				}
 			},
 			"spellManaCost": {

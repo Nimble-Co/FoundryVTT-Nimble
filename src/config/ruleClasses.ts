@@ -4,6 +4,7 @@ import { ActionDeltaRule } from '../models/rules/actionDelta.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
+import { AttackRollModeRule } from '../models/rules/attackRollMode.js';
 import { AuraReachRule } from '../models/rules/auraReach.js';
 import { ChangeDieRule } from '../models/rules/changeDie.js';
 import { ChangeEffectRule } from '../models/rules/changeEffect.js';
@@ -101,6 +102,7 @@ export const RULE_CLASSES = {
 	armorClass: ArmorClassRule,
 	auraReach: AuraReachRule,
 	attackOutcome: AttackOutcomeRule,
+	attackRollMode: AttackRollModeRule,
 	chargeConsumer: ChargeConsumerRule,
 	resourceCost: ResourceCostRule,
 	changeDie: ChangeDieRule,

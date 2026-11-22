@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
 import { testDependencies } from '../../../managers/ItemActivationManager.js';
 import { AttackOutcomeRule } from '../../../models/rules/attackOutcome.js';
+import { AttackRollModeRule } from '../../../models/rules/attackRollMode.js';
 import { OfferAttackBonusRule } from '../../../models/rules/offerAttackBonus.js';
 import { PrimaryDieBonusRule } from '../../../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../../../models/rules/reroll.js';
@@ -180,9 +181,13 @@ function everyNode(nodes: Node[]): Node[] {
 	return nodes.flatMap((node) => [node, ...everyNode(Object.values(node.on ?? {}).flat())]);
 }
 
-const dialog = { result: { rollMode: 0 } as Record<string, unknown> | null };
+const dialog = {
+	result: { rollMode: 0 } as Record<string, unknown> | null,
+	opened: null as Record<string, unknown> | null,
+};
 
-function FakeActivationDialog() {
+function FakeActivationDialog(_actor: unknown, _item: unknown, _title: string, options: object) {
+	dialog.opened = options as Record<string, unknown>;
 	return { render: async () => undefined, promise: Promise.resolve(dialog.result) };
 }
 
@@ -213,6 +218,7 @@ beforeEach(() => {
 		DamageRoll: testDependencies.DamageRoll,
 	};
 	dialog.result = { rollMode: 0 };
+	dialog.opened = null;
 	testDependencies.ItemActivationConfigDialog = FakeActivationDialog as never;
 	testDependencies.DamageRoll = FakeDamageRoll as never;
 	globals.game.settings = {
@@ -907,5 +913,176 @@ describe('the origin of an attack', () => {
 			expect(formulaOf(plain)).toBe('1d8');
 			expect(attackOptions(plain).primaryDieModifier).toBe(0);
 		});
+
+		it('rolls damage of its own type as its own damage, and only on an attack made through that feature', async () => {
+			const actor = hero();
+			longbow(actor);
+			const granting = grantingFeature(actor);
+			const rule = attackBonus({
+				...granting,
+				isEmbedded: true,
+				actor,
+				getDomain: () => new Set(),
+			});
+			Object.assign(rule, {
+				damage: '4',
+				primaryDie: 0,
+				damageType: 'necrotic',
+				resolveFormula: () => 4,
+			});
+			actor.rules.push(rule);
+			findItems(actor);
+			const through = incendiaryShot(actor);
+			const plain = incendiaryShot(actor);
+
+			await through.activate({ originUuid: granting.uuid });
+			await plain.activate();
+
+			const damageOf = (feature: typeof through) =>
+				everyNode(cardOf(feature).system.activation.effects)
+					.filter((node) => node.type === 'damage')
+					.map((node) => [
+						node.damageType,
+						(node as Node & { roll?: { formula: string } }).roll?.formula ?? node.formula,
+					]);
+			expect(damageOf(through)).toEqual([
+				['piercing', '1d8'],
+				['fire', '2d8'],
+				['necrotic', '4'],
+			]);
+			expect(damageOf(plain)).toEqual([
+				['piercing', '1d8'],
+				['fire', '2d8'],
+			]);
+		});
+	});
+});
+
+describe('a held change that ignores disadvantage, on a free attack', () => {
+	it('is spent by the attack that uses it', async () => {
+		const actor = hero();
+		longbow(actor);
+		const deleteEmbeddedDocuments = vi.fn(async () => []);
+		Object.assign(actor, {
+			isOwner: true,
+			deleteEmbeddedDocuments,
+			effects: [
+				{
+					id: 'held',
+					name: 'Steady',
+					origin: null,
+					flags: {},
+					system: {
+						rules: [
+							{
+								id: 'held-rule',
+								type: 'heldRoll',
+								heldKind: 'ignoreDisadvantage',
+								whichRoll: 'holderAttacks',
+								usedUp: true,
+								value: 0,
+							},
+						],
+					},
+				},
+			],
+		});
+		vi.stubGlobal('fromUuidSync', (uuid: string) =>
+			uuid === actor.uuid
+				? actor
+				: (actor.items as unknown as Array<{ uuid: string }>).find((item) => item.uuid === uuid),
+		);
+		const feature = incendiaryShot(actor);
+		dialog.result = { rollMode: -1 };
+
+		await feature.activate({ skipActionDeduction: true });
+
+		expect(deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['held']);
+	});
+});
+
+describe('an attack roll mode for attacks made through one feature', () => {
+	function rollModeRule(owner: object, config: Record<string, unknown>) {
+		const rule = new AttackRollModeRule({ type: 'attackRollMode' } as never, { strict: false });
+		Object.assign(rule, {
+			type: 'attackRollMode',
+			id: 'steady',
+			disabled: false,
+			label: 'Steady',
+			advantage: 0,
+			ignoreDisadvantage: false,
+			attackOrigin: 'granting-feature',
+			predicate: new Predicate({}),
+			...config,
+		});
+		Object.defineProperty(rule, 'parent', { get: () => owner, configurable: true });
+		return rule;
+	}
+
+	function setup(config: Record<string, unknown>) {
+		const actor = hero();
+		longbow(actor);
+		const granting = {
+			uuid: 'Actor.hunter.Item.granting',
+			name: 'Granting Feature',
+			identifier: 'granting-feature',
+			type: 'feature',
+			flags: {},
+			isEmbedded: true,
+			actor,
+			getDomain: () => new Set(),
+		};
+		actor.items.push(granting);
+		actor.rules.push(rollModeRule(granting, config));
+		findItems(actor);
+		return { actor, granting };
+	}
+
+	function rollOptions(feature: { _createActivationCard: ReturnType<typeof vi.fn> }) {
+		const attack = cardOf(feature).system.activation.effects[0] as Node & {
+			roll: { options: Record<string, unknown> };
+		};
+		return attack.roll.options;
+	}
+
+	it('opens the window with advantage and without the Rushed Attack disadvantage', async () => {
+		const { actor, granting } = setup({ advantage: 1, ignoreDisadvantage: true });
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ originUuid: granting.uuid, rollMode: -1, rushedAttack: 2 });
+
+		expect(dialog.opened).toMatchObject({ rollMode: 1, ignoreDisadvantage: true });
+		expect(dialog.opened?.rushedAttack).toBeUndefined();
+	});
+
+	it('takes disadvantage out of the roll', async () => {
+		const { actor, granting } = setup({ ignoreDisadvantage: true });
+		const feature = incendiaryShot(actor);
+		dialog.result = { rollMode: -2 };
+
+		await feature.activate({ originUuid: granting.uuid });
+
+		expect(rollOptions(feature).rollMode).toBe(0);
+	});
+
+	it('changes a roll with no window too', async () => {
+		const { actor, granting } = setup({ advantage: 1, ignoreDisadvantage: true });
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ originUuid: granting.uuid, rollMode: -1, fastForward: true });
+
+		expect(rollOptions(feature).rollMode).toBe(1);
+	});
+
+	it('changes nothing on an attack made another way', async () => {
+		const { actor } = setup({ advantage: 1, ignoreDisadvantage: true });
+		const feature = incendiaryShot(actor);
+		dialog.result = { rollMode: -1 };
+
+		await feature.activate({ rollMode: -1, rushedAttack: 2 });
+
+		expect(dialog.opened).toMatchObject({ rollMode: -1, rushedAttack: 2 });
+		expect(dialog.opened?.ignoreDisadvantage).toBeFalsy();
+		expect(rollOptions(feature).rollMode).toBe(-1);
 	});
 });

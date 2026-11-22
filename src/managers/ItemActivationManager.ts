@@ -1,4 +1,5 @@
 import type { AttackHeldPlan } from '#types/attackHeldPlan.d.ts';
+import type { OfferBonus } from '#types/attackOutcome.d.ts';
 import type { FreeUseHost } from '#types/cardEvent.d.ts';
 import type { ConditionalDamage } from '#types/conditionalDamage.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
@@ -8,12 +9,10 @@ import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { HeldChange } from '#types/heldChange.d.ts';
 import type { ActiveMaxDamage, MaxDamageChoice } from '#types/maxDamage.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
-import type { PrimaryDieBonusLine } from '#types/primaryDieBonus.d.ts';
 import type { ResourceCost } from '#types/resourceCost.d.ts';
 import type { ResolvedSpellCost, SpellLike } from '#types/spellCost.d.ts';
 import type { UpcastResult } from '#types/spellScaling.js';
 import type { ActionCostChange, ChosenUseOption, UseOptionGroup } from '#types/useOption.d.ts';
-import { ruleLabel } from '#utils/actor/actorRules.js';
 import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
 import {
@@ -65,6 +64,10 @@ import {
 } from '../utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '../utils/damage/collectCritDice.js';
 import { collectOfferBonuses } from '../utils/damage/collectOfferBonuses.js';
+import {
+	collectPrimaryDieBonuses,
+	type PrimaryDieBonusRecord,
+} from '../utils/damage/collectPrimaryDieBonuses.js';
 import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
@@ -104,6 +107,11 @@ import type { RerollHistory } from '../utils/reroll/rerollStep.js';
 import { statsInFormula } from '../utils/reroll/rollStat.js';
 import { withConditionSources } from '../utils/rolls/appliedConditionRollModes.js';
 import { conditionDelivery } from '../utils/rolls/attackConditionLines.js';
+import {
+	type AttackRollModeTotal,
+	attackRollModeOf,
+	rollModeWith,
+} from '../utils/rolls/attackRollMode.js';
 import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
@@ -146,54 +154,17 @@ import {
 	resolveMaxDamage,
 	spendMaxDamageCharge,
 } from './itemActivation/maxDamageActivation.js';
-import { addOfferBonuses, markOfferOnRollOptions } from './itemActivation/offerBonus.js';
+import {
+	addOfferBonuses,
+	markOfferOnRollOptions,
+	rollTypedOfferDamage,
+} from './itemActivation/offerBonus.js';
 import {
 	addPickRiders,
 	settleUseOptions,
 	spellCostWithOptions,
 	useOptionGroupsOfItem,
 } from './itemActivation/useOptionActivation.js';
-
-/** One Primary Die Bonus as the card stores it, with the item of its rule. */
-interface PrimaryDieBonusRecord extends PrimaryDieBonusLine {
-	itemUuid: string;
-}
-
-/** Structural view of a `primaryDieBonus` rule, so this module needs no rule import. */
-interface PrimaryDieBonusRuleLike {
-	type?: string;
-	label?: string;
-	parentDocument?: { name?: string; uuid?: string | null } | null;
-	bonusFor?: (context: {
-		delivery: AttackDelivery;
-		other: OtherCreature | null;
-		origin: string;
-	}) => number;
-}
-
-/**
- * The Primary Die Bonus rules of the attacker that add to this attack, each
- * with what it adds. A rule that adds 0 is left out.
- */
-function collectPrimaryDieBonuses(
-	attacker: { rules?: unknown[] } | null | undefined,
-	delivery: AttackDelivery,
-	target: OtherCreature | null,
-	origin: string,
-): PrimaryDieBonusRecord[] {
-	const lines: PrimaryDieBonusRecord[] = [];
-	for (const rule of (attacker?.rules ?? []) as PrimaryDieBonusRuleLike[]) {
-		if (rule?.type !== 'primaryDieBonus') continue;
-		const value = rule.bonusFor?.({ delivery, other: target, origin }) ?? 0;
-		if (value === 0) continue;
-		lines.push({
-			label: ruleLabel(rule),
-			value,
-			itemUuid: rule.parentDocument?.uuid ?? '',
-		});
-	}
-	return lines;
-}
 
 // Dependencies are grouped to allow tests to override them without relying on module mocking.
 const dependencies = {
@@ -394,6 +365,17 @@ class ItemActivationManager {
 		return attackOriginOf(this.#item, this.#options.originUuid);
 	}
 
+	/** What the attacker's rules add to this attack because of the feature it was made through. */
+	#offerBonuses: OfferBonus[] = [];
+
+	/** What the attacker's Attack Roll Mode rules do to this attack. */
+	#rollModeChange: AttackRollModeTotal = { advantage: 0, ignoreDisadvantage: false };
+
+	/** The attack takes no disadvantage: the caller or a rule says so. */
+	get #ignoresDisadvantage(): boolean {
+		return !!this.#options.ignoreDisadvantage || this.#rollModeChange.ignoreDisadvantage;
+	}
+
 	/** The attack roll of this activation, for the uses its crit dice spend. */
 	#primaryRoll: DamageRoll | null = null;
 
@@ -528,13 +510,17 @@ class ItemActivationManager {
 
 		this.useOptionGroups = useOptionGroupsOfItem(this.actor, this.#item);
 
+		this.#rollModeChange = attackRollModeOf(
+			this.actor as { rules?: unknown } | null,
+			this.origin.identifier,
+		);
 		const rollOptions = {
 			domain: this.#getItemDomain(),
 			executeMacro: options.executeMacro ?? false,
-			rollMode: options.rollMode ?? 0,
-			rushedAttack: options.rushedAttack,
+			rollMode: rollModeWith(options.rollMode ?? 0, this.#rollModeChange),
+			rushedAttack: this.#ignoresDisadvantage ? undefined : options.rushedAttack,
 			spendsActions: options.spendsActions,
-			ignoreDisadvantage: options.ignoreDisadvantage,
+			ignoreDisadvantage: this.#ignoresDisadvantage || undefined,
 			attackOrigin: this.origin.identifier,
 		};
 
@@ -957,7 +943,7 @@ class ItemActivationManager {
 						delivery,
 						kept: this.#keptAmount,
 						keptToEnd: this.#keptAmountToEnd,
-						noDisadvantageToIgnore: !!this.#maxDamage || !!this.#options.ignoreDisadvantage,
+						noDisadvantageToIgnore: !!this.#maxDamage || this.#ignoresDisadvantage,
 						extraDamage: true,
 						chosen: this.#heldChosen,
 					});
@@ -967,6 +953,7 @@ class ItemActivationManager {
 						this.actor as { rules?: unknown } | null,
 						origin.identifier,
 					);
+					this.#offerBonuses = offerBonuses;
 					const offerAdded = addOfferBonuses(formula, offerBonuses, isAoE);
 					formula = offerAdded.formula;
 					damageParts.push(...offerAdded.damageParts);
@@ -1059,7 +1046,7 @@ class ItemActivationManager {
 						primaryDamagePlan = incomingAttackPlan;
 					}
 
-					if (this.#options.ignoreDisadvantage) removeDisadvantage(damageOptions);
+					if (this.#ignoresDisadvantage) removeDisadvantage(damageOptions);
 					if (this.#options.grantedCannotMiss) {
 						grantCannotMiss(damageOptions, this.#options.grantedCannotMiss);
 					}
@@ -1180,6 +1167,10 @@ class ItemActivationManager {
 			if (conditional.modifierOnly) bonusNode.modifierOnly = true;
 			updatedEffects.push(bonusNode);
 			rolls.push(roll);
+		}
+		for (const part of await rollTypedOfferDamage(this.#offerBonuses)) {
+			updatedEffects.push(part.node);
+			rolls.push(part.roll);
 		}
 		for (const part of (await this.#heldPlan?.rollExtraDamage(this.actor!.getRollData())) ?? []) {
 			updatedEffects.push(part.node);
@@ -1746,7 +1737,7 @@ class ItemActivationManager {
 			}
 
 			return {
-				rollMode: options.rollMode ?? 0,
+				rollMode: rollOptions.rollMode,
 				rollFormula: options.rollFormula,
 				primaryDieValue: options.primaryDieValue,
 				primaryDieModifier: options.primaryDieModifier,

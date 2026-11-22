@@ -14,6 +14,7 @@ import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
+import { originIdentifierOfCard } from '#utils/damage/attackOrigin.js';
 import {
 	type AttackActivation,
 	type AttackDelivery,
@@ -1090,6 +1091,7 @@ class NimbleChatMessage extends ChatMessage {
 			isCritical: systemData.isCritical,
 			isMiss: systemData.isMiss,
 			sourceItem: this.#cardSourceItem(),
+			origin: originIdentifierOfCard(this),
 		});
 		if (ruleNodes.length > 0) {
 			nodes.push(ruleNodes);
@@ -1109,6 +1111,7 @@ class NimbleChatMessage extends ChatMessage {
 		isCritical: boolean;
 		isMiss: boolean;
 		sourceItem: { type?: string } | null;
+		origin: string | undefined;
 	}): EffectNode[] {
 		const actorId = this.speaker?.actor;
 		const actor = actorId ? game.actors?.get(actorId) : null;

@@ -1604,6 +1604,9 @@ export const myStore = writable<MyStoreState>(initialState);
 | `damageMultiplierOf()` | `src/utils/damage/damageMultiplier.ts` | The tick a damage multiplier rule offers in the roll window of an item. |
 | `collectCritDice()` | `src/utils/damage/collectCritDice.ts` | The Crit Dice rules that add dice to a crit of an attack. |
 | `collectOfferBonuses()` | `src/utils/damage/collectOfferBonuses.ts` | What a hero's rules add to an attack from the row of an item. |
+| `collectPrimaryDieBonuses()` | `src/utils/damage/collectPrimaryDieBonuses.ts` | The Primary Die Bonus rules of an attacker that add to one attack, each with its card line. |
+| `attackRollModeOf()`, `rollModeWith()` | `src/utils/rolls/attackRollMode.ts` | What the attacker's Attack Roll Mode rules do to one attack, and the roll mode an attack starts at with it. |
+| `originIdentifierOfCard()` | `src/utils/damage/attackOrigin.ts` | The identifier of the feature an attack card was made through. |
 | `dualWieldOfferFor()`, `dualWieldEntry()`, `keepChoiceOfWeapon()` | `src/utils/damage/dualWield.ts` | The dual wield tick and the two weapons of its roll. |
 | `rollInitiativeMana()`, `giveInitiativeMana()`, `endInitiativeMana()` | `src/utils/combat/initiativeManaRoll.ts` | The Initiative Mana dice on an Initiative card, and the mana they give. |
 | `invokeChaos()`, `canInvokeChaos()`, `whisperChaosRollsToGm()` | `src/utils/chaos/invokeChaos.ts` | A Chaos Table roll and its card. |

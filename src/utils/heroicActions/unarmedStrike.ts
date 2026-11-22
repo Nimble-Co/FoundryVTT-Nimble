@@ -2,6 +2,7 @@ import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { SYSTEM_ID } from '#system';
 import type { DamagePart } from '#types/damagePart.d.ts';
+import type { OtherCreature } from '#types/otherCreature.d.ts';
 import { giveUnarmedHitRecovery } from '#utils/chargePool/itemUseRecovery.js';
 import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
@@ -21,6 +22,8 @@ import {
 	collectAttackOutcome,
 } from '#utils/damage/collectAttackOutcome.js';
 import { collectCritDice, spendCritDiceUses } from '#utils/damage/collectCritDice.js';
+import { collectOfferBonuses } from '#utils/damage/collectOfferBonuses.js';
+import { collectPrimaryDieBonuses } from '#utils/damage/collectPrimaryDieBonuses.js';
 import { markDualWieldUse } from '#utils/damage/dualWield.js';
 import { DEFAULT_MISS_THRESHOLD } from '#utils/damage/missThreshold.js';
 import { UNARMED_STRIKE_ATTACK } from '#utils/damage/weaponAttack.js';
@@ -35,9 +38,18 @@ import type { OfferingActor } from '#utils/incomingReactions/poolSpendCardOffers
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import localize from '#utils/localize.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
+import { attackRollModeOf, rollModeWith } from '#utils/rolls/attackRollMode.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
-import { keptAmountRollOptions } from '../../managers/itemActivation/keptAmountActivation.js';
+import {
+	keptAmountRollOptions,
+	removeDisadvantage,
+} from '../../managers/itemActivation/keptAmountActivation.js';
+import {
+	addOfferBonuses,
+	markOfferOnRollOptions,
+	rollTypedOfferDamage,
+} from '../../managers/itemActivation/offerBonus.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
@@ -114,11 +126,21 @@ export async function rollUnarmedStrike(
 	actor: NimbleCharacter,
 	options: RollUnarmedStrikeOptions = {},
 ): Promise<boolean> {
-	const rushed =
-		options.rollMode === undefined && !options.ignoresRushed ? attacksMadeThisTurn(actor) : 0;
-	const startRollMode = options.rollMode ?? (rushed > 0 ? -rushed : 0);
 	const origin = options.originUuid ? attackOriginOf({}, options.originUuid) : null;
-	const { formula: rollFormula, damageParts } = buildRollFormula(actor, origin?.identifier);
+	const rollModeChange = attackRollModeOf(actor, origin?.identifier);
+	const rushed =
+		options.rollMode === undefined && !options.ignoresRushed && !rollModeChange.ignoreDisadvantage
+			? attacksMadeThisTurn(actor)
+			: 0;
+	const startRollMode = rollModeWith(
+		options.rollMode ?? (rushed > 0 ? -rushed : 0),
+		rollModeChange,
+	);
+	const offerBonuses = origin ? collectOfferBonuses(actor, origin.identifier) : [];
+	const built = buildRollFormula(actor, origin?.identifier);
+	const offerAdded = addOfferBonuses(built.formula, offerBonuses, false);
+	const rollFormula = offerAdded.formula;
+	const damageParts = [...built.damageParts, ...offerAdded.damageParts];
 	// Only characters proficient with unarmed strikes can crit.
 	const canCrit = hasUnarmedProficiency(actor);
 	const name = localize('NIMBLE.ui.heroicActions.unarmedStrike');
@@ -145,6 +167,8 @@ export async function rollUnarmedStrike(
 	const dialog = new ItemActivationConfigDialog(actor, unarmedItem, name, {
 		rollMode: startRollMode,
 		rushedAttack: rushed > 0 ? rushed + 1 : undefined,
+		...(rollModeChange.ignoreDisadvantage ? { ignoreDisadvantage: true } : {}),
+		...(origin ? { attackOrigin: origin.identifier } : {}),
 		spendsActions:
 			options.rollMode === undefined &&
 			!options.free &&
@@ -191,9 +215,20 @@ export async function rollUnarmedStrike(
 		delivery,
 		kept,
 		keptToEnd: toEnd,
+		noDisadvantageToIgnore: rollModeChange.ignoreDisadvantage,
 		extraDamage: true,
 		chosen,
 	});
+	const primaryDieBonuses = [
+		...collectPrimaryDieBonuses(
+			actor as unknown as { rules?: unknown[] },
+			delivery,
+			(target?.actor ?? null) as OtherCreature | null,
+			origin?.identifier,
+		),
+		...offerAdded.primaryDieBonuses,
+		...held.bonusLines(),
+	];
 
 	const rollOptions: ConstructorParameters<typeof DamageRoll>[2] = {
 		canCrit: canCrit && !multiTarget,
@@ -204,11 +239,12 @@ export async function rollUnarmedStrike(
 			: {}),
 		rollMode,
 		primaryDieValue: result.primaryDieValue ?? 0,
-		primaryDieModifier: (Number(result.primaryDieModifier) || 0) + held.primaryDieBonus,
+		primaryDieModifier:
+			(Number(result.primaryDieModifier) || 0) +
+			primaryDieBonuses.reduce((sum, line) => sum + line.value, 0),
 		damageType: 'bludgeoning',
 		primaryDieAsDamage: true,
 		...(damageParts.length > 0 ? { damageParts } : {}),
-		...(origin ? { origin } : {}),
 		...(canCrit && !multiTarget
 			? { critDice: collectCritDice(actor as { rules?: unknown }, delivery) }
 			: {}),
@@ -231,6 +267,8 @@ export async function rollUnarmedStrike(
 			incomingAttackPlan.appliedEntries;
 	}
 
+	if (origin) markOfferOnRollOptions(rollOptions, origin);
+	if (rollModeChange.ignoreDisadvantage) removeDisadvantage(rollOptions);
 	held.applyToRoll(rollOptions);
 	const firstRoll = new DamageRoll(
 		kept ? String(kept.value) : rollFormula,
@@ -275,7 +313,10 @@ export async function rollUnarmedStrike(
 			},
 		},
 	];
-	const extraDamage = await held.rollExtraDamage(actor.getRollData());
+	const extraDamage = [
+		...(await rollTypedOfferDamage(offerBonuses)),
+		...(await held.rollExtraDamage(actor.getRollData())),
+	];
 
 	const chatData = {
 		author: game.user?.id,
@@ -300,7 +341,7 @@ export async function rollUnarmedStrike(
 			image: unarmedItem.img,
 			permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 			rollMode,
-			primaryDieBonuses: held.bonusLines(),
+			primaryDieBonuses,
 			name,
 			description: '',
 			featureType: 'feature',

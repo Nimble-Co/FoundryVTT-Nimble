@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import { identifierOf } from '../documents/itemIdentifier.js';
 
 /** The feature that caused an attack: the item that granted it, or the item that is the attack. */
@@ -47,4 +48,12 @@ export function originIdentifierOfRoll(
 	options: RolledOriginOptions | null | undefined,
 ): string | undefined {
 	return options?.origin?.identifier || options?.offerSource || undefined;
+}
+
+/** The origin identifier a card of an attack recorded, if any. */
+export function originIdentifierOfCard(
+	card: { flags?: Record<string, unknown> } | null | undefined,
+): string | undefined {
+	const flags = card?.flags?.[SYSTEM_ID] as { origin?: Partial<AttackOrigin> } | undefined;
+	return flags?.origin?.identifier || undefined;
 }

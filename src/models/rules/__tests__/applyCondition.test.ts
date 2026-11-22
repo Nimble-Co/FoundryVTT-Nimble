@@ -1062,6 +1062,38 @@ describe('ApplyConditionRule', () => {
 		});
 	});
 
+	describe('only for attacks made through one feature', () => {
+		function scopedRule(actor: MockActor) {
+			const rule = createApplyConditionRule({ condition: 'smoldering', trigger: 'onHit' }, actor);
+			(rule as unknown as { attackOrigin: string }).attackOrigin = 'rally';
+			return rule;
+		}
+
+		const cardFrom = (identifier: string) =>
+			({ flags: { [SYSTEM_ID]: { origin: { uuid: 'Item.x', identifier } } } }) as never;
+
+		it('puts its step on the card of an attack made through that feature only', () => {
+			const rule = scopedRule(createMockActor());
+			const hit = { isCritical: false, isMiss: false };
+
+			expect(rule.getActivationCardNodes({ ...hit, origin: 'rally' })).toHaveLength(1);
+			expect(rule.getActivationCardNodes({ ...hit, origin: 'other' })).toEqual([]);
+			expect(rule.getActivationCardNodes(hit)).toEqual([]);
+		});
+
+		it('applies on a hit of an attack made through that feature only', async () => {
+			const attacker = createMockActor();
+			const target = createMockActor();
+			const rule = scopedRule(attacker);
+
+			await rule.onItemUsed({ ...buildItemUsedContext(attacker, target), card: cardFrom('other') });
+			expect(conditionsAppliedTo(target)).toEqual([]);
+
+			await rule.onItemUsed({ ...buildItemUsedContext(attacker, target), card: cardFrom('rally') });
+			expect(conditionsAppliedTo(target)).toEqual(['smoldering']);
+		});
+	});
+
 	describe('getActivationCardNodes', () => {
 		it('returns an Apply Effect node with the condition', () => {
 			const actor = createMockActor();

@@ -348,6 +348,18 @@ describe('RuleCard with a form layout (primaryDieBonus)', () => {
 	});
 });
 
+describe('RuleCard with a form layout (attackRollMode)', () => {
+	it('asks for the roll mode change, which attacks, then the condition', () => {
+		const { container } = render(RuleCard, { rule: initialRule('attackRollMode'), manager });
+		expect(shownFields(container)).toEqual([
+			'advantage',
+			'ignoreDisadvantage',
+			'attackOrigin',
+			'predicate',
+		]);
+	});
+});
+
 describe('RuleCard with a form layout (attackOutcome)', () => {
 	it('asks which attacks, what changes, the attack type, then the optional conditions', () => {
 		const { container } = render(RuleCard, { rule: initialRule('attackOutcome'), manager });
@@ -512,6 +524,7 @@ describe('RuleCard without a form layout', () => {
 		'reroll',
 		'modifyReroll',
 		'primaryDieBonus',
+		'attackRollMode',
 		'changeDie',
 		'changeResult',
 		'attackOutcome',

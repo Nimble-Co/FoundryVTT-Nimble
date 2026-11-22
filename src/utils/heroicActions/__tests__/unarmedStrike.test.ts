@@ -465,6 +465,110 @@ describe('rollUnarmedStrike', () => {
 				expect.objectContaining({ flags: { [SYSTEM_ID]: { origin } } }),
 			);
 		});
+		describe('the riders of attacks made through the feature', () => {
+			function commander() {
+				const actor = createHeroicCharacter();
+				Object.assign(actor, {
+					rules: [
+						{
+							type: 'offerAttackBonus',
+							bonusFor: (origin: string) =>
+								origin === 'rally' ? { label: 'Heavy Hand', damage: 3, primaryDie: 1 } : null,
+						},
+						{
+							type: 'primaryDieBonus',
+							label: 'Steady',
+							parentDocument: { uuid: 'Item.steady' },
+							bonusFor: ({ origin }: { origin?: string }) => (origin === 'rally' ? 1 : 0),
+						},
+						{
+							type: 'attackRollMode',
+							changeFor: (origin: string) =>
+								origin === 'rally'
+									? { advantage: 1, ignoreDisadvantage: true, label: 'Together' }
+									: null,
+						},
+					],
+				});
+				globals.fromUuidSync = vi.fn((uuid: string) =>
+					uuid === 'Item.rally' ? { system: { identifier: 'rally' } } : null,
+				);
+				return actor;
+			}
+
+			it('adds the damage and the Primary Die bonuses', async () => {
+				dialogResult({ rollMode: 0 });
+
+				await rollUnarmedStrike(commander(), { originUuid: 'Item.rally' });
+
+				expect(damageRollMock).toHaveBeenCalledWith(
+					'1 + 2 + 1d4 + 3',
+					{},
+					expect.objectContaining({ primaryDieModifier: 2 }),
+				);
+			});
+
+			it('opens the window with the roll mode change, and the roll takes no disadvantage', async () => {
+				dialogResult({ rollMode: -1 });
+				const actor = commander();
+				onOwnTurnAfterOneAttack(actor);
+
+				await rollUnarmedStrike(actor, { originUuid: 'Item.rally' });
+
+				expect(dialogMock).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.anything(),
+					expect.any(String),
+					expect.objectContaining({
+						rollMode: 1,
+						rushedAttack: undefined,
+						ignoreDisadvantage: true,
+					}),
+				);
+				expect(damageRollMock).toHaveBeenCalledWith(
+					expect.any(String),
+					{},
+					expect.objectContaining({ rollMode: 0 }),
+				);
+			});
+
+			it('puts damage of its own type on the card as its own damage', async () => {
+				dialogResult({ rollMode: 0 });
+				const actor = commander();
+				(actor.rules as unknown[]).push({
+					type: 'offerAttackBonus',
+					bonusFor: (origin: string) =>
+						origin === 'rally'
+							? { label: 'Dark Edge', damage: 6, primaryDie: 0, damageType: 'necrotic' }
+							: null,
+				});
+
+				await rollUnarmedStrike(actor, { originUuid: 'Item.rally' });
+
+				const card = vi.mocked(ChatMessage.create).mock.calls.at(-1)?.[0] as unknown as {
+					system: {
+						activation: { effects: Array<{ type: string; damageType: string; formula: string }> };
+					};
+				};
+				const damage = card.system.activation.effects.filter((node) => node.type === 'damage');
+				expect(damage.map((node) => [node.damageType, node.formula])).toEqual([
+					['bludgeoning', '1 + 2 + 1d4 + 3'],
+					['necrotic', '6'],
+				]);
+			});
+
+			it('adds nothing to a strike made another way', async () => {
+				dialogResult({ rollMode: 0 });
+
+				await rollUnarmedStrike(commander());
+
+				expect(damageRollMock).toHaveBeenCalledWith(
+					'1 + 2 + 1d4',
+					{},
+					expect.objectContaining({ primaryDieModifier: 0 }),
+				);
+			});
+		});
 	});
 
 	it('fires the attack event for the striker once', async () => {

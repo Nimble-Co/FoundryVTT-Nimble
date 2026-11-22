@@ -29,6 +29,18 @@
 				]
 			},
 			{
+				"type": "attackRollMode",
+				"disabled": false,
+				"id": "master-commander-ignore-disadvantage",
+				"identifier": "",
+				"label": "Master Commander",
+				"predicate": {},
+				"priority": 1,
+				"advantage": 0,
+				"ignoreDisadvantage": true,
+				"attackOrigin": "coordinated-strike"
+			},
+			{
 				"type": "modifyPool",
 				"disabled": false,
 				"id": "master-commander-uses-l9",

@@ -152,7 +152,7 @@ interface RerollRuleLike {
 	/** How many rows the rule gives this roll. Absent is one. */
 	rowsOn?(context: { roll: RollToReroll }): number;
 	/** With the effect `offerBonus`: what the row adds. */
-	offerBonus?: { label: string; damage: number; primaryDie: number };
+	offerBonus?: { label: string; damage: number; primaryDie: number; damageType?: string };
 	/** With the effect `critDiceSave`: the save the target makes, and its DC. */
 	saveType?: string;
 	saveDC?: string;

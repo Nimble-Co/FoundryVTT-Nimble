@@ -16,6 +16,7 @@
 				"priority": 1,
 				"offerSource": "coordinated-strike",
 				"damage": "@attributes.armor.value",
+				"damageType": "",
 				"primaryDie": 1
 			}
 		],

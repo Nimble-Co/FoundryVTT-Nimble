@@ -24,9 +24,11 @@ import {
 	type AttackSourceFilter,
 	matchesAttackSource,
 } from '#utils/damage/attackDelivery.js';
+import { isMadeThrough, originIdentifierOfCard } from '#utils/damage/attackOrigin.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { attackOriginFieldOptions } from './_attackOriginField.js';
 import { choiceLabels } from './_rollUseRule.js';
 import {
 	attackOutcomeMatches,
@@ -158,6 +160,13 @@ function schema() {
 					hasAttackSource(String(data.trigger ?? 'onCrit')),
 			}),
 		),
+		attackOrigin: new fields.StringField(
+			withWidget({
+				...attackOriginFieldOptions(),
+				showWhen: (data: Record<string, unknown>) =>
+					isAttackOutcomeTrigger(String(data.trigger ?? 'onCrit')),
+			}),
+		),
 		manaAtLeast: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -189,6 +198,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	declare effectId: string;
 	declare wounds: number;
 	declare attackSource: AttackSourceFilter;
+	declare attackOrigin: string;
 
 	declare manaAtLeast: number;
 
@@ -212,6 +222,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 				['effectId', 'string'],
 				['wounds', 'number'],
 				['attackSource', 'string'],
+				['attackOrigin', 'string'],
 				['manaAtLeast', 'number'],
 			]),
 		);
@@ -228,6 +239,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (!this.#isAttackTrigger()) return [];
 		if (!this.#matchesAttackContext(context)) return [];
 		if (!this.#matchesSource(context.sourceItem)) return [];
+		if (!isMadeThrough(this.attackOrigin, context.origin)) return [];
 		const effect = this.#itemEffect();
 		const nodes: EffectNode[] = [];
 		if (effect || this.condition) {
@@ -349,6 +361,7 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		if (!this.test()) return false;
 		if (context.sourceActor !== this.actor) return false;
 		if (!this.#matchesSource(context.sourceItem)) return false;
+		if (!isMadeThrough(this.attackOrigin, originIdentifierOfCard(context.card))) return false;
 		return this.#matchesAttackContext(context);
 	}
 

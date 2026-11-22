@@ -28,6 +28,15 @@ function schema() {
 				widget: 'diceFormula',
 			}),
 		),
+		damageType: new fields.StringField({
+			required: true,
+			nullable: false,
+			blank: true,
+			initial: '',
+			label: 'NIMBLE.rules.offerAttackBonus.damageType.label',
+			hint: 'NIMBLE.rules.offerAttackBonus.damageType.hint',
+			choices: () => CONFIG.NIMBLE.damageTypes,
+		}),
 		primaryDie: new fields.NumberField({
 			required: true,
 			nullable: false,
@@ -52,12 +61,13 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	declare offerSource: string;
 	declare damage: string;
 	declare primaryDie: number;
+	// `damageType` is inferred from the schema's `choices`.
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.offerAttackBonus.description';
 	static override icon = 'fa-solid fa-handshake-angle';
 	static override formLayout: readonly RuleFormGroup[] = [
-		{ fields: ['offerSource', 'damage', 'primaryDie'] },
+		{ fields: ['offerSource', 'damage', 'damageType', 'primaryDie'] },
 	];
 
 	static override defineSchema(): OfferAttackBonusRule.Schema {
@@ -72,6 +82,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 			new Map([
 				['offerSource', 'string'],
 				['damage', 'string'],
+				['damageType', 'string'],
 				['primaryDie', 'number'],
 			]),
 		);
@@ -90,13 +101,17 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 			itemUuid: this.item?.uuid ?? this.parentDocument?.uuid ?? '',
 			damage: Math.max(0, Math.trunc(Number(this.resolveFormula(this.damage)) || 0)),
 			primaryDie: Math.trunc(Number(this.primaryDie) || 0),
+			...(this.damageType ? { damageType: this.damageType } : {}),
 		};
 	}
 
+	/** A row adds the Primary Die bonus, and damage of the attack's type. */
 	offersUseOn(context: RollUseContext): boolean {
 		if (isRuleAutomationEnabled() || context.side !== 'roller') return false;
 		if (context.roll.kind !== 'attack') return false;
-		return this.bonusFor(context.roll.origin) !== null;
+		const bonus = this.bonusFor(context.roll.origin);
+		if (!bonus) return false;
+		return bonus.primaryDie !== 0 || (bonus.damage > 0 && !bonus.damageType);
 	}
 
 	get rollEffect(): RollEffect {

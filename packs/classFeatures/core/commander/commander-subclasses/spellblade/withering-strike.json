@@ -6,7 +6,53 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "offerAttackBonus",
+				"disabled": false,
+				"id": "withering-strike-necrotic",
+				"identifier": "",
+				"label": "Withering Strike",
+				"predicate": {},
+				"priority": 1,
+				"offerSource": "coordinated-strike",
+				"damage": "@pools.combat-dice.faces",
+				"damageType": "necrotic",
+				"primaryDie": 0
+			},
+			{
+				"type": "applyCondition",
+				"disabled": false,
+				"id": "withering-strike-undead-hit",
+				"identifier": "",
+				"label": "Withering Strike: considered undead",
+				"predicate": {},
+				"priority": 1,
+				"condition": "",
+				"trigger": "onHit",
+				"effectId": "ek1iEr1yAJm5bkIe",
+				"wounds": 0,
+				"attackSource": "any",
+				"attackOrigin": "coordinated-strike",
+				"manaAtLeast": 0
+			},
+			{
+				"type": "applyCondition",
+				"disabled": false,
+				"id": "withering-strike-undead-crit",
+				"identifier": "",
+				"label": "Withering Strike: considered undead",
+				"predicate": {},
+				"priority": 1,
+				"condition": "",
+				"trigger": "onCrit",
+				"effectId": "ek1iEr1yAJm5bkIe",
+				"wounds": 0,
+				"attackSource": "any",
+				"attackOrigin": "coordinated-strike",
+				"manaAtLeast": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,17 +66,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "R58atqyuNOS6xAUe",
-					"type": "applyEffect",
-					"effectId": "ek1iEr1yAJm5bkIe",
-					"recipient": "targets",
-					"tempHealingNodeId": null,
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
