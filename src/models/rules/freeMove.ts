@@ -9,6 +9,8 @@ import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
+import { type AttackActivation, deliveryOfAttack } from '../../utils/damage/attackDelivery.js';
+import { UNARMED_STRIKE } from '../../utils/damage/weaponAttack.js';
 import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
 import { offerMovement } from '../../utils/movement/postMovementOfferCard.js';
 import { withWidget } from './_widgetOption.js';
@@ -29,6 +31,7 @@ const TRIGGERS = [
 	'onCritReceived',
 	'afterPoolDiceToMax',
 	'onCritThrough',
+	'onRangedWeaponAttack',
 ] as const;
 
 type FreeMoveTrigger = (typeof TRIGGERS)[number];
@@ -193,6 +196,10 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			await this.#offerOnCritThrough(context.card);
 			return;
 		}
+		if (this.trigger === 'onRangedWeaponAttack') {
+			await this.#offerOnRangedWeaponAttack(context);
+			return;
+		}
 		if (this.trigger !== 'onActivation') return;
 		if (!this.item || context.sourceItem?.uuid !== this.item.uuid) return;
 		const use = activationEventsOf(this.actor);
@@ -283,6 +290,14 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		);
 	}
 
+	/** The owner attacked with a ranged weapon, with any item: the move goes on that attack's card. */
+	async #offerOnRangedWeaponAttack(context: ItemActivatedContext): Promise<void> {
+		const { card } = context;
+		if (!card || context.sourceActor !== this.actor) return;
+		if (!isRangedWeaponAttack(card, context.sourceItem, this.actor)) return;
+		await this.#offer({ key: `${REASONS}.onRangedWeaponAttack` }, speakerToken(card), { card });
+	}
+
 	/** The item use of the actor that is going on now, as the host of a line. */
 	#useHost(): MovementOfferHost | null {
 		const use = activationEventsOf(this.actor);
@@ -333,6 +348,26 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (this.recipient !== 'selfAndAllies') return allies;
 		return source.uuid ? [source.uuid, ...allies] : allies;
 	}
+}
+
+interface AttackCard {
+	system?: { activation?: AttackActivation | null };
+	flags?: Record<string, { weaponUuid?: string } | undefined>;
+}
+
+interface UsedItem {
+	type?: string;
+	system?: { objectType?: string };
+}
+
+/** The card is of a ranged attack made with a weapon: the weapon itself, or one an ability chose. */
+function isRangedWeaponAttack(card: ChatMessage, item: unknown, actor: Actor): boolean {
+	const { system, flags } = card as unknown as AttackCard;
+	if (deliveryOfAttack(system?.activation, actor) !== 'ranged') return false;
+	const used = item as UsedItem | null;
+	if (used?.type === 'object' && used.system?.objectType === 'weapon') return true;
+	const weaponUuid = flags?.[SYSTEM_ID]?.weaponUuid;
+	return !!weaponUuid && weaponUuid !== UNARMED_STRIKE;
 }
 
 function tokenFromUuid(uuid: string): TokenDocument | null {
