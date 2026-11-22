@@ -24,8 +24,8 @@
 
 	const update = (data: Record<string, unknown>) => effect.update(data as never);
 
-	const conditions = effectConditionOptions();
 	const statuses = $derived([...((reactive.statuses ?? []) as Iterable<string>)]);
+	const conditions = $derived(effectConditionOptions(new Set(statuses)));
 
 	const stacks = $derived(stackFieldsOf(reactive.system));
 	const stackItem = $derived(stackEffectItem(reactive as never));

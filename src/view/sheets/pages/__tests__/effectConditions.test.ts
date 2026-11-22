@@ -16,11 +16,16 @@ beforeEach(() => {
 			blinded: 'Blinded',
 			concentration: 'Concentration',
 			dying: 'Dying',
+			latched: 'Latched',
+			swallowed: 'Swallowed',
 		},
+		conditionScopes: { latched: 'monster', swallowed: 'monster' },
 	};
 	config.statusEffects = [
 		{ id: 'prone', name: 'Prone', img: 'icons/prone.svg' },
 		{ id: 'blinded', name: 'Blinded', img: 'icons/blinded.svg' },
+		{ id: 'latched', name: 'Latched', img: 'icons/latched.svg' },
+		{ id: 'swallowed', name: 'Swallowed', img: 'icons/swallowed.svg' },
 	];
 });
 
@@ -35,6 +40,14 @@ describe('effectConditionOptions', () => {
 			{ value: 'blinded', label: 'Blinded', icon: 'icons/blinded.svg' },
 			{ value: 'prone', label: 'Prone', icon: 'icons/prone.svg' },
 		]);
+	});
+
+	it('keeps a monster condition the effect already gives, so it can be seen and cleared', () => {
+		expect(effectConditionOptions(new Set(['swallowed']))).toContainEqual({
+			value: 'swallowed',
+			label: 'Swallowed',
+			icon: 'icons/swallowed.svg',
+		});
 	});
 });
 

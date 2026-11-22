@@ -43,12 +43,12 @@ The card names each condition that changed the roll as a tag, for example **Adva
 
 ## Latched and Swallowed
 
-These two conditions come from monsters, and each carries its own mechanics, so they work on whoever has one however it got there. Latched ends when either creature dies; the GM removes Swallowed by hand.
+These two conditions come from monsters, and each carries its own mechanics, so they work on any creature that has one. Latched ends when either creature dies; the GM removes Swallowed by hand.
 
 - Latched goes on the creature that hit with Latch On, and the creature stores who it hit. It lasts until that creature dies or the one it latched onto dies, with the usual ended line and **Undo**. See [How long effects last](how-long-effects-last.md). Its attacks cannot miss. When an attack on it misses, the card has one button for the whole attack, **Apply N Damage to** that creature. N is the amount after the creature's armor, immunity, resistance and damage reduction. If nobody clicks, nothing happens. The system does not move the Latched creature with its target. The table does that.
 - Swallowed goes on the target of a crit from Bite/Swallow. The creature takes 20 damage at the start of its turn. The line on the turn start card has **Undo**. Its attacks cannot miss and ignore armor.
 
-With Feature Effects off, the GM applies them by hand. At the start of a Swallowed creature's turn, the line has a **Take Damage** button, and the creature takes no damage until someone clicks it. The attack effects and the Latched button still work.
+With Feature Effects off, Latch On still records the creature that was hit, and neither condition is applied. They stay out of the token panel, the sheet's condition grid, and the effect sheet's condition list until a creature already has one, so those lists cannot put one on. A creature that already has Swallowed takes no damage at the start of its turn until someone clicks **Take Damage**. A creature that already has Latched keeps it until someone clicks **End** when either creature dies. The attack effects and the Latched button still work.
 
 ## Linked conditions
 

@@ -91,3 +91,4 @@ export { Migration090InspirationStartsOff } from './Migration090InspirationStart
 export { Migration091ChoicesWaitAndKnownSchools } from './Migration091ChoicesWaitAndKnownSchools.js';
 export { Migration092FeatureCostsContent } from './Migration092FeatureCostsContent.js';
 export { Migration093FeatureWeaponAttacksContent } from './Migration093FeatureWeaponAttacksContent.js';
+export { Migration094MonsterConditions } from './Migration094MonsterConditions.js';

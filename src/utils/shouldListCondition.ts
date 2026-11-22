@@ -1,5 +1,3 @@
-import isMonsterScopedCondition from './isMonsterScopedCondition.js';
-
 /**
  * Whether a condition belongs in a picker a GM chooses from.
  *
@@ -12,5 +10,11 @@ export default function shouldListCondition(
 	conditionId: string,
 	activeConditionIds: ReadonlySet<string> = new Set(),
 ): boolean {
-	return !isMonsterScopedCondition(conditionId) || activeConditionIds.has(conditionId);
+	return !isMonsterScoped(conditionId) || activeConditionIds.has(conditionId);
+}
+
+function isMonsterScoped(conditionId: string): boolean {
+	const scopes = (CONFIG.NIMBLE as { conditionScopes?: Record<string, string> } | undefined)
+		?.conditionScopes;
+	return scopes?.[conditionId] === 'monster';
 }

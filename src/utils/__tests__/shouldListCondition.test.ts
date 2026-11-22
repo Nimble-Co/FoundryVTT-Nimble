@@ -32,4 +32,10 @@ describe('shouldListCondition', () => {
 	it('still hides a monster-scoped condition when a different one is active', () => {
 		expect(shouldListCondition('swallowed', new Set(['latched']))).toBe(false);
 	});
+
+	it('lists every condition when the scope dictionary is missing', () => {
+		(CONFIG.NIMBLE as { conditionScopes?: unknown }).conditionScopes = undefined;
+
+		expect(shouldListCondition('latched')).toBe(true);
+	});
 });

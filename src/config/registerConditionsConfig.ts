@@ -256,7 +256,6 @@ export default function registerConditionsConfig() {
 			eventMoment('die', 'source'),
 			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
 		],
-		// The holder keeps it until they die, or until the creature it ties them to does.
 		latched: [eventMoment('die', 'holder'), eventMoment('die', 'linked')],
 		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
