@@ -146,7 +146,7 @@
 							<span class="duplicate-row__meta" use:tooltipWhenClipped>
 								{candidate.lineage}
 								{#if candidate.note}
-									<span class="duplicate-row__sep">·</span>
+									<span class="duplicate-row__sep">-</span>
 									<span class="duplicate-row__note" class:same={candidate.isIdentical}>
 										{candidate.note}
 									</span>

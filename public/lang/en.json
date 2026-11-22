@@ -4266,7 +4266,7 @@
 			"raisedToFloor": "{flavor} (rolled {rolled}, raised to {face})",
 			"panel": {
 				"ariaLabel": "{label} actions",
-				"rolledMeta": "{count}/{max} · sum {total}",
+				"rolledMeta": "{count}/{max} - sum {total}",
 				"countMeta": "{current}/{max}",
 				"close": "Close",
 				"editDice": {
@@ -4285,7 +4285,7 @@
 					"pickDiceToMaximize": "Pick a die to raise to its maximum",
 					"dieAlreadyMax": "Already at its maximum",
 					"toggleDie": "Toggle die (value: {value})",
-					"summary": "Selected {count} · sum {total}",
+					"summary": "Selected {count} - sum {total}",
 					"effectPreview": "Effect: {total}",
 					"spend": "Spend",
 					"spendWithCount": "Spend ({count})",
@@ -4345,9 +4345,9 @@
 			"tiny": "Tiny"
 		},
 		"sizeCategoryDescriptions": {
-			"gargantuan": "a castle keep · 4×4 spaces",
-			"huge": "a small house · 3×3 spaces",
-			"large": "a bear · 2×2 spaces",
+			"gargantuan": "a castle keep - 4×4 spaces",
+			"huge": "a small house - 3×3 spaces",
+			"large": "a bear - 2×2 spaces",
 			"medium": "average human size",
 			"small": "fits in a backpack",
 			"tiny": "fits in a pocket"
@@ -6927,7 +6927,7 @@
 				"labelArcana": "Arcana",
 				"labelUpcasting": "Upcasting",
 				"labelInventory": "Inventory",
-				"upcastUpToTier": "Up to {tier} · your highest unlocked",
+				"upcastUpToTier": "Up to {tier} - your highest unlocked",
 				"upcastNone": "Not possible. You haven't unlocked any spell tiers yet.",
 				"upcastFixed": "Not possible. It's fixed at {tier}.",
 				"arcanaNotNeeded": "No check needed. You already know {school} spells.",

@@ -250,7 +250,7 @@
 								>{state.formatGroupName(groupName)}</span
 							>
 							<span class="class-progression-tab__group-meta">
-								{features.length} options · Levels {state.getGroupLevels(groupName).join(', ')}
+								{features.length} options - Levels {state.getGroupLevels(groupName).join(', ')}
 							</span>
 							<button
 								type="button"
