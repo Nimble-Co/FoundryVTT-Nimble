@@ -25,12 +25,17 @@ export interface HeroCoinView {
 }
 
 export interface HeroInventoryTabView {
+	/** the list is the party stash */
+	party: boolean;
+	partyLabel: string;
 	coins: HeroCoinView[];
-	/** null: the hero does not track inventory slots */
+	/** the coin fields do not edit: this user cannot move objects from the stash */
+	coinsLocked: boolean;
+	/** null: the hero does not track inventory slots, or the list is the party stash */
 	slots: { text: string; label: string; over: string | null } | null;
 	createObject: { label: string; intent: HeroIntent };
 	groups: HeroRowGroup[];
-	/** the hero carries no objects */
+	/** the list has no objects */
 	empty: string | null;
 }
 
@@ -55,11 +60,65 @@ function canEquip(item: ItemLike): boolean {
 	return isContainer(item) && containerOf(item).requiresEquipped === true;
 }
 
+function transferIntent(
+	actor: HeroActorLike,
+	itemId: string,
+	source: 'actor' | 'stash',
+	destination: { kind: 'stash' } | { kind: 'actor'; actorId: string },
+): HeroIntent {
+	return {
+		kind: 'transferObject',
+		itemId,
+		source,
+		sourceActorId: actor.id,
+		destination,
+	};
+}
+
+/** Move to the stash, back onto this sheet, or straight to another character. */
+function shareMenu(
+	actor: HeroActorLike,
+	item: ItemLike,
+	context: HeroSheetContext,
+	source: 'actor' | 'stash',
+): HeroRowView['share'] {
+	const { localize, format } = context;
+	const canMove = source === 'actor' ? context.party.canGive : context.party.canTake;
+	const entries: { id: string; label: string; intent: HeroIntent }[] = [];
+	if (source === 'actor' && context.party.canGive) {
+		entries.push({
+			id: 'party',
+			label: localize(`${INV}.moveToParty`),
+			intent: transferIntent(actor, item.id, 'actor', { kind: 'stash' }),
+		});
+	}
+	if (source === 'stash' && context.party.canTake) {
+		entries.push({
+			id: 'mine',
+			label: localize(`${INV}.moveToMine`),
+			intent: transferIntent(actor, item.id, 'stash', { kind: 'actor', actorId: actor.id }),
+		});
+	}
+	const giveEntries = canMove
+		? context.party.characters.map((character) => ({
+				id: character.id,
+				label: character.name,
+				intent: transferIntent(actor, item.id, source, { kind: 'actor', actorId: character.id }),
+			}))
+		: [];
+	if (!entries.length && !giveEntries.length) return undefined;
+	return {
+		label: format(`${INV}.actions`, { name: item.name }),
+		entries,
+		give: giveEntries.length ? { label: localize(`${INV}.giveTo`), entries: giveEntries } : null,
+	};
+}
+
 function objectRow(
 	actor: HeroActorLike,
 	item: ItemLike,
 	context: HeroSheetContext,
-	options: { containers: ItemLike[]; stored: ItemLike[]; indent: boolean },
+	options: { containers: ItemLike[]; stored: ItemLike[]; indent: boolean; party: boolean },
 ): HeroRowView {
 	const { localize, format } = context;
 	const row = itemRow(actor, item, context);
@@ -73,9 +132,9 @@ function objectRow(
 
 	if (isContainer(item)) {
 		const { capacity } = containerOf(item);
-		const used = actor.system.inventory.containerCapacityUsage[item.id] ?? 0;
+		const used = options.party ? 0 : (actor.system.inventory.containerCapacityUsage[item.id] ?? 0);
 		if (!options.stored.length) text = localize(`${INV}.empty`);
-		else if (typeof capacity === 'number') {
+		else if (!options.party && typeof capacity === 'number') {
 			text = format(`${INV}.capacity`, { used: String(used), capacity: String(capacity) });
 			if (used > capacity) {
 				summary = format(`${INV}.overCapacity`, { used: String(used), capacity: String(capacity) });
@@ -105,7 +164,7 @@ function objectRow(
 	// an object that you use with no action is not "Free": it has no cost, as on the old sheet
 	const free = row.cost.free === true;
 	const costLabel = localize('NIMBLE.actorSheet.shared.facts.cost');
-	return {
+	const view: HeroRowView = {
 		...row,
 		summary,
 		summaryTone,
@@ -139,6 +198,21 @@ function objectRow(
 					},
 					...row.fields,
 				],
+		share: shareMenu(actor, item, context, options.party ? 'stash' : 'actor'),
+	};
+	// A stash row is data, not an item on this actor: it cannot be used, equipped, or edited.
+	if (!options.party) return view;
+	return {
+		...view,
+		use: null,
+		choice: null,
+		edit: null,
+		drag: null,
+		equip: undefined,
+		storeIn: undefined,
+		dropInto: undefined,
+		remove: undefined,
+		fields: [],
 	};
 }
 
@@ -146,9 +220,13 @@ function objectRow(
 export function heroInventoryTab(
 	actor: HeroActorLike,
 	context: HeroSheetContext,
+	options: { party?: boolean } = {},
 ): HeroInventoryTabView {
 	const { localize, format } = context;
-	const objects = actor.items.filter((item) => item.type === 'object');
+	const party = options.party === true;
+	const objects = (party ? context.party.items : actor.items).filter(
+		(item) => item.type === 'object',
+	);
 	const containers = byName(objects.filter(isContainer));
 	const containerIds = new Set(containers.map((container) => container.id));
 	const storedBy = (id: string) => byName(objects.filter((item) => storedIn(item) === id));
@@ -166,9 +244,9 @@ export function heroInventoryTab(
 			rows: byName(inGroup).flatMap((item) => {
 				const stored = isContainer(item) ? storedBy(item.id) : [];
 				return [
-					objectRow(actor, item, context, { containers, stored, indent: false }),
+					objectRow(actor, item, context, { containers, stored, indent: false, party }),
 					...stored.map((entry) =>
-						objectRow(actor, entry, context, { containers, stored: [], indent: true }),
+						objectRow(actor, entry, context, { containers, stored: [], indent: true, party }),
 					),
 				];
 			}),
@@ -177,18 +255,22 @@ export function heroInventoryTab(
 
 	const { usedSlots, totalSlots } = actor.system.inventory;
 	const slotData = { used: String(usedSlots), total: String(totalSlots) };
+	const currency = party ? context.party.currency : actor.system.currency;
 	return {
+		party,
+		partyLabel: localize(`${INV}.party`),
 		coins: COINS.map((coin) => {
 			const label = localize(`NIMBLE.currencyAbbreviations.${coin}`);
 			return {
 				coin,
 				label,
 				name: format(`${INV}.coin`, { coin: label }),
-				value: Number(actor.system.currency[coin] ?? 0),
+				value: Number(currency[coin] ?? 0),
 			};
 		}),
+		coinsLocked: party && !context.party.canTake,
 		slots:
-			actor.flags.trackInventorySlots === false
+			party || actor.flags.trackInventorySlots === false
 				? null
 				: {
 						text: format(`${INV}.slots`, slotData),
@@ -200,6 +282,6 @@ export function heroInventoryTab(
 			intent: { kind: 'createItem', itemType: 'object' },
 		},
 		groups,
-		empty: objects.length ? null : localize(`${INV}.none`),
+		empty: objects.length ? null : localize(party ? `${INV}.partyEmpty` : `${INV}.none`),
 	};
 }

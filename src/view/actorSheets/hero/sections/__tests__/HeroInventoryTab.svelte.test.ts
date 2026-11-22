@@ -4,19 +4,41 @@ import {
 	blankHero,
 	containerHero,
 	heroContext,
+	objectItem,
 } from '../../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
 import { createSheetUiState } from '../../../shared/sheetUiState.ts';
 import { heroInventoryTab } from '../../heroInventoryTab.ts';
-import type { HeroActorLike } from '../../heroSource.ts';
+import type { HeroActorLike, HeroSheetContext } from '../../heroSource.ts';
 import HeroInventoryTab from '../HeroInventoryTab.svelte';
 
 const INV = 'NIMBLE.actorSheet.hero.inventory';
 const SHARED = 'NIMBLE.actorSheet.shared';
 
-function renderTab(actor: HeroActorLike = containerHero(), editing = false) {
+function partyContext(overrides: Partial<HeroSheetContext['party']> = {}): HeroSheetContext {
+	return heroContext({
+		party: {
+			currency: { gp: 40, sp: 0, cp: 0 },
+			items: [objectItem('torch', 'Torch', { quantity: 3 })],
+			characters: [{ id: 'bob', name: 'Bob' }],
+			canGive: true,
+			canTake: true,
+			...overrides,
+		},
+	});
+}
+
+function renderTab(
+	actor: HeroActorLike = containerHero(),
+	editing = false,
+	options: { party?: boolean; context?: HeroSheetContext } = {},
+) {
 	const ui = $state({ ...createSheetUiState('inventory'), editing });
 	const perform = vi.fn();
-	render(HeroInventoryTab, { view: heroInventoryTab(actor, heroContext()), ui, perform });
+	render(HeroInventoryTab, {
+		view: heroInventoryTab(actor, options.context ?? heroContext(), { party: options.party }),
+		ui,
+		perform,
+	});
 	return { ui, perform };
 }
 
@@ -197,6 +219,120 @@ describe('HeroInventoryTab', () => {
 			expect(rowEl('backpack')?.classList.contains('drop-over')).toBe(true);
 			await fireEvent.dragEnter(rowEl('torch')!);
 			expect(rowEl('torch')?.classList.contains('drop-over')).toBe(false);
+		});
+	});
+
+	describe('the party inventory', () => {
+		it('switches the list when Party Inventory is pressed', async () => {
+			const { ui } = renderTab();
+			const party = screen.getByRole('button', { name: `${INV}.party` });
+
+			await fireEvent.click(party);
+
+			expect(ui.partyInventory).toBe(true);
+			expect(party).toHaveAttribute('aria-pressed', 'false');
+		});
+
+		it('hides Create Object, edits the shared coins, and ignores a drop', async () => {
+			const { perform } = renderTab(containerHero(), false, {
+				party: true,
+				context: partyContext(),
+			});
+			const gold = screen.getByRole('spinbutton', { name: new RegExp(`${INV}.coin.*gp`) });
+
+			expect(screen.queryByRole('button', { name: `${INV}.create` })).toBeNull();
+			expect(gold).toHaveValue(40);
+			await fireEvent.input(gold, { target: { value: '20' } });
+			await fireEvent.blur(gold);
+			expect(perform).toHaveBeenCalledWith({ kind: 'setPartyCurrency', coin: 'gp', value: 20 });
+
+			await fireEvent.drop(screen.getByText('NIMBLE.objectTypeHeadings.misc'), {
+				dataTransfer: {
+					getData: () => JSON.stringify({ type: 'Item', uuid: 'Item.lantern' }),
+					types: ['text/plain'],
+				},
+			});
+			expect(perform).toHaveBeenCalledOnce();
+		});
+
+		it('locks the coin fields when this user cannot take from the stash', () => {
+			renderTab(containerHero(), false, {
+				party: true,
+				context: partyContext({ canTake: false }),
+			});
+
+			const gold = screen.getByRole('spinbutton', { name: new RegExp(`${INV}.coin.*gp`) });
+			expect(gold.classList.contains('rest')).toBe(true);
+			expect(screen.queryByRole('button', { name: new RegExp(`${INV}.actions`) })).toBeNull();
+		});
+
+		it('moves an object to the party inventory from the menu, and does not use it', async () => {
+			const { perform } = renderTab();
+
+			await fireEvent.click(
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
+			);
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.moveToParty` }));
+
+			expect(perform).toHaveBeenCalledOnce();
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'transferObject',
+				itemId: 'torch',
+				source: 'actor',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'stash' },
+			});
+		});
+
+		it('opens the menu on a right-click, and Give to lists the other character', async () => {
+			const { perform } = renderTab(containerHero(), false, { context: partyContext() });
+
+			await fireEvent.contextMenu(rowEl('torch')!);
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.giveTo` }));
+			await fireEvent.click(screen.getByRole('menuitem', { name: 'Bob' }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'transferObject',
+				itemId: 'torch',
+				source: 'actor',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'actor', actorId: 'bob' },
+			});
+		});
+
+		it('closes the menu on a click outside and on Escape', async () => {
+			renderTab();
+			const open = () =>
+				fireEvent.click(screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }));
+
+			await open();
+			expect(screen.getByRole('menu')).toBeInTheDocument();
+			await fireEvent.pointerDown(document.body);
+			expect(screen.queryByRole('menu')).toBeNull();
+
+			await open();
+			await fireEvent.keyDown(document, { key: 'Escape' });
+			expect(screen.queryByRole('menu')).toBeNull();
+		});
+
+		it('moves a stash object onto this character', async () => {
+			const { perform } = renderTab(containerHero(), false, {
+				party: true,
+				context: partyContext(),
+			});
+
+			await fireEvent.click(
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
+			);
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.moveToMine` }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'transferObject',
+				itemId: 'torch',
+				source: 'stash',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'actor', actorId: 'containerHero0001' },
+			});
 		});
 	});
 });

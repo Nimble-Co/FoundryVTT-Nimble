@@ -172,6 +172,13 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 		formula: (text) => text.replace(/@[\w.]+/g, '3'),
 		enrichedNotes: '',
 		enrichedDescriptions: {},
+		party: {
+			currency: { gp: 0, sp: 0, cp: 0 },
+			items: [],
+			characters: [],
+			canGive: true,
+			canTake: true,
+		},
 		...overrides,
 	};
 }

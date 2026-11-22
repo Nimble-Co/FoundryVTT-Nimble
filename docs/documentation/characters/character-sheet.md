@@ -64,6 +64,12 @@ You can drag an action from here to the macro hotbar for one-click access; see [
 
 Your equipment and loot. Click a row to use the item (attack with a weapon, drink a potion); this posts a chat card. Weapons, armor and shields have an **EQUIP** tag: click it to equip or unequip the item. You can create new items here with **Create Object**, or drag them in from the compendiums. The coins and, if your table tracks them, your inventory slots are at the top of the tab. When you are over your slot limit, the slots show a warning.
 
+**Party Inventory**, next to Create Object, swaps this list for the gear and coins the party shares. Every world has this stash, and it has no slot limit. You type those coins the same way you type your own. The ellipsis on an object, or a right-click, moves it to the stash, back onto this character, or to another character.
+
+::: details What a move does
+A stack asks how many. An equipped item asks you to confirm, then arrives unequipped. A container brings its contents. The object is not copied. You do not need permission to edit the other character. Chat says who moved what.
+:::
+
 Items set up as containers, such as a chest, a backpack, a pouch or a quiver, show their contents indented under them. The row of a container shows how much of its capacity is in use, or **Empty**.
 
 - **To put something in**, drag it onto the container's row.

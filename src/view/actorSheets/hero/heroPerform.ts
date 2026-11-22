@@ -21,6 +21,7 @@ import { runMoveAction } from '#utils/heroicActions/move.js';
 import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
 import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
+import { requestPartyCurrency } from '#utils/partyStash/requestItemTransfer.ts';
 import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 import { isSheetIntent } from '../shared/sheetIntent.ts';
@@ -32,6 +33,7 @@ import type {
 	HeroPerform,
 	HeroSettingsField,
 } from './heroIntent.ts';
+import { transferObject } from './transferObject.ts';
 
 type CombatWithLateJoin = Combat & {
 	ensureCharacterCombatantForActorInCurrentScene?: (
@@ -349,6 +351,12 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				return;
 			case 'opportunityAttack':
 				await useOpportunityAttack(actor, intent.weaponId);
+				return;
+			case 'transferObject':
+				await transferObject(actor, intent);
+				return;
+			case 'setPartyCurrency':
+				await requestPartyCurrency(intent.coin, intent.value);
 				return;
 			default: {
 				const unknown: never = intent;

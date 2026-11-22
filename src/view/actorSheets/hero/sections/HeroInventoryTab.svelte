@@ -10,7 +10,7 @@ a stored object comes out of its container.
 	import ExpandAllButton from '../../parts/ExpandAllButton.svelte';
 	import InlineNumber from '../../parts/InlineNumber.svelte';
 	import { droppedItemData } from '../../shared/drag.ts';
-	import { setOpenRows } from '../../shared/sheetUiState.ts';
+	import { setOpenRows, setPartyInventory } from '../../shared/sheetUiState.ts';
 	import HeroRowGroupList from './HeroRowGroupList.svelte';
 
 	let { view, ui, perform }: HeroInventoryTabProps = $props();
@@ -19,6 +19,7 @@ a stored object comes out of its container.
 	const allOpen = $derived(rowIds.length > 0 && rowIds.every((id) => ui.openRows.includes(id)));
 
 	function ondrop(event: DragEvent) {
+		if (view.party) return;
 		const data = droppedItemData(event.dataTransfer);
 		if (!data) return;
 		event.preventDefault();
@@ -36,7 +37,13 @@ a stored object comes out of its container.
 				label={coin.name}
 				min={0}
 				width="34px"
-				onchange={(value) => perform({ kind: 'setCurrency', coin: coin.coin, value })}
+				rest={view.coinsLocked}
+				onchange={(value) =>
+					perform(
+						view.party
+							? { kind: 'setPartyCurrency', coin: coin.coin, value }
+							: { kind: 'setCurrency', coin: coin.coin, value },
+					)}
 			/>
 			<span class="cl" aria-hidden="true">{coin.label}</span>
 		</span>
@@ -55,13 +62,25 @@ a stored object comes out of its container.
 	{/if}
 </div>
 <div class="bar">
-	<button
-		type="button"
-		class="nimble-u-reset-button create"
-		onclick={() => perform(view.createObject.intent)}
-	>
-		<i class="fa-solid fa-plus"></i>{view.createObject.label}
-	</button>
+	<div class="tools">
+		<button
+			type="button"
+			class="nimble-u-reset-button party"
+			aria-pressed={view.party}
+			onclick={() => setPartyInventory(ui, !view.party)}
+		>
+			{view.partyLabel}
+		</button>
+		{#if !view.party}
+			<button
+				type="button"
+				class="nimble-u-reset-button create"
+				onclick={() => perform(view.createObject.intent)}
+			>
+				<i class="fa-solid fa-plus"></i>{view.createObject.label}
+			</button>
+		{/if}
+	</div>
 	<ExpandAllButton {allOpen} onclick={() => setOpenRows(ui, allOpen ? [] : rowIds)} />
 </div>
 <div class="list" role="presentation" ondragover={(event) => event.preventDefault()} {ondrop}>
@@ -112,12 +131,19 @@ a stored object comes out of its container.
 		font-weight: 600;
 		color: var(--nimble-ui-ink-muted);
 	}
-	.create {
+	.tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		margin-right: auto;
+	}
+	.create,
+	.party {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		height: 28px;
-		margin-right: auto;
 		padding: 0 10px;
 		border: 1px dashed var(--nimble-ui-edge);
 		border-radius: 4px;
@@ -125,7 +151,10 @@ a stored object comes out of its container.
 		color: var(--nimble-ui-ink);
 	}
 	.create:hover,
-	.create:focus-visible {
+	.create:focus-visible,
+	.party:hover,
+	.party:focus-visible,
+	.party[aria-pressed='true'] {
 		border-style: solid;
 		border-color: var(--nimble-ui-own);
 		background: var(--nimble-ui-own-background);

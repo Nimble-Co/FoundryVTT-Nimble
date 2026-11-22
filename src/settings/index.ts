@@ -11,6 +11,7 @@ import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerLanguageSettings } from './languageSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
+import { registerPartyStashSetting } from './partyStashSetting.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerDiceSoNiceSettings } from './registerDiceSoNiceSettings.js';
 import { registerSpellSchoolSettings } from './registerSpellSchoolSettings.js';
@@ -100,6 +101,7 @@ export default function registerSystemSettings() {
 	registerCombatTrackerSettings();
 	registerDiceSoNiceSettings();
 	registerChaosTableSettings();
+	registerPartyStashSetting();
 	registerNcswSettings();
 	registerLanguageSettings();
 	registerSpellSchoolSettings();

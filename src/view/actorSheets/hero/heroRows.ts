@@ -133,6 +133,12 @@ export interface HeroRowView {
 	dropInto?: string;
 	/** edit mode: the trash button, which asks first */
 	remove?: HeroRowAsk;
+	/** move this object to the party stash or to another character */
+	share?: {
+		label: string;
+		entries: { id: string; label: string; intent: HeroIntent }[];
+		give: { label: string; entries: { id: string; label: string; intent: HeroIntent }[] } | null;
+	};
 }
 
 export interface HeroRowGroup {

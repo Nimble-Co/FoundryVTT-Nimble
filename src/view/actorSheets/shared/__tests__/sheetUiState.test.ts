@@ -10,7 +10,9 @@ import {
 	setCardsStartOpen,
 	setClosedRows,
 	setEditing,
+	setMenuRow,
 	setOpenRows,
+	setPartyInventory,
 	showTab,
 	toggleCard,
 	toggleChoice,
@@ -67,6 +69,23 @@ describe('the UI state changes', () => {
 		setEditing(ui, true);
 
 		expect(ui).toMatchObject({ editing: true, confirm: null });
+	});
+
+	it('switches to the party list and closes the move menu', () => {
+		const ui = createSheetUiState('inventory');
+
+		expect(ui).toMatchObject({ partyInventory: false, menuRowId: null });
+
+		askConfirm(ui, 'delete:torch');
+		setMenuRow(ui, 'torch');
+		setPartyInventory(ui, true);
+
+		expect(ui).toMatchObject({ partyInventory: true, confirm: null, menuRowId: null });
+
+		setMenuRow(ui, 'rope');
+		showTab(ui, 'actions');
+
+		expect(ui).toMatchObject({ tab: 'actions', menuRowId: null });
 	});
 
 	it('opens and closes a ConfirmBar', () => {

@@ -68,6 +68,14 @@ export type HeroIntent =
 	| { kind: 'toggleEquip'; itemId: string }
 	| { kind: 'setQuantity'; itemId: string; value: number }
 	| { kind: 'storeIn'; itemId: string; containerId: string }
+	| {
+			kind: 'transferObject';
+			itemId: string;
+			source: 'actor' | 'stash';
+			sourceActorId: string;
+			destination: { kind: 'stash' } | { kind: 'actor'; actorId: string };
+	  }
+	| { kind: 'setPartyCurrency'; coin: string; value: number }
 	| { kind: 'setDetail'; detail: HeroDetail; value: string }
 	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }
 	| { kind: 'setInspiration'; value: boolean }

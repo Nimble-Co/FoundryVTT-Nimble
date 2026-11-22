@@ -59,7 +59,9 @@ In Foundry the Application gives the adapter, its `$state` and the Foundry dispa
 		ui.tab === 'features' ? heroFeaturesTab(current.actor, current.context) : null,
 	);
 	const inventory = $derived(
-		ui.tab === 'inventory' ? heroInventoryTab(current.actor, current.context) : null,
+		ui.tab === 'inventory'
+			? heroInventoryTab(current.actor, current.context, { party: ui.partyInventory })
+			: null,
 	);
 	const spells = $derived(
 		ui.tab === 'spells' ? heroSpellsTab(current.actor, current.context) : null,

@@ -19,6 +19,7 @@ import { registerCardSocketListener } from '../utils/chat/cardOperations.js';
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
 import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
+import { registerPartyStashSocketListener } from '../utils/partyStash/requestItemTransfer.js';
 // Their modules define the card operations and notices the socket listener runs.
 import '../utils/defend/defendRequests.js';
 import '../utils/incomingReactions/incomingAttackReactions.js';
@@ -66,6 +67,7 @@ export default async function ready() {
 	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
+	registerPartyStashSocketListener();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');
