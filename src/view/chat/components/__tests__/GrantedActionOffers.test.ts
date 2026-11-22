@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import GrantedActionOffersTestHarness from './GrantedActionOffers.testHarness.svelte';
 
 interface OfferOptions {
@@ -510,17 +511,56 @@ describe('GrantedActionOffers', () => {
 			render(GrantedActionOffersTestHarness, {
 				props: { messageDocument: moveCard('taken', mover) },
 			});
-			const warning = 'Sir Brannon is adjacent to 0 of the 2 enemies needed.';
+			const warning = 'Sir Brannon is not next to 2 enemies.';
 			expect(screen.getByText(warning)).toBeTruthy();
 
 			mover.x = 400;
 			for (const [hook, listener] of (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls) {
-				if (hook === 'updateToken') (listener as () => void)();
+				if (hook === 'updateToken') (listener as (document: unknown) => void)(mover);
 			}
 			await tick();
 
 			expect(screen.queryByText(warning)).toBeNull();
 			expect(attackButton().disabled).toBe(false);
+		});
+
+		it('checks again when the movement animation of a token ends', async () => {
+			const g = globalThis as Record<string, any>;
+			const scene = { grid: { isGridless: true, size: 100 }, tokens: [] as unknown[] };
+			const token = (id: string, x: number, y: number, disposition: number) => ({
+				id,
+				x,
+				y,
+				width: 1,
+				height: 1,
+				disposition,
+				actor: { uuid: `Actor.${id}` },
+				parent: scene,
+			});
+			let endAnimation = () => {};
+			const movementAnimationPromise = new Promise<void>((resolve) => {
+				endAnimation = resolve;
+			});
+			const mover = Object.assign(token('hero', 0, 0, 1), { object: { movementAnimationPromise } });
+			scene.tokens.push(mover, token('g2', 500, 0, -1), token('g3', 500, 100, -1));
+
+			render(GrantedActionOffersTestHarness, {
+				props: { messageDocument: moveCard('taken', mover) },
+			});
+			const warning = 'Sir Brannon is not next to 2 enemies.';
+
+			for (const [hook, listener] of (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls) {
+				if (hook === 'updateToken') (listener as (document: unknown) => void)(mover);
+			}
+			await tick();
+			expect(screen.getByText(warning)).toBeTruthy();
+
+			mover.x = 400;
+			endAnimation();
+			await movementAnimationPromise;
+			await tick();
+
+			expect(screen.queryByText(warning)).toBeNull();
 		});
 	});
 });

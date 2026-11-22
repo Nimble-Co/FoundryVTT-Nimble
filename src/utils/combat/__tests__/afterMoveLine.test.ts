@@ -182,7 +182,7 @@ describe('afterMoveWarning', () => {
 		const check = line('adjacentToMarked', { afterMoveFlagKey: 'hex' });
 
 		expect(afterMoveWarning(check as never, hero as never, 'Hero')).toBe(
-			'Hero is not adjacent to a creature with their hex mark.',
+			'Hero is not next to their hex.',
 		);
 
 		add('wolf', 0, 1);
@@ -219,6 +219,25 @@ describe('afterMoveWarning', () => {
 
 		add('distracted-guard', 5, 4, { statuses: ['distracted'] });
 		expect(afterMoveWarning(check as never, hero as never, 'Hero')).toBeNull();
+	});
+
+	it('measures from where the tokens stop, not from where their movement animation is', () => {
+		const { add } = makeScene();
+		const quarry = { quarry: [{ actorUuid: 'Actor.wolf', tokenUuid: null, name: 'Wolf' }] };
+		const hero = add('hero', 0, 0, { disposition: 1, flags: quarry });
+		const wolf = add('wolf', 9, 0);
+		const animated = (token: GridToken, col: number) =>
+			Object.assign(token, { _source: { x: col * SIZE, y: 0, width: 1, height: 1 } });
+		animated(hero, 5);
+		animated(wolf, 6);
+
+		expect(afterMoveWarning(line('adjacentToMarked') as never, hero as never, 'Hero')).toBeNull();
+
+		animated(hero, 2);
+		hero.x = 5 * SIZE;
+		expect(afterMoveWarning(line('adjacentToMarked') as never, hero as never, 'Hero')).toBe(
+			'Hero is not next to their quarry.',
+		);
 	});
 
 	it('says nothing when there is no token to check from', () => {

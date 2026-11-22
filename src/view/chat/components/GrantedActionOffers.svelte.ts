@@ -183,8 +183,11 @@ export function createGrantedActionOffersState(getMessage: () => NimbleChatMessa
 	let tokenVersion = $state(0);
 
 	$effect(() => {
-		const hookId = Hooks.on('updateToken', () => {
+		const hookId = Hooks.on('updateToken', (document: TokenDocument) => {
 			tokenVersion += 1;
+			document.object?.movementAnimationPromise?.finally(() => {
+				tokenVersion += 1;
+			});
 		});
 		return () => {
 			Hooks.off('updateToken', hookId);

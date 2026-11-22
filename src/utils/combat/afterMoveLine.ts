@@ -1,4 +1,4 @@
-import type { MeasurableTokenDocument, OfferCard } from '#types/movement.js';
+import type { MeasurableTokenDocument, OfferCard, TokenPosition } from '#types/movement.js';
 import type { AfterMoveCheck } from '../../models/rules/grantActivation.js';
 import { readToggledEffects } from '../actor/toggledEffects.js';
 import localize from '../localize.js';
@@ -41,12 +41,24 @@ export function afterMoveLineShown(card: OfferCard, tracking: boolean): boolean 
 interface CheckedToken {
 	id?: string | null;
 	hidden?: boolean;
+	_source?: Partial<TokenPosition>;
 	actor?: {
 		uuid?: string;
 		statuses?: Set<string>;
 		getFlag?: (scope: string, key: string) => unknown;
 	} | null;
 	parent?: { tokens?: Iterable<CheckedToken> } | null;
+}
+
+/** Where a token stops. A movement animation writes its frames into the document's position. */
+function stopPosition(token: CheckedToken): TokenPosition | undefined {
+	const source = token._source;
+	if (typeof source?.x !== 'number' || typeof source.y !== 'number') return undefined;
+	const position: TokenPosition = { x: source.x, y: source.y };
+	for (const key of ['elevation', 'width', 'height'] as const) {
+		if (typeof source[key] === 'number') position[key] = source[key];
+	}
+	return position;
 }
 
 function adjacentTokens(mover: CheckedToken): CheckedToken[] {
@@ -59,7 +71,7 @@ function adjacentTokens(mover: CheckedToken): CheckedToken[] {
 			spacesBetween(
 				mover as unknown as MeasurableTokenDocument,
 				token as unknown as MeasurableTokenDocument,
-				undefined,
+				{ a: stopPosition(mover), b: stopPosition(token) },
 				1,
 			) <= 1,
 	);
