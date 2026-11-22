@@ -93,6 +93,11 @@ describe('MovementTriggerCard', () => {
 		expect(screen.getByText('Creatures: Goblin, Ogre')).toBeTruthy();
 	});
 
+	it('leaves out the creatures line when its one creature is the mover', () => {
+		renderCard({ targets: ['Scene.s.Token.gob'] });
+		expect(screen.queryByText(/^Creatures:/)).toBeNull();
+	});
+
 	it("shows the mover, this Movement's spaces and the spaces moved this turn", () => {
 		renderCard({ spaces: 3, spacesThisTurn: 5 });
 		expect(screen.getByText('Goblin moved 3 spaces, 5 spaces this turn.')).toBeTruthy();
@@ -137,6 +142,34 @@ describe('MovementTriggerCard', () => {
 	it('shows a use button to the owner of the item', () => {
 		renderCard();
 		expect(useButton()).toBeTruthy();
+	});
+
+	it('shows its attack lines in place of the use button', () => {
+		g.game.user = { ...(g.game.user ?? {}), isGM: true, targets: new Set() };
+		documents['Actor.hero'] = { id: 'hero', name: 'Hero', isOwner: true, system: {}, items: [] };
+		renderCard({
+			grantedActionOffers: [
+				{
+					id: 'line-1',
+					targetActorUuid: 'Actor.hero',
+					label: 'Opportunistic Frenzy',
+					activationType: 'weaponAttack',
+					ruleId: 'r',
+					sourceItemUuid: '',
+					free: false,
+					spendsReaction: true,
+					weaponKind: 'melee',
+					allowsCantrips: false,
+					ignoresRushed: false,
+					condition: '',
+					used: false,
+					usedBy: null,
+				},
+			],
+		});
+
+		expect(screen.getByRole('heading', { name: 'Opportunity Attack (reaction)' })).toBeTruthy();
+		expect(useButton()).toBeNull();
 	});
 
 	it('shows no use button to a user who does not own the item', () => {

@@ -720,7 +720,8 @@
 					"free": "Free Attack",
 					"action": "Attack (1 action)",
 					"reaction": "Opportunity Attack (reaction)",
-					"freeOpportunity": "Opportunity Attack (free)"
+					"freeOpportunity": "Opportunity Attack (free)",
+					"reactionRanged": "Ranged Opportunity Attack (reaction)"
 				},
 				"attack": "Attack",
 				"choiceLabel": "What {name} attacks with",
@@ -2620,11 +2621,14 @@
 				},
 				"trigger": {
 					"label": "When",
-					"hint": "When the line goes on a card. On use: this item's card gets a line for each targeted creature. After the move: this item's card gets a line for the user, shown once the user's move from the card ends. On Interpose: when the owner of this item Interposes, the card of the attack gets a line for them.",
+					"hint": "When the line goes on a card. On use: this item's card gets a line for each targeted creature. After the move: this item's card gets a line for the user, shown once the user's move from the card ends. The other choices give the owner of this item a line. On Interpose and on a full block: on the card of the attack. On an ally's opportunity attack: on the card of that attack. On its Movement Trigger: on the card that a Movement Trigger rule of this item posts.",
 					"choices": {
 						"onActivation": "When this item is used",
 						"afterMove": "When the user's move from this item ends",
-						"onInterpose": "When its owner Interposes"
+						"onInterpose": "When its owner Interposes",
+						"onFullBlock": "When its owner's Defend blocks all the damage of an attack",
+						"onAllyOpportunityAttack": "When an ally of its owner makes an opportunity attack",
+						"onMovementTrigger": "When a Movement Trigger rule of this item posts its card"
 					}
 				},
 				"includesUser": {
@@ -2658,8 +2662,8 @@
 					"hint": "The attack spends no action."
 				},
 				"spendsReaction": {
-					"label": "Spends the reaction",
-					"hint": "The attack spends the recipient's Opportunity Attack reaction in place of an action."
+					"label": "Opportunity attack",
+					"hint": "The attack is an opportunity attack: it starts at disadvantage and spends the recipient's Opportunity Attack reaction in place of an action. With Free on too, it spends no reaction."
 				},
 				"ignoresRushed": {
 					"label": "Ignores Rushed Attacks",
@@ -2694,6 +2698,10 @@
 				"emptyPoolIdentifier": {
 					"label": "Needs an empty pool",
 					"hint": "When the item is used while this charge pool has charges, a warning shows. The use goes on."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the rule puts lines on a card only while this charge pool has a charge, and each card it puts lines on spends 1 charge. Leave empty for no limit."
 				}
 			},
 			"freeMove": {
@@ -2770,6 +2778,10 @@
 				"geometry": {
 					"label": "Geometry",
 					"hint": "any: no position test. endsAdjacent: the Movement stops in the Reach of the creature. enteredReach: it goes into the Reach. leftReach: it goes out of the Reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started."
+				},
+				"reachSource": {
+					"label": "Reach from",
+					"hint": "fixed: the Reach set below. meleeWeapon: the largest Reach of the owner's equipped melee weapons. With no melee weapon equipped, the Reach is 1 (the Unarmed Strike)."
 				},
 				"reach": {
 					"label": "Reach",
@@ -3836,6 +3848,14 @@
 				"ignoreDisadvantage": {
 					"label": "Ignore all disadvantage",
 					"hint": "The attack takes no disadvantage: not from Rushed Attacks, conditions or the target."
+				},
+				"attackKind": {
+					"label": "Attacks",
+					"hint": "The attacks it changes. An opportunity attack starts at disadvantage, so 1 advantage on opportunity attacks takes that disadvantage away and leaves the others.",
+					"choices": {
+						"any": "Every attack",
+						"opportunity": "Only opportunity attacks"
+					}
 				}
 			},
 			"spellManaCost": {

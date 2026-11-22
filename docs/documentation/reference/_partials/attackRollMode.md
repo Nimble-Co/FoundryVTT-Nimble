@@ -9,6 +9,8 @@ The Attack Roll Mode rule changes the roll mode of the owner's attacks. **Advant
 
 On your second attack of the turn, the window opens at advantage, with no Rushed Attack line. Your other attacks do not change. With **Attacks by** set to **You and allies**, the attack Coordinated Strike! gives an ally changes too. **You only** changes only your own attacks.
 
+**Attacks** set to `Only opportunity attacks` changes only opportunity attacks. An opportunity attack starts at disadvantage, so 1 advantage takes that disadvantage away and leaves the others, as Opportunistic Frenzy does while Raging.
+
 ::: details Edge cases
 - Disadvantage goes out first, then the advantage goes on. A window that starts at 1 disadvantage opens at 1 advantage.
 - With **Ignore all disadvantage** on, a Held Change that ignores disadvantage is not used, so it stays for the next roll.

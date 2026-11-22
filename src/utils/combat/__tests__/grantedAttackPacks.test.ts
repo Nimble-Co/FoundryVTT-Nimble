@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { packRuleFailures, readItem } from '../../../../tests/fixtures/packContent.js';
 import { Predicate } from '../../../etc/Predicate.js';
 import { GrantTargetBonusRule } from '../../../models/rules/grantTargetBonus.js';
-import { collectGrantedActionOffers, collectInterposeOffers } from '../grantedActionOffers.js';
+import {
+	collectAllyOpportunityOffers,
+	collectGrantedActionOffers,
+	collectInterposeOffers,
+	collectItemTriggerOffers,
+} from '../grantedActionOffers.js';
 
 interface PackRule {
 	id: string;
@@ -412,5 +417,111 @@ describe("How'd YOU get here?! crit", () => {
 				ignoresDifficultTerrain: true,
 			}),
 		);
+	});
+});
+
+function packRules(path: string): PackRule[] {
+	return JSON.parse(readFileSync(resolve(__dirname, '../../../../packs', path), 'utf8')).system
+		.rules;
+}
+
+describe('Shield Expert', () => {
+	const path =
+		'classFeatures/core/commander/commander-subclasses/champion-of-the-bulwark/shield-expert.json';
+	const rules = packRules(path);
+
+	it('gives a free melee opportunity attack line against the attacker after a full block', () => {
+		expect(rules.find((rule) => rule.type === 'grantActivation')).toMatchObject({
+			trigger: 'onFullBlock',
+			weaponKind: 'melee',
+			free: true,
+			spendsReaction: true,
+			condition: 'Against the attacker.',
+			chargePoolIdentifier: 'shield-expert-round',
+		});
+	});
+
+	it('gives the line once each round, through a hidden pool that refills at the turn start', () => {
+		expect(rules.find((rule) => rule.type === 'chargePool')).toMatchObject({
+			identifier: 'shield-expert-round',
+			max: '1',
+			hidden: true,
+			recoveries: expect.arrayContaining([{ trigger: 'onTurnStart', mode: 'refresh', value: '1' }]),
+		});
+	});
+
+	it('keeps the second Defend each round while wearing a shield, with no reminder line', () => {
+		expect(rules.find((rule) => rule.type === 'defendOption')).toMatchObject({
+			way: 'extraDefend',
+			predicate: { self: 'shield' },
+			reminder: '',
+		});
+	});
+});
+
+describe('No Escape', () => {
+	const feature = packFeature(
+		'classFeatures/core/hunter/hunter-progression/no-escape.json',
+		'Actor.hunter',
+	);
+
+	it("gives the Hunter a ranged opportunity attack line on an ally's opportunity attack card", () => {
+		const fighter = { id: 'f', disposition: 1, actor: { uuid: 'Actor.fighter', items: [] } };
+		const hunter = {
+			id: 'h',
+			disposition: 1,
+			actor: { uuid: 'Actor.hunter', items: [feature] },
+		};
+
+		expect(collectAllyOpportunityOffers(fighter, [fighter, hunter])).toEqual([
+			expect.objectContaining({
+				targetActorUuid: 'Actor.hunter',
+				label: 'No Escape',
+				weaponKind: 'ranged',
+				spendsReaction: true,
+				free: false,
+				condition: 'Against the same target.',
+			}),
+		]);
+	});
+});
+
+describe('Opportunistic Frenzy', () => {
+	const path =
+		'classFeatures/core/berserker/berserker-subclasses/path-of-the-red-mist/opportunistic-frenzy.json';
+	const feature = packFeature(path, 'Actor.berserker');
+	const rules = packRules(path);
+
+	it('takes the disadvantage off opportunity attacks while Raging', () => {
+		expect(rules.find((rule) => rule.type === 'attackRollMode')).toMatchObject({
+			predicate: { self: 'raging' },
+			advantage: 1,
+			ignoreDisadvantage: false,
+			attackOrigin: '',
+			attackKind: 'opportunity',
+		});
+	});
+
+	it('posts a card when an enemy enters melee reach while Raging', () => {
+		expect(rules.find((rule) => rule.type === 'movementTrigger')).toMatchObject({
+			predicate: { self: 'raging' },
+			event: 'creatureMoved',
+			creature: 'enemy',
+			geometry: 'enteredReach',
+			reach: 1,
+			observerScope: 'self',
+		});
+	});
+
+	it('puts a melee opportunity attack line that spends the reaction on that card', () => {
+		expect(collectItemTriggerOffers(feature, 'Actor.berserker', 'onMovementTrigger')).toEqual([
+			expect.objectContaining({
+				targetActorUuid: 'Actor.berserker',
+				label: 'Opportunistic Frenzy',
+				weaponKind: 'melee',
+				spendsReaction: true,
+				free: false,
+			}),
+		]);
 	});
 });

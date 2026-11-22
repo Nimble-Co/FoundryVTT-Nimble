@@ -6,9 +6,11 @@ import type {
 	GrantedWeaponKind,
 } from '../../models/rules/grantActivation.js';
 import { ruleLabel, rulesOfType } from '../actor/actorRules.js';
+import { hasRuleCharge, spendRuleCharge } from '../chargePool/ruleChargeGate.js';
 import { identifierOf } from '../documents/itemIdentifier.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import localize from '../localize.js';
+import { areAllies } from '../movement/alliesWithin.js';
 
 /**
  * Foundry system socket channel. Must be `system.<id>` so the request reaches the GM's
@@ -103,6 +105,7 @@ interface GrantActivationRuleLike {
 	afterMoveMinEnemies?: number;
 	afterMoveStatus?: string;
 	emptyPoolIdentifier?: string;
+	chargePoolIdentifier?: string;
 	appliesTo?: () => boolean;
 }
 
@@ -113,6 +116,11 @@ interface OfferGrantingItem {
 	system?: { identifier?: string };
 	actor?: { uuid?: string; rules?: unknown } | null;
 	rules?: Map<string, GrantActivationRuleLike> | null;
+}
+
+interface OfferRecipient {
+	uuid?: string;
+	items?: Iterable<OfferGrantingItem>;
 }
 
 interface OfferTargetToken {
@@ -129,7 +137,8 @@ function grantRulesOf(
 		(rule) =>
 			rule?.type === GRANT_ACTIVATION_RULE_TYPE &&
 			triggers.includes(rule.trigger ?? 'onActivation') &&
-			rule.appliesTo?.(),
+			rule.appliesTo?.() &&
+			hasRuleCharge(item.actor as Actor | null, rule.chargePoolIdentifier ?? ''),
 	);
 }
 
@@ -236,15 +245,78 @@ export function emptyPoolWarnings(
 	});
 }
 
-/** The lines the actor's own rules give them when they Interpose. */
-export function collectInterposeOffers(
-	actor: { uuid?: string; items?: Iterable<OfferGrantingItem> } | null | undefined,
+/** The lines a creature's own rules give them on a trigger other than item use. */
+export function collectTriggerOffers(
+	actor: OfferRecipient | null | undefined,
+	trigger: Exclude<GrantedActivationTrigger, 'onActivation'>,
 ): GrantedActionOffer[] {
 	const actorUuid = actor?.uuid ?? '';
 	if (!actorUuid) return [];
 	return [...(actor?.items ?? [])].flatMap((item) =>
-		grantRulesOf(item, 'onInterpose').map((rule) => offerOf(rule, item, actorUuid)),
+		grantRulesOf(item, trigger).map((rule) => offerOf(rule, item, actorUuid)),
 	);
+}
+
+/** The lines the actor's own rules give them when they Interpose. */
+export function collectInterposeOffers(
+	actor: OfferRecipient | null | undefined,
+): GrantedActionOffer[] {
+	return collectTriggerOffers(actor, 'onInterpose');
+}
+
+/** The lines of one item for its own trigger, such as a Movement Trigger of the item. */
+export function collectItemTriggerOffers(
+	item: OfferGrantingItem | null | undefined,
+	actorUuid: string,
+	trigger: Exclude<GrantedActivationTrigger, 'onActivation'>,
+): GrantedActionOffer[] {
+	if (!item || !actorUuid) return [];
+	return grantRulesOf(item, trigger).map((rule) => offerOf(rule, item, actorUuid));
+}
+
+interface CombatToken {
+	id?: string | null;
+	disposition?: number;
+	actor?: OfferRecipient | null;
+}
+
+/** The lines the allies of an attacker get when the attacker makes an opportunity attack. */
+export function collectAllyOpportunityOffers(
+	attacker: CombatToken | null | undefined,
+	tokens: Iterable<CombatToken>,
+): GrantedActionOffer[] {
+	if (!attacker) return [];
+	const seen = new Set<string>([attacker.actor?.uuid ?? '']);
+	return [...tokens].flatMap((token) => {
+		const uuid = token.actor?.uuid ?? '';
+		if (!uuid || seen.has(uuid) || token === attacker || (token.id && token.id === attacker.id)) {
+			return [];
+		}
+		if (!areAllies(attacker as TokenDocument, token as TokenDocument)) return [];
+		seen.add(uuid);
+		return collectTriggerOffers(token.actor, 'onAllyOpportunityAttack');
+	});
+}
+
+/**
+ * Spends 1 charge for each rule with a charge pool that put lines on a card. Lines of one
+ * rule spend once.
+ */
+export async function spendLineCharges(offers: readonly GrantedActionOffer[]): Promise<void> {
+	const spent = new Set<string>();
+	for (const offer of offers) {
+		const key = `${offer.sourceItemUuid}:${offer.ruleId}`;
+		if (spent.has(key) || !offer.sourceItemUuid) continue;
+		spent.add(key);
+		const item = fromUuidSync(offer.sourceItemUuid as Parameters<typeof fromUuidSync>[0]) as
+			| (OfferGrantingItem & { actor?: Actor | null })
+			| null;
+		const rule = item?.rules
+			? [...item.rules.values()].find((entry) => entry.id === offer.ruleId)
+			: undefined;
+		const pool = rule?.chargePoolIdentifier?.trim() ?? '';
+		if (pool && item?.actor) await spendRuleCharge(item.actor, pool);
+	}
 }
 
 interface OfferBearingMessage {

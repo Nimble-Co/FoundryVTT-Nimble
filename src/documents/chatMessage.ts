@@ -12,7 +12,7 @@ import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
-import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
+import { collectInterposeOffers, spendLineCharges } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackActivation,
@@ -2389,6 +2389,7 @@ class NimbleChatMessage extends ChatMessage {
 			await this.update({
 				system: { grantedActionOffers: [...cardOffers, ...interposeOffers] },
 			} as Record<string, unknown>);
+			await spendLineCharges(interposeOffers);
 			return;
 		}
 		if (hosted && interposeOffers.length < 1) return;
@@ -2408,6 +2409,7 @@ class NimbleChatMessage extends ChatMessage {
 				grantedActionOffers: interposeOffers,
 			},
 		} as unknown as ChatMessage.CreateData);
+		await spendLineCharges(interposeOffers);
 	}
 }
 

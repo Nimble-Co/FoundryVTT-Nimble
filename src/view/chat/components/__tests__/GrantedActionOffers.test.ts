@@ -122,6 +122,20 @@ describe('GrantedActionOffers', () => {
 		expect(attackButton().disabled).toBe(false);
 	});
 
+	it('names a ranged opportunity attack in its heading', () => {
+		render(GrantedActionOffersTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createOffer({ spendsReaction: true, weaponKind: 'ranged' }),
+				]),
+			},
+		});
+
+		expect(
+			screen.getByRole('heading', { name: 'Ranged Opportunity Attack (reaction)' }),
+		).toBeTruthy();
+	});
+
 	it('names a line that spends an action or the reaction in its heading', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: {

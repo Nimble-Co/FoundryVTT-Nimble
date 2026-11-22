@@ -1,3 +1,4 @@
+import type { GrantedActionOffer } from '../combat/grantedActionOffers.js';
 import { movementCardWhisper } from './movementCardWhisper.js';
 
 export interface MovementTriggerCardInput {
@@ -14,6 +15,8 @@ export interface MovementTriggerCardInput {
 	spacesThisTurn: number | null;
 	/** Whether only the item's owners and the GMs see the card. */
 	whisper: boolean;
+	/** Attack lines the card shows. */
+	lines?: GrantedActionOffer[];
 }
 
 /** Posts a card that lets the owner use an item after a Movement. */
@@ -41,6 +44,7 @@ export async function postMovementTriggerCard(
 			moverName: input.moverName,
 			spaces: input.spaces,
 			spacesThisTurn: input.spacesThisTurn,
+			...(input.lines?.length ? { grantedActionOffers: input.lines } : {}),
 		},
 	};
 

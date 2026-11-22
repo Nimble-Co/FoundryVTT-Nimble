@@ -140,6 +140,8 @@ The **Defend** and **Interpose** rows on the Actions tab of the sheet, and the h
 
 A feature that lets you attack when you Interpose, such as Quickstrike, puts an attack line for you on the attack card. When that card is a whisper you cannot see, or when you Interpose from the sheet with no attack card, the line goes on the Interpose card. Target the enemy and click **Attack**.
 
+Other features add an opportunity attack line. Shield Expert puts one on the attack card when your Defend blocks all its damage, or on a Defend card when the attack card is a whisper. No Escape puts one on the card of an ally's opportunity attack. Opportunistic Frenzy posts a card with one when an enemy enters your reach while you Rage. The attack rolls at disadvantage, unless a feature takes it away, and spends your reaction, unless the feature makes it free.
+
 ## The Initiative card
 
 The line under the name tells how many actions a hero starts combat with: 1, 2 with a total of 10 or more, 3 with 20 or more or a natural 20. A monster's card has no line. A change from **Change This Roll**, such as **Change to 10**, also goes to the combat tracker: the Initiative, the starting actions, and your current actions if you did not spend them yet. **Remove** does the reverse.

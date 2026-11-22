@@ -37,6 +37,7 @@ describe('movement chat card data models', () => {
 			[
 				'actorName',
 				'actorType',
+				'grantedActionOffers',
 				'image',
 				'permissions',
 				'rollMode',

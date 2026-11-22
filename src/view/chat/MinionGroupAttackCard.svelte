@@ -13,6 +13,7 @@
 	import CardHeader from './components/CardHeader.svelte';
 	import DamageBackLines from './components/DamageBackLines.svelte';
 	import DefendReactions from './components/DefendReactions.svelte';
+	import GrantedActionOffers from './components/GrantedActionOffers.svelte';
 	import IncomingReactionPrompts from './components/IncomingReactionPrompts.svelte';
 	import Targets from './components/Targets.svelte';
 
@@ -245,6 +246,8 @@
 			</button>
 		{/if}
 	</section>
+
+	<GrantedActionOffers />
 
 	<IncomingReactionPrompts place="options" />
 

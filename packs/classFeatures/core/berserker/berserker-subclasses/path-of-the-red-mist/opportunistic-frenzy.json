@@ -6,7 +6,71 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "attackRollMode",
+				"disabled": false,
+				"id": "opportunistic-frenzy-no-disadvantage",
+				"identifier": "",
+				"label": "Opportunistic Frenzy",
+				"predicate": {
+					"self": "raging"
+				},
+				"priority": 1,
+				"advantage": 1,
+				"ignoreDisadvantage": false,
+				"attackOrigin": "",
+				"attackKind": "opportunity"
+			},
+			{
+				"type": "movementTrigger",
+				"disabled": false,
+				"id": "opportunistic-frenzy-enters-reach",
+				"identifier": "",
+				"label": "Opportunistic Frenzy",
+				"predicate": {
+					"self": "raging"
+				},
+				"priority": 1,
+				"event": "creatureMoved",
+				"creature": "enemy",
+				"kinds": [
+					"regular",
+					"free",
+					"forced"
+				],
+				"minSpaces": 0,
+				"spacesScope": "thisTurn",
+				"geometry": "enteredReach",
+				"reachSource": "meleeWeapon",
+				"reach": 1,
+				"minTargets": 1,
+				"observerScope": "self",
+				"allyRadius": 6,
+				"message": "{mover} entered your melee reach.",
+				"whisper": true
+			},
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "opportunistic-frenzy-opportunity-attack",
+				"identifier": "",
+				"label": "Opportunistic Frenzy",
+				"predicate": {},
+				"priority": 2,
+				"activationType": "weaponAttack",
+				"trigger": "onMovementTrigger",
+				"includesUser": false,
+				"includesTargets": true,
+				"weaponKind": "melee",
+				"allowsCantrips": false,
+				"free": false,
+				"spendsReaction": true,
+				"ignoresRushed": false,
+				"condition": "",
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

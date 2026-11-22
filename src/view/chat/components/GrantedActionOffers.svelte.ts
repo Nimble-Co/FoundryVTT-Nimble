@@ -104,7 +104,9 @@ function sectionsOf(
 		const kind = grantedAttackKind(offer);
 		const section = sections.get(kind) ?? {
 			kind,
-			heading: localize(`${TEXT}.headings.${kind}`),
+			heading: localize(
+				`${TEXT}.headings.${kind === 'reaction' && offer.weaponKind === 'ranged' ? 'reactionRanged' : kind}`,
+			),
 			warning: null,
 			offers: [],
 		};

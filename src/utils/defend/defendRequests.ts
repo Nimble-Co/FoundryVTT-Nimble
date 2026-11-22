@@ -25,6 +25,7 @@ import {
 	roundDefendEffectIds,
 	roundMarkNow,
 } from './defendRound.js';
+import { addFullBlockLines } from './fullBlockLines.js';
 
 type DefendRequest = Omit<DefendRecord, 'id' | 'armorApplies' | 'userId'> & {
 	messageId: string;
@@ -89,6 +90,7 @@ async function writeDefend(request: DefendRequest, userId: string): Promise<stri
 	await card.update({
 		'system.defends': [...defendsOf(card.system), record],
 	} as Record<string, unknown>);
+	await addFullBlockLines(card as never, record);
 	await affectAttacker(card, record);
 	await setRoundMarks(record, request);
 	return null;

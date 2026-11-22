@@ -43,7 +43,18 @@ The item's card also has a Move node for the user. The line is only for the user
 
 **Needs an empty pool** names a charge pool. When the item is used while that pool has charges, a warning shows and the use goes on. Roll & Strike uses it for Thrill of the Hunt.
 
-**Free** spends no action. **Spends the reaction** spends the Opportunity Attack reaction in place of an action, after the attack. With neither, the attack spends an action as usual.
+**Example: No Escape.** When an ally makes an opportunity attack, the Hunter can make a ranged opportunity attack against the same target.
+
+- **When** → `When an ally of its owner makes an opportunity attack`
+- **Weapon** → `A ranged weapon`
+- **Opportunity attack** → on
+- **Condition** → `Against the same target.`
+
+The card of the ally's opportunity attack gets a "Ranged Opportunity Attack" line for each ally in the combat with the rule. Shield Expert uses **When its owner's Defend blocks all the damage of an attack**, with **Free** and **Opportunity attack** both on and a hidden Charge Pool as **Charge pool**, so the line comes once each round and spends nothing. Opportunistic Frenzy uses **When a Movement Trigger rule of this item posts its card**: the line goes on that card in place of its use button.
+
+**Free** spends no action. **Opportunity attack** makes the attack an opportunity attack: it starts at disadvantage and spends the Opportunity Attack reaction in place of an action, after the attack. With **Free** on too, it spends no reaction. With neither, the attack spends an action as usual.
+
+**Charge pool** limits the rule: it puts lines on a card only while the pool has a charge, and each card it puts lines on spends 1 charge, whether the line is used or not.
 
 A free attack still counts as an attack of the turn, so it takes Rushed Attack disadvantage and adds to the count. **Ignores Rushed Attacks** removes only that disadvantage. The attack still counts.
 

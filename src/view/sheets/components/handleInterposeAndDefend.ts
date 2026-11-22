@@ -1,5 +1,5 @@
 import type { ReactionPanelStateOptions } from '#types/components/ReactionPanel.d.ts';
-import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
+import { collectInterposeOffers, spendLineCharges } from '#utils/combat/grantedActionOffers.js';
 import { openDefendWindowOnNewestCard } from '#utils/defend/openDefendWindow.js';
 import showReactionConfirmation from '#utils/incomingReactions/showReactionConfirmation.js';
 import localize from '#utils/localize.js';
@@ -65,6 +65,7 @@ export default async function handleInterposeAndDefend(
 	const actor = getActor();
 	const currentArmorValue = actor.reactive.system.attributes.armor.value ?? 0;
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
+	const lines = collectInterposeOffers(actor as never);
 
 	await ChatMessage.create({
 		author: game.user?.id,
@@ -78,9 +79,10 @@ export default async function handleInterposeAndDefend(
 			rollMode: 0,
 			reactionType: 'interpose',
 			targets: targetUuids,
-			grantedActionOffers: collectInterposeOffers(actor as never),
+			grantedActionOffers: lines,
 		},
 	} as unknown as ChatMessage.CreateData);
+	await spendLineCharges(lines);
 
 	await ChatMessage.create({
 		author: game.user?.id,

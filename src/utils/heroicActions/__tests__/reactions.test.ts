@@ -107,6 +107,10 @@ describe('heroic reactions', () => {
 
 		it("puts the hero's attack lines from Interpose rules on the Interpose card", async () => {
 			const { actor } = inCombat();
+			vi.stubGlobal('fromUuidSync', () => null);
+			onTestFinished(() => {
+				vi.unstubAllGlobals();
+			});
 			Object.assign(actor, {
 				uuid: 'Actor.heroic-actor',
 				items: [
@@ -199,8 +203,8 @@ describe('heroic reactions', () => {
 
 			expect(activateItem).toHaveBeenCalledWith('weapon-1', {
 				rollMode: -1,
-				skipActionDeduction: true,
 				opportunityAttack: true,
+				skipActionDeduction: true,
 			});
 			expect(useHeroicReactions).toHaveBeenCalledWith(
 				combatant.id,

@@ -6,7 +6,28 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantActivation",
+				"disabled": false,
+				"id": "no-escape-ranged-opportunity-attack",
+				"identifier": "",
+				"label": "No Escape",
+				"predicate": {},
+				"priority": 1,
+				"activationType": "weaponAttack",
+				"trigger": "onAllyOpportunityAttack",
+				"includesUser": false,
+				"includesTargets": true,
+				"weaponKind": "ranged",
+				"allowsCantrips": false,
+				"free": false,
+				"spendsReaction": true,
+				"ignoresRushed": false,
+				"condition": "Against the same target.",
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

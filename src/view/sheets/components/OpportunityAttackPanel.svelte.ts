@@ -1,6 +1,9 @@
 import { SYSTEM_ID } from '#system';
+import { spendLineCharges } from '#utils/combat/grantedActionOffers.js';
+import { opportunityAttackLines } from '#utils/combat/opportunityAttackLines.js';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
+import { attackRollModeOf, rollModeWith } from '#utils/rolls/attackRollMode.js';
 import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
@@ -185,11 +188,15 @@ export function createOpportunityAttackPanelState(
 			},
 		};
 
+		const startRollMode = rollModeWith(
+			-1,
+			attackRollModeOf(getActor(), undefined, { opportunityAttack: true }),
+		);
 		const dialog = new ItemActivationConfigDialog(
 			getActor(),
 			unarmedItem,
 			localize('NIMBLE.ui.heroicActions.reactions.opportunity.unarmedOpportunity'),
-			{ rollMode: -1 }, // Default to disadvantage
+			{ rollMode: startRollMode },
 		);
 		await dialog.render(true);
 		const result = await dialog.promise;
@@ -203,7 +210,7 @@ export function createOpportunityAttackPanelState(
 			getOnConsumeForcedReactionUse()();
 		}
 
-		const rollMode = result.rollMode ?? -1; // Disadvantage by default
+		const rollMode = result.rollMode ?? startRollMode;
 		const conditions = result.conditionRollModes ?? [];
 		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
 			canCrit,
@@ -257,14 +264,15 @@ export function createOpportunityAttackPanelState(
 			},
 		];
 
+		const allyLines = opportunityAttackLines(getActor());
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${getActor().name}: ${localize('NIMBLE.ui.heroicActions.reactions.opportunity.unarmedOpportunity')}`,
+			flags: { [SYSTEM_ID]: { opportunityAttack: true } },
 			speaker: ChatMessage.getSpeaker({ actor: getActor() }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
-			flags: { [SYSTEM_ID]: { opportunityAttack: true } },
 			system: {
 				actorName: getActor().name,
 				actorType: getActor().type,
@@ -286,11 +294,13 @@ export function createOpportunityAttackPanelState(
 					targets: { count: 1, attackType: 'reach', distance: 1 },
 				},
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
+				grantedActionOffers: allyLines,
 			},
 			type: 'feature',
 		};
 
 		const card = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+		if (card && allyLines.length > 0) await spendLineCharges(allyLines);
 		void fireAttackEvents(getActor(), card);
 	}
 
@@ -302,8 +312,8 @@ export function createOpportunityAttackPanelState(
 		const item = getActor().items.get(itemId);
 		const result = await getActor().activateItem(itemId, {
 			rollMode: -1,
-			skipActionDeduction: true,
 			opportunityAttack: true,
+			skipActionDeduction: true,
 		});
 
 		if (result && item) {

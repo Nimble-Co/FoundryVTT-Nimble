@@ -96,6 +96,23 @@ function unarmedStrikeOption(actor: WeaponOwner): WeaponOption {
 }
 
 /**
+ * The largest Reach of the actor's equipped melee weapons, from their Reach property. A melee
+ * weapon without the property, and the Unarmed Strike, have Reach 1.
+ */
+export function meleeWeaponReachOf(actor: WeaponOwner | null | undefined): number {
+	let reach: number = UNARMED_STRIKE_ATTACK.distance;
+	for (const item of actor?.items ?? []) {
+		if (item.type !== 'object' || item.system?.objectType !== 'weapon') continue;
+		if (item.system.equipped !== true) continue;
+		if (deliveryOfAttack(item.system.activation, actor) !== 'melee') continue;
+		const properties = item.system.properties;
+		if (!properties?.selected?.includes('reach')) continue;
+		reach = Math.max(reach, properties.reach?.max || properties.reach?.min || 1);
+	}
+	return reach;
+}
+
+/**
  * Every weapon this ability can attack with: the equipped ones, then a hero's Unarmed Strike for
  * a melee, any or unarmed ability, then the weapons that are not equipped.
  */

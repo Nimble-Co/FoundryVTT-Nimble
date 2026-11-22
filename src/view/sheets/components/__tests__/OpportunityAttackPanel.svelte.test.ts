@@ -23,6 +23,12 @@ beforeAll(async () => {
 	vi.doMock('../../../../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 		default: dialogMock,
 	}));
+	vi.doMock('#utils/combat/opportunityAttackLines.js', () => ({
+		opportunityAttackLines: () => [{ id: 'no-escape' }],
+	}));
+	vi.doMock('#utils/combat/grantedActionOffers.js', () => ({
+		spendLineCharges: vi.fn(async () => undefined),
+	}));
 	vi.doMock('../../../../utils/damage/attackUtils.js', () => ({
 		getUnarmedDamageFormula: () => '1',
 		hasUnarmedProficiency: () => false,
@@ -128,5 +134,46 @@ describe('OpportunityAttackPanel unarmed strike', () => {
 		stop();
 
 		expect(fireAttackEventsMock).not.toHaveBeenCalled();
+	});
+	it('is an opportunity attack on its card, with the lines of the allies', async () => {
+		dialogResult({ rollMode: -1 });
+		const { panel, stop } = panelFor(striker());
+
+		await panel.handleUnarmedStrike();
+		stop();
+
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				flags: { nimble: { opportunityAttack: true } },
+				system: expect.objectContaining({ grantedActionOffers: [{ id: 'no-escape' }] }),
+			}),
+		);
+	});
+
+	it('opens without the disadvantage with a rule that takes it from opportunity attacks', async () => {
+		dialogResult({ rollMode: 0 });
+		const actor = {
+			...striker(),
+			rules: [
+				{
+					type: 'attackRollMode',
+					changeFor: (_origin: unknown, attack: { opportunityAttack?: boolean } = {}) =>
+						attack.opportunityAttack
+							? { advantage: 1, ignoreDisadvantage: false, label: 'F' }
+							: null,
+				},
+			],
+		};
+		const { panel, stop } = panelFor(actor);
+
+		await panel.handleUnarmedStrike();
+		stop();
+
+		expect(dialogMock).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.anything(),
+			expect.any(String),
+			{ rollMode: 0 },
+		);
 	});
 });

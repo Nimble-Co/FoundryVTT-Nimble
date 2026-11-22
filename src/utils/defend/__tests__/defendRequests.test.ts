@@ -59,7 +59,7 @@ const SAND = { itemUuid: 'Item.sand', effectId: 'e-sand', name: 'Pocket Sand' };
 
 type Globals = { fromUuidSync: ReturnType<typeof vi.fn>; game: Record<string, unknown> };
 
-const SAVED_GLOBALS = ['game', 'fromUuidSync', 'ui'].map(
+const SAVED_GLOBALS = ['game', 'fromUuidSync', 'ui', 'ChatMessage'].map(
 	(key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
 );
 
@@ -476,6 +476,107 @@ describe('Defend options on the card', () => {
 
 		expect(giveBack).not.toHaveBeenCalled();
 		expect(card.system.defends).toHaveLength(1);
+	});
+});
+
+describe('a Defend that blocks all the damage of the attack', () => {
+	const shieldRule = {
+		type: 'grantActivation',
+		id: 'shield',
+		trigger: 'onFullBlock',
+		free: true,
+		spendsReaction: true,
+		weaponKind: 'melee',
+		appliesTo: () => true,
+	};
+
+	function damage(card: ReturnType<typeof makeCard>, before: number, after: number) {
+		Object.assign(card, {
+			previewDamageFor: vi.fn(() => before),
+			getDamageBreakdownForTarget: vi.fn(() => ({ total: after, components: [] })),
+		});
+		card.system.grantedActionOffers = [];
+		const update = card.update;
+		card.update = vi.fn(async (data: Record<string, unknown>) => {
+			const system = data.system as Record<string, unknown> | undefined;
+			if (system?.grantedActionOffers) {
+				card.system.grantedActionOffers = system.grantedActionOffers;
+				return;
+			}
+			await update(data);
+		});
+	}
+
+	beforeEach(() => {
+		Object.assign(pip, {
+			items: [
+				{
+					uuid: 'Actor.pip.Item.shield',
+					name: 'Shield Expert',
+					rules: new Map([['shield', shieldRule]]),
+				},
+			],
+		});
+	});
+
+	afterEach(() => {
+		Reflect.deleteProperty(pip, 'items');
+	});
+
+	it("puts a line from the defender's rules for a full block on the card of the attack", async () => {
+		damage(card, 6, 0);
+
+		await requestDefend(request());
+
+		expect(card.system.grantedActionOffers).toEqual([
+			expect.objectContaining({
+				targetActorUuid: 'Actor.pip',
+				label: 'Shield Expert',
+				free: true,
+				spendsReaction: true,
+				weaponKind: 'melee',
+			}),
+		]);
+	});
+
+	it('puts the line on a Defend card of the defender when the attack card is a whisper', async () => {
+		damage(card, 6, 0);
+		Object.assign(card, { whisper: ['gm'] });
+		Object.assign(pip, { name: 'Pip', type: 'character', img: 'pip.webp', permission: 3 });
+		const create = vi.fn(async () => ({}));
+		Object.assign(globalThis, {
+			ChatMessage: { create, getSpeaker: () => ({ actor: 'pip' }) },
+		});
+
+		await requestDefend(request());
+
+		expect(card.system.grantedActionOffers).toEqual([]);
+		expect(create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: 'reaction',
+				system: expect.objectContaining({
+					reactionType: 'defend',
+					armorValue: 3,
+					grantedActionOffers: [expect.objectContaining({ targetActorUuid: 'Actor.pip' })],
+				}),
+			}),
+		);
+	});
+
+	it('puts no line when some damage gets through', async () => {
+		damage(card, 6, 2);
+
+		await requestDefend(request());
+
+		expect(card.system.grantedActionOffers).toEqual([]);
+	});
+
+	it('puts no line when the attack deals no damage to block', async () => {
+		damage(card, 0, 0);
+
+		await requestDefend(request());
+
+		expect(card.system.grantedActionOffers).toEqual([]);
 	});
 });
 
