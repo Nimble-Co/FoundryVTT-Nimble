@@ -5,6 +5,7 @@ import type { DamagePart } from '#types/damagePart.d.ts';
 import type { OtherCreature } from '#types/otherCreature.d.ts';
 import { giveUnarmedHitRecovery } from '#utils/chargePool/itemUseRecovery.js';
 import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
+import { spendChosenCharges } from '#utils/chargePool/spendChosenCharges.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { spendLineCharges } from '#utils/combat/grantedActionOffers.js';
@@ -44,6 +45,7 @@ import { attackRollModeOf, rollModeWith } from '#utils/rolls/attackRollMode.js';
 import { freeAttackNote } from '#utils/rolls/freeAttackNote.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { rollConditionalDamage } from '../../managers/itemActivation/conditionalDamage.js';
 import {
 	keptAmountRollOptions,
 	removeDisadvantage,
@@ -197,6 +199,7 @@ export async function rollUnarmedStrike(
 	if (!result) return false;
 
 	const rollMode = result.rollMode ?? startRollMode;
+	const damageFormula = result.rollFormula || rollFormula;
 	const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
 	const multiTarget = targets.length > 1 && !shared;
 	const target = soleTarget(targets, { firstDecides: shared });
@@ -204,7 +207,7 @@ export async function rollUnarmedStrike(
 	const incomingAttackPlan = computeIncomingAttackPlan(target, actor as OfferingActor, {
 		delivery,
 		source: 'weapon',
-		stats: statsInFormula(rollFormula),
+		stats: statsInFormula(damageFormula),
 		...(origin ? { origin } : {}),
 	});
 	const attackOutcome = collectAttackOutcome({
@@ -286,7 +289,7 @@ export async function rollUnarmedStrike(
 	if (rollModeChange.ignoreDisadvantage) removeDisadvantage(rollOptions);
 	held.applyToRoll(rollOptions);
 	const firstRoll = new DamageRoll(
-		kept ? String(kept.value) : rollFormula,
+		kept ? String(kept.value) : damageFormula,
 		actor.getRollData(),
 		kept ? keptAmountRollOptions(rollOptions, kept.label) : rollOptions,
 	);
@@ -307,7 +310,7 @@ export async function rollUnarmedStrike(
 		{
 			id: 'unarmed-damage',
 			type: 'damage',
-			formula: rollFormula,
+			formula: damageFormula,
 			damageType: 'bludgeoning',
 			canCrit,
 			canMiss: true,
@@ -329,11 +332,18 @@ export async function rollUnarmedStrike(
 		},
 	];
 	const extraDamage = [
+		...(kept ? [] : await rollConditionalDamage(actor, result.conditionalDamages ?? [])),
 		...(await rollTypedOfferDamage(offerBonuses)),
 		...(await held.rollExtraDamage(actor.getRollData())),
 	];
 
 	const allyLines = opportunityAttack ? opportunityAttackLines(actor) : [];
+	const chargeConsumption = await spendChosenCharges(actor, result.consumedChargePools ?? []);
+	const flags = {
+		...(origin ? { origin } : {}),
+		...(opportunityAttack ? { opportunityAttack: true } : {}),
+		...(chargeConsumption.length > 0 ? { chargeConsumption } : {}),
+	};
 	const chatData = {
 		author: game.user?.id,
 		flavor: `${actor.name}: ${name}`,
@@ -341,16 +351,7 @@ export async function rollUnarmedStrike(
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
 		rolls: [roll, ...extraDamage.map((part) => part.roll)],
-		...(origin || opportunityAttack
-			? {
-					flags: {
-						[SYSTEM_ID]: {
-							...(origin ? { origin } : {}),
-							...(opportunityAttack ? { opportunityAttack: true } : {}),
-						},
-					},
-				}
-			: {}),
+		...(Object.keys(flags).length > 0 ? { flags: { [SYSTEM_ID]: flags } } : {}),
 		system: {
 			actorName: actor.name,
 			actorType: actor.type,

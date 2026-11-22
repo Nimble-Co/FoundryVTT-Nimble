@@ -22,6 +22,7 @@ import {
 	getFixedChargeCostsByPool,
 	itemOffersFreeUse,
 } from '#utils/chargePool/helpers.js';
+import { spendChosenCharges } from '#utils/chargePool/spendChosenCharges.js';
 import type {
 	CharacterActorLike,
 	ChargeConsumptionDetail,
@@ -150,10 +151,10 @@ import {
 	noChosenUseOptions,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
-import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
+import { rollConditionalDamage } from './itemActivation/conditionalDamage.js';
 import { type DiceDivision, diceDivisionOf, diceSharesOf } from './itemActivation/diceDivision.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
@@ -1220,21 +1221,12 @@ class ItemActivationManager {
 		// mislabel the bonus. Like the item's secondary damage nodes, these are
 		// plain Rolls (no crit/miss doubling). Untyped conditional damage is
 		// already folded into the first node via `rollFormula`.
-		for (const conditional of dialogData.conditionalDamages ?? []) {
-			const formula = conditional.formula?.trim();
-			if (!formula) continue;
-			const roll = new Roll(formula, this.actor!.getRollData()) as Roll;
-			await roll.evaluate();
-			const bonusNode = createBonusDamageNode({
-				damageType: conditional.damageType,
-				formula,
-				roll: roll.toJSON() as Record<string, unknown>,
-				fromItemIdentifier: conditional.fromItemIdentifier,
-				source: { label: conditional.label, uuid: conditional.itemUuid ?? '' },
-			});
-			if (conditional.modifierOnly) bonusNode.modifierOnly = true;
-			updatedEffects.push(bonusNode);
-			rolls.push(roll);
+		for (const part of await rollConditionalDamage(
+			this.actor!,
+			dialogData.conditionalDamages ?? [],
+		)) {
+			updatedEffects.push(part.node);
+			rolls.push(part.roll);
 		}
 		for (const part of await rollTypedOfferDamage(this.#offerBonuses)) {
 			updatedEffects.push(part.node);
@@ -1469,37 +1461,9 @@ class ItemActivationManager {
 		const consumed = [...this.#deferredChargeSpends, ...this.#deferredVariableSpends];
 		this.#deferredChargeSpends = [];
 		this.#deferredVariableSpends = [];
-		if (consumed.length < 1) return;
-		if (!isResourceSpendingAutomationEnabled()) return;
-
-		const actor = this.actor as Actor.Implementation | null;
-		if (!actor) return;
-
-		for (const entry of consumed) {
-			if (!entry || typeof entry.poolId !== 'string') continue;
-			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
-			if (count < 1) continue;
-			// adjustPool with negative-equivalent: 'add' supports only non-negative
-			// values, so read current and 'set' to current - count. Read through
-			// getPools rather than the item flags directly: an actor-scoped pool is
-			// stored on the actor, and scanning items alone would read it as 0 and
-			// wipe the pool instead of deducting from it.
-			const pool = getChargePools(actor).find((candidate) => candidate.id === entry.poolId);
-			if (!pool) continue;
-			const next = Math.max(0, pool.current - count);
-			if (next === pool.current) continue;
-			const adjusted = await adjustPool(actor, entry.poolId, 'set', next);
-			if (!adjusted) continue;
-
-			this.#chargeConsumption.push({
-				poolId: entry.poolId,
-				poolLabel: pool.label,
-				previousValue: pool.current,
-				currentValue: next,
-				maxValue: pool.max,
-				change: next - pool.current,
-			});
-		}
+		this.#chargeConsumption.push(
+			...(await spendChosenCharges(this.actor as Actor.Implementation | null, consumed)),
+		);
 	}
 
 	/**
