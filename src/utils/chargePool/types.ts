@@ -69,6 +69,8 @@ type ChargePoolState = {
 	showAsResource: boolean;
 	/** The book gives no cap: show the count alone. */
 	hideMax?: boolean;
+	/** The roll window shows no generic spend row for this pool. */
+	spentByFeaturesOnly?: boolean;
 	recoveries: ChargeRecoveryEntry[];
 };
 
@@ -92,6 +94,7 @@ type ChargePoolRuleLike = {
 	hidden?: boolean;
 	showAsResource?: boolean;
 	hideMax?: boolean;
+	spentByFeaturesOnly?: boolean;
 	recoveries?: unknown;
 	/** Optional because plain objects satisfy this structural type in tests. */
 	appliesTo?: () => boolean;

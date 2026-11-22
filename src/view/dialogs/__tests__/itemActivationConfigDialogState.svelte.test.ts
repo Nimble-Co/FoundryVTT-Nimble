@@ -280,6 +280,19 @@ describe('the activation dialog spend from a charge pool with a die', () => {
 		expect(state.spendableChargePools.map((pool) => pool.id)).toEqual(['combat-dice']);
 	});
 
+	it('is not listed for a pool that only its features spend from', () => {
+		const gated = { ...combatDice, id: 'gated', identifier: 'gated', spentByFeaturesOnly: true };
+		user.targets = new Set();
+		chargePools.mockReturnValue([gated, { ...combatDice, spentByFeaturesOnly: false }]);
+		const state = createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'weapon', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+		});
+
+		expect(state.spendableChargePools.map((pool) => pool.id)).toEqual(['combat-dice']);
+	});
+
 	it('is not offered when the use already spends from that pool by itself', () => {
 		fixedCosts.mockReturnValueOnce([
 			{ poolId: 'combat-dice', label: 'Combat Dice', amount: 1, current: 3 },

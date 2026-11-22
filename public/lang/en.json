@@ -2445,6 +2445,10 @@
 					"label": "Show the count with no maximum",
 					"hint": "For a pool the book gives no cap. The maximum stays only as a limit, and the sheet and the card show the count alone."
 				},
+				"spentByFeaturesOnly": {
+					"label": "Spent only by its features",
+					"hint": "The roll window shows no Spend Pool Dice row for this pool. Features that spend from the pool still work."
+				},
 				"showAsResource": {
 					"label": "Show as a resource",
 					"hint": "Also show the pool as a meter on the character sheet, with the other meters. Use this for a pool the player spends and plans around. A pool hidden from the sheet is never shown here."

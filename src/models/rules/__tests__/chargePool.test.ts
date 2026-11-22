@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { packRuleFailures, readItem } from '../../../../tests/fixtures/packContent.js';
 import { PredicateField } from '../../fields/PredicateField.js';
 import { ChargePoolRule } from '../chargePool.js';
 
@@ -23,6 +24,15 @@ describe('ChargePoolRule', () => {
 			expect(schema).toHaveProperty('recoveries');
 		});
 
+		it('lets the generic spend row list the pool unless the rule says otherwise', () => {
+			const field = ChargePoolRule.defineSchema().spentByFeaturesOnly as unknown as {
+				initial: unknown;
+				label: string;
+			};
+			expect(field.initial).toBe(false);
+			expect(field.label).toBe('NIMBLE.rules.chargePool.spentByFeaturesOnly.label');
+		});
+
 		it('offers the healed trigger on a recovery', () => {
 			expect(Object.keys(recoveryFields().trigger.choices ?? {})).toContain('onHealed');
 		});
@@ -39,6 +49,23 @@ describe('ChargePoolRule', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ChargePoolRule.group).toBe('resource');
 			expect(ChargePoolRule.description).toBe('NIMBLE.rules.chargePool.description');
+		});
+	});
+
+	describe('pack pool spent only by its features', () => {
+		const path =
+			'packs/classFeatures/core/commander/commander-progression/fit-for-any-battlefield.json';
+
+		it('is set on the combat-dice pool', () => {
+			const rules = readItem(path).system.rules as Array<Record<string, unknown>>;
+			const pool = rules.find(
+				(rule) => rule.type === 'chargePool' && rule.identifier === 'combat-dice',
+			);
+			expect(pool?.spentByFeaturesOnly).toBe(true);
+		});
+
+		it('passes the schema of each rule type', async () => {
+			expect(await packRuleFailures(readItem(path))).toEqual([]);
 		});
 	});
 });

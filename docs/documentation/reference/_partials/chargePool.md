@@ -20,4 +20,6 @@ A **Healed** recovery applies each time the character's hit points go up, from a
 
 **Show as a resource** also shows the pool as a meter on the character sheet, with the other meters, as well as the uses on the row of the granting item. Use it for a pool the player spends and plans around, like the Shadowmancer's Pilfered Power, and leave it off for one they only glance at when using the feature it belongs to. Hidden wins: a pool hidden from the sheet never gets a meter. The meter names the pool by its label. When the rail is too narrow for a long label, such as one that ends in `(2×WIL/Safe Rest)`, the name is cut: point to it to read the full label.
 
+**Spent only by its features** removes the pool's **Spend Pool Dice** row from the roll window. Use it for a pool that only its own features spend, like the Commander's Combat Dice. Those features still spend from the pool.
+
 The Label names the pool wherever it is shown. A pool by itself never spends charges automatically; pair it with a Charge Consumer rule (or a Pool effect on the item's activation) to spend charges when the wand is used. **Max charges** takes formulas too: `@key + 1` scales with the character's key stat.

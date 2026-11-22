@@ -69,6 +69,13 @@ function schema() {
 			label: 'NIMBLE.rules.chargePool.hideMax.label',
 			hint: 'NIMBLE.rules.chargePool.hideMax.hint',
 		}),
+		spentByFeaturesOnly: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.chargePool.spentByFeaturesOnly.label',
+			hint: 'NIMBLE.rules.chargePool.spentByFeaturesOnly.hint',
+		}),
 		recoveries: new fields.ArrayField(
 			new fields.SchemaField({
 				trigger: new fields.StringField({
@@ -175,6 +182,9 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 	 */
 	declare showAsResource: boolean;
 
+	/** Leaves the pool out of the roll window's generic spend row. */
+	declare spentByFeaturesOnly: boolean;
+
 	static override defineSchema(): ChargePoolRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -191,6 +201,7 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 				['initial', '"max" | "zero"'],
 				['hidden', 'boolean'],
 				['showAsResource', 'boolean'],
+				['spentByFeaturesOnly', 'boolean'],
 				[
 					'recoveries',
 					'Array<{ trigger: string; mode: string; value: string; predicate: object }>',
