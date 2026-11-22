@@ -348,11 +348,14 @@ describe('Withering Strike', () => {
 		expect(rules[0]).toEqual(expect.objectContaining({ type: 'tags', tags: ['target:undead'] }));
 	});
 
-	it('applies to the targets at the root, with no damage step', () => {
-		const steps = stepsApplying(item, effect._id);
-		expect(steps).toHaveLength(1);
-		expect((steps[0] as Json).recipient).toBe('targets');
-		expectAtRoot(item, steps[0] as Json);
-		expect(nodesOfType(item, 'damage')).toEqual([]);
+	it('is put on the enemy a Coordinated Strike! attack hits or crits, with no activation step', () => {
+		expect(stepsApplying(item, effect._id)).toEqual([]);
+		const rules = (item.system.rules as Json[]).filter((rule) => rule.type === 'applyCondition');
+		expect(rules.map((rule) => rule.trigger).sort()).toEqual(['onCrit', 'onHit']);
+		for (const rule of rules) {
+			expect(rule).toEqual(
+				expect.objectContaining({ effectId: effect._id, attackOrigin: 'coordinated-strike' }),
+			);
+		}
 	});
 });
