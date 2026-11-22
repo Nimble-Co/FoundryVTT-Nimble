@@ -8,7 +8,8 @@
 			"character": "Player Character",
 			"minion": "Minion",
 			"npc": "Standard",
-			"soloMonster": "Solo Monster"
+			"soloMonster": "Solo Monster",
+			"partyInventory": "Party Inventory"
 		},
 		"Item": {
 			"background": "Background",
@@ -326,8 +327,11 @@
 					"howMany": "How many {name}?",
 					"howManyTitle": "How many?",
 					"howManyConfirm": "Move",
-					"unequipToGive": "{name} is equipped. It arrives unequipped.",
-					"unequipToGiveTitle": "Unequip to give",
+					"unequipToGive": "{name} is equipped. It will be unequipped before it moves to {destination}.",
+					"unequipToGiveTitle": "Unequip {name}",
+					"moveConfirm": "{name} will move to {destination}.",
+					"moveConfirmTitle": "Move {name}",
+					"namedInventory": "the {name} inventory",
 					"gave": "{user} gave {item} to {destination}.",
 					"gaveCount": "{user} gave {count} {item} to {destination}.",
 					"gaveCoins": "{user} gave {amount} to {destination}.",
@@ -4999,6 +5003,7 @@
 			"playerCharacter": "Character sheet (old)",
 			"hero": "Character sheet",
 			"monster": "NPC sheet",
+			"partyInventory": "Party inventory",
 			"ancestry": "Nimble Ancestry Sheet",
 			"ancestryBonus": "Nimble Ancestry Bonus Sheet",
 			"soloMonster": "Nimble Solo Monster Sheet",

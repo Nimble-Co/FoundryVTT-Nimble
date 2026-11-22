@@ -10,7 +10,7 @@ One thing in a list on the character sheet: an item, a spell, a feature, a react
 An item that you can equip gets `onequip`: the tag after the name is then a toggle, EQUIPPED or EQUIP.
 The row stays one button with the tag on top of it.
 
-In edit mode, `fields` replaces the cost with the numbers that you type, and the row does not act. `dim` fades a row that has no window.
+In edit mode, `fields` replaces the cost with the numbers that you type, and the row does not act. `end` is controls after the cost and before the pen. `dim` fades a row that has no window.
 -->
 <script lang="ts">
 	import type { RowProps } from '#types/components/actorSheets/Row.d.ts';
@@ -45,6 +45,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 		onedit,
 		hasWindow = true,
 		fields,
+		end,
 		dim = false,
 		children,
 		touch = false,
@@ -144,6 +145,7 @@ In edit mode, `fields` replaces the cost with the numbers that you type, and the
 				<span>{escapeButton.label}</span>
 			</button>
 		{/if}
+		{@render end?.()}
 		<RowButton kind={hasWindow ? 'edit' : 'spacer'} {name} {touch} onclick={onedit} />
 	</div>
 	{#if open}

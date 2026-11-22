@@ -121,16 +121,38 @@ describe('HeroInventoryTab', () => {
 		});
 	});
 
-	it('types a quantity in edit mode', async () => {
-		const { perform } = renderTab(containerHero(), true);
-		const quantity = screen.getByRole('spinbutton', {
+	it('types a quantity on the row, before the ellipsis and the edit button', async () => {
+		const { perform } = renderTab();
+		const row = rowEl('torch');
+		if (!row) throw new Error('no torch row');
+		const bar = row.querySelector('.rw');
+		if (!bar) throw new Error('no row bar');
+		const quantity = within(row).getByRole('spinbutton', {
 			name: new RegExp(`${INV}.quantityOf.*Torch`),
 		});
+		const menu = within(row).getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) });
+		const edit = within(row).getByRole('button', { name: 'Configure Torch' });
+
+		expect(bar.contains(quantity)).toBe(true);
+		expect(within(row).queryByText(`${INV}.quantity {"count":"3"}`)).toBeNull();
+		expect(quantity.compareDocumentPosition(menu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(menu.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(getComputedStyle(menu).position).not.toBe('absolute');
 
 		await fireEvent.input(quantity, { target: { value: '5' } });
 		await fireEvent.blur(quantity);
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'setQuantity', itemId: 'torch', value: 5 });
+	});
+
+	it('keeps a single quantity field in edit mode', () => {
+		renderTab(containerHero(), true);
+		const row = rowEl('torch');
+		if (!row) throw new Error('no torch row');
+
+		expect(
+			within(row).getAllByRole('spinbutton', { name: new RegExp(`${INV}.quantityOf.*Torch`) }),
+		).toHaveLength(1);
 	});
 
 	it('asks before it deletes, and Keep deletes nothing', async () => {
@@ -305,7 +327,8 @@ describe('HeroInventoryTab', () => {
 			const { perform } = renderTab(containerHero(), false, { context: partyContext() });
 
 			await fireEvent.contextMenu(rowEl('torch')!);
-			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.giveTo` }));
+			expect(screen.getByText(`${INV}.giveTo`)).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: `${INV}.giveTo` })).toBeNull();
 			await fireEvent.click(screen.getByRole('menuitem', { name: 'Bob' }));
 
 			expect(perform).toHaveBeenCalledWith({
@@ -330,6 +353,20 @@ describe('HeroInventoryTab', () => {
 			await open();
 			await fireEvent.keyDown(document, { key: 'Escape' });
 			expect(screen.queryByRole('menu')).toBeNull();
+		});
+
+		it('shows a stash stack as text, with the ellipsis after it', () => {
+			renderTab(containerHero(), false, { party: true, context: partyContext() });
+			const row = rowEl('torch');
+			if (!row) throw new Error('no torch row');
+			const count = within(row).getByText(`${INV}.quantity {"count":"3"}`);
+			const menu = within(row).getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) });
+
+			expect(
+				within(row).queryByRole('spinbutton', { name: new RegExp(`${INV}.quantityOf.*Torch`) }),
+			).toBeNull();
+			expect(count.compareDocumentPosition(menu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+			expect(getComputedStyle(menu).position).not.toBe('absolute');
 		});
 
 		it('moves a stash object onto this character', async () => {

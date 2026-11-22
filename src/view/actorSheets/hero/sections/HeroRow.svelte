@@ -25,12 +25,11 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	const uid = $props.id();
 	const c = heroRowControls(() => ({ row, ui, perform }));
 	const menuOpen = $derived(Boolean(row.share) && ui.menuRowId === row.id);
-	let giveOpen = $state(false);
+	const quantityField = $derived(row.fields.find((field) => field.kind === 'quantity'));
 
 	function toggleMenu(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
-		giveOpen = false;
 		setMenuRow(ui, menuOpen ? null : row.id);
 	}
 
@@ -38,7 +37,6 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		if (!row.share) return;
 		event.preventDefault();
 		event.stopPropagation();
-		giveOpen = false;
 		setMenuRow(ui, row.id);
 	}
 
@@ -90,19 +88,9 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 			{/each}
 		</select>
 	{/if}
-	{#each row.fields as field (field.kind === 'uses' ? field.poolId : 'quantity')}
-		<span class="us">
-			{#if field.kind === 'quantity'}
-				<span class="mx">x</span><InlineNumber
-					value={field.value}
-					label={field.label}
-					min={0}
-					dotted
-					width="22px"
-					variant="cost"
-					onchange={(value) => perform({ kind: 'setQuantity', itemId: field.itemId, value })}
-				/>
-			{:else}
+	{#each row.fields as field (field.kind === 'uses' ? field.poolId : field.itemId)}
+		{#if field.kind === 'uses'}
+			<span class="us">
 				<InlineNumber
 					value={field.value}
 					label={field.label}
@@ -115,8 +103,8 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 				/>{#if !field.hideMax}<span class="mx">/{field.max}</span>{/if}{#if field.per}<small
 						>{field.per}</small
 					>{/if}
-			{/if}
-		</span>
+			</span>
+		{/if}
 	{/each}
 	{#if row.remove}
 		<button
@@ -159,7 +147,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		summary={row.summary}
 		summaryIcon={row.summaryIcon}
 		summaryTone={row.summaryTone}
-		cost={row.cost}
+		cost={quantityField ? { ...row.cost, text: undefined } : row.cost}
 		description={row.description}
 		descriptionHtml={row.descriptionHtml}
 		facts={row.facts}
@@ -182,6 +170,72 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		fields={c.editing && c.hasFields ? fields : undefined}
 		dim={c.editing && !c.hasFields && !row.edit}
 	>
+		{#snippet end()}
+			{#if quantityField}
+				{@const quantity = quantityField}
+				<span class="us">
+					<span class="mx">x</span><InlineNumber
+						value={quantity.value}
+						label={quantity.label}
+						min={0}
+						dotted
+						width="22px"
+						variant="cost"
+						onchange={(value) => perform({ kind: 'setQuantity', itemId: quantity.itemId, value })}
+					/>
+				</span>
+			{/if}
+			{#if row.share}
+				<span class="share">
+					<button
+						type="button"
+						id="{uid}-menu-button"
+						class="nimble-u-reset-button more"
+						aria-label={row.share.label}
+						aria-haspopup="menu"
+						aria-expanded={menuOpen}
+						onclick={toggleMenu}
+						onpointerdown={(event) => event.stopPropagation()}
+					>
+						<i class="fa-solid fa-ellipsis"></i>
+					</button>
+					{#if menuOpen}
+						{@const share = row.share}
+						<div
+							id="{uid}-menu"
+							class="menu"
+							role="menu"
+							tabindex="-1"
+							onpointerdown={(event) => event.stopPropagation()}
+						>
+							{#each share.entries as entry (entry.id)}
+								<button
+									type="button"
+									class="nimble-u-reset-button"
+									role="menuitem"
+									onclick={() => choose(entry.intent)}
+								>
+									{entry.label}
+								</button>
+							{/each}
+							{#if share.give}
+								<div class="menu-label">{share.give.label}</div>
+								{#each share.give.entries as entry (entry.id)}
+									<button
+										type="button"
+										class="nimble-u-reset-button sub"
+										role="menuitem"
+										onclick={() => choose(entry.intent)}
+									>
+										{entry.label}
+									</button>
+								{/each}
+							{/if}
+						</div>
+					{/if}
+				</span>
+			{/if}
+		{/snippet}
 		{#if c.stepOpen && row.choice}
 			<HeroRowChoice step={row.choice} {perform} onclose={() => closeChoice(ui)} />
 		{/if}
@@ -196,64 +250,6 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 			</div>
 		{/if}
 	</Row>
-	{#if row.share}
-		<button
-			type="button"
-			id="{uid}-menu-button"
-			class="nimble-u-reset-button more"
-			aria-label={row.share.label}
-			aria-haspopup="menu"
-			aria-expanded={menuOpen}
-			onclick={toggleMenu}
-			onpointerdown={(event) => event.stopPropagation()}
-		>
-			<i class="fa-solid fa-ellipsis"></i>
-		</button>
-	{/if}
-	{#if menuOpen && row.share}
-		{@const share = row.share}
-		<div
-			id="{uid}-menu"
-			class="menu"
-			role="menu"
-			tabindex="-1"
-			onpointerdown={(event) => event.stopPropagation()}
-		>
-			{#each share.entries as entry (entry.id)}
-				<button
-					type="button"
-					class="nimble-u-reset-button"
-					role="menuitem"
-					onclick={() => choose(entry.intent)}
-				>
-					{entry.label}
-				</button>
-			{/each}
-			{#if share.give}
-				<button
-					type="button"
-					class="nimble-u-reset-button"
-					role="menuitem"
-					aria-expanded={giveOpen}
-					onclick={() => (giveOpen = !giveOpen)}
-				>
-					{share.give.label}
-				</button>
-				{#if giveOpen}
-					{#each share.give.entries as entry (entry.id)}
-						<button
-							type="button"
-							class="nimble-u-reset-button sub"
-							role="menuitem"
-							onclick={() => choose(entry.intent)}
-						>
-							{entry.label}
-						</button>
-					{/each}
-				{/if}
-			{/if}
-		</div>
-	{/if}
 </div>
 
 <style>
@@ -264,15 +260,15 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	.menu-open {
 		z-index: 3;
 	}
+	.share {
+		position: relative;
+		flex: none;
+	}
 	.more {
-		position: absolute;
-		top: 8px;
-		right: 32px;
-		z-index: 2;
 		display: grid;
 		place-items: center;
-		width: 24px;
-		height: 28px;
+		width: 30px;
+		height: 36px;
 		border-radius: 4px;
 		color: var(--nimble-ui-ink-muted);
 	}
@@ -285,8 +281,8 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	}
 	.menu {
 		position: absolute;
-		top: 40px;
-		right: 32px;
+		top: 100%;
+		right: 0;
 		z-index: 4;
 		min-width: 11rem;
 		padding: 4px;
@@ -308,6 +304,11 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 	.menu button:focus-visible {
 		background: var(--nimble-ui-hover);
 		outline: none;
+	}
+	.menu-label {
+		padding: 6px 8px 2px;
+		font: 600 0.75rem/1.2 var(--nimble-primary-font);
+		color: var(--nimble-ui-ink-muted);
 	}
 	.menu button.sub {
 		padding-left: 16px;

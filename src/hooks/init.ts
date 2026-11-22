@@ -47,6 +47,7 @@ import { configureEffectExpiry } from '../utils/lastsUntil/configureExpiry.js';
 import { registerMovementActions } from '../utils/movement/movementActions.js';
 import HeroSheet from '../view/actorSheets/hero/HeroSheetApplication.svelte.js';
 import MonsterSheet from '../view/actorSheets/monster/MonsterSheetApplication.svelte.js';
+import PartyInventorySheet from '../view/actorSheets/partyInventory/PartyInventorySheetApplication.svelte.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -196,6 +197,16 @@ export default function init() {
 			types: ['npc', 'soloMonster', 'minion'],
 			makeDefault: true,
 			label: 'NIMBLE.sheets.monster',
+		},
+	);
+
+	foundry.documents.collections.Actors.registerSheet(
+		SYSTEM_ID,
+		PartyInventorySheet as unknown as ActorSheetConstructor,
+		{
+			types: ['partyInventory'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.partyInventory',
 		},
 	);
 

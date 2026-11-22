@@ -1,0 +1,64 @@
+import { describe, expect, it } from 'vitest';
+import { SYSTEM_PATH } from '#system';
+import {
+	PARTY_INVENTORY_IMAGE,
+	PARTY_INVENTORY_NAME,
+} from '../../../settings/partyStashSetting.ts';
+import { NimblePartyInventory } from '../partyInventory.ts';
+
+describe('NimblePartyInventory', () => {
+	function actor(): NimblePartyInventory {
+		return new NimblePartyInventory({
+			name: 'Goblin',
+			img: 'icons/svg/mystery-man.svg',
+			type: 'partyInventory',
+		} as never);
+	}
+
+	it('cannot be deleted, and can still be edited', async () => {
+		const inventory = actor();
+		const parent = Object.getPrototypeOf(NimblePartyInventory.prototype) as {
+			canUserModify?: (user: unknown, action: string) => boolean;
+		};
+		const original = parent.canUserModify;
+		const seen: string[] = [];
+		parent.canUserModify = (_user, action) => {
+			seen.push(action);
+			return true;
+		};
+		try {
+			expect(inventory.canUserModify({} as never, 'delete')).toBe(false);
+			expect(inventory.canUserModify({} as never, 'update')).toBe(true);
+			expect(seen).toEqual(['update']);
+		} finally {
+			parent.canUserModify = original;
+		}
+		const deleting = inventory as unknown as {
+			_preDelete(options: object, user: object): Promise<boolean>;
+		};
+		expect(await deleting._preDelete({}, {})).toBe(false);
+	});
+
+	it('uses the party chest, named Party Inventory', () => {
+		expect(NimblePartyInventory.getDefaultArtwork().img).toBe(PARTY_INVENTORY_IMAGE);
+		expect(PARTY_INVENTORY_IMAGE).toBe(`${SYSTEM_PATH}/assets/icons/party-inventory.svg`);
+		expect(PARTY_INVENTORY_NAME).toBe('Party Inventory');
+	});
+
+	it('keeps the party name and chest when a rename comes in', async () => {
+		const inventory = actor();
+		const parent = Object.getPrototypeOf(NimblePartyInventory.prototype) as {
+			_preUpdate?: (...args: unknown[]) => Promise<unknown>;
+		};
+		const original = parent._preUpdate;
+		parent._preUpdate = async () => true;
+		const changes = { name: 'Goblin', img: 'icons/svg/mystery-man.svg' };
+		try {
+			await inventory._preUpdate(changes as never, {} as never, {} as never);
+		} finally {
+			parent._preUpdate = original;
+		}
+		expect(changes.name).toBe(PARTY_INVENTORY_NAME);
+		expect(changes.img).toBe(PARTY_INVENTORY_IMAGE);
+	});
+});

@@ -3,6 +3,7 @@ import { NimbleBaseActor } from '../documents/actor/base.svelte.js';
 import { NimbleCharacter } from '../documents/actor/character.js';
 import { NimbleMinion } from '../documents/actor/minion.js';
 import { NimbleNPC } from '../documents/actor/npc.js';
+import { NimblePartyInventory } from '../documents/actor/partyInventory.js';
 import { NimbleSoloMonster } from '../documents/actor/soloMonster.js';
 // Chat Messages
 import { NimbleChatMessage } from '../documents/chatMessage.js';
@@ -37,6 +38,7 @@ export default function registerDocumentConfig() {
 				soloMonster: NimbleSoloMonster,
 				npc: NimbleNPC,
 				minion: NimbleMinion,
+				partyInventory: NimblePartyInventory,
 			},
 		},
 		ChatMessage: {

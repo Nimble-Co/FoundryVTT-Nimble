@@ -10,7 +10,7 @@
 
 <article>
 	<ul class="nimble-actor-type-list">
-		{#each Object.keys(documentClasses) as actorType}
+		{#each Object.keys(documentClasses).filter((actorType) => actorType !== 'partyInventory') as actorType}
 			{@const actorTypeName = localize(`TYPES.Actor.${actorType}`)}
 
 			<li class="nimble-actor-type-list__option nimble-card">

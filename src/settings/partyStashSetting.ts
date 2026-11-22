@@ -1,4 +1,4 @@
-import { SYSTEM_ID, systemHookName } from '#system';
+import { SYSTEM_ID, SYSTEM_PATH, systemHookName } from '#system';
 import type { TransferItem } from '#utils/partyStash/planItemTransfer.ts';
 
 export const PARTY_STASH_SETTING = 'partyStash';
@@ -20,12 +20,24 @@ export interface PartyStash {
 const COINS = ['gp', 'sp', 'cp'] as const;
 const HOLDER_FLAG = 'partyStashHolder';
 const STASH_FLAG = 'partyStash';
+const PARTY_INVENTORY_TYPE = 'partyInventory';
+export const PARTY_INVENTORY_NAME = 'Party Inventory';
+export const PARTY_INVENTORY_IMAGE = `${SYSTEM_PATH}/assets/icons/party-inventory.svg`;
+
+interface PartyOwnership {
+	default: number;
+}
 
 interface PartyHolder {
 	name?: string | null;
+	img?: string | null;
+	type?: string;
+	ownership?: object;
 	getFlag?(scope: string, key: string): unknown;
 	setFlag?(scope: string, key: string, value: unknown): Promise<unknown>;
 	testUserPermission?(user: unknown, permission: string | number): boolean;
+	update?(data: object): Promise<unknown>;
+	delete?(): Promise<unknown>;
 }
 
 export function emptyPartyStash(): PartyStash {
@@ -48,19 +60,35 @@ function partyHolders(): PartyHolder[] {
 	return actors ? [...actors] : [];
 }
 
-/** The npc every player can edit. Absent until a GM has opened the world once. */
+function isPartyStashHolder(actor: PartyHolder): boolean {
+	return actor.getFlag?.(SYSTEM_ID, HOLDER_FLAG) === true;
+}
+
+/** The party inventory actor every player can edit. Absent until a GM has opened the world once. */
 export function findPartyHolder(): PartyHolder | null {
-	return partyHolders().find((actor) => actor.getFlag?.(SYSTEM_ID, HOLDER_FLAG) === true) ?? null;
+	return partyHolders().find(isPartyStashHolder) ?? null;
+}
+
+interface ActorDirectoryCollection {
+	_getVisibleTreeContents(): PartyHolder[];
+	initializeTree(): void;
+}
+
+/** The holder is an actor every player owns, so Foundry would list it. Leave it out of the Actors sidebar. */
+export function hidePartyStashHolder(): void {
+	const actors = game.actors as unknown as ActorDirectoryCollection | undefined;
+	if (!actors?._getVisibleTreeContents) return;
+	const listVisibleActors = actors._getVisibleTreeContents.bind(actors);
+	actors._getVisibleTreeContents = () =>
+		listVisibleActors().filter((actor) => !isPartyStashHolder(actor));
+	actors.initializeTree();
 }
 
 export function canWritePartyStash(user: { isGM?: boolean } | null | undefined): boolean {
 	if (user?.isGM) return true;
 	const holder = findPartyHolder();
 	if (!holder || !user) return false;
-	const level =
-		(globalThis as { CONST?: { DOCUMENT_OWNERSHIP_LEVELS?: { OWNER?: number } } }).CONST
-			?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
-	return Boolean(holder.testUserPermission?.(user, level));
+	return Boolean(holder.testUserPermission?.(user, ownerLevel()));
 }
 
 function readSetting(): PartyStash {
@@ -110,25 +138,70 @@ export async function writePartyStash(stash: PartyStash): Promise<void> {
 	await game.settings.set(SYSTEM_ID as 'core', PARTY_STASH_SETTING as 'rollMode', stash as never);
 }
 
-/** Creates the shared actor and copies the world setting into it. A GM has to do this once. */
-export async function ensurePartyStashHolder(): Promise<void> {
-	if (game.user?.isGM !== true || findPartyHolder()) return;
-	const ownership = {
-		default:
-			(globalThis as { CONST?: { DOCUMENT_OWNERSHIP_LEVELS?: { OWNER?: number } } }).CONST
-				?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3,
+function ownerLevel(): number {
+	return (
+		(globalThis as { CONST?: { DOCUMENT_OWNERSHIP_LEVELS?: { OWNER?: number } } }).CONST
+			?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3
+	);
+}
+
+function partyInventoryPortrait() {
+	return {
+		name: PARTY_INVENTORY_NAME,
+		img: PARTY_INVENTORY_IMAGE,
+		prototypeToken: {
+			name: PARTY_INVENTORY_NAME,
+			texture: { src: PARTY_INVENTORY_IMAGE },
+		},
 	};
-	await Actor.create({
-		name: 'Party Inventory',
-		type: 'npc',
-		ownership,
+}
+
+/** The document to create for a missing holder, or for one that is still a creature. */
+export function partyInventoryReplacement(
+	holder: Pick<PartyHolder, 'type' | 'ownership' | 'getFlag'> | null,
+	fallback: PartyStash,
+	ownership: PartyOwnership,
+) {
+	if (holder?.type === PARTY_INVENTORY_TYPE) return null;
+	const stash = holder ? normalizePartyStash(holder.getFlag?.(SYSTEM_ID, STASH_FLAG)) : fallback;
+	const copied = holder?.ownership as { default?: number } | undefined;
+	return {
+		...partyInventoryPortrait(),
+		type: PARTY_INVENTORY_TYPE,
+		ownership: typeof copied?.default === 'number' ? copied : ownership,
 		flags: {
 			[SYSTEM_ID]: {
 				[HOLDER_FLAG]: true,
-				[STASH_FLAG]: readSetting(),
+				[STASH_FLAG]: stash,
 			},
 		},
-	} as unknown as Actor.CreateData);
+	};
+}
+
+/**
+ * Name and portrait for a holder that is already a party inventory.
+ * Null when it already has both, so a ready hook does not write every time.
+ */
+export function partyInventoryIdentity(
+	holder: Pick<PartyHolder, 'type' | 'name' | 'img'> | null,
+): ReturnType<typeof partyInventoryPortrait> | null {
+	if (holder?.type !== PARTY_INVENTORY_TYPE) return null;
+	if (holder.name === PARTY_INVENTORY_NAME && holder.img === PARTY_INVENTORY_IMAGE) return null;
+	return partyInventoryPortrait();
+}
+
+/** Creates the party inventory actor, or replaces a creature holder with one. A GM has to open the world once. */
+export async function ensurePartyStashHolder(): Promise<void> {
+	if (game.user?.isGM !== true) return;
+	const holder = findPartyHolder();
+	const data = partyInventoryReplacement(holder, readSetting(), { default: ownerLevel() });
+	if (data) {
+		const created = await Actor.create(data as unknown as Actor.CreateData);
+		if (created && holder) await holder.delete?.();
+		return;
+	}
+	const identity = partyInventoryIdentity(holder);
+	if (identity) await holder?.update?.(identity);
 }
 
 export function partyCoin(coin: string): coin is (typeof COINS)[number] {

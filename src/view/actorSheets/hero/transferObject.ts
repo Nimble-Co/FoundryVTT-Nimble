@@ -77,11 +77,20 @@ function quantityDialogContent(question: string, have: number): string {
 	</div>`;
 }
 
-async function askQuantity(name: string, have: number): Promise<number | null> {
+async function askQuantity(
+	name: string,
+	have: number,
+	equippedNote: string | null,
+): Promise<number | null> {
 	const question = localize(`${INV}.howMany`, { name: escapeHtml(name) });
+	const note = equippedNote ? `<p>${equippedNote}</p>` : '';
 	const chosen = (await foundry.applications.api.DialogV2.wait({
-		window: { title: localize(`${INV}.howManyTitle`) },
-		content: quantityDialogContent(question, have),
+		window: {
+			title: equippedNote
+				? localize(`${INV}.unequipToGiveTitle`, { name })
+				: localize(`${INV}.howManyTitle`),
+		},
+		content: `${note}${quantityDialogContent(question, have)}`,
 		buttons: [
 			{
 				action: 'move',
@@ -104,18 +113,38 @@ async function askQuantity(name: string, have: number): Promise<number | null> {
 	return quantity;
 }
 
-async function confirmUnequip(name: string): Promise<boolean> {
+function actorName(actorId: string): string {
+	const actors = game.actors as
+		| { get?: (id: string) => { name?: string | null } | null }
+		| undefined;
+	const name = actors?.get?.(actorId)?.name;
+	return typeof name === 'string' ? name : '';
+}
+
+function destinationPhrase(
+	actor: NimbleCharacter,
+	destination: TransferIntent['destination'],
+): string {
+	if (destination.kind === 'stash') return localize(`${INV}.partyName`);
+	const name =
+		actorName(destination.actorId) ||
+		(destination.actorId === actor.id ? actor.name : '') ||
+		destination.actorId;
+	return localize(`${INV}.namedInventory`, { name: escapeHtml(name) });
+}
+
+async function confirmText(title: string, body: string): Promise<boolean> {
 	return Boolean(
 		await foundry.applications.api.DialogV2.confirm({
-			window: { title: localize(`${INV}.unequipToGiveTitle`) },
-			content: `<p>${localize(`${INV}.unequipToGive`, { name: escapeHtml(name) })}</p>`,
+			window: { title },
+			content: `<p>${body}</p>`,
 			rejectClose: false,
 			modal: true,
 		}),
 	);
 }
 
-/** Asks how many, and whether to unequip, then moves the object. */
+/** One confirmation. A stack counts in that dialog. An equipped object says it will be unequipped there too. */
 export async function transferObject(
 	actor: NimbleCharacter,
 	intent: TransferIntent,
@@ -124,10 +153,28 @@ export async function transferObject(
 	if (!held) return;
 	const have = quantityOf(held.system);
 	const container = isContainer(held.system);
-	const quantity = !container && have > 1 ? await askQuantity(held.name, have) : have;
+	const equipped = held.system.equipped === true;
+	const destination = destinationPhrase(actor, intent.destination);
+	const equippedNote = equipped
+		? localize(`${INV}.unequipToGive`, { name: escapeHtml(held.name), destination })
+		: null;
+	let quantity: number | null = have;
+	if (!container && have > 1) {
+		quantity = await askQuantity(held.name, have, equippedNote);
+	} else if (equippedNote) {
+		const accepted = await confirmText(
+			localize(`${INV}.unequipToGiveTitle`, { name: held.name }),
+			equippedNote,
+		);
+		quantity = accepted ? have : null;
+	} else {
+		const accepted = await confirmText(
+			localize(`${INV}.moveConfirmTitle`, { name: held.name }),
+			localize(`${INV}.moveConfirm`, { name: escapeHtml(held.name), destination }),
+		);
+		quantity = accepted ? have : null;
+	}
 	if (quantity === null) return;
-	const leavesEquipped = held.system.equipped === true && quantity >= have;
-	if (leavesEquipped && !(await confirmUnequip(held.name))) return;
 	await requestItemTransfer({
 		source: intent.source,
 		sourceActorId: intent.sourceActorId,

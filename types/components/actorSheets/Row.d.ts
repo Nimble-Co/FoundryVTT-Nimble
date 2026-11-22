@@ -49,6 +49,8 @@ export interface RowProps {
 	hasWindow?: boolean;
 	/** edit mode: the numbers that you type, in place of the cost */
 	fields?: Snippet;
+	/** controls after the cost and before the pen */
+	end?: Snippet;
 	/** edit mode: a row with no window, faded */
 	dim?: boolean;
 	/** under the row: its choices, or a question */

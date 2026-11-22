@@ -6,13 +6,22 @@ interface CombatLike {
 	combatant?: { tokenId: string | null; sceneId: string | null } | null;
 }
 
+interface MovingActor {
+	type?: string;
+	system?: object;
+}
+
 interface MovingToken {
 	id: string | null;
 	parent?: { id?: string | null } | null;
-	actor?: {
-		type?: string;
-		system?: { attributes?: { movement?: Partial<Record<string, number>> } };
-	} | null;
+	actor?: MovingActor | null;
+}
+
+function movementOf(actor: MovingActor): Partial<Record<string, number>> {
+	const attributes = (
+		actor.system as { attributes?: { movement?: Partial<Record<string, number>> } }
+	)?.attributes;
+	return attributes?.movement ?? {};
 }
 
 export interface MoveBandOptions {
@@ -37,7 +46,7 @@ export function getMoveBandOptions(
 		const combatant = combat.combatant;
 		if (!combat.started || combatant?.tokenId !== token.id || combatant.sceneId !== sceneId)
 			continue;
-		const movement = actor.system?.attributes?.movement ?? {};
+		const movement = movementOf(actor);
 		const walk = movement.walk ?? 0;
 		return {
 			speedFor: (action) => {
