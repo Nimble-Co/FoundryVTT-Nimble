@@ -39,6 +39,7 @@ import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import localize from '#utils/localize.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
 import { attackRollModeOf, rollModeWith } from '#utils/rolls/attackRollMode.js';
+import { freeAttackNote } from '#utils/rolls/freeAttackNote.js';
 import { soleTarget } from '#utils/tokens/soleTarget.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 import {
@@ -51,7 +52,6 @@ import {
 	rollTypedOfferDamage,
 } from '../../managers/itemActivation/offerBonus.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
-import { freeAttackNote } from '../../view/dialogs/components/rollSpendLine.js';
 import { statsInFormula } from '../reroll/rollStat.js';
 
 /**

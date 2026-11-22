@@ -114,6 +114,7 @@ import {
 } from '../utils/rolls/attackRollMode.js';
 import { conditionRollModes } from '../utils/rolls/conditionRollModes.js';
 import { checkFormulaReferences } from '../utils/rolls/formulaReferences.js';
+import { freeAttackNote } from '../utils/rolls/freeAttackNote.js';
 import getRollFormula from '../utils/rolls/getRollFormula.js';
 import { fixSaveDCs } from '../utils/rolls/saveNodeDC.js';
 import {
@@ -140,7 +141,6 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
-import { freeAttackNote } from '../view/dialogs/components/rollSpendLine.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,

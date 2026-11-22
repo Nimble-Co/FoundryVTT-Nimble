@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { freeAttackNote } from '../rollSpendLine.ts';
+import { freeAttackNote } from '../freeAttackNote.ts';
 
 describe('freeAttackNote', () => {
 	it('names the feature and says the attack spends no action', () => {
