@@ -75,7 +75,6 @@ import {
 	type WeaponOption,
 	weaponAttackOf,
 	weaponOptionsFor,
-	withWeaponEffects,
 } from '../utils/damage/weaponAttack.js';
 import {
 	emitDicePoolChanged,
@@ -132,6 +131,7 @@ import { soleTarget } from '../utils/tokens/soleTarget.js';
 import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
