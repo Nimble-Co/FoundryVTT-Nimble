@@ -756,6 +756,16 @@
 				"ended": "Ended after it answered the attack"
 			},
 			"applyLatchedDamage": "Apply {amount} Damage to {name}",
+			"damageForTarget": "{type} to {name}",
+			"ricochet": {
+				"line": "Ricochet ({source}): half the damage, rounded down, to another creature within {reach} spaces.",
+				"lineAnyReach": "Ricochet ({source}): half the damage, rounded down, to another creature.",
+				"pick": "Ricochet to {name}",
+				"apply": "Apply {amount} Damage to {name}",
+				"noTarget": "Target another creature",
+				"waitsForGm": "{name} takes it when the GM applies it.",
+				"applied": "Applied to {name}."
+			},
 			"escapeDamage": {
 				"cause": "Escaped {effect} - {formula}"
 			},
@@ -2095,6 +2105,8 @@
 			"escapeDamage": "Damage on escape",
 			"extraTargets": "Extra Targets",
 			"grantTargetBonus": "Grant Activation Targets",
+			"ricochet": "Ricochet",
+			"divideDice": "Divide Dice",
 			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
@@ -3983,6 +3995,25 @@
 					"hint": "How many more targeted creatures the rule reaches."
 				}
 			},
+			"divideDice": {
+				"description": "The player divides the dice of an attack made through one feature among its targets. The roll window shows a row for each target; all the dice must be given out before the roll. One roll: each target takes its dice through its own armor, and the first target with dice also takes the flat damage. A crit or a miss is the whole attack's. Damage marked Divides with the dice is divided the same way."
+			},
+			"ricochet": {
+				"description": "A hit with a fitting weapon ricochets to another creature. The attack card shows a line after the hit: the player targets the creature, and it takes half of the attack's damage, rounded down, through its own armor. The GM applies it. The reach is shown, not checked.",
+				"weapon": {
+					"label": "Weapon",
+					"hint": "The weapon type, or a word of the weapon's name, such as dagger. A plural name counts too. Blank: any weapon."
+				},
+				"weaponProperty": {
+					"label": "Weapon property",
+					"hint": "The property the weapon must have, such as Thrown.",
+					"any": "Any"
+				},
+				"reach": {
+					"label": "Within spaces",
+					"hint": "How far from the first target the other creature can be, shown on the line. 0: no distance is shown."
+				}
+			},
 			"zeroHpAtEnd": {
 				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
 			},
@@ -5796,6 +5827,8 @@
 			"deferredRoll": "Roll Damage From Card",
 			"deferredRollHint": "Leave this damage unrolled when the card is posted and show a Roll Damage button instead. For damage that triggers later than the activation itself.",
 			"ignoreArmor": "Ignore Armor",
+			"dividesWithDice": "Divides With the Dice",
+			"dividesWithDiceHint": "Damage for all the dice of the first damage roll, such as DEX for each die. When a Divide Dice rule divides those dice among targets, each target takes its part of this damage.",
 			"onlyDamageHostile": "Only Damage Hostile Actors",
 			"rollFormula": "Roll Formula",
 			"damageType": "Damage Type",
@@ -5916,6 +5949,13 @@
 			}
 		},
 		"rollWindow": {
+			"divideDice": {
+				"heading": "Divide the dice ({source})",
+				"given": "{given} of {dice} dice given out",
+				"giveAll": "Give out every die before you roll.",
+				"decrement": "One less die for {name}",
+				"increment": "One more die for {name}"
+			},
 			"weapon": "Weapon",
 			"weaponsEquipped": "Equipped",
 			"weaponsNotEquipped": "Not equipped",

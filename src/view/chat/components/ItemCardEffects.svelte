@@ -5,6 +5,7 @@
 	import { isDamageGroup } from './damageGroup.ts';
 	import ApplyDamageButton from './ApplyDamageButton.svelte';
 	import LatchedMissButton from './LatchedMissButton.svelte';
+	import RicochetLine from './RicochetLine.svelte';
 	import DamageBackLines from './DamageBackLines.svelte';
 	import DefendReactions from './DefendReactions.svelte';
 	import IncomingReactionPrompts from './IncomingReactionPrompts.svelte';
@@ -50,6 +51,7 @@
 
 				{#if nodeGroup === firstDamageGroup}
 					<DefendReactions />
+					<RicochetLine />
 				{/if}
 
 				{#if game.user?.isGM}

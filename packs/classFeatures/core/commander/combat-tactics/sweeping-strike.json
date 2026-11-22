@@ -21,6 +21,27 @@
 			},
 			"effects": [
 				{
+					"id": "sweepingDmg00001",
+					"type": "damage",
+					"damageType": "slashing",
+					"formula": "1d6",
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "sweepingDmg00001Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "sweepingDmg00001"
+							}
+						]
+					}
+				},
+				{
 					"id": "Prn094f0MIvEpsDS",
 					"type": "note",
 					"noteType": "flavor",
@@ -32,14 +53,17 @@
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "reach",
+				"singleTargetAttack": true
 			},
 			"template": {
 				"length": 1,
 				"radius": 1,
 				"shape": "",
 				"width": 1
-			}
+			},
+			"weaponAttack": "melee"
 		},
 		"description": "<p><strong>2 actions:</strong> Select any contiguous area within your weapon's Reach and damage ALL targets there. This attack does not miss on a 1. </p>",
 		"featureType": "class",

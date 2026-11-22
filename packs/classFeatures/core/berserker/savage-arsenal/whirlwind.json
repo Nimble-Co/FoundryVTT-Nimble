@@ -23,25 +23,41 @@
 			},
 			"effects": [
 				{
-					"id": "wwReminderNote001",
-					"type": "note",
-					"noteType": "reminder",
-					"text": "Attack ALL targets within your melee weapon's reach.",
+					"id": "whirlwindDmg0001",
+					"type": "damage",
+					"damageType": "slashing",
+					"formula": "1d6",
+					"canCrit": true,
+					"canMiss": true,
 					"parentContext": null,
-					"parentNode": null
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "whirlwindDmg0001Full",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "whirlwindDmg0001"
+							}
+						]
+					}
 				}
 			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "reach",
+				"singleTargetAttack": true
 			},
 			"template": {
 				"length": 1,
 				"radius": 1,
 				"shape": "",
 				"width": 1
-			}
+			},
+			"weaponAttack": "melee"
 		},
 		"description": "<p>2 actions: Attack ALL targets within your melee weapon's reach.</p>",
 		"featureType": "class",

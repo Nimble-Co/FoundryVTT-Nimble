@@ -20,6 +20,8 @@ A damage entry has a **Roll Formula**, such as dice plus `@strength` or `@key`, 
 The author of the card and the GM can click **Roll Damage**. The roll then works like any other damage roll. Only top-level damage entries have the switch, because damage under an outcome already waits for that outcome. Can Miss and Can Crit still apply to the later roll.
 :::
 
+**Divides With the Dice** is on top-level damage entries after the first. It marks damage for all the dice of the first entry, such as DEX for each die. When a Divide Dice rule lets the player divide those dice among the targets, each target takes its part of this damage, rounded down.
+
 The first damage entry in the list is the attack roll. Only it has the **Can Miss** and **Can Crit** switches, and its result decides whether the card reads as a hit, a miss or a critical hit.
 
 ::: info When crits are suppressed

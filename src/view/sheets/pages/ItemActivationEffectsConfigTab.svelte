@@ -177,6 +177,25 @@
 					</label>
 				{/if}
 
+				{#if !parentNode && node.id !== effects.find((effect) => effect.type === 'damage')?.id}
+					<label class="nimble-field">
+						<input
+							type="checkbox"
+							checked={node.dividesWithDice}
+							onchange={({ target }) =>
+								updateEffectNode(document, effects, node, 'dividesWithDice', target.checked)}
+						/>
+
+						<h5
+							class="nimble-field__label nimble-heading"
+							data-heading-variant="field"
+							data-tooltip={localize('NIMBLE.activationEffects.dividesWithDiceHint')}
+						>
+							{localize('NIMBLE.activationEffects.dividesWithDice')}
+						</h5>
+					</label>
+				{/if}
+
 				<label class="nimble-field">
 					<input
 						type="checkbox"

@@ -30,6 +30,7 @@ import {
 	findRollableDeferredDamageNode,
 } from '#utils/damage/buildDeferredDamagePatch.js';
 import { cardAttackers } from '#utils/damage/cardAttackers.js';
+import { cardRicochet } from '#utils/damage/cardRicochet.js';
 import {
 	findPrimaryDamageNode,
 	foldBonusIntoPrimaryDamage,
@@ -56,6 +57,7 @@ import isTokenDefeated from '#utils/tokens/isTokenDefeated.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { DamageReductionEntry } from '../models/rules/damageReduction.js';
+import type { Ricochet } from '../models/rules/ricochet.js';
 import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
@@ -140,6 +142,8 @@ type DamageApplyOptions = {
 	isCritical?: boolean;
 	/** The attack the damage comes from is a crit. Absent: read `isCritical`. */
 	attackIsCritical?: boolean;
+	/** The token that alone takes this damage. Absent: every target takes it. */
+	forTarget?: string;
 };
 
 interface DamageApplicationTarget {
@@ -185,6 +189,14 @@ export interface TargetDamageBreakdown {
 }
 
 export const LATCHED_DAMAGE_FLAG = 'latchedDamageApplied';
+
+/** The creature a ricochet goes to, and whether its damage is applied. */
+export const RICOCHET_FLAG = 'ricochet';
+
+export interface RicochetRecord {
+	targetUuid?: string;
+	applied?: boolean;
+}
 
 /** A Defend's effect on one token's damage: its armor, or the full effect. */
 type DefendDamage = number | Partial<DefendEffect>;
@@ -607,6 +619,11 @@ function calculateDefenseAdjustedDamage(params: {
 /** One damage packet of a card, as `#collectApplicableDamageRolls` reports it. */
 type DamagePacket = { value: number; options: DamageApplyOptions };
 
+/** The packets one target takes: those for every target, and those for it alone. */
+function packetsFor(packets: DamagePacket[], targetUuid: string): DamagePacket[] {
+	return packets.filter(({ options }) => !options.forTarget || options.forTarget === targetUuid);
+}
+
 interface ResolvedDamageForActor {
 	total: number;
 	components: TargetDamageComponent[];
@@ -826,7 +843,8 @@ function buildDamageApplicationPlan(params: {
 		// armor zeroing it leaves the bank in place.
 		const availableBank = bankedReductionActors.has(actor) ? 0 : getBankedDamageReduction(actor);
 		const usedMaximize = params.areaMaximizeFor?.(actor) ?? null;
-		const packets = usedMaximize ? maximizedPackets(params.packets) : params.packets;
+		const ownPackets = packetsFor(params.packets, uuid);
+		const packets = usedMaximize ? maximizedPackets(ownPackets) : ownPackets;
 		const resolved = resolveDamageForActor(actor, packets, availableBank, defend);
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
@@ -1717,6 +1735,10 @@ class NimbleChatMessage extends ChatMessage {
 							? 'noDamage'
 							: 'fullDamage';
 
+				const { forTarget, sharesAttackRoll } = node as {
+					forTarget?: string;
+					sharesAttackRoll?: boolean;
+				};
 				const nodeMultiplier = (node as { damageMultiplier?: number }).damageMultiplier ?? 1;
 				const multiplier = (outcome === 'halfDamage' ? 0.5 : 1) * nodeMultiplier;
 				const rollTotal = Number(roll.total ?? 0);
@@ -1731,9 +1753,17 @@ class NimbleChatMessage extends ChatMessage {
 						...((node as { modifierOnly?: boolean }).modifierOnly ? { modifierOnly: true } : {}),
 						outcome,
 						...(nodeMultiplier !== 1 ? { damageMultiplier: nodeMultiplier } : {}),
-						roll: roll as unknown as DamageRoll.SerializedData,
-						isCritical: typeof roll.isCritical === 'boolean' ? roll.isCritical : undefined,
+						roll: (sharesAttackRoll
+							? { ...roll, isCritical: system.isCritical === true }
+							: roll) as unknown as DamageRoll.SerializedData,
+						isCritical:
+							typeof roll.isCritical === 'boolean'
+								? roll.isCritical
+								: sharesAttackRoll
+									? system.isCritical === true
+									: undefined,
 						attackIsCritical: system.isCritical === true,
+						...(forTarget ? { forTarget } : {}),
 					},
 				});
 			}
@@ -1752,7 +1782,7 @@ class NimbleChatMessage extends ChatMessage {
 	getDamageBreakdownForTarget(targetUuid: string): TargetDamageBreakdown | null {
 		if (!this.isActivationCard()) return null;
 
-		const damageRolls = this.#applicableDamagePackets();
+		const damageRolls = packetsFor(this.#applicableDamagePackets(), targetUuid);
 		if (damageRolls.length < 1) return null;
 
 		const tokenDocument = fromUuidSync(targetUuid) as TokenDocument | null;
@@ -1788,7 +1818,7 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	previewDamageFor(tokenUuid: string, defend: DefendDamage = 0): number | null {
 		if (!this.isActivationCard()) return null;
-		const packets = this.#applicableDamagePackets();
+		const packets = packetsFor(this.#applicableDamagePackets(), tokenUuid);
 		if (packets.length < 1) return null;
 		const actor = (fromUuidSync(tokenUuid) as TokenDocument | null)?.actor as
 			| Actor.Implementation
@@ -1837,6 +1867,58 @@ class NimbleChatMessage extends ChatMessage {
 		await withDamageCard(this.id, () => resolved.actor.applyDamage(resolved.total));
 		await spendHeldChanges(resolved.usedVulnerabilities, this.#endedLines());
 		await this.setFlag(SYSTEM_ID, LATCHED_DAMAGE_FLAG, true);
+	}
+
+	/** What a hit of this card ricochets with, or null. */
+	ricochet(): Ricochet | null {
+		if (!this.isActivationCard() || this.system.isMiss === true) return null;
+		const attacker = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
+		return cardRicochet(
+			attacker as { rules?: unknown } | null,
+			(this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID] as never,
+		);
+	}
+
+	/** The creature this card's ricochet goes to, and whether its damage is applied. */
+	get ricochetRecord(): RicochetRecord {
+		const flags = (this.flags as Record<string, Record<string, unknown> | undefined>)?.[SYSTEM_ID];
+		return (flags?.[RICOCHET_FLAG] as RicochetRecord | undefined) ?? {};
+	}
+
+	/** Half of the hit, rounded down, after the defenses of the token's creature. */
+	#ricochetOn(tokenUuid: string): (ResolvedDamageForActor & { actor: HpMutableActor }) | null {
+		const actor = (fromUuidSync(tokenUuid) as TokenDocument | null)?.actor as
+			| HpMutableActor
+			| null
+			| undefined;
+		if (!actor) return null;
+		const packets = this.#applicableDamagePackets().map(({ value, options }) => ({
+			value: Math.floor(value / 2),
+			options: { ...options, damageMultiplier: (options.damageMultiplier ?? 1) * 0.5 },
+		}));
+		return packets.length > 0 ? { ...resolveDamageForActor(actor, packets), actor } : null;
+	}
+
+	/** What the ricochet deals to the token's creature, or null when nothing can be dealt. */
+	ricochetDamage(tokenUuid: string): number | null {
+		if (!this.ricochet()) return null;
+		return this.#ricochetOn(tokenUuid)?.total ?? null;
+	}
+
+	/** The creature a player picks for the ricochet, for the GM to apply. */
+	async setRicochetTarget(tokenUuid: string): Promise<void> {
+		if (!this.ricochet() || this.ricochetRecord.applied) return;
+		await this.setFlag(SYSTEM_ID, RICOCHET_FLAG, { targetUuid: tokenUuid });
+	}
+
+	async applyRicochetDamage(tokenUuid: string): Promise<void> {
+		if (!game.user?.isGM || this.ricochetRecord.applied || !this.ricochet()) return;
+		const resolved = this.#ricochetOn(tokenUuid);
+		if (!resolved) return;
+		if (resolved.consumedBank) await clearBankedDamageReduction(resolved.actor);
+		await withDamageCard(this.id, () => resolved.actor.applyDamage(resolved.total));
+		await spendHeldChanges(resolved.usedVulnerabilities, this.#endedLines());
+		await this.setFlag(SYSTEM_ID, RICOCHET_FLAG, { targetUuid: tokenUuid, applied: true });
 	}
 
 	/** The name of the feature that keeps this target from taking damage, or null. */

@@ -73,7 +73,9 @@ import {
 	type PrimaryDieBonusRecord,
 } from '../utils/damage/collectPrimaryDieBonuses.js';
 import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
+import { divideDice } from '../utils/damage/divideDice.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
+import type { DiceShare } from '../utils/damage/evenDiceShares.js';
 import { DEFAULT_MISS_THRESHOLD } from '../utils/damage/missThreshold.js';
 import { normalizeDamageRollFormula } from '../utils/damage/normalizeDamageRollFormula.js';
 import {
@@ -145,6 +147,7 @@ import { createBonusDamageNode } from '../utils/treeManipulation/createBonusDama
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
+import { type DiceDivision, diceDivisionOf, diceSharesOf } from './itemActivation/diceDivision.js';
 import { activatedWeaponRollMode, rollOtherWeapon } from './itemActivation/dualWieldAttack.js';
 import {
 	grantCannotMiss,
@@ -282,7 +285,29 @@ class ItemActivationManager {
 	 */
 	get targets(): Token.Implementation[] {
 		if (this.free) return [];
-		return Array.from(game.user?.targets ?? []) as Token.Implementation[];
+		const targets = Array.from(game.user?.targets ?? []) as Token.Implementation[];
+		const divided = this.#diceShares;
+		if (!divided) return targets;
+		return targets.filter((token) =>
+			divided.some((share) => share.targetUuid === token.document.uuid),
+		);
+	}
+
+	/** The dice of the attack that the player can divide among its targets, or null. */
+	#diceDivision: DiceDivision | null = null;
+
+	/** How the dice of the attack are divided: the targets with dice, in order. */
+	#diceShares: DiceShare[] | null = null;
+
+	/** The attack's dice divided among the targets, before the roll. */
+	#divideDice(dialogData: ItemActivationManager.DialogData): void {
+		if (!this.#diceDivision) return;
+		const shares = diceSharesOf(this.#diceDivision, dialogData.diceShares);
+		this.#diceShares = shares;
+		if (shares.length < 2) return;
+		const divided = divideDice(this.activationData.effects ?? [], shares, dialogData.rollFormula);
+		this.activationData.effects = divided.effects;
+		if (divided.rollFormula !== undefined) dialogData.rollFormula = divided.rollFormula;
 	}
 
 	/** Interactive incoming-attack reactions to stamp onto the chat card. */
@@ -542,7 +567,19 @@ class ItemActivationManager {
 
 		if (!this.#hasFittingWeapon()) return { activation: null, rolls: null };
 
-		const dialogData = await this.#resolveDialogData(rollOptions);
+		this.#diceDivision = diceDivisionOf(
+			this.actor as never,
+			this.origin.identifier,
+			this.activationData.effects as EffectNode[] | undefined,
+			this.targets.map((token) => ({
+				uuid: token.document.uuid ?? '',
+				name: token.document.name || token.name || '',
+			})),
+		);
+		const dialogData = await this.#resolveDialogData({
+			...rollOptions,
+			...(this.#diceDivision ? { diceDivision: this.#diceDivision, sharesOneAttack: true } : {}),
+		});
 
 		// If dialog is cancelled, don't roll
 		if (!dialogData) return { activation: null, rolls: null };
@@ -694,6 +731,7 @@ class ItemActivationManager {
 		// Resolve the first target's domain for targetCondition evaluation
 		const targetDomain = this.#getSoleTargetDomain();
 		this.#applyChosenWeapon();
+		this.#divideDice(dialogData);
 
 		const incomingAttackPlan = computeIncomingAttackPlan(
 			this.#getSoleTargetToken(),
@@ -2006,7 +2044,8 @@ class ItemActivationManager {
 	#isSingleTargetAttack(): boolean {
 		return (
 			this.activationData?.targets?.singleTargetAttack === true ||
-			(this.#options.sharedTargets ?? 0) > 1
+			(this.#options.sharedTargets ?? 0) > 1 ||
+			(this.#diceShares?.length ?? 0) > 1
 		);
 	}
 
@@ -2159,6 +2198,8 @@ namespace ItemActivationManager {
 		heldChosen?: string[];
 		/** The weapon an ability attacks with. */
 		weaponUuid?: string;
+		/** How the player divided the dice of the attack among its targets. */
+		diceShares?: DiceShare[];
 		/**
 		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
 		 * The dialog already appended the bonus to rollFormula; this list is used to
