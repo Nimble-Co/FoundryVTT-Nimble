@@ -399,9 +399,10 @@ describe('conditionalBonuses', () => {
 		});
 
 		it('spends nothing when it names no pool', () => {
-			const [option] = getActiveConditionalBonuses(heroWith(0, createRule()), weaponItem, null);
+			const options = getActiveConditionalBonuses(heroWith(0, createRule()), weaponItem, null);
 
-			expect(option?.charge).toBeUndefined();
+			expect(options).toHaveLength(1);
+			expect(options[0].charge).toBeUndefined();
 		});
 	});
 
