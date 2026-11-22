@@ -910,7 +910,8 @@ class ItemActivationManager {
 								source,
 								node.damageType,
 								targetDomain,
-								this.#item.identifier,
+								this.#attackItemIdentifiers(),
+								this.origin.identifier,
 							),
 						);
 						const numericBonus = getDamageBonusTotal(

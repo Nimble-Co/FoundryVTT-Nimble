@@ -197,14 +197,17 @@ export function getDamageBonusParts(
 	source: DamageBonusSource,
 	damageType?: string,
 	targetDomain?: Set<string>,
-	itemIdentifier?: string,
+	itemIdentifier?: string | readonly string[],
+	origin?: string,
 ): DamagePart[] {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
 	const parts: DamagePart[] = [];
 	for (const bonus of bonuses ?? []) {
 		if (!bonus.value && !bonus.formula) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain, itemIdentifier, origin)) {
+			continue;
+		}
 		const named = { label: bonus.label ?? '', itemUuid: bonus.itemUuid ?? '' };
 		parts.push(
 			bonus.value ? { ...named, amount: bonus.value } : { ...named, formula: bonus.formula ?? '' },
