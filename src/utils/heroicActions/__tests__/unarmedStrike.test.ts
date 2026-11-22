@@ -31,6 +31,7 @@ beforeAll(async () => {
 	}));
 	vi.doMock('../../damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => ['1d4'],
+		getDamageBonusParts: () => [{ label: 'Rage', itemUuid: 'Item.rage', amount: 2 }],
 		getDamageBonusTotal: () => 2,
 		getUnarmedDamageFormula: () => '1',
 		hasUnarmedProficiency: (actor: { proficient?: boolean }) => actor.proficient === true,

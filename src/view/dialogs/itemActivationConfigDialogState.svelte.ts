@@ -362,6 +362,7 @@ export function createItemActivationConfigDialogState(
 				formula: o.damageFormula ?? `${o.damageValue ?? 0}`,
 				damageType: o.damageType,
 				label: o.label,
+				...(o.itemUuid ? { itemUuid: o.itemUuid } : {}),
 				...(o.fromItemIdentifier ? { fromItemIdentifier: o.fromItemIdentifier } : {}),
 			})),
 	);

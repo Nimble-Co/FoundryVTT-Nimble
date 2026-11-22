@@ -18,6 +18,7 @@ export function processNodes(effects: EffectNode[], relevantNodes: EffectNode[])
 				node.ignoreAllies = parentNode.ignoreAllies;
 				node.roll = parentNode.roll;
 				node.damageMultiplier = parentNode.damageMultiplier;
+				if (parentNode.source) node.source = parentNode.source;
 			}
 		}
 	}

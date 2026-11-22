@@ -17,21 +17,17 @@ import {
 	requestIncomingAttackReaction,
 	requestResultRemoval,
 } from '#utils/incomingReactions/incomingAttackReactions.js';
-import type {
-	DieOutcome,
-	IncomingReactionEntry,
-	RerollRecord,
+import {
+	type DieOutcome,
+	type IncomingReactionEntry,
+	type RerollRecord,
+	rerollTriggerMatches,
 } from '#utils/incomingReactions/incomingReactionEntry.ts';
 import { pendingKeepOf, resultRemovalRefusal } from '#utils/rolls/cardRollState.ts';
 import { resultChangesOf } from '#utils/rolls/resultChanges.ts';
 import type { PickableDie } from '../../../dice/oneDieReroll.ts';
 import localize from '../../../utils/localize.js';
-import {
-	attackOutcomeTags,
-	cardPrimaryRoll,
-	conditionRollModeTags,
-	primaryDieBonusNotAdded,
-} from './attackOutcomeTags.ts';
+import { attackOutcomeTags, cardPrimaryRoll, conditionRollModeTags } from './attackOutcomeTags.ts';
 import { createChangeThisRollState } from './ChangeThisRoll.svelte.ts';
 import { confirmRerollHeroicReaction } from './confirmRerollHeroicReaction.js';
 import { cardHasDamageSection } from './damageGroup.ts';
@@ -119,11 +115,28 @@ export function createIncomingReactionPromptsState(
 					}))
 			: [],
 	);
+	// A spend for damage is a button of its own on the card, not a row.
 	const rowEntries = $derived.by(() => {
 		if (!ownsControl) return [];
-		if (getPlace() === 'roll') return entries;
-		return entries.filter((entry) => changesTheRoll(entry) === (getPlace() === 'checkRoll'));
+		const rows = entries.filter((entry) => entry.kind !== 'spendPoolForDamage');
+		if (getPlace() === 'roll') return rows;
+		return rows.filter((entry) => changesTheRoll(entry) === (getPlace() === 'checkRoll'));
 	});
+	const outcomeView = $derived(
+		(message?.reactive?.system ?? {}) as { isCritical?: boolean; isMiss?: boolean },
+	);
+	const spendOffers = $derived(
+		getPlace() === 'roll'
+			? entries.filter(
+					(entry) =>
+						entry.kind === 'spendPoolForDamage' &&
+						!entry.used &&
+						!held.has(entry.id) &&
+						rerollTriggerMatches(entry.outcomeTrigger, outcomeView) &&
+						rowStateOf(entry) === 'usable',
+				)
+			: [],
+	);
 	// The rows that show, and the reason of each that shows but cannot be used now.
 	const pendingRows = $derived.by(() => {
 		// A click or a Remove can bring a row back or take it away with no new entry.
@@ -148,9 +161,13 @@ export function createIncomingReactionPromptsState(
 	const rowCount = $derived(
 		pendingGroups.reduce((total, group) => total + group.entries.length, 0),
 	);
-	// A used reroll is told by the card's history line, not by its entry.
+	// A used reroll is told by the card's history line, and a used spend by the damage box.
 	const usedEntries = $derived(
-		getPlace() === 'options' ? entries.filter((entry) => entry.used && !changesTheRoll(entry)) : [],
+		getPlace() === 'options'
+			? entries.filter(
+					(entry) => entry.used && !changesTheRoll(entry) && entry.kind !== 'spendPoolForDamage',
+				)
+			: [],
 	);
 	const historyLines = $derived(
 		showsHistory
@@ -186,9 +203,6 @@ export function createIncomingReactionPromptsState(
 		}
 		return [];
 	});
-	const bonusNotAdded = $derived(
-		primaryDieBonusNotAdded(primaryRoll?.options, rerolls, text.documentName),
-	);
 	const pendingKeep = $derived(showsHistory ? pendingKeepOf(message?.reactive?.system) : null);
 	const pendingLine = $derived(
 		pendingKeep
@@ -489,6 +503,24 @@ export function createIncomingReactionPromptsState(
 		}
 	}
 
+	/** The words of a spend button, and its note as the tooltip. */
+	function spendButton(entry: IncomingReactionEntry): { label: string; tooltip: string | null } {
+		const row = text.row(entry);
+		const feature = row.withFeature ? text.featureName(entry) || entry.label : '';
+		const label = feature
+			? localize('NIMBLE.chat.incomingReactions.changeThisRoll.sentence', {
+					verb: row.verb,
+					feature,
+				})
+			: row.verb;
+		return {
+			label: row.cost
+				? localize('NIMBLE.chat.incomingReactions.rerollWithCost', { label, cost: row.cost })
+				: label,
+			tooltip: row.note || null,
+		};
+	}
+
 	const control = createChangeThisRollState(message, () => ({
 		count: rowCount,
 		blockedReason: (entry) => pendingRows.blocked.get(entry.id) ?? '',
@@ -521,6 +553,11 @@ export function createIncomingReactionPromptsState(
 		get usedEntries() {
 			return usedEntries;
 		},
+		get spendOffers() {
+			return spendOffers;
+		},
+		spendButton,
+		useSpend: useEntry,
 		get legacyRerollLines() {
 			return legacyRerollLines;
 		},
@@ -532,9 +569,6 @@ export function createIncomingReactionPromptsState(
 		},
 		get outcomeTags() {
 			return outcomeTags;
-		},
-		get bonusNotAdded() {
-			return bonusNotAdded;
 		},
 		get historyLines() {
 			return historyLines;

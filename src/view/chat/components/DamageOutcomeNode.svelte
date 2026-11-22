@@ -15,4 +15,5 @@
 	{roll}
 	nodeId={node.parentNode}
 	damageMultiplier={node.damageMultiplier ?? 1}
+	source={node.source ?? null}
 />

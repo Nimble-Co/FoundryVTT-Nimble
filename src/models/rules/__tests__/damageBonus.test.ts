@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Predicate } from '../../../etc/Predicate.js';
-import { getDamageBonusFormulas, getDamageBonusTotal } from '../../../utils/damage/attackUtils.js';
+import {
+	getDamageBonusFormulas,
+	getDamageBonusParts,
+	getDamageBonusTotal,
+} from '../../../utils/damage/attackUtils.js';
 import {
 	type DamageBonusDelivery,
 	type DamageBonusEntry,
@@ -117,6 +121,8 @@ describe('DamageBonusRule', () => {
 					delivery: 'melee',
 					source: 'weapon',
 					targetCondition: null,
+					label: 'Test Item',
+					itemUuid: 'test-item-uuid',
 				},
 			]);
 		});
@@ -138,6 +144,8 @@ describe('DamageBonusRule', () => {
 					delivery: 'any',
 					source: 'any',
 					targetCondition: null,
+					label: 'Test Item',
+					itemUuid: 'test-item-uuid',
 				},
 			]);
 		});
@@ -256,6 +264,8 @@ describe('DamageBonusRule', () => {
 					delivery: 'any',
 					source: 'spell',
 					targetCondition: null,
+					label: 'Test Item',
+					itemUuid: 'test-item-uuid',
 				},
 			]);
 		});
@@ -658,6 +668,8 @@ describe('DamageBonusRule — dice-based values', () => {
 				delivery: 'any',
 				source: 'any',
 				targetCondition: null,
+				label: 'Test Item',
+				itemUuid: 'test-item-uuid',
 			},
 		]);
 	});
@@ -1101,5 +1113,61 @@ describe('targetCondition filtering', () => {
 		// (which getTargetDomain() would never include)
 		const leakyDomain = new Set(['target:bloodied', 'self:bloodied']);
 		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, leakyDomain)).toBe(5);
+	});
+});
+
+describe('getDamageBonusParts', () => {
+	const actor = {
+		system: {
+			damageBonuses: [
+				{
+					value: 3,
+					formula: null,
+					damageType: '',
+					delivery: 'melee',
+					source: 'any',
+					targetCondition: null,
+					label: 'Rage',
+					itemUuid: 'Item.rage',
+				},
+				{
+					value: null,
+					formula: '1d4',
+					damageType: '',
+					delivery: 'any',
+					source: 'any',
+					targetCondition: null,
+					label: 'Hex',
+					itemUuid: 'Item.hex',
+				},
+				{
+					value: 2,
+					formula: null,
+					damageType: '',
+					delivery: 'ranged',
+					source: 'any',
+					targetCondition: null,
+					label: 'Sharpshooter',
+					itemUuid: 'Item.sharp',
+				},
+			],
+		},
+	};
+
+	it('gives one named part per matching bonus: an amount or a formula', () => {
+		expect(getDamageBonusParts(actor, 'melee', 'weapon')).toEqual([
+			{ label: 'Rage', itemUuid: 'Item.rage', amount: 3 },
+			{ label: 'Hex', itemUuid: 'Item.hex', formula: '1d4' },
+		]);
+	});
+
+	it('names an entry from before labels with an empty label', () => {
+		expect(
+			getDamageBonusParts(
+				{ system: { damageBonuses: [{ ...actor.system.damageBonuses[0], label: undefined }] } },
+				'melee',
+				'weapon',
+			),
+		).toEqual([{ label: '', itemUuid: 'Item.rage', amount: 3 }]);
 	});
 });

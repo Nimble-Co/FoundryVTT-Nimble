@@ -2183,7 +2183,12 @@ class NimbleChatMessage extends ChatMessage {
 			return reject('NIMBLE.chat.incomingReactions.useFailed');
 		}
 
-		const patched = await this.#buildSpendDamagePatch(systemData, consumer, bonusDamage);
+		const patched = await this.#buildSpendDamagePatch(
+			systemData,
+			consumer,
+			bonusDamage,
+			entry.itemUuid ?? '',
+		);
 		if (!patched) return reject('NIMBLE.chat.incomingReactions.useFailed');
 
 		// Charge the pool only once the patch is known to be possible, and only
@@ -2226,6 +2231,7 @@ class NimbleChatMessage extends ChatMessage {
 		systemData: ActivationCardSystemData,
 		consumer: DicePoolConsumer,
 		bonusDamage: number,
+		sourceUuid: string,
 	): Promise<{ activation: Record<string, unknown>; rolls: string[] } | null> {
 		const activation = (systemData.activation ?? { effects: [] }) as Record<string, unknown>;
 		const rollsSource = ((this._source as { rolls?: string[] }).rolls ?? []) as string[];
@@ -2262,6 +2268,7 @@ class NimbleChatMessage extends ChatMessage {
 				damageType,
 				flavor: consumer.itemName,
 				isCritical: systemData.isCritical === true,
+				sourceUuid,
 			},
 		);
 	}

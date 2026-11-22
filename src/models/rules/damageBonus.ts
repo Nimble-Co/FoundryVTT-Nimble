@@ -1,4 +1,5 @@
 import type { RawPredicate } from '../../etc/Predicate.js';
+import { ruleLabel } from '../../utils/actor/actorRules.js';
 import { PredicateField } from '../fields/PredicateField.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -18,6 +19,10 @@ interface DamageBonusEntry {
 	itemIdentifier?: string;
 	/** Optional predicate evaluated against the target's domain at activation time */
 	targetCondition: RawPredicate | null;
+	/** The plain name of the rule, for the card's damage parts. */
+	label?: string;
+	/** The document of the rule, for a link on the card. */
+	itemUuid?: string;
 }
 
 function schema() {
@@ -143,6 +148,10 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 
 		const tc = this.targetCondition;
 		const targetConditionRaw = tc && tc.size > 0 ? tc.toObject() : null;
+		const source = {
+			label: ruleLabel(this),
+			itemUuid: this.item?.uuid ?? this.parentDocument?.uuid ?? '',
+		};
 
 		if (this.isDiceExpression(this.value)) {
 			// Dice expression — store raw formula, don't resolve to a number
@@ -156,6 +165,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				source: this.source,
 				itemIdentifier: this.itemIdentifier,
 				targetCondition: targetConditionRaw,
+				...source,
 			});
 		} else {
 			// Numeric formula — resolve to a number
@@ -170,6 +180,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				source: this.source,
 				itemIdentifier: this.itemIdentifier,
 				targetCondition: targetConditionRaw,
+				...source,
 			});
 		}
 	}

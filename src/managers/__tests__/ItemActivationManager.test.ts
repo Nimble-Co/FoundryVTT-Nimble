@@ -1915,6 +1915,65 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(DamageRoll).toHaveBeenCalledWith(formula, expect.anything(), expect.anything());
 		});
 
+		it('records each damage bonus as a named part on the roll options', async () => {
+			mockActor.type = 'npc';
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{
+					value: 5,
+					formula: null,
+					damageType: '',
+					delivery: 'melee',
+					source: 'weapon',
+					label: 'Rage',
+					itemUuid: 'Item.rage',
+				},
+				{
+					value: null,
+					formula: '1d4',
+					damageType: '',
+					delivery: 'any',
+					source: 'any',
+					label: 'Hex',
+					itemUuid: 'Item.hex',
+				},
+			];
+			mockItem.type = 'monsterFeature';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode], targets: { attackType: 'reach' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d6 + 5 + 1d4',
+				expect.anything(),
+				expect.objectContaining({
+					damageParts: [
+						{ label: 'Rage', itemUuid: 'Item.rage', amount: 5 },
+						{ label: 'Hex', itemUuid: 'Item.hex', formula: '1d4' },
+					],
+				}),
+			);
+		});
+
 		it('should not apply melee weapon bonus to ranged weapon attacks', async () => {
 			(mockActor.system as Record<string, unknown>).damageBonuses = [
 				{ value: 5, damageType: 'bludgeoning', delivery: 'melee', source: 'weapon' },

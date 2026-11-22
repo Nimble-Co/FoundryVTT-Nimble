@@ -46,6 +46,7 @@ describe('Juggernaut', () => {
 	it('adds damage equal to armor and +1 on an attack from a Coordinated Strike row', () => {
 		expect(juggernaut().bonusFor('coordinated-strike')).toEqual({
 			label: 'Juggernaut',
+			itemUuid: 'Item.j',
 			damage: 5,
 			primaryDie: 1,
 		});

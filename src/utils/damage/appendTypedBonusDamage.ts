@@ -43,7 +43,7 @@ export function appendTypedBonusDamage(
 	activation: Record<string, unknown>,
 	rollsSource: string[],
 	serializedRoll: Record<string, unknown>,
-	options: { damageType: string; flavor: string; isCritical: boolean },
+	options: { damageType: string; flavor: string; isCritical: boolean; sourceUuid?: string },
 ): TypedBonusResult | null {
 	const terms = Array.isArray(serializedRoll.terms) ? serializedRoll.terms : [];
 	const roll: Record<string, unknown> = {
@@ -69,6 +69,7 @@ export function appendTypedBonusDamage(
 		roll,
 		parentNode: primaryDamageNode.parentNode,
 		parentContext: primaryDamageNode.parentContext,
+		source: { label: options.flavor, uuid: options.sourceUuid ?? '' },
 	});
 
 	// Flattened under the same parent, so the node and its outcome children enter

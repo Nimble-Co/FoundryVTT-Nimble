@@ -1,6 +1,8 @@
+import termDisplayExpression from './termDisplayExpression.js';
+
 export default function prepareRollTooltipFormula(roll) {
 	const terms = roll.terms.reduce((acc, term) => {
-		let newTerm = `<span class="nimble-roll-formula__term">${term.expression}`;
+		let newTerm = `<span class="nimble-roll-formula__term">${termDisplayExpression(term)}`;
 
 		if (term.flavor) newTerm += ` [${term.flavor}]`;
 

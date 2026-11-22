@@ -86,6 +86,7 @@ class OfferAttackBonusRule extends NimbleBaseRule<OfferAttackBonusRule.Schema> {
 	get offerBonus(): OfferBonus {
 		return {
 			label: ruleLabel(this),
+			itemUuid: this.item?.uuid ?? this.parentDocument?.uuid ?? '',
 			damage: Math.max(0, Math.trunc(Number(this.resolveFormula(this.damage)) || 0)),
 			primaryDie: Math.trunc(Number(this.primaryDie) || 0),
 		};

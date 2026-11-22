@@ -21,6 +21,7 @@ beforeAll(async () => {
 	vi.doMock('#utils/lastsUntil/lastsUntilEvents.js', () => ({ fireAttackEvents: vi.fn() }));
 	vi.doMock('../../utils/damage/attackUtils.js', () => ({
 		getDamageBonusFormulas: () => [],
+		getDamageBonusParts: () => [],
 		getDamageBonusTotal: () => 0,
 		getUnarmedDamageFormula: getUnarmedDamageFormulaMock,
 		hasUnarmedProficiency: hasUnarmedProficiencyMock,

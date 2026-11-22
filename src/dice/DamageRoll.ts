@@ -2,6 +2,7 @@ import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { AttackOutcomeSources } from '#types/attackOutcome.d.ts';
 import type { ConditionRollMode } from '#types/conditionRollMode.d.ts';
 import type { CritDiceLine, CritDiceSpec } from '#types/critDice.d.ts';
+import type { DamagePart } from '#types/damagePart.d.ts';
 import type { DualWieldWeapon, DualWieldWeaponSelf } from '#types/dualWield.d.ts';
 import type { InexactPartial } from '#types/utils.js';
 import { getPrimaryDieDiceOptions } from '../integrations/diceSoNice.js';
@@ -79,6 +80,8 @@ declare namespace DamageRoll {
 		critD20?: boolean;
 		/** The features that changed how the roll is read, for the card's tags. */
 		outcomeSources?: Partial<AttackOutcomeSources>;
+		/** The parts features added to the roll, for the card's damage box. */
+		damageParts?: DamagePart[];
 		/** The damage type for this roll (e.g., "fire", "slashing"). */
 		damageType?: string;
 		/**

@@ -3,6 +3,7 @@ import prepareRollTooltipDiceResults, {
 	isViciousBonus,
 	prepareRollTooltipViciousDiceResults,
 } from './prepareRollTooltipDiceResults.js';
+import termDisplayExpression from './termDisplayExpression.js';
 
 function rollDetailsSection(formula: string, flavor: string, total, dice: string): string {
 	let section = `<section class="nimble-roll-details">
@@ -38,7 +39,7 @@ export default function prepareRollTooltipRollParts(roll) {
 		let parts =
 			acc +
 			rollDetailsSection(
-				part.expression,
+				termDisplayExpression(part),
 				part.flavor,
 				total,
 				prepareRollTooltipDiceResults(part, roll.options),
