@@ -263,8 +263,14 @@ export async function useOpportunityAttack(
 	if (!confirmed) return false;
 
 	const rolled = weaponId
-		? Boolean(await actor.activateItem(weaponId, { rollMode: -1, skipActionDeduction: true }))
-		: await rollUnarmedStrike(actor, { rollMode: -1 });
+		? Boolean(
+				await actor.activateItem(weaponId, {
+					rollMode: -1,
+					skipActionDeduction: true,
+					opportunityAttack: true,
+				}),
+			)
+		: await rollUnarmedStrike(actor, { rollMode: -1, opportunityAttack: true });
 	if (!rolled || !combat.useHeroicReactions) return false;
 
 	return combat.useHeroicReactions(

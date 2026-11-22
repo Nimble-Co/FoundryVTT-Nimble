@@ -556,7 +556,9 @@
 				"withWeapon": "{outcome} with {weapon}",
 				"weaponOnly": "With {weapon}",
 				"withOrigin": "{meta} ({origin})",
-				"originOnly": "({origin})"
+				"originOnly": "({origin})",
+				"opportunityAttack": "opportunity attack",
+				"opportunityWithOrigin": "opportunity attack, {origin}"
 			},
 			"tempHpGivenByEffect": "The effect below gives these temp HP, and takes back what is left when it ends.",
 			"applyEffect": {

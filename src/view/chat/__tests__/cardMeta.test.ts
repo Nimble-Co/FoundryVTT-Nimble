@@ -18,7 +18,12 @@ const DAMAGE = { activation: { effects: [{ type: 'damage' }] } };
 
 function card(
 	system: Record<string, unknown>,
-	flags: { itemUuid?: string; origin?: { uuid: string }; weaponUuid?: string } = {},
+	flags: {
+		itemUuid?: string;
+		opportunityAttack?: boolean;
+		origin?: { uuid: string };
+		weaponUuid?: string;
+	} = {},
 ) {
 	return {
 		system,
@@ -94,6 +99,31 @@ describe('cardMeta', () => {
 	it('gives only the origin on a card with no outcome', () => {
 		const parts = cardMeta(card({}, { origin: { uuid: 'Actor.boss.Item.strike' } }));
 		expect(partsText(parts ?? [])).toBe('(Coordinated Strike!)');
+	});
+
+	it('marks an opportunity attack in the brackets', () => {
+		expect(cardMeta(card(DAMAGE, { opportunityAttack: true }))).toEqual([
+			'Hit (opportunity attack)',
+		]);
+		const withWeapon = cardMeta(
+			card(DAMAGE, { opportunityAttack: true, weaponUuid: 'Actor.hero.Item.sword' }),
+		);
+		expect(partsText(withWeapon ?? [])).toBe('Hit with Longsword (opportunity attack)');
+	});
+
+	it('puts the origin after the opportunity attack mark, as a link', () => {
+		const parts = cardMeta(
+			card(DAMAGE, { opportunityAttack: true, origin: { uuid: 'Actor.boss.Item.strike' } }),
+		);
+		expect(parts).toEqual([
+			'Hit (opportunity attack, ',
+			{ name: 'Coordinated Strike!', uuid: 'Actor.boss.Item.strike' },
+			')',
+		]);
+	});
+
+	it('marks an opportunity attack on a card with no outcome', () => {
+		expect(cardMeta(card({}, { opportunityAttack: true }))).toEqual(['(opportunity attack)']);
 	});
 
 	it('leaves out a weapon or origin that is not found', () => {

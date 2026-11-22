@@ -2073,6 +2073,8 @@ namespace ItemActivationManager {
 		confirmActions?: (changes: readonly ActionCostChange[]) => Promise<boolean>;
 		/** The attack card this use answers, as a reaction from the Defend window does. */
 		answersCardId?: string;
+		/** The use is an opportunity attack; its card says so. */
+		opportunityAttack?: boolean;
 	}
 
 	/** What a free use does not spend or check. `action` is always part of it. */

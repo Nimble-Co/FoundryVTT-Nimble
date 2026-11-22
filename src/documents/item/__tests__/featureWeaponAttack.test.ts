@@ -398,6 +398,20 @@ describe('the card of a feature attack with a weapon', () => {
 		});
 	});
 
+	it('records an opportunity attack, and nothing for other uses', async () => {
+		const actor = hero();
+		longbow(actor);
+		findItems(actor);
+		const feature = incendiaryShot(actor);
+
+		await feature.activate({ opportunityAttack: true });
+		expect(cardOf(feature).flags[SYSTEM_ID].opportunityAttack).toBe(true);
+
+		await feature.activate();
+		const plainCard = feature._createActivationCard.mock.calls[1]?.[0] as ReturnType<typeof cardOf>;
+		expect(plainCard.flags[SYSTEM_ID]).not.toHaveProperty('opportunityAttack');
+	});
+
 	it('records an Unarmed Strike', async () => {
 		const actor = hero();
 		Object.assign(actor.system, { unarmedDamage: '1' });

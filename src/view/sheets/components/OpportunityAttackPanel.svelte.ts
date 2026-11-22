@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import { fireAttackEvents } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { withConditionSources } from '#utils/rolls/appliedConditionRollModes.js';
 import { DamageRoll } from '../../../dice/DamageRoll.js';
@@ -263,6 +264,7 @@ export function createOpportunityAttackPanelState(
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
+			flags: { [SYSTEM_ID]: { opportunityAttack: true } },
 			system: {
 				actorName: getActor().name,
 				actorType: getActor().type,
@@ -301,6 +303,7 @@ export function createOpportunityAttackPanelState(
 		const result = await getActor().activateItem(itemId, {
 			rollMode: -1,
 			skipActionDeduction: true,
+			opportunityAttack: true,
 		});
 
 		if (result && item) {

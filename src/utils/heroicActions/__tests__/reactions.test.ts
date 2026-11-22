@@ -150,6 +150,7 @@ describe('heroic reactions', () => {
 			expect(activateItem).toHaveBeenCalledWith('weapon-1', {
 				rollMode: -1,
 				skipActionDeduction: true,
+				opportunityAttack: true,
 			});
 			expect(useHeroicReactions).toHaveBeenCalledWith(
 				combatant.id,
@@ -177,7 +178,10 @@ describe('heroic reactions', () => {
 			expect(await reactions.useOpportunityAttack(actor, null)).toBe(true);
 
 			expect(activateItem).not.toHaveBeenCalled();
-			expect(rollUnarmedStrikeMock).toHaveBeenCalledWith(actor, { rollMode: -1 });
+			expect(rollUnarmedStrikeMock).toHaveBeenCalledWith(actor, {
+				rollMode: -1,
+				opportunityAttack: true,
+			});
 			expect(useHeroicReactions).toHaveBeenCalledWith(
 				combatant.id,
 				['opportunityAttack'],

@@ -18,6 +18,7 @@ export interface CardMetaSource {
 
 interface CardMetaFlags {
 	itemUuid?: string | null;
+	opportunityAttack?: boolean;
 	origin?: { uuid?: string | null } | null;
 	weaponUuid?: string | null;
 }
@@ -57,9 +58,19 @@ function weaponLink(flags: CardMetaFlags | undefined): DocLink | null {
 	return otherItemLink(flags?.weaponUuid, flags?.itemUuid);
 }
 
+/** What goes in the brackets: the opportunity attack mark first, then the origin feature. */
+function bracketParts(flags: CardMetaFlags | undefined): LinkedPart[] | null {
+	const origin = otherItemLink(flags?.origin?.uuid, flags?.itemUuid);
+	if (!flags?.opportunityAttack) return origin ? [origin] : null;
+	return origin
+		? linkedParts(`${KEY}.opportunityWithOrigin`, { origin })
+		: [localize(`${KEY}.opportunityAttack`)];
+}
+
 /**
  * The meta line under a card's title: the outcome of the attack, the weapon a feature attacked
- * with, and the feature the attack was made through. Null when the card has none of them.
+ * with, and in brackets an opportunity attack and the feature the attack was made through. Null
+ * when the card has none of them.
  */
 export function cardMeta(
 	source: CardMetaSource,
@@ -68,7 +79,7 @@ export function cardMeta(
 	const outcome = outcomeOf(source, showsHealing);
 	const flags = source.flags?.[SYSTEM_ID];
 	const weapon = weaponLink(flags);
-	const origin = otherItemLink(flags?.origin?.uuid, flags?.itemUuid);
+	const bracket = bracketParts(flags);
 
 	let meta: LinkedPart[] | null = null;
 	if (outcome && weapon) {
@@ -78,8 +89,8 @@ export function cardMeta(
 	} else if (weapon) {
 		meta = linkedParts(`${KEY}.weaponOnly`, { weapon });
 	}
-	if (!origin) return meta;
+	if (!bracket) return meta;
 	return meta
-		? linkedParts(`${KEY}.withOrigin`, { meta, origin })
-		: linkedParts(`${KEY}.originOnly`, { origin });
+		? linkedParts(`${KEY}.withOrigin`, { meta, origin: bracket })
+		: linkedParts(`${KEY}.originOnly`, { origin: bracket });
 }

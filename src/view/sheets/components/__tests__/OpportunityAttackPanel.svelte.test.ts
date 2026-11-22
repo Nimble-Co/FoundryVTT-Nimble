@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 
 import { resetHeroicGlobals } from '../../../../../tests/fixtures/heroicActions.js';
 import type { NimbleCharacter } from '../../../../documents/actor/character.js';
@@ -99,6 +100,9 @@ describe('OpportunityAttackPanel unarmed strike', () => {
 		stop();
 
 		expect(ChatMessage.create).toHaveBeenCalledTimes(1);
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({ flags: { [SYSTEM_ID]: { opportunityAttack: true } } }),
+		);
 		expect(fireAttackEventsMock).toHaveBeenCalledTimes(1);
 		// The card of the strike hosts the lines of what the attack ends.
 		expect(fireAttackEventsMock).toHaveBeenCalledWith(actor, { id: 'chat-message-id' });

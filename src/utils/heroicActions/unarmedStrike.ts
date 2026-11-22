@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import ItemActivationConfigDialog from '#documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import { SYSTEM_ID } from '#system';
 import type { DamagePart } from '#types/damagePart.d.ts';
 import { giveUnarmedHitRecovery } from '#utils/chargePool/itemUseRecovery.js';
 import { spendRuleCharge } from '#utils/chargePool/ruleChargeGate.js';
@@ -49,6 +50,8 @@ const UNARMED_STRIKE_IMG = 'icons/skills/melee/unarmed-punch-fist.webp';
 export interface RollUnarmedStrikeOptions {
 	/** Starting roll mode of the config dialog. */
 	rollMode?: number;
+	/** The strike is an opportunity attack; its card says so. */
+	opportunityAttack?: boolean;
 }
 
 function buildRollFormula(actor: NimbleCharacter): { formula: string; damageParts: DamagePart[] } {
@@ -243,6 +246,7 @@ export async function rollUnarmedStrike(
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
 		rolls: [roll, ...extraDamage.map((part) => part.roll)],
+		...(options.opportunityAttack ? { flags: { [SYSTEM_ID]: { opportunityAttack: true } } } : {}),
 		system: {
 			actorName: actor.name,
 			actorType: actor.type,

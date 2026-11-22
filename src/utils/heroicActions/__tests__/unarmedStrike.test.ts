@@ -95,6 +95,15 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	it('marks the card of an opportunity attack', async () => {
+		dialogResult({ rollMode: -1 });
+		await rollUnarmedStrike(createHeroicCharacter(), { rollMode: -1, opportunityAttack: true });
+
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({ flags: { [SYSTEM_ID]: { opportunityAttack: true } } }),
+		);
+	});
+
 	it('cannot crit or miss with two targets (Core:1403)', async () => {
 		dialogResult({ rollMode: 0 });
 		heroicGlobals().game.user.targets = new Set([
