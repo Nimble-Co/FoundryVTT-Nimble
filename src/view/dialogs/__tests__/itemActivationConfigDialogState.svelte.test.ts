@@ -90,6 +90,30 @@ describe('the activation dialog conditional bonuses', () => {
 	});
 });
 
+describe('the activation dialog tick of a conditional bonus', () => {
+	function tick(label: string, damage: string) {
+		user.targets = new Set();
+		return createState({
+			actor: () => ({ rules: [], system: {}, items: [], getFlag: () => undefined }) as never,
+			item: () => ({ type: 'weapon', system: { activation: { effects: [] } } }) as never,
+			hideRollsDefault: false,
+		}).conditionalBonusTick(label, damage);
+	}
+
+	it('puts the note of the label after the damage', () => {
+		expect(tick('Lunging Strike (+1 Reach)', '1d6 × 2')).toBe(
+			'Lunging Strike: +1d6 × 2 damage (+1 Reach)',
+		);
+		expect(tick('Using Assist Me, My Friend! (1/round)', '1d6 + 3')).toBe(
+			'Using Assist Me, My Friend!: +1d6 + 3 damage (1/round)',
+		);
+	});
+
+	it('reads label and damage for a label with no note', () => {
+		expect(tick("Hunter's Mark", '5')).toBe("Hunter's Mark: +5 damage");
+	});
+});
+
 describe('the activation dialog bonus of an item damage', () => {
 	const assist = {
 		key: 'Item.assist:rule',

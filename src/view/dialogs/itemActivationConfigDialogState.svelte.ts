@@ -19,6 +19,7 @@ import {
 import { offersLessManaFor } from '#utils/chaos/lessMana.js';
 import { fixedChargeCostsOf } from '#utils/chargePool/fixedChargeCosts.js';
 import { itemOffersFreeUse } from '#utils/chargePool/helpers.js';
+import { labelNote } from '#utils/chargePool/poolHeading.js';
 import { rollWindowCostParts } from '#utils/cost/resourceCostWords.js';
 import {
 	type AttackActivation,
@@ -62,6 +63,15 @@ import { resourceAmounts } from './resourceAmounts.svelte.ts';
 import { useOptionSplits } from './useOptionSplits.svelte.ts';
 
 type ConditionalChoice = 'advantage' | 'damage' | 'none';
+
+/** "Bonus: +1d6 × 2 damage (+1 Reach)": a note in brackets on the label goes last. */
+function conditionalBonusTick(label: string, damage: string): string {
+	const text = 'NIMBLE.activationDialog.conditionalBonus';
+	const { name, note } = labelNote(label);
+	return note
+		? localize(`${text}.tickWithNote`, { label: name, value: damage, note })
+		: localize(`${text}.tick`, { label, value: damage });
+}
 
 export interface CreateItemActivationConfigDialogStateOptions {
 	actor: () => Actor;
@@ -706,6 +716,7 @@ export function createItemActivationConfigDialogState(
 			return conditionalAdvantageTotal;
 		},
 		setConditionalChoice,
+		conditionalBonusTick,
 
 		// Selection getters.
 		get chargeSpendCounts() {
