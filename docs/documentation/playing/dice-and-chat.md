@@ -67,6 +67,7 @@ Some features add a tick to the window, for example **Max damage** or **Dual wie
 - **Effects:** a row for each effect of the item, with its Lasts Until. An effect for the targets has an **Apply to Targets** button. An effect for the user goes on by itself, or has an **Apply to You** button while Feature Effects is off. See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 - **Change This Roll:** rerolls and changes from features. See below.
 - **Reactions:** Defend and Interpose on an attack that hits a hero. See [Defend and Interpose](#defend-and-interpose).
+- **Granted Actions:** an attack that a feature gives, such as Coordinated Strike!. Each line names the creature and the feature, for example "Wren: Weapon Attack (Coordinated Strike)", with a dropdown and an **Attack** button. The dropdown lists the weapons of that creature as the attack window does, with **Cantrips** when the feature allows a cantrip. **Attack** opens the usual attack window. The attack counts as made through the feature, so the riders of that feature apply. A free attack spends no action, but it still counts toward Rushed Attacks unless the feature says it ignores them. After the attack, the line says who used it. Only the owner of that creature and the GM see the controls.
 
 A player sees only the rows of the characters they own. The GM sees all.
 
@@ -136,6 +137,8 @@ Pick a row and click the button. A window asks first when your reaction is spent
 After a Defend, the target row shows a green shield and the damage after Armor. Until the damage is applied, the GM can click the shield when the damage cannot be avoided (no Armor comes off), or click **Undo** to give back the reaction and its actions.
 
 The **Defend** and **Interpose** rows on the Actions tab of the sheet, and the hotbar buttons, open the same window on the newest attack that the hero can still react to.
+
+A feature that lets you attack when you Interpose, such as Quickstrike, puts a **Granted Actions** line for you on the attack card. When that card is a whisper you cannot see, or when you Interpose from the sheet with no attack card, the line goes on the Interpose card. Target the enemy and click **Attack**.
 
 ## The Initiative card
 

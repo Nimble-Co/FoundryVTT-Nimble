@@ -12,6 +12,7 @@ import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
+import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
 import {
 	type AttackActivation,
@@ -2344,6 +2345,7 @@ class NimbleChatMessage extends ChatMessage {
 		const protectedName =
 			(fromUuidSync(entry.targetTokenUuid ?? '', { strict: false }) as { name?: string } | null)
 				?.name ?? '';
+		const interposeOffers = collectInterposeOffers(protector as never);
 		const isPublic = (this.whisper ?? []).length < 1;
 		const hosted =
 			isPublic &&
@@ -2362,7 +2364,14 @@ class NimbleChatMessage extends ChatMessage {
 					at: Date.now(),
 				},
 			]));
-		if (hosted) return;
+		const cardOffers = (this.system as { grantedActionOffers?: unknown }).grantedActionOffers;
+		if (hosted && interposeOffers.length > 0 && Array.isArray(cardOffers)) {
+			await this.update({
+				system: { grantedActionOffers: [...cardOffers, ...interposeOffers] },
+			} as Record<string, unknown>);
+			return;
+		}
+		if (hosted && interposeOffers.length < 1) return;
 
 		await ChatMessage.create({
 			author: game.user?.id,
@@ -2376,6 +2385,7 @@ class NimbleChatMessage extends ChatMessage {
 				rollMode: 0,
 				reactionType: 'interpose',
 				targets: entry.targetTokenUuid ? [entry.targetTokenUuid] : [],
+				grantedActionOffers: interposeOffers,
 			},
 		} as unknown as ChatMessage.CreateData);
 	}

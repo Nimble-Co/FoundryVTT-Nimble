@@ -2860,6 +2860,70 @@ describe('NimbleChatMessage.resolveRedirectReaction', () => {
 			expectReactionCard();
 		});
 
+		describe('with a feature that gives an attack on Interpose', () => {
+			const strikeRule = {
+				type: 'grantActivation',
+				id: 'strike',
+				label: 'Quickstrike',
+				trigger: 'onInterpose',
+				free: true,
+				weaponKind: 'unarmed',
+				appliesTo: () => true,
+			};
+			const zephyr = {
+				...protectorActor,
+				uuid: 'Actor.protector',
+				items: [
+					{
+						uuid: 'Actor.protector.Item.quickstrike',
+						name: 'Quickstrike',
+						rules: new Map([['strike', strikeRule]]),
+					},
+				],
+			};
+
+			beforeEach(() => {
+				reactionGlobals().fromUuidSync.mockImplementation((uuid: string) =>
+					uuid === 'Scene.scene.Token.protector' ? { actor: zephyr } : null,
+				);
+			});
+
+			const line = expect.objectContaining({
+				targetActorUuid: 'Actor.protector',
+				label: 'Quickstrike',
+				sourceItemUuid: 'Actor.protector.Item.quickstrike',
+				free: true,
+				weaponKind: 'unarmed',
+				used: false,
+			});
+
+			it('gives the protector the attack line on the public attack card', async () => {
+				const message = attackCard();
+				Object.assign(message.system, { grantedActionOffers: [] });
+
+				await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+				expect(message.update).toHaveBeenCalledWith({ system: { grantedActionOffers: [line] } });
+				expect(reactionGlobals().ChatMessage.create).not.toHaveBeenCalled();
+			});
+
+			it('puts the attack line on the reaction card when the attack card is whispered', async () => {
+				const message = attackCard(['gm-user']);
+				Object.assign(message.system, { grantedActionOffers: [] });
+
+				await message.resolveRedirectReaction('redirect-1', 'gm-user');
+
+				expect(reactionGlobals().ChatMessage.create).toHaveBeenCalledWith(
+					expect.objectContaining({
+						system: expect.objectContaining({
+							reactionType: 'interpose',
+							grantedActionOffers: [line],
+						}),
+					}),
+				);
+			});
+		});
+
 		it('posts the reaction card when no GM can write the line', async () => {
 			user().isActiveGM = false;
 			const message = attackCard();

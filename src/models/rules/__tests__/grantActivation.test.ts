@@ -18,6 +18,27 @@ describe('GrantActivationRule', () => {
 			expect(activationType.choices).toEqual(['weaponAttack']);
 			expect(activationType.options.initial).toBe('weaponAttack');
 		});
+
+		it('keeps the behaviour of older data with every new option at its default', () => {
+			const schema = GrantActivationRule.defineSchema() as unknown as Record<
+				string,
+				{ options: { initial: unknown }; choices?: Record<string, string> }
+			>;
+			expect(schema.trigger?.options.initial).toBe('onActivation');
+			expect(Object.keys(schema.trigger?.choices ?? {})).toEqual(['onActivation', 'onInterpose']);
+			expect(schema.free?.options.initial).toBe(false);
+			expect(schema.spendsReaction?.options.initial).toBe(false);
+			expect(schema.weaponKind?.options.initial).toBe('any');
+			expect(Object.keys(schema.weaponKind?.choices ?? {})).toEqual([
+				'any',
+				'melee',
+				'ranged',
+				'unarmed',
+			]);
+			expect(schema.allowsCantrips?.options.initial).toBe(false);
+			expect(schema.ignoresRushed?.options.initial).toBe(false);
+			expect(schema.condition?.options.initial).toBe('');
+		});
 	});
 
 	describe('class metadata', () => {

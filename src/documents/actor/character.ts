@@ -2461,7 +2461,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			if (!(await this.#confirmActions(item, [], force))) return null;
 		}
 
-		const rushed = rollsWithRushedDisadvantage(item) ? attacksMadeThisTurn(this) : 0;
+		const rushed = rollsWithRushedDisadvantage(item, {
+			ignoresRushed: options.ignoresRushed === true,
+		})
+			? attacksMadeThisTurn(this)
+			: 0;
 		const result = await super.activateItem(id, {
 			...options,
 			...(rushed > 0 && options.rollMode === undefined

@@ -8,6 +8,7 @@ import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { consumeCombatantAction } from '#utils/combat/combatTurnActions.js';
 import { attacksMadeThisTurn, recordAttack } from '#utils/combat/rushedAttacks.js';
 import { deliveryOfAttack } from '#utils/damage/attackDelivery.js';
+import { attackOriginOf } from '#utils/damage/attackOrigin.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusParts,
@@ -52,23 +53,56 @@ export interface RollUnarmedStrikeOptions {
 	rollMode?: number;
 	/** The strike is an opportunity attack; its card says so. */
 	opportunityAttack?: boolean;
+	/** The feature the strike is made through. */
+	originUuid?: string;
+	/** The strike spends no action. */
+	free?: boolean;
+	/** The strike takes no Rushed Attack disadvantage; it still counts as an attack of the turn. */
+	ignoresRushed?: boolean;
 }
 
-function buildRollFormula(actor: NimbleCharacter): { formula: string; damageParts: DamagePart[] } {
+function buildRollFormula(
+	actor: NimbleCharacter,
+	origin: string | undefined,
+): { formula: string; damageParts: DamagePart[] } {
 	let rollFormula = getUnarmedDamageFormula(actor);
 
 	// Unarmed strikes are melee + weapon + bludgeoning. No targetDomain is passed,
 	// so bonuses with a targetCondition are excluded.
-	const meleeDamageBonus = getDamageBonusTotal(actor, 'melee', 'weapon', 'bludgeoning');
+	const meleeDamageBonus = getDamageBonusTotal(
+		actor,
+		'melee',
+		'weapon',
+		'bludgeoning',
+		undefined,
+		undefined,
+		origin,
+	);
 	if (meleeDamageBonus > 0) {
 		rollFormula = `${rollFormula} + ${meleeDamageBonus}`;
 	}
-	for (const diceFormula of getDamageBonusFormulas(actor, 'melee', 'weapon', 'bludgeoning')) {
+	for (const diceFormula of getDamageBonusFormulas(
+		actor,
+		'melee',
+		'weapon',
+		'bludgeoning',
+		undefined,
+		undefined,
+		origin,
+	)) {
 		rollFormula = `${rollFormula} + ${diceFormula}`;
 	}
 	return {
 		formula: rollFormula,
-		damageParts: getDamageBonusParts(actor, 'melee', 'weapon', 'bludgeoning'),
+		damageParts: getDamageBonusParts(
+			actor,
+			'melee',
+			'weapon',
+			'bludgeoning',
+			undefined,
+			undefined,
+			origin,
+		),
 	};
 }
 
@@ -80,9 +114,11 @@ export async function rollUnarmedStrike(
 	actor: NimbleCharacter,
 	options: RollUnarmedStrikeOptions = {},
 ): Promise<boolean> {
-	const rushed = options.rollMode === undefined ? attacksMadeThisTurn(actor) : 0;
+	const rushed =
+		options.rollMode === undefined && !options.ignoresRushed ? attacksMadeThisTurn(actor) : 0;
 	const startRollMode = options.rollMode ?? (rushed > 0 ? -rushed : 0);
-	const { formula: rollFormula, damageParts } = buildRollFormula(actor);
+	const origin = options.originUuid ? attackOriginOf({}, options.originUuid) : null;
+	const { formula: rollFormula, damageParts } = buildRollFormula(actor, origin?.identifier);
 	// Only characters proficient with unarmed strikes can crit.
 	const canCrit = hasUnarmedProficiency(actor);
 	const name = localize('NIMBLE.ui.heroicActions.unarmedStrike');
@@ -111,6 +147,7 @@ export async function rollUnarmedStrike(
 		rushedAttack: rushed > 0 ? rushed + 1 : undefined,
 		spendsActions:
 			options.rollMode === undefined &&
+			!options.free &&
 			isActionTrackingAutomationEnabled() &&
 			game.combat?.started &&
 			game.combat.combatants.some((entry) => entry.actorId === actor.id)
@@ -171,6 +208,7 @@ export async function rollUnarmedStrike(
 		damageType: 'bludgeoning',
 		primaryDieAsDamage: true,
 		...(damageParts.length > 0 ? { damageParts } : {}),
+		...(origin ? { origin } : {}),
 		...(canCrit && !multiTarget
 			? { critDice: collectCritDice(actor as { rules?: unknown }, delivery) }
 			: {}),
@@ -246,7 +284,16 @@ export async function rollUnarmedStrike(
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
 		rolls: [roll, ...extraDamage.map((part) => part.roll)],
-		...(options.opportunityAttack ? { flags: { [SYSTEM_ID]: { opportunityAttack: true } } } : {}),
+		...(origin || options.opportunityAttack
+			? {
+					flags: {
+						[SYSTEM_ID]: {
+							...(origin ? { origin } : {}),
+							...(options.opportunityAttack ? { opportunityAttack: true } : {}),
+						},
+					},
+				}
+			: {}),
 		system: {
 			actorName: actor.name,
 			actorType: actor.type,
@@ -291,12 +338,16 @@ export async function rollUnarmedStrike(
 	return true;
 }
 
-/** Rolls an Unarmed Strike, then spends 1 action by the same rule as `activateItem`. */
-export async function strikeUnarmed(actor: NimbleCharacter): Promise<void> {
-	if (!(await rollUnarmedStrike(actor))) return;
+/** Rolls an Unarmed Strike, then spends 1 action by the same rule as `activateItem`. True when rolled. */
+export async function strikeUnarmed(
+	actor: NimbleCharacter,
+	options: Omit<RollUnarmedStrikeOptions, 'rollMode' | 'free'> = {},
+): Promise<boolean> {
+	if (!(await rollUnarmedStrike(actor, options))) return false;
 	const combat = game.combat;
 	const combatant = combat?.combatants.find((entry) => entry.actorId === actor.id);
 	if (combat?.started && combatant?.id) {
 		await consumeCombatantAction({ combat, combatantId: combatant.id });
 	}
+	return true;
 }

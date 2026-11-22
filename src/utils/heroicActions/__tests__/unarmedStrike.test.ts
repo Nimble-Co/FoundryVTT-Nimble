@@ -388,6 +388,85 @@ describe('rollUnarmedStrike', () => {
 		);
 	});
 
+	describe('a strike that a feature gives', () => {
+		function onOwnTurnAfterOneAttack(actor: ReturnType<typeof createHeroicCharacter>) {
+			const combatant = createHeroicCombatant(actor);
+			setHeroicCombat(combatant, {
+				turn: 0,
+				combatant: {
+					actorId: actor.id,
+					getFlag: () => ({ round: 1, turn: 0, count: 1 }),
+					setFlag: vi.fn(async () => undefined),
+				},
+			});
+		}
+
+		it('takes Rushed Attack disadvantage as the second attack of the turn', async () => {
+			dialogResult({});
+			globals.fromUuidSync = vi.fn(() => null);
+			const actor = createHeroicCharacter();
+			onOwnTurnAfterOneAttack(actor);
+
+			await rollUnarmedStrike(actor, { originUuid: 'Item.quickstrike' });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ rollMode: -1, rushedAttack: 2 }),
+			);
+		});
+
+		it('takes no Rushed Attack disadvantage when it ignores it', async () => {
+			dialogResult({});
+			const actor = createHeroicCharacter();
+			onOwnTurnAfterOneAttack(actor);
+
+			await rollUnarmedStrike(actor, { ignoresRushed: true });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ rollMode: 0, rushedAttack: undefined }),
+			);
+		});
+
+		it('says in its window that a free strike spends no action', async () => {
+			dialogResult({});
+			const actor = createHeroicCharacter();
+			onOwnTurnAfterOneAttack(actor);
+
+			await rollUnarmedStrike(actor, { free: true });
+
+			expect(dialogMock).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
+				expect.any(String),
+				expect.objectContaining({ spendsActions: 0 }),
+			);
+		});
+
+		it('records the feature as the origin, on the roll and on the card', async () => {
+			dialogResult({ rollMode: 0 });
+			globals.fromUuidSync = vi.fn((uuid: string) =>
+				uuid === 'Item.quickstrike' ? { system: { identifier: 'quickstrike' } } : null,
+			);
+
+			await rollUnarmedStrike(createHeroicCharacter(), { originUuid: 'Item.quickstrike' });
+
+			const origin = { uuid: 'Item.quickstrike', identifier: 'quickstrike' };
+			expect(damageRollMock).toHaveBeenCalledWith(
+				expect.any(String),
+				{},
+				expect.objectContaining({ origin }),
+			);
+			expect(ChatMessage.create).toHaveBeenCalledWith(
+				expect.objectContaining({ flags: { [SYSTEM_ID]: { origin } } }),
+			);
+		});
+	});
+
 	it('fires the attack event for the striker once', async () => {
 		dialogResult({ rollMode: 0 });
 		const actor = createHeroicCharacter();

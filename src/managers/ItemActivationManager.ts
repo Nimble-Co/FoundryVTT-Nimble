@@ -2035,6 +2035,8 @@ namespace ItemActivationManager {
 		rollMode?: number;
 		/** Which attack of the turn this is, when `rollMode` starts with Rushed Attack disadvantage. */
 		rushedAttack?: number;
+		/** The attack takes no Rushed Attack disadvantage; it still counts as an attack of the turn. */
+		ignoresRushed?: boolean;
 		/** False for a use inside another use, such as a free copy: it is not an attack of the turn. */
 		countsAsAttack?: boolean;
 		/** The actions that this use spends; the roll window says so. */

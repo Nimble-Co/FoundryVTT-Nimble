@@ -34,6 +34,12 @@ function createOffer(overrides: Partial<GrantedActionOffer> = {}): GrantedAction
 		activationType: 'weaponAttack',
 		ruleId: 'rule-1',
 		sourceItemUuid: 'Item.granting-item',
+		free: false,
+		spendsReaction: false,
+		weaponKind: 'any',
+		allowsCantrips: false,
+		ignoresRushed: false,
+		condition: '',
 		used: false,
 		usedBy: null,
 		...overrides,
@@ -178,6 +184,120 @@ describe('collectGrantedActionOffers', () => {
 		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
 
 		expect(offers).toHaveLength(0);
+	});
+
+	it("puts the rule's attack options on the line", async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([
+			{
+				type: 'grantActivation',
+				id: 'rule-1',
+				free: true,
+				spendsReaction: false,
+				weaponKind: 'melee',
+				allowsCantrips: true,
+				ignoresRushed: true,
+				condition: 'If you end adjacent to your quarry.',
+			} as never,
+		]);
+
+		const [offer] = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
+
+		expect(offer).toMatchObject({
+			free: true,
+			spendsReaction: false,
+			weaponKind: 'melee',
+			allowsCantrips: true,
+			ignoresRushed: true,
+			condition: 'If you end adjacent to your quarry.',
+		});
+	});
+
+	it('gives a line from older rule data the behaviour of today', async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([{ type: 'grantActivation', id: 'rule-1' }]);
+
+		const [offer] = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
+
+		expect(offer).toMatchObject({
+			free: false,
+			spendsReaction: false,
+			weaponKind: 'any',
+			allowsCantrips: false,
+			ignoresRushed: false,
+			condition: '',
+		});
+	});
+
+	it('gives no line on use for a rule that waits for an Interpose', async () => {
+		const { collectGrantedActionOffers } = await loadModule();
+		const item = createGrantingItem([
+			{
+				type: 'grantActivation',
+				id: 'rule-1',
+				trigger: 'onInterpose',
+				includesUser: true,
+			} as never,
+		]);
+
+		const offers = collectGrantedActionOffers(item, [{ actor: { uuid: 'Actor.ally' } }]);
+
+		expect(offers).toHaveLength(0);
+	});
+});
+
+describe('collectInterposeOffers', () => {
+	function interposer(rules: Record<string, unknown>[]) {
+		return {
+			uuid: 'Scene.s.Token.z.Actor.zephyr',
+			items: [
+				{
+					uuid: 'Actor.zephyr.Item.quickstrike',
+					name: 'Quickstrike',
+					rules: new Map(
+						rules.map((rule) => [rule.id as string, { appliesTo: () => true, ...rule }]),
+					),
+				},
+				{ uuid: 'Actor.zephyr.Item.sword', name: 'Sword', rules: new Map() },
+			],
+		};
+	}
+
+	it('gives the one who Interposes a line from each rule that waits for an Interpose', async () => {
+		const { collectInterposeOffers } = await loadModule();
+		const actor = interposer([
+			{
+				type: 'grantActivation',
+				id: 'rule-1',
+				trigger: 'onInterpose',
+				free: true,
+				weaponKind: 'unarmed',
+			},
+		]);
+
+		const offers = collectInterposeOffers(actor);
+
+		expect(offers).toHaveLength(1);
+		expect(offers[0]).toMatchObject({
+			targetActorUuid: 'Scene.s.Token.z.Actor.zephyr',
+			label: 'Quickstrike',
+			ruleId: 'rule-1',
+			sourceItemUuid: 'Actor.zephyr.Item.quickstrike',
+			free: true,
+			weaponKind: 'unarmed',
+			used: false,
+		});
+	});
+
+	it('gives no line from a rule for item use, or a rule whose predicate does not apply', async () => {
+		const { collectInterposeOffers } = await loadModule();
+		const actor = interposer([
+			{ type: 'grantActivation', id: 'rule-1' },
+			{ type: 'grantActivation', id: 'rule-2', trigger: 'onInterpose', appliesTo: () => false },
+		]);
+
+		expect(collectInterposeOffers(actor)).toHaveLength(0);
+		expect(collectInterposeOffers(null)).toHaveLength(0);
 	});
 });
 

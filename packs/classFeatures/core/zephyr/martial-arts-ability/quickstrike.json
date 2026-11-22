@@ -49,17 +49,22 @@
 				"maxCost": ""
 			},
 			{
-				"type": "actionDelta",
+				"type": "grantActivation",
 				"disabled": false,
 				"id": "EXXA4m4drUjXLrSo",
 				"identifier": "",
 				"label": "Quickstrike",
 				"predicate": {},
 				"priority": 3,
-				"value": "1",
-				"timing": "now",
-				"target": "self",
-				"borrowFromNextTurn": false
+				"activationType": "weaponAttack",
+				"trigger": "onInterpose",
+				"includesUser": false,
+				"weaponKind": "unarmed",
+				"allowsCantrips": false,
+				"free": true,
+				"spendsReaction": false,
+				"ignoresRushed": false,
+				"condition": ""
 			}
 		],
 		"activation": {

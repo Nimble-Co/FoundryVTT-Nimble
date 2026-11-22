@@ -3,26 +3,18 @@
 	import type { GrantedActionOffer } from '#utils/combat/grantedActionOffers.ts';
 
 	import { getContext } from 'svelte';
+	import { grantedAttackGroups, makeGrantedAttack } from '#utils/combat/grantedAttack.js';
 	import { requestGrantedActionOfferUse } from '#utils/combat/grantedActionOffers.js';
 	import { docLink, type LinkedPart, linkedParts } from '#utils/documents/docLink.ts';
 	import localize from '../../../utils/localize.js';
 	import LinkedText from '../../components/LinkedText.svelte';
 	import { resolveGrantedOfferTargeting } from '../utils/resolveGrantedOfferTargeting.ts';
 
-	interface OfferRecipientActor {
+	type OfferRecipientActor = Parameters<typeof grantedAttackGroups>[0] & {
 		id?: string | null;
 		name?: string;
 		isOwner?: boolean;
-		items?: Iterable<OfferRecipientItem>;
-		activateItem?: (id: string, options?: Record<string, unknown>) => Promise<unknown>;
-	}
-
-	interface OfferRecipientItem {
-		id: string | null;
-		name: string;
-		type: string;
-		system?: { objectType?: string };
-	}
+	};
 
 	function getRecipientActor(offer: GrantedActionOffer): OfferRecipientActor | null {
 		return (fromUuidSync(offer.targetActorUuid as Parameters<typeof fromUuidSync>[0]) ??
@@ -36,6 +28,7 @@
 	}
 
 	function getOfferHeading(offer: GrantedActionOffer): string {
+		if (offer.weaponKind === 'unarmed') return localize('NIMBLE.ui.heroicActions.unarmedStrike');
 		return localize(`NIMBLE.chat.grantedActionOffers.${offer.activationType}`);
 	}
 
@@ -69,23 +62,17 @@
 			: linkedParts('NIMBLE.chat.grantedActionOffers.usedBy', { name: actorName });
 	}
 
-	/** The recipient's items the offer allows them to activate. */
-	function getEligibleItems(offer: GrantedActionOffer): OfferRecipientItem[] {
+	function getChoiceGroups(offer: GrantedActionOffer) {
 		const actor = getRecipientActor(offer);
-		if (!actor?.items) return [];
-		// weaponAttack is the only activation type; extend here alongside the
-		// rule's choice set.
-		return [...actor.items].filter(
-			(item) => item.type === 'object' && item.system?.objectType === 'weapon',
-		);
+		return actor ? grantedAttackGroups(actor, offer) : [];
 	}
 
-	function toggleOffer(offerId: string): void {
-		expandedOfferId = expandedOfferId === offerId ? null : offerId;
+	function getChosen(offer: GrantedActionOffer, groups: ReturnType<typeof getChoiceGroups>) {
+		return chosenByOffer[offer.id] ?? groups[0]?.choices[0]?.value ?? '';
 	}
 
 	/**
-	 * What the offer is currently pointed at. Reading `targetingVersion` re-runs
+	 * What the line is currently pointed at. Reading `targetingVersion` re-runs
 	 * this the moment the user retargets, so the display never sits on a stale
 	 * answer.
 	 */
@@ -101,29 +88,21 @@
 	}
 
 	/**
-	 * Run the recipient's normal activation flow, then consume the offer. The
-	 * activation resolves its own costs (including any adjustments the granting
-	 * feature's rules declared), so the offer itself carries none. A cancelled
-	 * activation returns null and leaves the offer available.
+	 * Make the attack of the line, then mark the line used. A cancelled attack
+	 * leaves the line available.
 	 */
-	async function useOfferWithItem(offer: GrantedActionOffer, itemId: string | null) {
-		if (busy || !itemId) return;
+	async function attackWith(offer: GrantedActionOffer, choice: string) {
+		if (busy || !choice) return;
 		busy = true;
 
 		try {
 			const actor = getRecipientActor(offer);
-			if (!actor?.activateItem) return;
-
-			const activationCard = await actor.activateItem(itemId, {
-				originUuid: offer.sourceItemUuid,
-			});
-			if (!activationCard) return;
+			if (!actor || !(await makeGrantedAttack(actor, offer, choice))) return;
 
 			await requestGrantedActionOfferUse({
 				messageId: messageDocument.id ?? '',
 				offerId: offer.id,
 			});
-			expandedOfferId = null;
 		} finally {
 			busy = false;
 		}
@@ -131,7 +110,7 @@
 
 	let messageDocument = getContext<NimbleChatMessage>('messageDocument');
 	let busy = $state(false);
-	let expandedOfferId = $state<string | null>(null);
+	let chosenByOffer = $state<Record<string, string>>({});
 	let targetingVersion = $state(0);
 
 	$effect(() => {
@@ -162,62 +141,78 @@
 
 			<ul class="nimble-granted-action-offer-list">
 				{#each pendingOffers as offer (offer.id)}
-					<li>
-						<button
-							class="nimble-button nimble-granted-action-offer-button"
-							type="button"
-							disabled={busy}
-							data-tooltip={getOfferTooltip(offer)}
-							onclick={() => toggleOffer(offer.id)}
-						>
-							<i class="nimble-button__icon fa-solid fa-hand-point-right"></i>
-							{getOfferLabel(offer)}
-						</button>
+					{@const groups = getChoiceGroups(offer)}
+					{@const chosen = getChosen(offer, groups)}
+					{@const targeting = getOfferTargeting(offer)}
+					{@const label = getOfferLabel(offer)}
 
-						{#if expandedOfferId === offer.id}
-							{@const eligibleItems = getEligibleItems(offer)}
-							{@const targeting = getOfferTargeting(offer)}
+					<li class="nimble-granted-action-offer">
+						<p class="nimble-granted-action-offer__label" data-tooltip={getOfferTooltip(offer)}>
+							<i class="fa-solid fa-hand-point-right"></i>
+							<span>{label}</span>
+						</p>
 
-							{#if eligibleItems.length > 0}
-								{#if targeting.targetsRecipient}
-									<p class="nimble-granted-action-offer-notice">
-										<i class="fa-solid fa-circle-info"></i>
-										{localize('NIMBLE.chat.grantedActionOffers.targetingRecipient', {
-											name: targeting.recipientTargetNames.join(', '),
-										})}
-									</p>
-								{/if}
+						{#if offer.condition}
+							<p class="nimble-granted-action-offer__note">{offer.condition}</p>
+						{/if}
 
-								{#if targeting.otherTargetNames.length > 0}
-									<p class="nimble-granted-action-offer-notice">
-										{localize('NIMBLE.chat.grantedActionOffers.currentTarget', {
-											name: targeting.otherTargetNames.join(', '),
-										})}
-									</p>
-								{/if}
-
-								<ul
-									class="nimble-granted-action-offer-list nimble-granted-action-offer-list--items"
+						{#if groups.length > 0}
+							<div class="nimble-granted-action-offer__row">
+								<select
+									class="nimble-granted-action-offer__choice"
+									aria-label={label}
+									value={chosen}
+									disabled={busy}
+									onchange={(event) => {
+										chosenByOffer[offer.id] = event.currentTarget.value;
+									}}
 								>
-									{#each eligibleItems as item (item.id)}
-										<li>
-											<button
-												class="nimble-button nimble-granted-action-offer-button"
-												type="button"
-												disabled={busy}
-												onclick={() => useOfferWithItem(offer, item.id)}
-											>
-												<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
-												{item.name}
-											</button>
-										</li>
+									{#each groups as group, index (index)}
+										{#if group.label}
+											<optgroup label={group.label}>
+												{#each group.choices as choice (choice.value)}
+													<option value={choice.value}>{choice.name}</option>
+												{/each}
+											</optgroup>
+										{:else}
+											{#each group.choices as choice (choice.value)}
+												<option value={choice.value}>{choice.name}</option>
+											{/each}
+										{/if}
 									{/each}
-								</ul>
-							{:else}
-								<p class="nimble-granted-action-offer-empty">
-									{localize('NIMBLE.chat.grantedActionOffers.noEligibleItems')}
+								</select>
+
+								<button
+									class="nimble-button nimble-granted-action-offer__attack"
+									type="button"
+									disabled={busy}
+									onclick={() => attackWith(offer, chosen)}
+								>
+									<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
+									{localize('NIMBLE.chat.grantedActionOffers.attack')}
+								</button>
+							</div>
+
+							{#if targeting.targetsRecipient}
+								<p class="nimble-granted-action-offer__note">
+									<i class="fa-solid fa-circle-info"></i>
+									{localize('NIMBLE.chat.grantedActionOffers.targetingRecipient', {
+										name: targeting.recipientTargetNames.join(', '),
+									})}
 								</p>
 							{/if}
+
+							{#if targeting.otherTargetNames.length > 0}
+								<p class="nimble-granted-action-offer__note">
+									{localize('NIMBLE.chat.grantedActionOffers.currentTarget', {
+										name: targeting.otherTargetNames.join(', '),
+									})}
+								</p>
+							{/if}
+						{:else}
+							<p class="nimble-granted-action-offer__note nimble-granted-action-offer__note--empty">
+								{localize('NIMBLE.chat.grantedActionOffers.noEligibleItems')}
+							</p>
 						{/if}
 					</li>
 				{/each}
@@ -237,38 +232,67 @@
 	.nimble-granted-action-offer-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 0.5rem;
 		list-style: none;
 		padding: 0;
 		margin: 0;
-
-		&--items {
-			margin-block-start: 0.25rem;
-			margin-inline-start: 1rem;
-		}
 	}
 
-	.nimble-granted-action-offer-button {
+	.nimble-granted-action-offer {
 		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		width: 100%;
-		padding: 0.25rem 0.5rem;
-		font-size: var(--nimble-sm-text);
-		text-align: left;
-	}
+		flex-direction: column;
+		gap: 0.25rem;
 
-	.nimble-granted-action-offer-notice {
-		margin: 0.25rem 0 0 1rem;
-		font-size: var(--nimble-xs-text);
-		color: var(--nimble-medium-text-color);
-	}
+		&__label {
+			display: flex;
+			align-items: baseline;
+			gap: 0.375rem;
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+		}
 
-	.nimble-granted-action-offer-empty {
-		margin: 0.25rem 0 0 1rem;
-		font-size: var(--nimble-xs-text);
-		font-style: italic;
-		color: var(--nimble-medium-text-color);
+		&__note {
+			margin: 0;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+
+			&--empty {
+				font-style: italic;
+			}
+		}
+
+		&__row {
+			display: flex;
+			gap: 0.25rem;
+		}
+
+		// The dropdown takes the look of the card's buttons, so the line reads as one control row.
+		&__choice,
+		&__attack {
+			height: var(--button-size, 2em);
+			font-family: var(--font-sans);
+			font-size: var(--nimble-sm-text);
+		}
+
+		&__choice {
+			flex: 1;
+			min-width: 0;
+			padding: 0 0.375rem;
+			line-height: normal;
+			color: inherit;
+			background: var(--button-background-color);
+			border: 1px solid var(--button-border-color);
+			border-radius: 4px;
+			box-shadow: none;
+			cursor: pointer;
+		}
+
+		&__attack {
+			flex: none;
+			gap: 0.375rem;
+			padding: 0 0.5rem;
+		}
 	}
 
 	.nimble-granted-action-offer-attribution {

@@ -55,8 +55,15 @@ export function usesCountAsAttack(
 	return options.countsAsAttack !== false && countsAsAttack(item);
 }
 
-/** A roll by the attacker takes the disadvantage. With a save, the rule gives the enemy advantage. */
-export function rollsWithRushedDisadvantage(item: ItemLike | null | undefined): boolean {
+/**
+ * A roll by the attacker takes the disadvantage. With a save, the rule gives the enemy advantage.
+ * An attack that ignores Rushed Attacks takes none, and still counts as an attack of the turn.
+ */
+export function rollsWithRushedDisadvantage(
+	item: ItemLike | null | undefined,
+	options: { ignoresRushed?: boolean } = {},
+): boolean {
+	if (options.ignoresRushed) return false;
 	return countsAsAttack(item) && !effectTypes(item as ItemLike).has(SAVE_NODE);
 }
 

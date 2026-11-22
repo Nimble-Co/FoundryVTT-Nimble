@@ -1,5 +1,9 @@
 import { SYSTEM_ID } from '#system';
-import type { GrantedActivationType } from '../../models/rules/grantActivation.js';
+import type {
+	GrantedActivationTrigger,
+	GrantedActivationType,
+	GrantedWeaponKind,
+} from '../../models/rules/grantActivation.js';
 import { ruleLabel } from '../actor/actorRules.js';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 
@@ -14,10 +18,10 @@ const GRANTED_ACTION_OFFER_REQUEST_TYPE = 'grantedActionOffer';
 const GRANT_ACTIVATION_RULE_TYPE = 'grantActivation';
 
 /**
- * A pending granted-activation offer stamped onto the granting item's chat
- * card. Snapshotted on the activating client at card creation so every client
- * sees the same offer; the executing GM revalidates lightly on use. Offers
- * carry no expiry — like the incoming-attack reaction entries, they simply
+ * A pending granted-activation line stamped onto a chat card. Snapshotted on
+ * the client that makes the card, with the options of its rule, so every
+ * client sees the same line; the executing GM revalidates lightly on use.
+ * Lines carry no expiry: like the incoming-attack reaction entries, they
  * remain available until used.
  */
 interface GrantedActionOffer {
@@ -31,6 +35,17 @@ interface GrantedActionOffer {
 	ruleId: string;
 	/** The granting item, for revalidating that the rule still exists and is enabled */
 	sourceItemUuid: string;
+	/** The attack spends no action. */
+	free: boolean;
+	/** The attack spends the recipient's reaction in place of an action. */
+	spendsReaction: boolean;
+	weaponKind: GrantedWeaponKind;
+	/** The recipient's cantrips are choices too. */
+	allowsCantrips: boolean;
+	/** The attack ignores Rushed Attack disadvantage. */
+	ignoresRushed: boolean;
+	/** Text under the label, for a condition the table checks. */
+	condition: string;
 	used: boolean;
 	/** Id of the user who consumed the offer */
 	usedBy: string | null;
@@ -48,7 +63,14 @@ interface GrantActivationRuleLike {
 	id?: string;
 	label?: string;
 	activationType?: GrantedActivationType;
+	trigger?: GrantedActivationTrigger;
 	includesUser?: boolean;
+	weaponKind?: GrantedWeaponKind;
+	allowsCantrips?: boolean;
+	free?: boolean;
+	spendsReaction?: boolean;
+	ignoresRushed?: boolean;
+	condition?: string;
 	appliesTo?: () => boolean;
 }
 
@@ -63,6 +85,43 @@ interface OfferTargetToken {
 	actor?: { uuid?: string } | null;
 }
 
+function grantRulesOf(
+	item: OfferGrantingItem,
+	trigger: GrantedActivationTrigger,
+): GrantActivationRuleLike[] {
+	const rules =
+		item.rules && typeof item.rules.values === 'function' ? [...item.rules.values()] : [];
+	return rules.filter(
+		(rule) =>
+			rule?.type === GRANT_ACTIVATION_RULE_TYPE &&
+			(rule.trigger ?? 'onActivation') === trigger &&
+			rule.appliesTo?.(),
+	);
+}
+
+function offerOf(
+	rule: GrantActivationRuleLike,
+	item: OfferGrantingItem,
+	targetActorUuid: string,
+): GrantedActionOffer {
+	return {
+		id: foundry.utils.randomID(),
+		targetActorUuid,
+		label: ruleLabel({ label: rule.label, parentDocument: item }),
+		activationType: rule.activationType ?? 'weaponAttack',
+		ruleId: rule.id ?? '',
+		sourceItemUuid: item.uuid ?? '',
+		free: rule.free === true,
+		spendsReaction: rule.spendsReaction === true,
+		weaponKind: rule.weaponKind ?? 'any',
+		allowsCantrips: rule.allowsCantrips === true,
+		ignoresRushed: rule.ignoresRushed === true,
+		condition: rule.condition ?? '',
+		used: false,
+		usedBy: null,
+	};
+}
+
 /**
  * Build the granted-activation offers a used item extends to the user's
  * current targets, one offer per (rule, target actor). The activating actor
@@ -72,11 +131,7 @@ export function collectGrantedActionOffers(
 	item: OfferGrantingItem,
 	targets: OfferTargetToken[],
 ): GrantedActionOffer[] {
-	const rules =
-		item.rules && typeof item.rules.values === 'function' ? [...item.rules.values()] : [];
-	const grantRules = rules.filter(
-		(rule) => rule?.type === GRANT_ACTIVATION_RULE_TYPE && rule.appliesTo?.(),
-	);
+	const grantRules = grantRulesOf(item, 'onActivation');
 	if (grantRules.length < 1) return [];
 
 	const sourceActorUuid = item.actor?.uuid ?? '';
@@ -92,20 +147,22 @@ export function collectGrantedActionOffers(
 			const key = `${rule.id ?? ''}:${targetActorUuid}`;
 			if (offersByKey.has(key)) continue;
 
-			offersByKey.set(key, {
-				id: foundry.utils.randomID(),
-				targetActorUuid,
-				label: ruleLabel({ label: rule.label, parentDocument: item }),
-				activationType: rule.activationType ?? 'weaponAttack',
-				ruleId: rule.id ?? '',
-				sourceItemUuid: item.uuid ?? '',
-				used: false,
-				usedBy: null,
-			});
+			offersByKey.set(key, offerOf(rule, item, targetActorUuid));
 		}
 	}
 
 	return Array.from(offersByKey.values());
+}
+
+/** The lines the actor's own rules give them when they Interpose. */
+export function collectInterposeOffers(
+	actor: { uuid?: string; items?: Iterable<OfferGrantingItem> } | null | undefined,
+): GrantedActionOffer[] {
+	const actorUuid = actor?.uuid ?? '';
+	if (!actorUuid) return [];
+	return [...(actor?.items ?? [])].flatMap((item) =>
+		grantRulesOf(item, 'onInterpose').map((rule) => offerOf(rule, item, actorUuid)),
+	);
 }
 
 interface OfferBearingMessage {

@@ -7,6 +7,11 @@ interface OfferOptions {
 	label?: string;
 	used?: boolean;
 	sourceItemUuid?: string;
+	free?: boolean;
+	weaponKind?: string;
+	allowsCantrips?: boolean;
+	ignoresRushed?: boolean;
+	condition?: string;
 }
 
 function createOffer(options: OfferOptions = {}) {
@@ -17,6 +22,12 @@ function createOffer(options: OfferOptions = {}) {
 		activationType: 'weaponAttack',
 		ruleId: 'rule-1',
 		sourceItemUuid: options.sourceItemUuid ?? '',
+		free: options.free ?? false,
+		spendsReaction: false,
+		weaponKind: options.weaponKind ?? 'any',
+		allowsCantrips: options.allowsCantrips ?? false,
+		ignoresRushed: options.ignoresRushed ?? false,
+		condition: options.condition ?? '',
 		used: options.used ?? false,
 		usedBy: options.used ? 'player-1' : null,
 	};
@@ -32,12 +43,35 @@ function createMessage(offers: ReturnType<typeof createOffer>[]) {
 	return message;
 }
 
-function createRecipient(options: { activateItem?: (id: string) => Promise<unknown> } = {}) {
+function weapon(id: string, name: string, equipped = true) {
+	return {
+		id,
+		uuid: `Actor.ally.Item.${id}`,
+		name,
+		type: 'object',
+		system: {
+			objectType: 'weapon',
+			equipped,
+			activation: {
+				targets: { attackType: 'reach', distance: 1 },
+				effects: [{ type: 'damage', formula: '1d8', damageType: 'slashing' }],
+			},
+		},
+	};
+}
+
+function createRecipient(
+	options: {
+		activateItem?: (id: string, options?: unknown) => Promise<unknown>;
+		items?: unknown[];
+	} = {},
+) {
 	return {
 		id: 'ally',
 		name: 'Sir Brannon',
 		isOwner: true,
-		items: [{ id: 'sword', name: 'Longsword', type: 'object', system: { objectType: 'weapon' } }],
+		system: {},
+		items: options.items ?? [weapon('sword', 'Longsword')],
 		activateItem: options.activateItem,
 	};
 }
@@ -46,11 +80,12 @@ function createTargetToken(actorId: string, actorName: string, disposition = -1)
 	return { actor: { id: actorId, name: actorName }, document: { disposition } };
 }
 
-function findItemButton(itemName: string): HTMLButtonElement | undefined {
-	return screen.getAllByRole('button').find((button) => button.textContent?.includes(itemName)) as
-		| HTMLButtonElement
-		| undefined;
-}
+const attackButton = () => screen.getByRole('button', { name: /Attack/ }) as HTMLButtonElement;
+const dropdown = () => screen.getByRole('combobox') as HTMLSelectElement;
+const optionNames = () =>
+	Array.from(dropdown().querySelectorAll('option'), (option) => option.textContent?.trim());
+const groupNames = () =>
+	Array.from(dropdown().querySelectorAll('optgroup'), (group) => group.getAttribute('label'));
 
 let previousFromUuidSync: unknown;
 let previousGameUser: unknown;
@@ -59,7 +94,7 @@ beforeEach(() => {
 	const g = globalThis as Record<string, any>;
 	previousFromUuidSync = g.fromUuidSync;
 	previousGameUser = g.game?.user;
-	g.fromUuidSync = vi.fn(() => ({ name: 'Sir Brannon', isOwner: true, items: [] }));
+	g.fromUuidSync = vi.fn(() => createRecipient());
 	g.game = g.game ?? {};
 	g.game.user = { isGM: true, id: 'gm', targets: new Set() };
 });
@@ -71,68 +106,155 @@ afterEach(() => {
 });
 
 describe('GrantedActionOffers', () => {
-	it('renders a labeled button for a pending offer', () => {
+	it('shows the label as text, and the dropdown and the Attack button at once', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
 
-		const button = screen.getByRole('button');
-		expect(button.textContent?.trim()).toBe('Sir Brannon: Weapon Attack (Granting Feature)');
+		expect(screen.getByText('Sir Brannon: Weapon Attack (Granting Feature)')).toBeTruthy();
+		expect(dropdown().value).toBe('Actor.ally.Item.sword');
+		expect(attackButton().disabled).toBe(false);
 	});
 
-	it('leaves the source out of the label when the offer has none', () => {
+	it('leaves the source out of the label when the line has none', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([{ ...createOffer(), label: '' }]) },
 		});
 
-		expect(screen.getByRole('button').textContent?.trim()).toBe('Sir Brannon: Weapon Attack');
+		expect(screen.getByText('Sir Brannon: Weapon Attack')).toBeTruthy();
 	});
 
-	it('expands into the recipient item list on click, with an empty state when no items qualify', async () => {
+	it('names an unarmed line an Unarmed Strike', () => {
 		render(GrantedActionOffersTestHarness, {
-			props: { messageDocument: createMessage([createOffer()]) },
+			props: { messageDocument: createMessage([createOffer({ weaponKind: 'unarmed' })]) },
 		});
 
-		await fireEvent.click(screen.getByRole('button'));
-
-		expect(screen.getByText('No eligible items to use.')).toBeTruthy();
+		expect(screen.getByText('Sir Brannon: Unarmed Strike (Granting Feature)')).toBeTruthy();
 	});
 
-	it('lists the recipient weapons when the offer is expanded', async () => {
+	it('shows the condition of the line under its label', () => {
+		render(GrantedActionOffersTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createOffer({ condition: 'If you end adjacent to your quarry.' }),
+				]),
+			},
+		});
+
+		expect(screen.getByText('If you end adjacent to your quarry.')).toBeTruthy();
+	});
+
+	it('says so when the recipient has nothing to attack with', () => {
 		const g = globalThis as Record<string, any>;
-		g.fromUuidSync = vi.fn(() => ({
-			name: 'Sir Brannon',
-			isOwner: true,
-			items: [
-				{ id: 'sword', name: 'Longsword', type: 'object', system: { objectType: 'weapon' } },
-				{ id: 'rope', name: 'Rope', type: 'object', system: { objectType: 'gear' } },
-				{ id: 'rage', name: 'Rage', type: 'feature', system: {} },
-			],
-		}));
+		g.fromUuidSync = vi.fn(() => createRecipient({ items: [] }));
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer({ weaponKind: 'ranged' })]) },
+		});
+
+		expect(screen.getByText('No weapon to attack with.')).toBeTruthy();
+		expect(screen.queryByRole('button')).toBeNull();
+	});
+
+	it('groups the weapons only when some are equipped and some are not, first equipped chosen', () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() =>
+			createRecipient({
+				items: [
+					weapon('bow', 'Shortbow', false),
+					weapon('sword', 'Longsword'),
+					{ id: 'rope', name: 'Rope', type: 'object', system: { objectType: 'gear' } },
+				],
+			}),
+		);
 
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
 
-		await fireEvent.click(screen.getByRole('button'));
-
-		const buttons = screen.getAllByRole('button');
-		const buttonLabels = buttons.map((button) => button.textContent ?? '');
-		expect(buttonLabels.some((label) => label.includes('Longsword'))).toBe(true);
-		expect(buttonLabels.some((label) => label.includes('Rope'))).toBe(false);
-		expect(buttonLabels.some((label) => label.includes('Rage'))).toBe(false);
+		expect(groupNames()).toEqual(['Equipped', 'Not equipped']);
+		expect(optionNames()).toEqual(['Longsword', 'Shortbow']);
+		expect(dropdown().value).toBe('Actor.ally.Item.sword');
 	});
 
-	it('renders an attribution line instead of a button for used offers', () => {
+	it('adds a Cantrips group when the line allows cantrips', () => {
+		const g = globalThis as Record<string, any>;
+		g.fromUuidSync = vi.fn(() =>
+			createRecipient({
+				items: [
+					weapon('sword', 'Longsword'),
+					{
+						id: 'bolt',
+						uuid: 'Actor.ally.Item.bolt',
+						name: 'Fire Bolt',
+						type: 'spell',
+						system: { tier: 0 },
+					},
+				],
+			}),
+		);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer({ allowsCantrips: true })]) },
+		});
+
+		expect(groupNames()).toEqual(['Cantrips']);
+		expect(optionNames()).toEqual(['Longsword', 'Fire Bolt']);
+	});
+
+	it('attacks with the chosen weapon through the granting feature', async () => {
+		const g = globalThis as Record<string, any>;
+		const activateItem = vi.fn(async () => ({}));
+		g.fromUuidSync = vi.fn(() =>
+			createRecipient({
+				activateItem,
+				items: [weapon('sword', 'Longsword'), weapon('axe', 'Handaxe')],
+			}),
+		);
+
+		render(GrantedActionOffersTestHarness, {
+			props: { messageDocument: createMessage([createOffer({ sourceItemUuid: 'Item.source' })]) },
+		});
+
+		await fireEvent.change(dropdown(), { target: { value: 'Actor.ally.Item.axe' } });
+		await fireEvent.click(attackButton());
+
+		expect(activateItem).toHaveBeenCalledWith('axe', { originUuid: 'Item.source' });
+	});
+
+	it('makes a free attack that ignores Rushed Attacks when the line says so', async () => {
+		const g = globalThis as Record<string, any>;
+		const activateItem = vi.fn(async () => ({}));
+		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
+
+		render(GrantedActionOffersTestHarness, {
+			props: {
+				messageDocument: createMessage([
+					createOffer({ sourceItemUuid: 'Item.source', free: true, ignoresRushed: true }),
+				]),
+			},
+		});
+
+		await fireEvent.click(attackButton());
+
+		expect(activateItem).toHaveBeenCalledWith('sword', {
+			originUuid: 'Item.source',
+			skipActionDeduction: true,
+			ignoresRushed: true,
+		});
+	});
+
+	it('renders an attribution line instead of the controls for used lines', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer({ used: true })]) },
 		});
 
 		expect(screen.queryByRole('button')).toBeNull();
-		expect(screen.getByText(/Sir Brannon/)).toBeTruthy();
+		expect(screen.queryByRole('combobox')).toBeNull();
+		expect(screen.getByText(/Granted action used by Sir Brannon/)).toBeTruthy();
 	});
 
-	it('renders nothing when there are no offers', () => {
+	it('renders nothing when there are no lines', () => {
 		const { container } = render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([]) },
 		});
@@ -140,61 +262,26 @@ describe('GrantedActionOffers', () => {
 		expect(container.querySelector('section')).toBeNull();
 	});
 
-	it('names the recipient in a notice while they are the current target', async () => {
+	it('names the recipient in a notice while they are the current target, and still attacks', async () => {
 		const g = globalThis as Record<string, any>;
-		g.fromUuidSync = vi.fn(() => createRecipient());
+		const activateItem = vi.fn(async () => ({}));
+		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
 		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
 
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
-
-		await fireEvent.click(screen.getByRole('button'));
 
 		expect(
 			screen.getByText(/Currently targeting Sir Brannon, who is the one taking this action/),
 		).toBeTruthy();
-		expect(findItemButton('Longsword')?.disabled).toBe(false);
-	});
 
-	it('still runs the activation while the recipient is the current target', async () => {
-		const g = globalThis as Record<string, any>;
-		const activateItem = vi.fn(async () => ({}));
-		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
-		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
-
-		render(GrantedActionOffersTestHarness, {
-			props: { messageDocument: createMessage([createOffer()]) },
-		});
-
-		await fireEvent.click(screen.getByRole('button'));
-
-		const itemButton = findItemButton('Longsword');
-		expect(itemButton).toBeTruthy();
-
-		await fireEvent.click(itemButton as HTMLButtonElement);
+		await fireEvent.click(attackButton());
 		expect(activateItem).toHaveBeenCalledWith('sword', { originUuid: '' });
 	});
 
-	it('gives the attack the item of the row', async () => {
-		const g = globalThis as any;
-		const activateItem = vi.fn(async () => ({}));
-		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
-		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
-
-		render(GrantedActionOffersTestHarness, {
-			props: { messageDocument: createMessage([createOffer({ sourceItemUuid: 'Item.source' })]) },
-		});
-
-		await fireEvent.click(screen.getByRole('button'));
-		await fireEvent.click(findItemButton('Longsword') as HTMLButtonElement);
-
-		expect(activateItem).toHaveBeenCalledWith('sword', { originUuid: 'Item.source' });
-	});
-
-	it('names only the recipient as the one acting when other creatures are targeted too', async () => {
+	it('names only the recipient as the one acting when other creatures are targeted too', () => {
 		const g = globalThis as Record<string, any>;
-		g.fromUuidSync = vi.fn(() => createRecipient());
 		g.game.user.targets = new Set([
 			createTargetToken('ally', 'Sir Brannon'),
 			createTargetToken('goblin', 'Goblin Cutthroat'),
@@ -203,8 +290,6 @@ describe('GrantedActionOffers', () => {
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
-
-		await fireEvent.click(screen.getByRole('button'));
 
 		// The clause claims its subject is the one acting, so naming anyone but
 		// the recipient in it states something false.
@@ -215,7 +300,7 @@ describe('GrantedActionOffers', () => {
 		expect(screen.getByText(/Target: Goblin Cutthroat/)).toBeTruthy();
 	});
 
-	it('leaves every offer usable whoever is targeted, friendly included', async () => {
+	it('leaves every line usable whoever is targeted, friendly included', async () => {
 		const g = globalThis as Record<string, any>;
 		const activateItem = vi.fn(async () => ({}));
 		g.fromUuidSync = vi.fn(() => createRecipient({ activateItem }));
@@ -225,43 +310,23 @@ describe('GrantedActionOffers', () => {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
 
-		await fireEvent.click(screen.getByRole('button'));
-
 		// Who to aim at is the table's call. The card reports the target and
 		// nothing more: no disabling, and no styling that reads as disabled.
-		const itemButton = findItemButton('Longsword');
-		expect(itemButton?.disabled).toBe(false);
-		expect(itemButton?.className).not.toMatch(/discouraged/);
+		expect(attackButton().disabled).toBe(false);
+		expect(attackButton().className).not.toMatch(/discouraged/);
 
-		await fireEvent.click(itemButton as HTMLButtonElement);
+		await fireEvent.click(attackButton());
 		expect(activateItem).toHaveBeenCalledWith('sword', { originUuid: '' });
-	});
-
-	it('names the current target when it is not the recipient', async () => {
-		const g = globalThis as Record<string, any>;
-		g.fromUuidSync = vi.fn(() => createRecipient());
-		g.game.user.targets = new Set([createTargetToken('goblin', 'Goblin Cutthroat')]);
-
-		render(GrantedActionOffersTestHarness, {
-			props: { messageDocument: createMessage([createOffer()]) },
-		});
-
-		await fireEvent.click(screen.getByRole('button'));
-
-		expect(findItemButton('Longsword')?.disabled).toBe(false);
-		expect(screen.getByText(/Goblin Cutthroat/)).toBeTruthy();
 	});
 
 	it('updates the notice as soon as the user retargets', async () => {
 		const g = globalThis as Record<string, any>;
-		g.fromUuidSync = vi.fn(() => createRecipient());
 		g.game.user.targets = new Set([createTargetToken('ally', 'Sir Brannon')]);
 
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
 
-		await fireEvent.click(screen.getByRole('button'));
 		expect(screen.getByText(/Currently targeting Sir Brannon/)).toBeTruthy();
 
 		const targetTokenHook = (g.Hooks.on as ReturnType<typeof vi.fn>).mock.calls.findLast(
@@ -275,18 +340,19 @@ describe('GrantedActionOffers', () => {
 
 		expect(screen.queryByText(/Currently targeting Sir Brannon/)).toBeNull();
 		expect(screen.getByText(/Goblin Cutthroat/)).toBeTruthy();
-		expect(findItemButton('Longsword')?.disabled).toBe(false);
+		expect(attackButton().disabled).toBe(false);
 	});
 
-	it('hides pending offers from non-owners who are not GMs', () => {
+	it('hides pending lines from non-owners who are not GMs', () => {
 		const g = globalThis as Record<string, any>;
 		g.game.user = { isGM: false, id: 'player' };
-		g.fromUuidSync = vi.fn(() => ({ name: 'Sir Brannon', isOwner: false, items: [] }));
+		g.fromUuidSync = vi.fn(() => ({ ...createRecipient(), isOwner: false }));
 
 		render(GrantedActionOffersTestHarness, {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
 
 		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.queryByRole('combobox')).toBeNull();
 	});
 });

@@ -1,4 +1,5 @@
 import type { ReactionPanelStateOptions } from '#types/components/ReactionPanel.d.ts';
+import { collectInterposeOffers } from '#utils/combat/grantedActionOffers.js';
 import { openDefendWindowOnNewestCard } from '#utils/defend/openDefendWindow.js';
 import showReactionConfirmation from '#utils/incomingReactions/showReactionConfirmation.js';
 import localize from '#utils/localize.js';
@@ -77,6 +78,7 @@ export default async function handleInterposeAndDefend(
 			rollMode: 0,
 			reactionType: 'interpose',
 			targets: targetUuids,
+			grantedActionOffers: collectInterposeOffers(actor as never),
 		},
 	} as unknown as ChatMessage.CreateData);
 

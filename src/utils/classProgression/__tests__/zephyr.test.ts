@@ -231,17 +231,18 @@ describe('Zephyr - pack data', () => {
 	});
 
 	describe('Quickstrike', () => {
-		it('ships one action delta that gives the Zephyr 1 action now', () => {
-			const deltas = rulesOf('Quickstrike', 'actionDelta');
-			expect(deltas).toHaveLength(1);
-			const [delta] = deltas;
-			expect(delta.disabled).toBe(false);
-			expect(delta.predicate).toEqual({});
-			expect(delta.priority).toBe(3);
-			expect(delta.target).toBe('self');
-			expect(delta.value).toBe('1');
-			expect(delta.timing).toBe('now');
-			expect(delta.borrowFromNextTurn).toBe(false);
+		it('ships one free Unarmed Strike line for the Zephyr when they Interpose', () => {
+			expect(rulesOf('Quickstrike', 'actionDelta')).toHaveLength(0);
+			const grants = rulesOf('Quickstrike', 'grantActivation');
+			expect(grants).toHaveLength(1);
+			const [grant] = grants;
+			expect(grant.disabled).toBe(false);
+			expect(grant.predicate).toEqual({});
+			expect(grant.trigger).toBe('onInterpose');
+			expect(grant.weaponKind).toBe('unarmed');
+			expect(grant.free).toBe(true);
+			expect(grant.spendsReaction).toBe(false);
+			expect(grant.ignoresRushed).toBe(false);
 		});
 
 		it('ships one hidden pool that gates it until the next turn ends', () => {

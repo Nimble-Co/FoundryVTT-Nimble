@@ -130,33 +130,14 @@
 				"predicate": {},
 				"priority": 3,
 				"activationType": "weaponAttack",
-				"includesUser": true
-			},
-			{
-				"type": "actionDelta",
-				"disabled": false,
-				"id": "coordinated-strike-self-free-attack",
-				"identifier": "",
-				"label": "Coordinated Strike (your attack is free)",
-				"predicate": {},
-				"priority": 3,
-				"value": "1",
-				"timing": "now",
-				"target": "self",
-				"borrowFromNextTurn": false
-			},
-			{
-				"type": "actionDelta",
-				"disabled": false,
-				"id": "coordinated-strike-ally-free-attack",
-				"identifier": "",
-				"label": "Coordinated Strike (ally attack is free)",
-				"predicate": {},
-				"priority": 3,
-				"value": "1",
-				"timing": "now",
-				"target": "targeted",
-				"borrowFromNextTurn": false
+				"trigger": "onActivation",
+				"includesUser": true,
+				"weaponKind": "any",
+				"allowsCantrips": true,
+				"free": true,
+				"spendsReaction": false,
+				"ignoresRushed": false,
+				"condition": ""
 			},
 			{
 				"type": "actionDelta",
@@ -253,16 +234,7 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "0gbDXjqJDZcUxjNB",
-					"type": "note",
-					"noteType": "reminder",
-					"text": "You and the targeted ally each attack for free. The ally may cast a cantrip instead; only the weapon attack is offered on this card.",
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

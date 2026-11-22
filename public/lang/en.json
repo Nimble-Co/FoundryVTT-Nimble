@@ -719,7 +719,9 @@
 				"weaponAttack": "Weapon Attack",
 				"offerLabel": "{name}: {heading} ({source})",
 				"offerLabelNoSource": "{name}: {heading}",
-				"noEligibleItems": "No eligible items to use.",
+				"attack": "Attack",
+				"cantrips": "Cantrips",
+				"noEligibleItems": "No weapon to attack with.",
 				"targetingRecipient": "Currently targeting {name}, who is the one taking this action.",
 				"currentTarget": "Target: {name}",
 				"usedBy": "Granted action used by {name}",
@@ -2590,14 +2592,52 @@
 				}
 			},
 			"grantActivation": {
-				"description": "Offer the currently targeted tokens an immediate activation (e.g. a weapon attack) via a button on this item's chat card. Any action cost for the recipient is governed by other rules, such as an Action Cost or Action Adjustment rule.",
-				"includesUser": {
-					"label": "Also for the user",
-					"hint": "The user of the item gets an offer row too."
-				},
+				"description": "Give creatures an attack line on a chat card: a weapon dropdown and an Attack button. The attack is made through this item, so rules that are only for attacks made through it apply.",
 				"activationType": {
 					"label": "Granted activation",
-					"hint": "What the recipient is offered. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
+					"hint": "What the recipient gets. Weapon attack: the recipient picks one of their weapons and makes a normal attack."
+				},
+				"trigger": {
+					"label": "When",
+					"hint": "When the line goes on a card. On use: this item's card gets a line for each targeted creature. On Interpose: when the owner of this item Interposes, the card of the attack gets a line for them.",
+					"choices": {
+						"onActivation": "When this item is used",
+						"onInterpose": "When its owner Interposes"
+					}
+				},
+				"includesUser": {
+					"label": "Also for the user",
+					"hint": "The user of the item gets a line too."
+				},
+				"weaponKind": {
+					"label": "Weapon",
+					"hint": "The weapons the dropdown lists. Melee, any and unarmed include Unarmed Strike.",
+					"choices": {
+						"any": "Any weapon",
+						"melee": "A melee weapon",
+						"ranged": "A ranged weapon",
+						"unarmed": "An Unarmed Strike"
+					}
+				},
+				"allowsCantrips": {
+					"label": "Cantrips too",
+					"hint": "The dropdown also lists the recipient's cantrips."
+				},
+				"free": {
+					"label": "Free",
+					"hint": "The attack spends no action."
+				},
+				"spendsReaction": {
+					"label": "Spends the reaction",
+					"hint": "The attack spends the recipient's Opportunity Attack reaction in place of an action."
+				},
+				"ignoresRushed": {
+					"label": "Ignores Rushed Attacks",
+					"hint": "The attack takes no disadvantage from Rushed Attacks. It still counts as an attack of the turn."
+				},
+				"condition": {
+					"label": "Condition",
+					"hint": "Text under the line's label, for a condition the table checks (e.g. If you end adjacent to your quarry)."
 				}
 			},
 			"freeMove": {

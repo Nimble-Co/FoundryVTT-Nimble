@@ -132,6 +132,25 @@ export function weaponOptionsFor(
 	];
 }
 
+/** A group of a weapon dropdown. The label is null when the dropdown has one group only. */
+export interface WeaponGroup {
+	label: string | null;
+	weapons: WeaponOption[];
+}
+
+/** The weapons as the groups "Equipped" and "Not equipped", or as one group when one is empty. */
+export function groupWeapons(weapons: WeaponOption[]): WeaponGroup[] {
+	const equipped = weapons.filter((weapon) => weapon.equipped);
+	const notEquipped = weapons.filter((weapon) => !weapon.equipped);
+	if (equipped.length === 0 || notEquipped.length === 0) {
+		return weapons.length > 0 ? [{ label: null, weapons }] : [];
+	}
+	return [
+		{ label: localize('NIMBLE.rollWindow.weaponsEquipped'), weapons: equipped },
+		{ label: localize('NIMBLE.rollWindow.weaponsNotEquipped'), weapons: notEquipped },
+	];
+}
+
 interface EffectTreeNode {
 	type?: string;
 	formula?: string;
