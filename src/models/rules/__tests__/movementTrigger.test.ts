@@ -30,6 +30,7 @@ const DEFAULTS = {
 	minSpaces: 0,
 	spacesScope: 'thisTurn',
 	geometry: 'any',
+	reachSource: 'fixed',
 	reach: 1,
 	minTargets: 1,
 	observerScope: 'self',
@@ -168,6 +169,7 @@ describe('MovementTriggerRule', () => {
 				'movedToward',
 			]);
 			expect(schema.observerScope?.choices).toEqual(['self', 'selfOrAllyWithin']);
+			expect(schema.reachSource?.choices).toEqual(['fixed', 'meleeWeapon']);
 		});
 
 		it('shows the dependent fields only when they apply', () => {
@@ -177,6 +179,9 @@ describe('MovementTriggerRule', () => {
 			expect(show('reach')({ geometry: 'endsAdjacent' })).toBe(true);
 			expect(show('reach')({ geometry: 'inPath' })).toBe(false);
 			expect(show('reach')({ geometry: 'any' })).toBe(false);
+			expect(show('reach')({ geometry: 'enteredReach', reachSource: 'meleeWeapon' })).toBe(false);
+			expect(show('reachSource')({ geometry: 'enteredReach' })).toBe(true);
+			expect(show('reachSource')({ geometry: 'inPath' })).toBe(false);
 			expect(show('minTargets')({ event: 'selfMoved', geometry: 'inPath' })).toBe(true);
 			expect(show('minTargets')({ event: 'selfMoved', geometry: 'any' })).toBe(false);
 			expect(show('minTargets')({ event: 'creatureMoved', geometry: 'inPath' })).toBe(false);
@@ -242,6 +247,59 @@ describe('MovementTriggerRule', () => {
 				},
 				context.record.token.parent.tokens,
 			);
+		});
+
+		describe('with the Reach of the melee weapon', () => {
+			const weapon = (
+				name: string,
+				options: { equipped?: boolean; reach?: { min: number; max: number | null } } = {},
+			) => ({
+				type: 'object',
+				name,
+				system: {
+					objectType: 'weapon',
+					equipped: options.equipped ?? true,
+					properties: {
+						selected: options.reach ? ['twoHanded', 'reach'] : [],
+						reach: options.reach ?? { min: 1, max: null },
+					},
+					activation: { targets: { attackType: 'reach' } },
+				},
+			});
+			const reachOnMatcher = async (items: unknown[], config: Record<string, unknown> = {}) => {
+				const { rule, actor } = makeRule({
+					event: 'creatureMoved',
+					geometry: 'enteredReach',
+					reachSource: 'meleeWeapon',
+					reach: 5,
+					...config,
+				});
+				Object.assign(actor, { items });
+				await rule.onMovementFinished(makeContext() as never);
+				return (matchMovementTrigger.mock.calls.at(-1)?.[3] as { reach: number }).reach;
+			};
+
+			it("uses the largest Reach property of the owner's equipped melee weapons", async () => {
+				const glaive = weapon('Glaive', { reach: { min: 1, max: 2 } });
+				expect(await reachOnMatcher([weapon('Sword'), glaive])).toBe(2);
+			});
+
+			it('uses Reach 1 with no melee weapon equipped (the Unarmed Strike)', async () => {
+				expect(await reachOnMatcher([])).toBe(1);
+				const stowed = weapon('Glaive', { equipped: false, reach: { min: 1, max: 2 } });
+				expect(await reachOnMatcher([stowed])).toBe(1);
+			});
+
+			it('does not count a ranged weapon', async () => {
+				const longbow = weapon('Longbow', { reach: { min: 1, max: 3 } });
+				longbow.system.activation.targets.attackType = 'range';
+				expect(await reachOnMatcher([longbow])).toBe(1);
+			});
+
+			it('keeps the set Reach when the source is fixed', async () => {
+				const glaive = weapon('Glaive', { reach: { min: 1, max: 2 } });
+				expect(await reachOnMatcher([glaive], { reachSource: 'fixed' })).toBe(5);
+			});
 		});
 
 		it('offers its own item on the card', async () => {

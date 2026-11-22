@@ -2779,6 +2779,10 @@
 					"label": "Geometry",
 					"hint": "any: no position test. endsAdjacent: the Movement stops in the Reach of the creature. enteredReach: it goes into the Reach. leftReach: it goes out of the Reach. inPath: it goes through the space of the creature. movedToward: it stops nearer to the creature than where it started."
 				},
+				"reachSource": {
+					"label": "Reach from",
+					"hint": "fixed: the Reach set below. meleeWeapon: the largest Reach of the owner's equipped melee weapons. With no melee weapon equipped, the Reach is 1 (the Unarmed Strike)."
+				},
 				"reach": {
 					"label": "Reach",
 					"hint": "The Reach, in spaces, that the geometry tests use. Reach 1 is adjacent."

@@ -42,6 +42,7 @@
 				"minSpaces": 0,
 				"spacesScope": "thisTurn",
 				"geometry": "enteredReach",
+				"reachSource": "meleeWeapon",
 				"reach": 1,
 				"minTargets": 1,
 				"observerScope": "self",

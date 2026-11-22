@@ -1,4 +1,5 @@
 import type { MovementTriggerOptions, TriggerCreature, TriggerGeometry } from '#types/movement.js';
+import { meleeWeaponReachOf } from '#utils/damage/weaponAttack.js';
 import localize from '#utils/localize.js';
 import { isInStartedCombat } from '#utils/movement/isInStartedCombat.js';
 import {
@@ -76,6 +77,17 @@ function schema() {
 			label: 'NIMBLE.rules.movementTrigger.geometry.label',
 			hint: 'NIMBLE.rules.movementTrigger.geometry.hint',
 		}),
+		reachSource: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'fixed',
+				choices: ['fixed', 'meleeWeapon'],
+				label: 'NIMBLE.rules.movementTrigger.reachSource.label',
+				hint: 'NIMBLE.rules.movementTrigger.reachSource.hint',
+				showWhen: (data: Record<string, unknown>) => REACH_GEOMETRIES.has(data.geometry),
+			}),
+		),
 		reach: new fields.NumberField(
 			withWidget({
 				required: true,
@@ -85,7 +97,8 @@ function schema() {
 				initial: 1,
 				label: 'NIMBLE.rules.movementTrigger.reach.label',
 				hint: 'NIMBLE.rules.movementTrigger.reach.hint',
-				showWhen: (data: Record<string, unknown>) => REACH_GEOMETRIES.has(data.geometry),
+				showWhen: (data: Record<string, unknown>) =>
+					REACH_GEOMETRIES.has(data.geometry) && data.reachSource !== 'meleeWeapon',
 			}),
 		),
 		minTargets: new fields.NumberField(
@@ -169,6 +182,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 	declare minSpaces: number;
 	declare spacesScope: MovementTriggerOptions['spacesScope'];
 	declare geometry: TriggerGeometry;
+	declare reachSource: 'fixed' | 'meleeWeapon';
 	declare reach: number;
 	declare minTargets: number;
 	declare observerScope: MovementTriggerOptions['observerScope'];
@@ -192,6 +206,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 				['minSpaces', 'number'],
 				['spacesScope', 'string'],
 				['geometry', 'string'],
+				['reachSource', '"fixed" | "meleeWeapon"'],
 				['reach', 'number'],
 				['minTargets', 'number'],
 				['observerScope', 'string'],
@@ -267,7 +282,7 @@ class MovementTriggerRule extends NimbleBaseRule<MovementTriggerRule.Schema> {
 			minSpaces: this.minSpaces,
 			spacesScope: this.spacesScope,
 			geometry: this.geometry,
-			reach: this.reach,
+			reach: this.reachSource === 'meleeWeapon' ? meleeWeaponReachOf(this.actor) : this.reach,
 			minTargets: this.minTargets,
 			observerScope: this.observerScope,
 			allyRadius: this.allyRadius,
