@@ -164,3 +164,69 @@ describe.each([
 		]);
 	});
 });
+
+function packActor(path: string) {
+	return JSON.parse(readFileSync(resolve(__dirname, '../../../../packs', path), 'utf8')) as {
+		_id: string;
+		items: { _id: string; name: string; system: Record<string, unknown> }[];
+	};
+}
+
+describe("Ul'vek, Psionic Despot: Control", () => {
+	const despot = packActor('legendaryMonsters/core/ulvek-psionic-despot.json');
+	const source = despot.items.find((item) => item.name === 'Control.');
+	const rules = ((source?.system.rules ?? []) as PackRule[]).map((rule) => ({
+		...rule,
+		appliesTo: () => true,
+	}));
+	const feature = {
+		uuid: `Actor.ulvek.Item.${source?._id}`,
+		name: source?.name ?? '',
+		actor: { uuid: 'Actor.ulvek' },
+		rules: new Map(rules.map((rule) => [rule.id, rule])),
+	};
+
+	it('gives only the target hero a line that spends one of their actions, with weapons and cantrips', () => {
+		const lines = collectGrantedActionOffers(feature, [{ actor: { uuid: 'Actor.hero' } }]);
+
+		expect(lines).toEqual([
+			expect.objectContaining({
+				targetActorUuid: 'Actor.hero',
+				label: 'Control',
+				free: false,
+				spendsReaction: false,
+				weaponKind: 'any',
+				allowsCantrips: true,
+				ignoresRushed: false,
+				condition: 'If you passed the save, attack with disadvantage.',
+			}),
+		]);
+	});
+
+	it('keeps the DC 15 WIL save', () => {
+		const activation = source?.system.activation as { effects: Record<string, unknown>[] };
+
+		expect(activation.effects).toEqual([
+			expect.objectContaining({ type: 'savingThrow', savingThrowType: 'will', saveDC: '15' }),
+		]);
+	});
+});
+
+describe('Kobolds: Nooooo!', () => {
+	it.each([
+		'kobold',
+		'kobold-minion',
+		'kobold-sneak',
+		'kobold-trapper',
+		'kobold-denwarden',
+		'kobold-clanger',
+	])('%s keeps Nooooo! as a note on its stat block', (file) => {
+		const kobold = packActor(`monsters/core/kobolds/${file}.json`);
+		const nooooo = kobold.items.find((item) => item.name === 'Nooooo!');
+
+		expect(nooooo?.system.description).toContain(
+			'When an ally within 2 spaces dies, attack once for free.',
+		);
+		expect(nooooo?.system.rules).toEqual([]);
+	});
+});

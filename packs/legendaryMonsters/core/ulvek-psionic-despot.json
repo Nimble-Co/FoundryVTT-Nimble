@@ -493,7 +493,27 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "grantActivation",
+						"disabled": false,
+						"id": "ulvekControlAttack",
+						"identifier": "",
+						"label": "Control",
+						"predicate": {},
+						"priority": 1,
+						"activationType": "weaponAttack",
+						"trigger": "onActivation",
+						"includesUser": false,
+						"includesTargets": true,
+						"weaponKind": "any",
+						"allowsCantrips": true,
+						"free": false,
+						"spendsReaction": false,
+						"ignoresRushed": false,
+						"condition": "If you passed the save, attack with disadvantage."
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {
