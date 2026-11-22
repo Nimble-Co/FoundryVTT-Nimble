@@ -35,6 +35,7 @@ type CombatEventTrigger =
 	| 'onTurnStart'
 	| 'onTurnEnd'
 	| 'onAnyTurnStart'
+	| 'onRoundStart'
 	| 'onWound'
 	| 'onHealed'
 	| 'onKill'

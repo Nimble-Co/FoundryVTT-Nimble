@@ -115,6 +115,7 @@ describe('registerTurnTriggerHooks', () => {
 
 		expect(callbacks.get('nimbleCombatTurnStart')).toBeDefined();
 		expect(callbacks.get('nimbleCombatTurnEnd')).toBeDefined();
+		expect(callbacks.get('nimbleCombatRoundStart')).toBeDefined();
 	});
 
 	it('does not throw when called with non-character combatant', async () => {
@@ -210,11 +211,14 @@ describe('registerTurnTriggerHooks', () => {
 			registerTurnTriggerHooks();
 			const start = callbacks.get('nimbleCombatTurnStart');
 			const end = callbacks.get('nimbleCombatTurnEnd');
+			const round = callbacks.get('nimbleCombatRoundStart');
 			expect(start).toBeDefined();
 			expect(end).toBeDefined();
+			expect(round).toBeDefined();
 			return {
 				start: start as (combatant: unknown) => void,
 				end: end as (combatant: unknown) => void,
+				round: round as (combat: unknown) => void,
 			};
 		}
 
@@ -266,6 +270,50 @@ describe('registerTurnTriggerHooks', () => {
 				await settle();
 
 				expect(current('use')).toBe(0);
+			});
+		});
+
+		describe('at the start of a round', () => {
+			const combatOf = (combatant: Combatant.Implementation) => combatant.parent;
+
+			it('recovers a round pool of every hero in the combat', async () => {
+				const hooks = await registerTurnStart();
+				const first = createHeroWithPools([{ identifier: 'round', trigger: 'onRoundStart' }]);
+				const second = createHeroWithPools([{ identifier: 'round', trigger: 'onRoundStart' }]);
+
+				hooks.round(combatOf(createTurnOf('npc', [first.actor, second.actor])));
+
+				await vi.waitFor(() => {
+					expect(first.current('round')).toBe(1);
+					expect(second.current('round')).toBe(1);
+				});
+			});
+
+			it("does not recover a round pool at the start of the hero's own turn", async () => {
+				const hooks = await registerTurnStart();
+				const { actor, current } = createHeroWithPools([
+					{ identifier: 'round', trigger: 'onRoundStart' },
+				]);
+
+				hooks.start(createTurnOf('character', [actor]));
+				await settle();
+
+				expect(current('round')).toBe(0);
+			});
+
+			it('lets the first turn of the round recover after the round pools', async () => {
+				const hooks = await registerTurnStart();
+				const { actor, current } = createHeroWithPools([
+					{ identifier: 'round', trigger: 'onRoundStart' },
+					{ identifier: 'own', trigger: 'onTurnStart' },
+				]);
+				const turn = createTurnOf('character', [actor]);
+
+				hooks.round(combatOf(turn));
+				hooks.start(turn);
+				await settle();
+
+				expect([current('round'), current('own')]).toEqual([1, 1]);
 			});
 		});
 
