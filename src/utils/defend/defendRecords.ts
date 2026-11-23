@@ -45,11 +45,17 @@ export function defendsOf(system: unknown): DefendRecord[] {
 }
 
 /** The lines a Defend shows on its card: its reminders, then each effect it put on the attacker. */
-export function defendLinesOf(record: DefendRecord): string[] {
+export function defendLinesOf(record: DefendRecord, targetName = ''): string[] {
+	const name = targetName.trim();
+	const reminders = name
+		? record.reminders.map((line) =>
+				localize('NIMBLE.chat.defend.reminderFor', { name, reminder: line }),
+			)
+		: record.reminders;
 	const effects = record.attackerEffects
 		.filter((each) => !!each.name)
 		.map((each) => localize('NIMBLE.chat.defend.attackerEffect', { name: each.name }));
-	return [...record.reminders, ...effects];
+	return [...reminders, ...effects];
 }
 
 /**

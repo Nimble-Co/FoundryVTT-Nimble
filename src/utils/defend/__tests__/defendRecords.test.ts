@@ -43,4 +43,13 @@ describe('defendLinesOf', () => {
 
 		expect(defendLinesOf(record)).toEqual([]);
 	});
+
+	it('names the target on reminders, but not on effects applied to the attacker', () => {
+		const record = recordWith({ reminders: ['Decoy: move.'], attackerEffects: [SAND] });
+
+		const lines = defendLinesOf(record, 'Pip');
+
+		expect(lines[0]).toBe('For Pip: Decoy: move.');
+		expect(lines[1]).not.toContain('Pip');
+	});
 });
