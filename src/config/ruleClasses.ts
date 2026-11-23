@@ -1,6 +1,7 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
 import { ActionCostRule } from '../models/rules/actionCost.js';
 import { ActionDeltaRule } from '../models/rules/actionDelta.js';
+import { AdditionalMarkRule } from '../models/rules/additionalMark.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
@@ -108,6 +109,7 @@ export const RULE_CLASSES = {
 	abilityBonus: AbilityBonusRule,
 	actionCost: ActionCostRule,
 	actionDelta: ActionDeltaRule,
+	additionalMark: AdditionalMarkRule,
 	applyCondition: ApplyConditionRule,
 	armorClass: ArmorClassRule,
 	auraReach: AuraReachRule,
