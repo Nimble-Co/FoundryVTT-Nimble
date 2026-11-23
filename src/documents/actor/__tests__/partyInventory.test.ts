@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SYSTEM_PATH } from '#system';
-import {
-	PARTY_INVENTORY_IMAGE,
-	PARTY_INVENTORY_NAME,
-} from '../../../settings/partyStashSetting.ts';
+import { PARTY_INVENTORY_NAME } from '../../../settings/partyStashSetting.ts';
 import { NimblePartyInventory } from '../partyInventory.ts';
 
 describe('NimblePartyInventory', () => {
@@ -39,13 +35,11 @@ describe('NimblePartyInventory', () => {
 		expect(await deleting._preDelete({}, {})).toBe(false);
 	});
 
-	it('uses the party chest, named Party Inventory', () => {
-		expect(NimblePartyInventory.getDefaultArtwork().img).toBe(PARTY_INVENTORY_IMAGE);
-		expect(PARTY_INVENTORY_IMAGE).toBe(`${SYSTEM_PATH}/assets/icons/party-inventory.svg`);
+	it('is named Party Inventory', () => {
 		expect(PARTY_INVENTORY_NAME).toBe('Party Inventory');
 	});
 
-	it('keeps the party name and chest when a rename comes in', async () => {
+	it('keeps the party name when a rename comes in, and leaves the image alone', async () => {
 		const inventory = actor();
 		const parent = Object.getPrototypeOf(NimblePartyInventory.prototype) as {
 			_preUpdate?: (...args: unknown[]) => Promise<unknown>;
@@ -59,6 +53,6 @@ describe('NimblePartyInventory', () => {
 			parent._preUpdate = original;
 		}
 		expect(changes.name).toBe(PARTY_INVENTORY_NAME);
-		expect(changes.img).toBe(PARTY_INVENTORY_IMAGE);
+		expect(changes.img).toBe('icons/svg/mystery-man.svg');
 	});
 });

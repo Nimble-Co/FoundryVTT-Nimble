@@ -1,4 +1,4 @@
-import { SYSTEM_ID, SYSTEM_PATH, systemHookName } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import type { TransferItem } from '#utils/partyStash/planItemTransfer.ts';
 
 export const PARTY_STASH_SETTING = 'partyStash';
@@ -22,7 +22,6 @@ const HOLDER_FLAG = 'partyStashHolder';
 const STASH_FLAG = 'partyStash';
 const PARTY_INVENTORY_TYPE = 'partyInventory';
 export const PARTY_INVENTORY_NAME = 'Party Inventory';
-export const PARTY_INVENTORY_IMAGE = `${SYSTEM_PATH}/assets/icons/party-inventory.svg`;
 
 interface PartyOwnership {
 	default: number;
@@ -30,7 +29,6 @@ interface PartyOwnership {
 
 interface PartyHolder {
 	name?: string | null;
-	img?: string | null;
 	type?: string;
 	ownership?: object;
 	getFlag?(scope: string, key: string): unknown;
@@ -145,15 +143,8 @@ function ownerLevel(): number {
 	);
 }
 
-function partyInventoryPortrait() {
-	return {
-		name: PARTY_INVENTORY_NAME,
-		img: PARTY_INVENTORY_IMAGE,
-		prototypeToken: {
-			name: PARTY_INVENTORY_NAME,
-			texture: { src: PARTY_INVENTORY_IMAGE },
-		},
-	};
+function partyInventoryName() {
+	return { name: PARTY_INVENTORY_NAME };
 }
 
 /** The document to create for a missing holder, or for one that is still a creature. */
@@ -166,7 +157,7 @@ export function partyInventoryReplacement(
 	const stash = holder ? normalizePartyStash(holder.getFlag?.(SYSTEM_ID, STASH_FLAG)) : fallback;
 	const copied = holder?.ownership as { default?: number } | undefined;
 	return {
-		...partyInventoryPortrait(),
+		...partyInventoryName(),
 		type: PARTY_INVENTORY_TYPE,
 		ownership: typeof copied?.default === 'number' ? copied : ownership,
 		flags: {
@@ -179,15 +170,15 @@ export function partyInventoryReplacement(
 }
 
 /**
- * Name and portrait for a holder that is already a party inventory.
- * Null when it already has both, so a ready hook does not write every time.
+ * The party name for a holder that is already a party inventory.
+ * Null when it already has that name, so a ready hook does not write every time.
  */
 export function partyInventoryIdentity(
-	holder: Pick<PartyHolder, 'type' | 'name' | 'img'> | null,
-): ReturnType<typeof partyInventoryPortrait> | null {
+	holder: Pick<PartyHolder, 'type' | 'name'> | null,
+): ReturnType<typeof partyInventoryName> | null {
 	if (holder?.type !== PARTY_INVENTORY_TYPE) return null;
-	if (holder.name === PARTY_INVENTORY_NAME && holder.img === PARTY_INVENTORY_IMAGE) return null;
-	return partyInventoryPortrait();
+	if (holder.name === PARTY_INVENTORY_NAME) return null;
+	return partyInventoryName();
 }
 
 /** Creates the party inventory actor, or replaces a creature holder with one. A GM has to open the world once. */

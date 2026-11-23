@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SYSTEM_ID, SYSTEM_PATH } from '#system';
+import { SYSTEM_ID } from '#system';
 
 const world = game as unknown as { actors: unknown; user: unknown };
 
@@ -8,7 +8,6 @@ import {
 	ensurePartyStashHolder,
 	hidePartyStashHolder,
 	normalizePartyStash,
-	PARTY_INVENTORY_IMAGE,
 	PARTY_INVENTORY_NAME,
 	partyCoin,
 	partyInventoryIdentity,
@@ -77,11 +76,7 @@ describe('hidePartyStashHolder', () => {
 });
 
 const torch = { _id: 'torch', type: 'object', name: 'Torch', system: { quantity: 2 } };
-const portrait = {
-	name: PARTY_INVENTORY_NAME,
-	img: PARTY_INVENTORY_IMAGE,
-	prototypeToken: { name: PARTY_INVENTORY_NAME, texture: { src: PARTY_INVENTORY_IMAGE } },
-};
+const partyName = { name: PARTY_INVENTORY_NAME };
 
 describe('partyInventoryReplacement', () => {
 	it('creates a party inventory actor from the setting when none exists', () => {
@@ -92,7 +87,7 @@ describe('partyInventoryReplacement', () => {
 				{ default: 3 },
 			),
 		).toEqual({
-			...portrait,
+			...partyName,
 			type: 'partyInventory',
 			ownership: { default: 3 },
 			flags: {
@@ -132,24 +127,13 @@ describe('partyInventoryReplacement', () => {
 });
 
 describe('partyInventoryIdentity', () => {
-	it('gives a party inventory actor the party name and chest when it still looks like something else', () => {
-		expect(
-			partyInventoryIdentity({
-				type: 'partyInventory',
-				name: 'Goblin',
-				img: 'icons/svg/mystery-man.svg',
-			}),
-		).toEqual(portrait);
-		expect(PARTY_INVENTORY_IMAGE).toBe(`${SYSTEM_PATH}/assets/icons/party-inventory.svg`);
+	it('gives a party inventory actor the party name when it still has another name', () => {
+		expect(partyInventoryIdentity({ type: 'partyInventory', name: 'Goblin' })).toEqual(partyName);
 	});
 
-	it('leaves a party inventory actor that already has the name and chest', () => {
+	it('leaves a party inventory actor that already has the party name', () => {
 		expect(
-			partyInventoryIdentity({
-				type: 'partyInventory',
-				name: PARTY_INVENTORY_NAME,
-				img: PARTY_INVENTORY_IMAGE,
-			}),
+			partyInventoryIdentity({ type: 'partyInventory', name: PARTY_INVENTORY_NAME }),
 		).toBeNull();
 	});
 });
@@ -190,8 +174,8 @@ describe('ensurePartyStashHolder', () => {
 			expect(created[0]).toMatchObject({
 				type: 'partyInventory',
 				name: 'Party Inventory',
-				img: `${SYSTEM_PATH}/assets/icons/party-inventory.svg`,
 			});
+			expect(created[0]).not.toHaveProperty('img');
 			expect(deleted).toBe(true);
 		} finally {
 			world.actors = previousActors;
@@ -227,7 +211,7 @@ describe('ensurePartyStashHolder', () => {
 		}
 	});
 
-	it('renames and reicons a party inventory actor without deleting it', async () => {
+	it('renames a party inventory actor without deleting it', async () => {
 		const previousActors = world.actors;
 		const previousUser = world.user;
 		const actorCreate = actorClass.create;
@@ -252,7 +236,7 @@ describe('ensurePartyStashHolder', () => {
 		};
 		try {
 			await ensurePartyStashHolder();
-			expect(updates).toEqual([portrait]);
+			expect(updates).toEqual([partyName]);
 			expect(deleted).toBe(false);
 		} finally {
 			world.actors = previousActors;
