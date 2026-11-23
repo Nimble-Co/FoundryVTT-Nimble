@@ -144,7 +144,7 @@ In combat, an attack card that hits a hero has a **Reactions** section: a button
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too. A move is offered on the attack card: drag the token and choose where to stop, up to the distance, away from the attacker when the feature says so. Skipping the drag leaves the Defend. An attack back is still an [attack line](#attacks-from-a-feature).
+A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too: a move back is a line for the table, and an attack back is an [attack line](#attacks-from-a-feature).
 
 After a Defend, the target row shows a green shield. Before the damage is applied, the GM can click it when the damage cannot be avoided, or **Undo** to give back the reaction and actions. An effect a feature put on the attacker stays.
 
@@ -153,7 +153,6 @@ The **Defend** and **Interpose** rows on the sheet's Actions tab and the hotbar 
 ::: details More about Defend features
 - A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
 - A free Defend that is a spell, such as Flame Barrier, has its own row. Cast from that row, its effect that hurts attackers also counts the attack you answer.
-- Decoy and Small Protect Me! miss the attack, then offer a move of up to half your speed away from the attacker.
 :::
 
 ## The Initiative card

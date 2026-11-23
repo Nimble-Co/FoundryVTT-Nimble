@@ -22,12 +22,7 @@ vi.doMock('../defendOptions.js', () => ({
 const { allyDefendOffers, useAllyDefendOffer } = await import('../allyDefendOffers.js');
 
 const PIP = 'Scene.s.Token.pip';
-const exploit = {
-	id: 'ex',
-	resolveRange: () => 4,
-	reminder: 'Force an enemy to Interpose.',
-	moveOffer: () => null,
-};
+const exploit = { id: 'ex', resolveRange: () => 4, reminder: 'Force an enemy to Interpose.' };
 
 function token(id: string, actorUuid: string, owner = true, rules: unknown[] = []) {
 	return {

@@ -2,7 +2,6 @@ import type { AllyDefendOffer, DefendCardLike } from '#types/defend.d.ts';
 import { getPrimaryActiveGmId } from '../getPrimaryActiveGmId.js';
 import localize from '../localize.js';
 import { areAllies, areWithinSpaces } from '../tokens/tokenAdjacency.js';
-import { offerDefendOptionMoves } from './defendOptionMove.js';
 import { defendOptionsOf, payDefendOption } from './defendOptions.js';
 import { damageAppliedTo, defendsOf } from './defendRecords.js';
 import { requestDefendAllyUse } from './defendRequests.js';
@@ -55,23 +54,10 @@ export async function useAllyDefendOffer(
 	const use = await payDefendOption(offer.actor, offer.pick);
 	if (!use) return false;
 	const text = (offer.pick.rule.reminder ?? '').trim();
-	const written = await requestDefendAllyUse({
+	return requestDefendAllyUse({
 		messageId,
 		defendId: offer.defendId,
 		use,
 		reminder: text ? `${offer.pick.label}: ${text}` : '',
 	});
-	if (!written) return false;
-	const card = (game.messages?.get(messageId) ?? null) as ChatMessage | null;
-	const attacker = card
-		? (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker)
-		: null;
-	await offerDefendOptionMoves({
-		rules: [offer.pick.rule],
-		actor: offer.actor,
-		tokenUuid: null,
-		fromName: attacker?.name ?? '',
-		card,
-	});
-	return true;
 }

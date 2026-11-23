@@ -3565,19 +3565,6 @@
 				"woundCost": {
 					"label": "Wounds",
 					"hint": "The Wounds one use gives the hero."
-				},
-				"moveDistance": {
-					"label": "Move",
-					"hint": "A formula for a free move when this option is taken, for example floor(@speed / 2). @speed is the mover's speed. Empty offers no move. The player chooses where to stop."
-				},
-				"moveDirection": {
-					"label": "Direction",
-					"hint": "Away and toward are from the attacker. The player still chooses where to stop, up to the distance.",
-					"choices": {
-						"any": "Any",
-						"away": "Away from the attacker",
-						"toward": "Toward the attacker"
-					}
 				}
 			},
 			"damageBack": {

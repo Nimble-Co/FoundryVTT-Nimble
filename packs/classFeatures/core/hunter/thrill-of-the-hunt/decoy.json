@@ -22,8 +22,6 @@
 				"useReroll": false,
 				"attackerEffectId": "",
 				"reminder": "Move up to half your speed away.",
-				"moveDistance": "floor(@speed / 2)",
-				"moveDirection": "away",
 				"useItem": false,
 				"withInterpose": false,
 				"wholeRound": false,

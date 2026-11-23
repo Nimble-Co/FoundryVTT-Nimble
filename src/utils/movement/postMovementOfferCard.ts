@@ -22,7 +22,7 @@ export interface MovementOfferCardInput {
 	/** Why the offer was made. Plain text shows as it is. */
 	reason: CardEventText | string;
 	node: Pick<MoveNode, 'kind' | 'distance' | 'ignoreDifficultTerrain' | 'direction'> &
-		Partial<Pick<MoveNode, 'distanceBySize' | 'sourceName'>>;
+		Partial<Pick<MoveNode, 'distanceBySize'>>;
 	/** 'self' offers to the speaker token; a list of token uuids offers to those tokens. */
 	recipients: 'self' | string[];
 	/** Whether only the owners of the source and of each creature with an offer, and the GMs, see the card. */
@@ -59,7 +59,7 @@ function buildOffer(input: MovementOfferCardInput): BuiltOffer | null {
 		distanceBySize: { ...(input.node.distanceBySize ?? {}) },
 		ignoreDifficultTerrain: input.node.ignoreDifficultTerrain,
 		direction: input.node.direction,
-		sourceName: input.node.sourceName?.trim() || actor.name || '',
+		sourceName: actor.name ?? '',
 		parentContext: null,
 		parentNode: null,
 	};
