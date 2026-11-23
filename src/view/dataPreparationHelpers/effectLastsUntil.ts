@@ -1,3 +1,4 @@
+import { heldActorOf } from '#utils/actor/heldActor.js';
 import {
 	type CoreDurationUnits,
 	describeLastsUntil,
@@ -10,6 +11,7 @@ import localize from '#utils/localize.js';
 
 export interface LastsUntilEffect {
 	origin?: string | null;
+	flags?: Record<string, Record<string, unknown> | undefined>;
 	system?: unknown;
 	duration?: { value?: number | null; units?: string | null } | null;
 	_source?: { duration?: { value?: number | null; units?: string | null } | null };
@@ -71,12 +73,13 @@ export function effectLastsUntil(effect: LastsUntilEffect, holder: Creature | nu
 	};
 	const source = sourceCreature(effect);
 	const sourceName = source && source.uuid !== holder?.uuid ? (source.name ?? null) : null;
+	const held = heldActorOf(effect);
 	return describeLastsUntil({
 		moments: system.lastsUntil ?? [],
 		usedUp: usedUpOf(system),
 		coreDuration: coreDurationOf(effect),
 		escape: hasEscape(system),
-		reader: holderReader(sourceName),
+		reader: holderReader(sourceName, held?.name ?? null),
 		localize,
 		format: localize,
 	});

@@ -1,4 +1,5 @@
 import { SYSTEM_ID } from '#system';
+import { heldActorOf } from '#utils/actor/heldActor.js';
 import {
 	type EffectStart,
 	type LastsUntilCheck,
@@ -69,6 +70,7 @@ export function effectSubject(
 ): MomentSubject {
 	const holder = holderOf(effect);
 	const source = sourceOf(effect);
+	const held = heldActorOf(effect);
 	const start = (effect.start ?? { time: 0 }) as Partial<Omit<EffectStart, 'combat'>> & {
 		combat?: string | { id?: string | null } | null;
 	};
@@ -91,6 +93,7 @@ export function effectSubject(
 		startSeat: startCombatant ? seatOf(startCombatant) : null,
 		holder,
 		source,
+		held,
 		origin: effect.origin ?? null,
 		effectId: effect.id ?? null,
 		holderInCombat: !!(holder as { inCombat?: boolean } | null)?.inCombat,

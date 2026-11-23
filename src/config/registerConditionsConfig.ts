@@ -103,7 +103,6 @@ export default function registerConditionsConfig() {
 		invisible: 'NIMBLE.conditions.invisible',
 		lastStand: 'NIMBLE.conditions.lastStand',
 		latched: 'NIMBLE.conditions.latched',
-		swallowed: 'NIMBLE.conditions.swallowed',
 		marked: 'NIMBLE.conditions.marked',
 		paralyzed: 'NIMBLE.conditions.paralyzed',
 		petrified: 'NIMBLE.conditions.petrified',
@@ -115,6 +114,7 @@ export default function registerConditionsConfig() {
 		slowed: 'NIMBLE.conditions.slowed',
 		stunned: 'NIMBLE.conditions.stunned',
 		smoldering: 'NIMBLE.conditions.smoldering',
+		swallowed: 'NIMBLE.conditions.swallowed',
 		taunted: 'NIMBLE.conditions.taunted',
 		unconscious: 'NIMBLE.conditions.unconscious',
 		wounded: 'NIMBLE.conditions.wounded',
@@ -137,7 +137,6 @@ export default function registerConditionsConfig() {
 		invisible: 'NIMBLE.conditionDescriptions.invisible',
 		lastStand: 'NIMBLE.conditionDescriptions.lastStand',
 		latched: 'NIMBLE.conditionDescriptions.latched',
-		swallowed: 'NIMBLE.conditionDescriptions.swallowed',
 		marked: 'NIMBLE.conditionDescriptions.marked',
 		paralyzed: 'NIMBLE.conditionDescriptions.paralyzed',
 		petrified: 'NIMBLE.conditionDescriptions.petrified',
@@ -149,6 +148,7 @@ export default function registerConditionsConfig() {
 		slowed: 'NIMBLE.conditionDescriptions.slowed',
 		smoldering: 'NIMBLE.conditionDescriptions.smoldering',
 		stunned: 'NIMBLE.conditionDescriptions.stunned',
+		swallowed: 'NIMBLE.conditionDescriptions.swallowed',
 		taunted: 'NIMBLE.conditionDescriptions.taunted',
 		unconscious: 'NIMBLE.conditionDescriptions.unconscious',
 		wounded: 'NIMBLE.conditionDescriptions.wounded',
@@ -173,7 +173,6 @@ export default function registerConditionsConfig() {
 		invisible: 'icons/svg/invisible.svg',
 		lastStand: 'icons/svg/combat.svg',
 		latched: `${SYSTEM_PATH}/assets/icons/latched.svg`,
-		swallowed: `${SYSTEM_PATH}/assets/icons/swallowed.svg`,
 		marked: 'icons/svg/target.svg',
 		paralyzed: 'icons/svg/paralysis.svg',
 		petrified: `${SYSTEM_PATH}/assets/icons/petrified.svg`,
@@ -185,6 +184,7 @@ export default function registerConditionsConfig() {
 		slowed: `${SYSTEM_PATH}/assets/icons/slowed.svg`,
 		smoldering: 'icons/svg/fire.svg',
 		stunned: `${SYSTEM_PATH}/assets/icons/stunned.svg`,
+		swallowed: `${SYSTEM_PATH}/assets/icons/swallowed.svg`,
 		taunted: `${SYSTEM_PATH}/assets/icons/taunted.svg`,
 		unconscious: 'icons/svg/unconscious.svg',
 		wounded: `${SYSTEM_PATH}/assets/icons/wound.svg`,
@@ -202,6 +202,9 @@ export default function registerConditionsConfig() {
 	const conditionLinkedConditions = {
 		petrified: ['incapacitated'] as const,
 	};
+
+	/** Monster features inflict these. An id not in the set stays in the pickers, including a GM's custom condition. */
+	const monsterConditions = new Set<string>(['latched', 'swallowed']);
 
 	const conditionStackableConditions = new Set(['wounded']);
 
@@ -247,6 +250,7 @@ export default function registerConditionsConfig() {
 			eventMoment('die', 'source'),
 			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
 		],
+		latched: [eventMoment('die', 'holder'), eventMoment('die', 'held')],
 		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
 			eventMoment('zeroHp', 'holder'),
@@ -276,6 +280,21 @@ export default function registerConditionsConfig() {
 				damageType: '',
 				wounds: 0,
 			},
+			{
+				id: 'swallowedAttacks',
+				type: 'attackOutcome',
+				side: 'yourAttacks',
+				cannotMiss: true,
+				ignoreArmor: true,
+			},
+		],
+		latched: [
+			{
+				id: 'latchedAttacks',
+				type: 'attackOutcome',
+				side: 'yourAttacks',
+				cannotMiss: true,
+			},
 		],
 	};
 
@@ -296,6 +315,7 @@ export default function registerConditionsConfig() {
 		conditionDescriptions,
 		conditionDefaultImages,
 		conditionLinkedConditions,
+		monsterConditions,
 		conditionStackableConditions,
 		conditionOverlayConditions,
 		conditionMinorConditions,

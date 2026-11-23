@@ -9,6 +9,7 @@ function setConfiguredConditions(
 		linked?: Record<string, readonly string[]>;
 		stackable?: string[];
 		lastsUntil?: Record<string, object[]>;
+		monster?: string[];
 	} = {},
 ): void {
 	(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {
@@ -19,6 +20,7 @@ function setConfiguredConditions(
 		conditionLinkedConditions: relationships.linked ?? {},
 		conditionStackableConditions: new Set<string>(relationships.stackable ?? []),
 		conditionLastsUntil: relationships.lastsUntil ?? {},
+		monsterConditions: new Set<string>(relationships.monster ?? []),
 	};
 }
 
@@ -146,6 +148,41 @@ describe('ConditionManager', () => {
 			manager.configureStatusEffects();
 
 			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['afraid', 'zealous']);
+		});
+
+		it('keeps monster-scoped conditions in CONFIG.statusEffects, so they can be applied', () => {
+			setConfiguredConditions(
+				{ blinded: 'Blinded', swallowed: 'Swallowed' },
+				{ monster: ['swallowed'] },
+			);
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			expect(CONFIG.statusEffects.map((effect) => effect.id)).toEqual(['blinded', 'swallowed']);
+		});
+
+		it('publishes every registered condition, since an absent id cannot be applied at all', () => {
+			setConfiguredConditions(
+				{ blinded: 'Blinded', swallowed: 'Swallowed', latched: 'Latched' },
+				{ monster: ['swallowed', 'latched'] },
+			);
+			manager.initialize();
+			manager.configureStatusEffects();
+
+			const published = new Set(CONFIG.statusEffects.map((effect) => effect.id));
+			for (const conditionId of Object.keys(CONFIG.NIMBLE.conditions)) {
+				expect(published).toContain(conditionId);
+			}
+		});
+
+		it('still registers a monster-scoped condition, so it can be applied and read', () => {
+			setConfiguredConditions(
+				{ blinded: 'Blinded', swallowed: 'Swallowed' },
+				{ monster: ['swallowed'] },
+			);
+			manager.initialize();
+
+			expect(manager.get('swallowed')).toBeDefined();
 		});
 
 		it('re-publishes the snapshot after the config changes', () => {

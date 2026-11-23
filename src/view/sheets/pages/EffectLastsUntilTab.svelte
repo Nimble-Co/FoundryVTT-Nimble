@@ -22,6 +22,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		withEffectName,
 		withEvent,
 		withSpanChoice,
+		type EventRowSubject,
 		withSubject,
 		withUnits,
 		withValue,
@@ -48,7 +49,6 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 
 	let { effect }: EffectTabProps = $props();
 
-	const SUBJECTS = ['holder', 'source', 'effect'] as const;
 	const DAMAGE_TYPES = Object.keys(CONFIG.NIMBLE.damageTypes ?? {});
 	const SKILL_WORDS = (CONFIG.NIMBLE.skills ?? {}) as Record<string, string>;
 	const tab = createEffectLastsUntilTabState(() => effect);
@@ -66,6 +66,7 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 		pickGain,
 	} = tab;
 	const moments = $derived(tab.moments);
+	const subjects = $derived(tab.subjects);
 	const escapeData = $derived(tab.escape);
 	const coreDuration = $derived(tab.coreDuration);
 	const statusDefault = $derived(tab.statusDefault);
@@ -193,12 +194,9 @@ The first moment that happens ends the effect. Escape lets the holder roll a sav
 							aria-label={word('fields.subject')}
 							value={subject}
 							onchange={({ currentTarget }) =>
-								change(
-									index,
-									withSubject(moment, currentTarget.value as (typeof SUBJECTS)[number]),
-								)}
+								change(index, withSubject(moment, currentTarget.value as EventRowSubject))}
 						>
-							{#each SUBJECTS as each (each)}
+							{#each subjects as each (each)}
 								<option value={each}>{word(`subject.${each}`)}</option>
 							{/each}
 						</select>

@@ -289,6 +289,17 @@ describe('applyEffectFromCard for a node that a rule gives', () => {
 		expect(data.system.lastsUntil).toEqual([{ ...moment, value: 2 }]);
 	});
 
+	it('ties Latched to the creature that used the card, and leaves another condition untied', async () => {
+		await applyEffectFromCard(card, applyNode({ effectId: null, condition: 'latched' }));
+		const [latched] = createEffect.mock.calls[0] as [{ flags?: Record<string, unknown> }];
+		expect(latched.flags).toEqual({ [SYSTEM_ID]: { heldActorUuid: 'Actor.hero' } });
+
+		createEffect.mockClear();
+		await applyEffectFromCard(card, applyNode({ effectId: null, condition: 'dazed' }));
+		const [dazed] = createEffect.mock.calls[0] as [{ flags?: Record<string, unknown> }];
+		expect(dazed.flags).toBeUndefined();
+	});
+
 	it('reads no core duration from a condition node', async () => {
 		const legacy = {
 			...applyNode({ effectId: null, condition: 'dazed' }),

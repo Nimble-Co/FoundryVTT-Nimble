@@ -75,6 +75,7 @@ export class ConditionManager {
 	configureStatusEffects() {
 		if (!this.#ready) throw Error('Conditions are not ready yet.');
 
+		// Monster-scoped ids must stay here: Foundry validates a status id against this list.
 		const statusEffects = [...this.#conditions.values()].sort((a, b) => {
 			const aid = a.name !== undefined ? localize(a.name) : a.id || a;
 			const bid = b.name !== undefined ? localize(b.name) : b.id || b;

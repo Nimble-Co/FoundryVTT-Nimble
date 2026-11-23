@@ -72,6 +72,13 @@ describe('conditionLastsUntil', () => {
 		]);
 	});
 
+	it('Latched On lasts until the stirge dies or the creature it latched onto dies', () => {
+		expect(registerConditionsConfig().conditionLastsUntil.latched).toEqual([
+			event('die', 'holder'),
+			event('die', 'held'),
+		]);
+	});
+
 	it('Confused has no default Lasts Until', () => {
 		expect(registerConditionsConfig().conditionLastsUntil.confused).toBeUndefined();
 	});
@@ -126,17 +133,44 @@ describe('conditionCountsAs', () => {
 
 describe('conditionRules', () => {
 	it('Swallowed deals 20 damage to its holder at the start of each of its turns', () => {
-		expect(registerConditionsConfig().conditionRules.swallowed).toEqual([
+		expect(registerConditionsConfig().conditionRules.swallowed).toContainEqual({
+			id: 'swallowedDamage',
+			type: 'turnDamage',
+			at: 'turnStart',
+			who: 'holder',
+			reach: 1,
+			formula: '20',
+			damageType: '',
+			wounds: 0,
+		});
+	});
+
+	it("Swallowed makes its holder's attacks land and ignore armor", () => {
+		expect(registerConditionsConfig().conditionRules.swallowed).toContainEqual({
+			id: 'swallowedAttacks',
+			type: 'attackOutcome',
+			side: 'yourAttacks',
+			cannotMiss: true,
+			ignoreArmor: true,
+		});
+	});
+
+	it("Latched makes its holder's attacks land, and does not touch armor", () => {
+		expect(registerConditionsConfig().conditionRules.latched).toEqual([
 			{
-				id: 'swallowedDamage',
-				type: 'turnDamage',
-				at: 'turnStart',
-				who: 'holder',
-				reach: 1,
-				formula: '20',
-				damageType: '',
-				wounds: 0,
+				id: 'latchedAttacks',
+				type: 'attackOutcome',
+				side: 'yourAttacks',
+				cannotMiss: true,
 			},
 		]);
+	});
+
+	it('carries the mechanics on the condition, so a creature needs no feature to get them', () => {
+		const { conditionRules } = registerConditionsConfig();
+
+		for (const id of ['swallowed', 'latched']) {
+			expect(conditionRules[id]?.length).toBeGreaterThan(0);
+		}
 	});
 });

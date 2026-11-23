@@ -15,6 +15,7 @@ import {
 	type WoundRecord,
 	woundsGiven,
 } from '#utils/actor/giveWounds.js';
+import { heldActorFlags } from '#utils/actor/heldActor.js';
 import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import { recordAppliedEffects } from '#utils/chat/applyEffectFromCard.js';
@@ -105,6 +106,12 @@ interface SaveCard {
 /** The triggers that come from an attack, whose source the rule can limit. */
 function hasAttackSource(trigger: string): boolean {
 	return isAttackOutcomeTrigger(trigger) || trigger === 'onCritReceived';
+}
+
+/** Latched ends when the creature they hold dies. Another condition does not name that creature. */
+function conditionUsesHeld(conditionId: string): boolean {
+	const moments = CONFIG.NIMBLE.conditionLastsUntil?.[conditionId] ?? [];
+	return moments.some((moment) => moment.who === 'held');
 }
 
 function schema() {
@@ -246,9 +253,15 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	override async onItemUsed(context: ItemUsedContext): Promise<void> {
 		if (!this.#shouldFireOnItemUsed(context)) return;
+
 		const targetActor = context.targetActor as unknown as ConditionTargetActor | null;
 		if (!targetActor) return;
-		await this.#applyConditionTo(targetActor, undefined, context.card as unknown as WoundCard);
+		const actorUuid = (this.actor as unknown as { uuid?: string } | null)?.uuid;
+		await this.#applyConditionTo(
+			targetActor,
+			conditionUsesHeld(this.condition) ? heldActorFlags(actorUuid) : undefined,
+			context.card as unknown as WoundCard,
+		);
 	}
 
 	override getActivationCardNodes(context: ActivationCardContext): EffectNode[] {

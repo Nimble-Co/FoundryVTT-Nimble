@@ -279,35 +279,7 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [
-					{
-						"type": "attackOutcome",
-						"disabled": false,
-						"id": "latchedCannotMis",
-						"identifier": "",
-						"label": "Latched On",
-						"predicate": {
-							"$and": [
-								"self:latched"
-							]
-						},
-						"priority": 1,
-						"side": "yourAttacks",
-						"cannotMiss": true,
-						"critRange": 0,
-						"forceCrit": "none",
-						"ignoreArmor": false,
-						"anyDieCrits": false,
-						"critD20": false,
-						"viciousCrits": false,
-						"attackDelivery": "any",
-						"thisItemOnly": false,
-						"attackSource": "any",
-						"exceptItemIdentifier": "",
-						"otherCreature": {},
-						"chargePoolIdentifier": ""
-					}
-				],
+				"rules": [],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

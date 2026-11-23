@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SYSTEM_ID } from '#system';
 import { effectSubject, seatOf } from '../effectSubject.js';
 import type { LastsUntilCheck } from '../momentReached.js';
 
@@ -48,7 +49,11 @@ const turnEnd: LastsUntilCheck = {
 beforeEach(() => {
 	vi.stubGlobal(
 		'fromUuidSync',
-		vi.fn((uuid: string) => (uuid === spell.uuid ? spell : null)),
+		vi.fn((uuid: string) => {
+			if (uuid === spell.uuid) return spell;
+			if (uuid === bystander.uuid) return bystander;
+			return null;
+		}),
 	);
 });
 
@@ -72,5 +77,19 @@ describe('effectSubject isClockTurn', () => {
 
 		expect(subject.isClockTurn('holder', seatOf(goblinCombatant))).toBe(true);
 		expect(subject.isClockTurn('holder', seatOf(bystanderCombatant))).toBe(false);
+	});
+});
+
+describe('effectSubject held', () => {
+	it('reads the creature the effect is tied to from its flag', () => {
+		const effect = Object.assign(makeEffect(), {
+			flags: { [SYSTEM_ID]: { heldActorUuid: bystander.uuid } },
+		});
+
+		expect(effectSubject(effect, turnEnd, combat).held).toBe(bystander);
+	});
+
+	it('has no held creature when the effect names none', () => {
+		expect(effectSubject(makeEffect(), turnEnd, combat).held).toBeNull();
 	});
 });

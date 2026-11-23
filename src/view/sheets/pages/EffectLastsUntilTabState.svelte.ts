@@ -1,5 +1,6 @@
 import type { NimbleActiveEffect } from '#documents/activeEffect/activeEffect.js';
 import { SYSTEM_ID } from '#system';
+import { heldActorUuidOf } from '#utils/actor/heldActor.js';
 import { CARD_TARGETS_READER, describeLastsUntil } from '#utils/lastsUntil/describeLastsUntil.js';
 import { turnsSeenOf } from '#utils/lastsUntil/effectSubject.js';
 import {
@@ -51,6 +52,29 @@ export function eventLabel(event: LastsUntilEvent): string {
 	return label === key ? event : label;
 }
 
+const PLAIN_SUBJECTS = ['holder', 'source', 'effect'] as const;
+const HELD_SUBJECTS = ['holder', 'source', 'held', 'effect'] as const;
+
+export type LastsUntilSubject = (typeof HELD_SUBJECTS)[number];
+
+interface HeldSubjectEffect {
+	flags?: Record<string, Record<string, unknown> | undefined>;
+	statuses?: Iterable<string> | null;
+	system?: { lastsUntil?: Moment[] };
+}
+
+/** The creature they hold is a choice only when this effect can name one. */
+export function subjectsFor(effect: HeldSubjectEffect): readonly LastsUntilSubject[] {
+	if (heldActorUuidOf(effect)) return HELD_SUBJECTS;
+	if ((effect.system?.lastsUntil ?? []).some((moment) => moment.who === 'held'))
+		return HELD_SUBJECTS;
+	for (const id of effect.statuses ?? []) {
+		const configured = CONFIG.NIMBLE.conditionLastsUntil?.[id] ?? [];
+		if (configured.some((moment) => moment.who === 'held')) return HELD_SUBJECTS;
+	}
+	return PLAIN_SUBJECTS;
+}
+
 /** The form's events, and an event from the data that the form does not offer. */
 export function eventsFor(moment: Moment): LastsUntilEvent[] {
 	const events: LastsUntilEvent[] = [...formEventsOf(moment.who)];
@@ -72,6 +96,7 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 
 	const system = $derived(getEffect().reactive.system as unknown as EffectSystem);
 	const moments = $derived(system.lastsUntil ?? []);
+	const subjects = $derived(subjectsFor(getEffect().reactive));
 	const escapeData = $derived<Required<EscapeFields>>({
 		dc: system.escape?.dc ?? '',
 		noDc: system.escape?.noDc ?? false,
@@ -212,6 +237,9 @@ export function createEffectLastsUntilTabState(getEffect: () => NimbleActiveEffe
 	return {
 		get moments() {
 			return moments;
+		},
+		get subjects() {
+			return subjects;
 		},
 		get escape() {
 			return escapeData;

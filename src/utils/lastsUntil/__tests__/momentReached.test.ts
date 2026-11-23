@@ -55,6 +55,7 @@ function subject(start: Partial<EffectStart> = {}, fields: Partial<MomentSubject
 		startSeat: fullStart.combatant ? (seats[fullStart.combatant] ?? null) : null,
 		holder,
 		source: caster,
+		held: null,
 		origin: 'Actor.tessa.Item.sand',
 		holderInCombat: true,
 		isClockTurn: (clock, turn) => {
@@ -433,6 +434,22 @@ describe('event moments', () => {
 		expect(momentReached(youDrop, subject(), event({ event: 'zeroHp', actor: holder }))).toBe(
 			false,
 		);
+	});
+
+	it('"until the creature they hold dies" ends when that creature dies', () => {
+		const held = { name: 'Brave Adventurer' };
+		const heldDies = moment({ kind: 'event', who: 'held', event: 'die' });
+		const latched = subject({}, { held });
+
+		expect(momentReached(heldDies, latched, event({ event: 'die', actor: held }))).toBe(true);
+		expect(momentReached(heldDies, latched, event({ event: 'die', actor: holder }))).toBe(false);
+		expect(momentReached(heldDies, latched, event({ event: 'die', actor: caster }))).toBe(false);
+	});
+
+	it('a held moment ends nothing when the effect names no held creature', () => {
+		const heldDies = moment({ kind: 'event', who: 'held', event: 'die' });
+
+		expect(momentReached(heldDies, subject(), event({ event: 'die', actor: holder }))).toBe(false);
 	});
 
 	it('a different event does not end it', () => {

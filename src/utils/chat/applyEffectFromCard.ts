@@ -10,6 +10,7 @@ import {
 	payloadFromCondition,
 	payloadFromEffect,
 } from '#utils/actor/applyEffectToActor.js';
+import { heldActorFlags } from '#utils/actor/heldActor.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
 import { resourceCostRollData } from '#utils/cost/itemResourceCosts.js';
@@ -153,7 +154,13 @@ function payloadOf(card: EffectCard, node: ApplyEffectNode): EffectPayload | nul
 	return payloadFromCondition(node.condition, lastsUntil, {
 		itemUuid: cardItem(card)?.uuid ?? null,
 		actorUuid: user?.uuid ?? null,
+		systemFlags: conditionUsesHeld(node.condition) ? heldActorFlags(user?.uuid) : null,
 	});
+}
+
+function conditionUsesHeld(conditionId: string): boolean {
+	const moments = CONFIG.NIMBLE.conditionLastsUntil?.[conditionId] ?? [];
+	return moments.some((moment) => moment.who === 'held');
 }
 
 /** The temp healing node of the card that an Apply Effect node gives, when it has a roll. */

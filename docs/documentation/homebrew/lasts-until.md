@@ -17,10 +17,11 @@ The tab reads as a sentence. Each row is one moment, and each word in a box is a
 | A turn or a round | until **the end of** **their** **next turn**, or their **2nd next turn** up to the 5th; until **the start of** the **next round** |
 | Rounds or time | until **1** **minutes** pass |
 | They or you do something | until **they** **attack**; until **you** **drop to 0 HP**; until **they** **take** **fire** damage; until **they** **gain** **Incapacitated** |
+| The creature they hold does something | until **the creature they hold** **dies** |
 | Another effect ends | until **the effect** **Rage** ends |
 | Combat ends | until **combat ends**, or until **the 2nd combat ends** up to the 5th |
 
-"Their" is the holder, the creature that has the effect. "Your" is the creature that used the item that applied it, as the book uses the word.
+"Their" is the holder, the creature that has the effect. "Your" is the creature that used the item that applied it, as the book uses the word. "The creature they hold" is a creature the effect was tied to when it went on, such as the one a stirge latched onto; the sheet names them once the effect is on a creature.
 
 The first moment that happens ends the effect. An effect with no moment stays until someone removes it. An effect with a condition takes the condition's own Lasts Until, such as "until the end of their next turn" for Dazed. Turn on **Stays until someone removes it** to keep the effect on. When an effect ends, a line in the **Events** part of a card says so, with **Undo**. See [How an effect works](effects.md#how-an-effect-works). With the **Feature Effects** automation setting off, the effect does not end by itself. Its line has an **End** button instead. See [When an effect ends](../playing/how-long-effects-last.md#when-an-effect-ends).
 
@@ -29,7 +30,9 @@ The first moment that happens ends the effect. An effect with no moment stays un
 :::
 
 ::: details Each thing they or you can do
-They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something.
+They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something. The creature they hold can drop to 0 HP or die. That choice is in the list only when the effect already names that creature, already has a moment about them, or carries a condition whose Lasts Until uses them, such as Latched.
+
+- **The creature they hold** is set by the feature that applied the effect, such as Latch On. An effect applied by hand has none, and a moment about them ends nothing.
 
 - **Take damage** can name damage types. Turn on **fire** and **radiant** for "until they take fire or radiant damage". With none on, any damage ends it.
 - **Gain** and **apply** name a condition, or an effect by its name ("an effect named..."). A condition also counts the conditions that count as it, so gaining Stunned is a gain of Incapacitated. To end an effect when any effect of a group goes on, give each effect of the group the same custom condition, and name that condition. An effect never ends on its own gain.

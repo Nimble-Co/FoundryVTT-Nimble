@@ -4,7 +4,7 @@
 	import ItemEffectSelect from '../../components/ItemEffectSelect.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
 	import Editor from '../components/Editor.svelte';
-	import { effectConditionOptions, toggledStatus } from './effectConditions.ts';
+	import { conditionToggleUpdate, effectConditionOptions } from './effectConditions.ts';
 	import { stackFieldsOf } from '#utils/actor/effectStacks.js';
 	import { stackAtUpdate, stackCountUpdate, stackEffectItem } from './effectStackFields.ts';
 
@@ -24,8 +24,8 @@
 
 	const update = (data: Record<string, unknown>) => effect.update(data as never);
 
-	const conditions = effectConditionOptions();
 	const statuses = $derived([...((reactive.statuses ?? []) as Iterable<string>)]);
+	const conditions = $derived(effectConditionOptions(new Set(statuses)));
 
 	const stacks = $derived(stackFieldsOf(reactive.system));
 	const stackItem = $derived(stackEffectItem(reactive as never));
@@ -102,7 +102,8 @@
 			options={conditions}
 			selectedOptions={statuses}
 			toggleOption={async (id) => {
-				await update({ statuses: toggledStatus(statuses, String(id)) });
+				const system = reactive.system as { rules?: unknown } | undefined;
+				await update(conditionToggleUpdate(statuses, String(id), system?.rules));
 			}}
 		/>
 	</div>
