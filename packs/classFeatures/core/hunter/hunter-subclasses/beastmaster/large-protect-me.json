@@ -6,7 +6,94 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "k7LmProtectMePool",
+				"identifier": "large-protect-me",
+				"label": "Large Protect Me! (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "k7LmProtectMeMod1",
+				"identifier": "",
+				"label": "Large Protect Me! (2/encounter)",
+				"predicate": {
+					"level": {
+						"min": 15
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "large-protect-me",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "k7LmProtectMeMove",
+				"identifier": "",
+				"label": "Large Protect Me!",
+				"predicate": {
+					"level": {
+						"max": 6
+					}
+				},
+				"priority": 3,
+				"trigger": "onWound",
+				"poolIdentifier": "",
+				"distance": "12",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": "large-protect-me",
+				"whisper": true
+			},
+			{
+				"type": "pendingWound",
+				"disabled": false,
+				"id": "k7LmProtectMePend",
+				"identifier": "",
+				"label": "Large Protect Me!",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				},
+				"priority": 4,
+				"change": "negate",
+				"amount": "",
+				"whenAmount": 0,
+				"choice": "offer",
+				"cause": "any",
+				"critical": "any",
+				"onlyLastWound": false,
+				"watch": "self",
+				"reach": 0,
+				"redirectTo": "source",
+				"moveDistance": "12",
+				"chargePoolIdentifier": "large-protect-me"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

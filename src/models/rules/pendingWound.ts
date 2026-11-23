@@ -1,4 +1,5 @@
 import type { PendingWoundPlan, PendingWoundView } from '#utils/wounds/pendingWound.js';
+import { hasRuleCharge, spendRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import type { RuleFormGroup } from './_formLayout.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
@@ -125,6 +126,16 @@ function schema() {
 				widget: 'formula',
 			}),
 		),
+		chargePoolIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.pendingWound.chargePoolIdentifier.label',
+				hint: 'NIMBLE.rules.pendingWound.chargePoolIdentifier.hint',
+				widget: 'chargePoolPicker',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'pendingWound' }),
 	};
 }
@@ -150,12 +161,13 @@ class PendingWoundRule extends NimbleBaseRule<PendingWoundRule.Schema> {
 	declare reach: number;
 	declare redirectTo: RedirectTo;
 	declare moveDistance: string;
+	declare chargePoolIdentifier: string;
 
 	static override group = 'triggers';
 	static override description = 'NIMBLE.rules.pendingWound.description';
 	static override icon = 'fa-solid fa-droplet';
 	static override formLayout: readonly RuleFormGroup[] = [
-		{ fields: ['change', 'amount', 'whenAmount', 'choice'] },
+		{ fields: ['change', 'amount', 'whenAmount', 'choice', 'chargePoolIdentifier'] },
 		{ fields: ['cause', 'critical', 'onlyLastWound'] },
 		{ fields: ['watch', 'reach', 'redirectTo', 'moveDistance'] },
 	];
@@ -181,6 +193,7 @@ class PendingWoundRule extends NimbleBaseRule<PendingWoundRule.Schema> {
 				['reach', 'number'],
 				['redirectTo', 'string'],
 				['moveDistance', 'string'],
+				['chargePoolIdentifier', 'string'],
 			]),
 		);
 	}
@@ -188,12 +201,18 @@ class PendingWoundRule extends NimbleBaseRule<PendingWoundRule.Schema> {
 	matchesPending(view: PendingWoundView): boolean {
 		if (!this.appliesTo()) return false;
 		if (!(view.amount > 0)) return false;
+		const pool = this.chargePoolIdentifier?.trim() ?? '';
+		if (pool && !hasRuleCharge(this.actor, pool)) return false;
 		if (this.cause !== 'any' && this.cause !== view.cause) return false;
 		if (this.critical === 'only' && !view.critical) return false;
 		if (this.critical === 'never' && view.critical) return false;
 		if (this.whenAmount > 0 && view.amount !== this.whenAmount) return false;
 		if (this.onlyLastWound && !view.reachesLastWound) return false;
 		return true;
+	}
+
+	async commitPending(): Promise<void> {
+		await spendRuleCharge(this.actor, this.chargePoolIdentifier ?? '');
 	}
 
 	planPending(_view: PendingWoundView, mover?: unknown): PendingWoundPlan {
