@@ -5,14 +5,78 @@
 	"img": "icons/skills/melee/strike-slashes-red.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "medium-go-for-the-throat",
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "medThroatPool",
+				"identifier": "medium-go-for-the-throat",
+				"label": "Go for the Throat! (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "medThroatLevel11",
+				"identifier": "",
+				"label": "Go for the Throat! (2/encounter)",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "medium-go-for-the-throat",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "medThroatUse",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 3,
+				"poolIdentifier": "medium-go-for-the-throat",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "medThroatTotH",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 4,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,7 +84,30 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "medThroatDmg",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d8+(3*@level)",
+					"ignoreArmor": true,
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "medThroatDmgFull",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "medThroatDmg"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
