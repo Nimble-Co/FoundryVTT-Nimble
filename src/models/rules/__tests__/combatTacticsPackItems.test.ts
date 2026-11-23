@@ -162,7 +162,7 @@ describe('Assist Me, My Friend!', () => {
 		});
 	});
 
-	it('has a hidden use that comes back at the start of each round', () => {
+	it('has a hidden use that comes back when your own turn starts, as a 1/round ability does', () => {
 		expect(bonus.chargePoolIdentifier).toBe(pool.identifier);
 		expect(pool).toMatchObject({
 			scope: 'item',
@@ -170,7 +170,7 @@ describe('Assist Me, My Friend!', () => {
 			initial: 'max',
 			hidden: true,
 			recoveries: [
-				{ trigger: 'onRoundStart', mode: 'refresh', value: '1' },
+				{ trigger: 'onTurnStart', mode: 'refresh', value: '1' },
 				{ trigger: 'encounterEnd', mode: 'refresh', value: '1' },
 			],
 		});

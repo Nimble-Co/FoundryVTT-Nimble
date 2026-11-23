@@ -21,7 +21,7 @@
 				"initial": "max",
 				"recoveries": [
 					{
-						"trigger": "onRoundStart",
+						"trigger": "onTurnStart",
 						"mode": "refresh",
 						"value": "1"
 					},
