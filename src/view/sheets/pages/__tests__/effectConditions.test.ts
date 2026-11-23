@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { effectConditionOptions, toggledStatus } from '../effectConditions.ts';
+import {
+	conditionToggleUpdate,
+	effectConditionOptions,
+	toggledStatus,
+} from '../effectConditions.ts';
 
 const config = CONFIG as unknown as {
 	NIMBLE: Record<string, unknown>;
@@ -20,6 +24,13 @@ beforeEach(() => {
 			swallowed: 'Swallowed',
 		},
 		monsterConditions: new Set(['latched', 'swallowed']),
+		conditionRules: {
+			latched: [{ id: 'latchedAttacks', type: 'attackOutcome', cannotMiss: true }],
+			swallowed: [
+				{ id: 'swallowedDamage', type: 'turnDamage' },
+				{ id: 'swallowedAttacks', type: 'attackOutcome' },
+			],
+		},
 	};
 	config.statusEffects = [
 		{ id: 'prone', name: 'Prone', img: 'icons/prone.svg' },
@@ -55,5 +66,24 @@ describe('toggledStatus', () => {
 	it('adds a status that is not there, and takes away one that is', () => {
 		expect(toggledStatus(new Set(['prone']), 'blinded')).toEqual(['prone', 'blinded']);
 		expect(toggledStatus(['prone', 'blinded'], 'prone')).toEqual(['blinded']);
+	});
+});
+
+describe('conditionToggleUpdate', () => {
+	const rules = [
+		{ id: 'latchedAttacks', type: 'attackOutcome', cannotMiss: true },
+		{ id: 'authored', type: 'statBonus' },
+	];
+
+	it('drops the copied rules when the condition is cleared, and keeps the authored ones', () => {
+		expect(conditionToggleUpdate(['latched'], 'latched', rules)).toEqual({
+			statuses: [],
+			'system.rules': [{ id: 'authored', type: 'statBonus' }],
+		});
+	});
+
+	it('leaves the rules alone when the condition is added, or when it copies none', () => {
+		expect(conditionToggleUpdate([], 'latched', rules)).toEqual({ statuses: ['latched'] });
+		expect(conditionToggleUpdate(['blinded'], 'blinded', rules)).toEqual({ statuses: [] });
 	});
 });

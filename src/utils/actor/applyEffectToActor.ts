@@ -201,10 +201,17 @@ export function payloadFromEffect(
 export function payloadFromCondition(
 	condition: string,
 	lastsUntil: Moment[],
-	source: { itemUuid: string | null; actorUuid: string | null; cardId?: string | null },
+	source: {
+		itemUuid: string | null;
+		actorUuid: string | null;
+		cardId?: string | null;
+		systemFlags?: Record<string, unknown> | null;
+	},
 ): EffectPayload {
+	const data: Record<string, unknown> = { statuses: [condition], system: { lastsUntil } };
+	if (source.systemFlags) data.flags = { [SYSTEM_ID]: source.systemFlags };
 	return {
-		data: { statuses: [condition], system: { lastsUntil } },
+		data,
 		sourceItemUuid: source.itemUuid,
 		sourceActorUuid: source.actorUuid,
 		...cardIdOf(source),

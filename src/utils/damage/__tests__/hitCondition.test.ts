@@ -81,6 +81,34 @@ describe('applyHitConditions', () => {
 		});
 	});
 
+	it('does not leave Latched when the hit already killed the creature it holds', async () => {
+		const { applyHitConditions } = await load();
+		const self = attacker(rule({ recipient: 'self', condition: 'latched' }));
+		const dead = {
+			uuid: 'Actor.h',
+			name: 'Dagr',
+			system: { attributes: { hp: { value: 0 } } },
+		};
+		await applyHitConditions(input({ attacker: self, hurt: [dead] }));
+		expect(apply).not.toHaveBeenCalled();
+		expect(self.setFlag).toHaveBeenCalledWith('nimble', 'heldCreature', {
+			uuid: 'Actor.h',
+			name: 'Dagr',
+		});
+	});
+
+	it('still latches onto a creature at 0 HP who is only dying', async () => {
+		const { applyHitConditions } = await load();
+		const self = attacker(rule({ recipient: 'self', condition: 'latched' }));
+		const dying = {
+			uuid: 'Actor.h',
+			name: 'Dagr',
+			system: { attributes: { hp: { value: 0 }, wounds: { value: 1, max: 3 } } },
+		};
+		await applyHitConditions(input({ attacker: self, hurt: [dying] }));
+		expect(apply).toHaveBeenCalledWith(self, 'latched', expect.anything());
+	});
+
 	it('with Feature Effects off, applies nothing but still stores the creature', async () => {
 		featureEffects = false;
 		const { applyHitConditions } = await load();

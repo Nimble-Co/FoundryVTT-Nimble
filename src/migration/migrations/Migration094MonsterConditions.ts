@@ -70,11 +70,20 @@ function rulesOf(effect: Json): Json[] | null {
 	return Array.isArray(system.rules) ? system.rules.filter(isRecord) : null;
 }
 
+function ruleIsComplete(current: Json, rule: Json): boolean {
+	return Object.keys(rule).every((key) => current[key] === rule[key]);
+}
+
 function addRule(effect: Json, status: string): void {
 	const rule = CONDITION_RULES[status];
 	const rules = rule ? rulesOf(effect) : null;
-	if (!rule || !rules || rules.some((entry) => entry.id === rule.id)) return;
-	rules.push(foundry.utils.deepClone(rule));
+	if (!rule || !rules) return;
+	const index = rules.findIndex((entry) => entry.id === rule.id);
+	const current = rules[index];
+	if (current && ruleIsComplete(current, rule)) return;
+	const next = foundry.utils.deepClone(rule);
+	if (current) rules[index] = next;
+	else rules.push(next);
 	systemOf(effect).rules = rules;
 }
 

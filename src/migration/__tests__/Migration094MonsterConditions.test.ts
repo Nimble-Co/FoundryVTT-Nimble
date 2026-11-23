@@ -66,7 +66,7 @@ describe('Migration094MonsterConditions', () => {
 		expect(effect.flags?.[SYSTEM_ID]?.heldActorUuid).toBe('Actor.hero');
 	});
 
-	it('leaves a Latched effect that already ends, and already names its creature', async () => {
+	it('fills in a Latched attack rule that is only partly there, and leaves its end and its creature', async () => {
 		const lastsUntil = [{ kind: 'event', event: 'rest', who: 'holder' }];
 		const effect = {
 			statuses: ['latched'],
@@ -76,13 +76,21 @@ describe('Migration094MonsterConditions', () => {
 			},
 			flags: { [SYSTEM_ID]: { heldActorUuid: 'Actor.kept' } },
 		};
+		const stirge = actor({
+			flags: { [SYSTEM_ID]: { heldCreature: { uuid: 'Actor.other', name: 'Other' } } },
+		});
 
-		await migration().alwaysUpdateEffect(
-			effect,
-			actor({ flags: { [SYSTEM_ID]: { heldCreature: { uuid: 'Actor.other', name: 'Other' } } } }),
-		);
+		await migration().alwaysUpdateEffect(effect, stirge);
+		await migration().alwaysUpdateEffect(effect, stirge);
 
-		expect(effect.system.rules).toEqual([{ id: 'latchedAttacks', type: 'attackOutcome' }]);
+		expect(effect.system.rules).toEqual([
+			{
+				id: 'latchedAttacks',
+				type: 'attackOutcome',
+				side: 'yourAttacks',
+				cannotMiss: true,
+			},
+		]);
 		expect(effect.system.lastsUntil).toBe(lastsUntil);
 		expect(effect.flags[SYSTEM_ID].heldActorUuid).toBe('Actor.kept');
 	});

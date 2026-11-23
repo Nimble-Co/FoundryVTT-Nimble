@@ -349,7 +349,9 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
-			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toBeUndefined();
+			const applied = lastAppliedEffect();
+			expect(applied?.sourceData).toBeDefined();
+			expect(applied?.sourceData[`flags.${SYSTEM_ID}`]).toBeUndefined();
 		});
 
 		it('ties Latched to the attacker, since it ends when the creature they hold dies', async () => {

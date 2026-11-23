@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from '#system';
 import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { isRuleAutomationEnabled } from '../../settings/automationSettings.js';
+import { isActorDead } from '../actor/actorHealthState.js';
 import { rulesOfType } from '../actor/actorRules.js';
 import applyConditionToActor, {
 	type ConditionTargetActor,
@@ -51,7 +52,8 @@ export async function applyHitConditions(input: {
 				uuid: held?.uuid ?? '',
 				name: held?.name ?? '',
 			});
-			if (automatic) {
+			// The die event already fired during the damage update, before this effect exists.
+			if (automatic && !heldAlreadyDied(rule.condition, held)) {
 				await applyConditionToActor(attacker, rule.condition, {
 					...context,
 					systemFlags: heldActorFlags(held?.uuid) ?? null,
@@ -62,6 +64,15 @@ export async function applyHitConditions(input: {
 		if (!automatic) continue;
 		for (const creature of hurt) await applyConditionToActor(creature, rule.condition, context);
 	}
+}
+
+/** The condition ends when the creature it names dies, and that creature is already dead. */
+function heldAlreadyDied(conditionId: string, held: Creature | undefined): boolean {
+	const moments = CONFIG.NIMBLE.conditionLastsUntil?.[conditionId] ?? [];
+	const endsOnTheirDeath = moments.some(
+		(moment) => moment.who === 'held' && moment.event === 'die',
+	);
+	return endsOnTheirDeath && isActorDead(held as Actor.Implementation);
 }
 
 /** The creature a Latched creature holds, read from the card's target. */
