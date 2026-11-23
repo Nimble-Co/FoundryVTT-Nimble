@@ -380,6 +380,18 @@ const characterSchema = () => ({
 				new fields.StringField({ required: true, nullable: false, initial: '' }),
 				{ required: true, nullable: false, initial: () => [] },
 			),
+			releasedFeatures: new fields.ArrayField(
+				new fields.SchemaField({
+					uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					level: new fields.NumberField({
+						required: true,
+						initial: 0,
+						integer: true,
+						nullable: false,
+					}),
+				}),
+				{ required: false, nullable: false, initial: () => [] },
+			),
 		}),
 		{ required: true, nullable: false, initial: () => [] },
 	),
@@ -473,6 +485,8 @@ interface LevelUpHistoryEntry {
 	/** Item ids of class features granted during this level-up (auto + selected). */
 	grantedFeatureIds: string[];
 	grantedSpellIds: string[];
+	/** Features this level removed, restored onto `level` when the level is reverted. */
+	releasedFeatures: Array<{ uuid: string; level: number }>;
 }
 
 declare namespace NimbleCharacterData {

@@ -37,10 +37,222 @@
 		"featureType": "class",
 		"class": "hunter",
 		"group": "beastmaster",
-		"gainedAtLevel": 1,
+		"gainedAtLevel": 3,
 		"subclass": true,
 		"gainedAtLevels": [
-			1
+			3
+		],
+		"levelUpOptions": [
+			{
+				"id": "small",
+				"label": "Small companion",
+				"applyAtLevels": [3],
+				"rules": [
+					{
+						"id": "bmSmallKeen",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.00HPS1fSEtILkMxc",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					}
+				],
+				"selectionGroups": [],
+				"selectionCount": 1
+			},
+			{
+				"id": "small-swap",
+				"label": "Small companion, with Go for the Throat! and Protect Me! instead of your first two Thrill of the Hunt abilities",
+				"applyAtLevels": [3],
+				"rules": [
+					{
+						"id": "bmSmallKeenSwap",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.00HPS1fSEtILkMxc",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					},
+					{
+						"id": "bmSmallThroat",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 2,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.DnVxVRGpYco6AA98",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					},
+					{
+						"id": "bmSmallProtect",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 3,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.GGSs5oI7c578HH9x",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					}
+				],
+				"selectionGroups": [],
+				"selectionCount": 1
+			},
+			{
+				"id": "medium",
+				"label": "Medium companion",
+				"applyAtLevels": [3],
+				"rules": [
+					{
+						"id": "bmMediumFerocious",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.EeHS4RkpnkeFK53B",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					}
+				],
+				"selectionGroups": [],
+				"selectionCount": 1
+			},
+			{
+				"id": "medium-swap",
+				"label": "Medium companion, with Go for the Throat! and Protect Me! instead of your first two Thrill of the Hunt abilities",
+				"applyAtLevels": [3],
+				"rules": [
+					{
+						"id": "bmMediumFerociousSwap",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.EeHS4RkpnkeFK53B",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					},
+					{
+						"id": "bmMediumThroat",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 2,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.5i08WEBF4AxD5Tgu",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					},
+					{
+						"id": "bmMediumProtect",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 3,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.WpTBjJEqfLhiA37M",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					}
+				],
+				"selectionGroups": [],
+				"selectionCount": 1
+			},
+			{
+				"id": "large",
+				"label": "Large companion",
+				"applyAtLevels": [3],
+				"rules": [
+					{
+						"id": "bmLargeAlpha",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.KHwoI2lL0ihXiLAP",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					}
+				],
+				"selectionGroups": [],
+				"selectionCount": 1
+			},
+			{
+				"id": "large-swap",
+				"label": "Large companion, with Go for the Throat! and Protect Me! instead of your first two Thrill of the Hunt abilities",
+				"applyAtLevels": [3],
+				"rules": [
+					{
+						"id": "bmLargeAlphaSwap",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 1,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.KHwoI2lL0ihXiLAP",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					},
+					{
+						"id": "bmLargeThroat",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 2,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.78hq89TxTwpW7H17",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					},
+					{
+						"id": "bmLargeProtect",
+						"type": "grantItem",
+						"label": "",
+						"identifier": "",
+						"disabled": false,
+						"predicate": {},
+						"priority": 3,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.BvqvafXRB6HzPSHw",
+						"allowDuplicate": false,
+						"inMemoryOnly": false,
+						"quantity": null
+					}
+				],
+				"selectionGroups": [],
+				"selectionCount": 1
+			}
 		]
 	},
 	"effects": [],

@@ -1666,6 +1666,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `cardSchemaHas()` | `src/utils/documents/cardSchemaHas.ts` | Whether the data model of a chat card type has a field, such as `incomingReactions` or `movementOffers`. Check it before a write of that field: Foundry drops a key the schema does not declare |
 | `identifierOf()` | `src/utils/documents/itemIdentifier.ts` | The identifier of an item, from item data or a document: its own `identifier`, else `system.identifier`, else an empty string |
 | `getSubclassChoices()` | `src/utils/classProgression/getSubclassChoices.ts` | Get available subclass options |
+| `planBeastmasterChoice()` | `src/utils/classProgression/planBeastmasterChoice.ts` | Split a level's subclass features into the option picker and the auto-grant list, and name the earliest Thrill of the Hunt picks a companion swap releases |
 | `resolveItemActionCost()` | `src/utils/combat/resolveItemActionCost.ts` | Get an item's activation action cost (0 for non-action cost types; missing quantity defaults to 1) |
 | `resolveMinionAttackActionCost()` | `src/utils/combat/resolveMinionAttackActionCost.ts` | Action cost for group-attack activations; a missing or `none` cost defaults to 1 (legacy pack convention), an explicit zero stays free |
 | `formatActivationCostLabel()` | `src/utils/combat/formatActivationCostLabel.ts` | Render an activation cost as "1 Action", "2 Actions", "10 Minutes" or "Free"; returns `null` for the types that carry no quantity so the caller can label them |

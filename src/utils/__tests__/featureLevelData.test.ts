@@ -10,6 +10,7 @@ type PackSource = {
 	system?: {
 		class?: string;
 		group?: string;
+		subclass?: boolean;
 		gainedAtLevel?: number | null;
 		gainedAtLevels?: number[];
 		rules?: unknown[];
@@ -39,23 +40,41 @@ function collectRules(source: PackSource): Record<string, unknown>[] {
 	);
 }
 
+/** Ids named by item uuids on the given rules. */
+function idsNamedBy(rules: Record<string, unknown>[]): Set<string> {
+	const granted = new Set<string>();
+	for (const rule of rules) {
+		for (const value of Object.values(rule)) {
+			if (typeof value !== 'string') continue;
+			const id = COMPENDIUM_ITEM_UUID.exec(value)?.groups?.id;
+			if (id) granted.add(id);
+		}
+	}
+	return granted;
+}
+
 /**
  * Ids of items that some other item's rule hands out (`grantItem.uuid`,
  * `poolMaxBonus.grantItemUuid`, and anything else naming an item uuid).
  */
 function collectGrantedItemIds(sources: { source: PackSource }[]): Set<string> {
 	const granted = new Set<string>();
-
 	for (const { source } of sources) {
-		for (const rule of collectRules(source)) {
-			for (const value of Object.values(rule)) {
-				if (typeof value !== 'string') continue;
-				const id = COMPENDIUM_ITEM_UUID.exec(value)?.groups?.id;
-				if (id) granted.add(id);
-			}
-		}
+		for (const id of idsNamedBy(collectRules(source))) granted.add(id);
 	}
+	return granted;
+}
 
+/** Ids handed out by a rule that is not inside a level-up option. */
+function collectTopLevelGrantedItemIds(sources: { source: PackSource }[]): Set<string> {
+	const granted = new Set<string>();
+	for (const { source } of sources) {
+		const own = Array.isArray(source.system?.rules) ? source.system.rules : [];
+		const rules = own.filter(
+			(rule): rule is Record<string, unknown> => !!rule && typeof rule === 'object',
+		);
+		for (const id of idsNamedBy(rules)) granted.add(id);
+	}
 	return granted;
 }
 
@@ -88,6 +107,7 @@ describe('feature pack level data', () => {
 	const sources = readPackSources();
 	const features = sources.filter(({ source }) => source.type === 'feature');
 	const grantedItemIds = collectGrantedItemIds(sources);
+	const topLevelGrantedItemIds = collectTopLevelGrantedItemIds(sources);
 
 	it('reads a non-empty set of feature items', () => {
 		expect(features.length).toBeGreaterThan(0);
@@ -109,9 +129,22 @@ describe('feature pack level data', () => {
 	});
 
 	it('leaves a level off every feature another rule already grants', () => {
+		// A subclass feature keeps its level so the subclass list can still show it.
+		// When the only grant is a level-up option, planBeastmasterChoice keeps that
+		// uuid off the auto-grant list, so the level is not a second copy.
 		const overSpecified = features
 			.filter(({ source }) => source._id && grantedItemIds.has(source._id))
 			.filter(({ source }) => hasLevelData(source))
+			.filter(({ source }) => {
+				if (
+					source.system?.subclass === true &&
+					source._id &&
+					!topLevelGrantedItemIds.has(source._id)
+				) {
+					return false;
+				}
+				return true;
+			})
 			.map(describeItem);
 
 		expect(overSpecified).toEqual([]);

@@ -184,6 +184,78 @@ interface LevelUpDialogData {
 	spellUuids: string[];
 	/** The schools the player chose, by the id of the school choice rule. */
 	schoolChoices?: Map<string, string[]>;
+	/** Thrill of the Hunt picks a companion swap removes. `uuid` is empty when it cannot be restored. */
+	releasedThrillPicks?: Array<{ id: string; uuid: string; level: number }>;
+}
+
+interface ReleasedFeature {
+	uuid: string;
+	level: number;
+}
+
+/**
+ * Deletes the Thrill of the Hunt picks a companion swap gave up.
+ *
+ * A pick with no compendium uuid is still removed, and is absent from the
+ * returned list because a later level-down has nothing to restore it from.
+ */
+async function dropReleasedThrillPicks(
+	actor: {
+		items: { get(id: string): unknown };
+		deleteEmbeddedDocuments(type: 'Item', ids: string[]): Promise<unknown>;
+	},
+	picks: ReadonlyArray<{ id: string; uuid: string; level: number }>,
+): Promise<{ droppedIds: string[]; releasedFeatures: ReleasedFeature[] }> {
+	const present = picks.filter((pick) => pick.id.length > 0 && actor.items.get(pick.id));
+	if (present.length > 0) {
+		await actor.deleteEmbeddedDocuments(
+			'Item',
+			present.map((pick) => pick.id),
+		);
+	}
+	return {
+		droppedIds: present.map((pick) => pick.id),
+		releasedFeatures: present
+			.filter((pick) => pick.uuid.length > 0)
+			.map((pick) => ({ uuid: pick.uuid, level: pick.level })),
+	};
+}
+
+/** Recreates features a level removed, keyed by the level that originally granted them. */
+async function restoreReleasedFeatures(
+	actor: {
+		createEmbeddedDocuments(
+			type: 'Item',
+			sources: Item.CreateData[],
+		): Promise<unknown[] | undefined>;
+	},
+	released: ReadonlyArray<ReleasedFeature>,
+): Promise<Map<number, string[]>> {
+	const sources: Item.CreateData[] = [];
+	const levels: number[] = [];
+	for (const feature of released) {
+		if (!feature.uuid) continue;
+		const document = await fromUuid(feature.uuid as `Item.${string}`);
+		if (!document) continue;
+		const source = (document as NimbleFeatureItem).toObject();
+		source._stats.compendiumSource = feature.uuid;
+		sources.push(source as object as Item.CreateData);
+		levels.push(feature.level);
+	}
+
+	const restored = new Map<number, string[]>();
+	if (sources.length === 0) return restored;
+
+	const created = (await actor.createEmbeddedDocuments('Item', sources)) ?? [];
+	created.forEach((document, index) => {
+		const id = (document as { id: string | null }).id;
+		const level = levels[index];
+		if (!id || level === undefined) return;
+		const ids = restored.get(level);
+		if (ids) ids.push(id);
+		else restored.set(level, [id]);
+	});
+	return restored;
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -2014,6 +2086,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		await storeChosenSchools(this, typedDialogData.schoolChoices ?? new Map());
 
 		const grantedFeatureIds = [...epicBoonIds, ...classFeatureIds];
+		const release = await dropReleasedThrillPicks(this, typedDialogData.releasedThrillPicks ?? []);
 
 		// Create spell documents
 		let grantedSpellIds: string[] = [];
@@ -2043,7 +2116,16 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
-		// Record level up history
+		// Record level up history. A companion swap's released picks leave the earlier
+		// entries that granted them, and this entry remembers how to put them back.
+		const droppedIds = new Set(release.droppedIds);
+		const priorHistory = this.system.levelUpHistory.map((entry) => {
+			if (!entry.grantedFeatureIds.some((id) => droppedIds.has(id))) return entry;
+			return {
+				...entry,
+				grantedFeatureIds: entry.grantedFeatureIds.filter((id) => !droppedIds.has(id)),
+			};
+		});
 		const historyEntry = {
 			level: nextClassLevel,
 			hpIncrease: hp,
@@ -2053,9 +2135,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			classIdentifier: characterClass.identifier,
 			grantedFeatureIds,
 			grantedSpellIds,
+			releasedFeatures: release.releasedFeatures,
 		};
 
-		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
+		actorUpdates['system.levelUpHistory'] = [...priorHistory, historyEntry];
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		// The class update already raised max HP, so the HP this update adds is not healing.
@@ -2243,6 +2326,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			);
 		}
 
+		// Put back features this level removed before deleting what it granted. A restore
+		// that fails leaves both, which the player can sort out; deleting first would not.
+		const restoredIdsByLevel = await restoreReleasedFeatures(
+			this,
+			lastHistory.releasedFeatures ?? [],
+		);
+
 		// Remove all subclasses if reverting from level 3
 		if (lastHistory.level <= 3) {
 			const subclasses = this.items.filter((i) => i.type === 'subclass');
@@ -2282,8 +2372,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Revert levels
 		actorUpdates['system.classData.levels'] = this.system.classData.levels.slice(0, -1);
 
-		// Remove from history
-		actorUpdates['system.levelUpHistory'] = this.system.levelUpHistory.slice(0, -1);
+		// Remove from history. Restored picks join the entry of the level that first granted them.
+		actorUpdates['system.levelUpHistory'] = this.system.levelUpHistory.slice(0, -1).map((entry) => {
+			const restoredIds = restoredIdsByLevel.get(entry.level);
+			if (!restoredIds?.length) return entry;
+			return { ...entry, grantedFeatureIds: [...entry.grantedFeatureIds, ...restoredIds] };
+		});
 
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
