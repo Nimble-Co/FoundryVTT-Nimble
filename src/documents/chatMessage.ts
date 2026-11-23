@@ -1558,6 +1558,19 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
+	 * A card that stored no targets takes the user's current ones, through the
+	 * same write as the crosshairs button. An empty selection is left alone, so
+	 * Apply still gives its own "no targets" warning.
+	 */
+	async #adoptCurrentTargetsWhenEmpty(): Promise<void> {
+		if (!this.isActivationCard()) return;
+		const stored = (this.system as ActivationCardSystemData).targets ?? [];
+		if (stored.length > 0) return;
+		if (Array.from(game.user?.targets ?? []).length < 1) return;
+		await this.addTargetedTokensAsTargets();
+	}
+
+	/**
 	 * Apply one packet's worth of damage. Kept for the callers that own a single
 	 * node's damage (the minion group attack card), and routed through the same
 	 * path as `applyAllDamage` so a card's damage resolves by one set of rules
@@ -1711,6 +1724,9 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
+		// Before the plan is built, and before the reaction queue: adopting from
+		// inside that queue would wait on itself.
+		await this.#adoptCurrentTargetsWhenEmpty();
 		// The plan reads the Defends, so a Defend request waits until the targets are marked applied.
 		const applied = await queueReactionWrite(this.id ?? '', () =>
 			this.#applyDamageToTargets(packets),
@@ -2022,6 +2038,15 @@ class NimbleChatMessage extends ChatMessage {
 		const healing = Math.floor(Math.abs(Number(value)));
 		if (!Number.isFinite(healing) || healing <= 0) return;
 
+		// Before adoption: an effect that already landed must not gain targets or run again.
+		if (effectId && this.isHealingApplied(effectId)) {
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.healingAlreadyApplied'));
+			return;
+		}
+
+		// Self healing names the user. It does not read the card's target list.
+		if (recipient !== 'self') await this.#adoptCurrentTargetsWhenEmpty();
+
 		const systemData = this.system as ActivationCardSystemData;
 		const self = (this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker);
 		const targets =
@@ -2029,12 +2054,6 @@ class NimbleChatMessage extends ChatMessage {
 
 		if (!targets.length) {
 			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
-			return;
-		}
-
-		// Check if already applied for this effect
-		if (effectId && this.isHealingApplied(effectId)) {
-			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.healingAlreadyApplied'));
 			return;
 		}
 
