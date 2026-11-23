@@ -263,7 +263,10 @@ describe('HeroInventoryTab', () => {
 		it('gives coins from the button beside the coins', async () => {
 			const { perform } = renderTab(containerHero(), false, { context: partyContext() });
 
-			await fireEvent.click(screen.getByRole('button', { name: `${INV}.giveTo` }));
+			await fireEvent.click(screen.getByRole('button', { name: `${INV}.moveCurrency` }));
+			expect(screen.getByText(`${INV}.moveTo`)).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: `${INV}.moveTo` })).toBeNull();
+			expect(screen.queryByRole('menuitem', { name: 'Backpack' })).toBeNull();
 			await fireEvent.click(screen.getByRole('menuitem', { name: 'Bob' }));
 
 			expect(perform).toHaveBeenCalledWith({

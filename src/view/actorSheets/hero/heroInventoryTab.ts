@@ -42,7 +42,12 @@ export interface HeroInventoryTabView {
 	/** the coin fields do not edit: this user cannot move objects from the stash */
 	coinsLocked: boolean;
 	/** null: this user has nowhere to send the coins on this list */
-	currencyGive: { label: string; entries: HeroCurrencyDestination[] } | null;
+	currencyGive: {
+		/** the tooltip on the button beside the coins */
+		label: string;
+		move: { label: string; entries: HeroCurrencyDestination[] } | null;
+		give: { label: string; entries: HeroCurrencyDestination[] } | null;
+	} | null;
 	/** null: the hero does not track inventory slots, or the list is the party stash */
 	slots: { text: string; label: string; over: string | null } | null;
 	createObject: { label: string; intent: HeroIntent };
@@ -255,23 +260,39 @@ function objectRow(
 	};
 }
 
-/** Party inventory, this character, and the other characters this user may pay. */
+function currencySection(
+	label: string,
+	entries: HeroCurrencyDestination[],
+): { label: string; entries: HeroCurrencyDestination[] } | null {
+	return entries.length ? { label, entries } : null;
+}
+
+/** Coins are one stash per list. Move to is that other stash. Give to is a character. */
 function currencyGive(
 	actor: HeroActorLike,
 	context: HeroSheetContext,
 	party: boolean,
 ): HeroInventoryTabView['currencyGive'] {
+	const { localize } = context;
 	const source: 'actor' | 'stash' = party ? 'stash' : 'actor';
-	const entries: HeroCurrencyDestination[] = [];
+	const moveEntries: HeroCurrencyDestination[] = [];
 	if (!party && context.party.canGive) {
-		entries.push({
+		moveEntries.push({
 			id: 'party',
-			label: context.localize(`${INV}.party`),
+			label: localize(`${INV}.party`),
 			intent: giveCurrencyIntent(actor, 'actor', { kind: 'stash' }),
 		});
 	}
-	if (party && (context.party.canTake || context.party.canGiveAway)) {
-		entries.push({
+	if (party && context.party.canTake) {
+		moveEntries.push({
+			id: 'mine',
+			label: localize(`${INV}.mine`),
+			intent: giveCurrencyIntent(actor, 'stash', { kind: 'actor', actorId: actor.id }),
+		});
+	}
+	const giveEntries: HeroCurrencyDestination[] = [];
+	if (party && !context.party.canTake && context.party.canGiveAway) {
+		giveEntries.push({
 			id: actor.id,
 			label: actor.name,
 			intent: giveCurrencyIntent(actor, 'stash', { kind: 'actor', actorId: actor.id }),
@@ -279,15 +300,17 @@ function currencyGive(
 	}
 	if (canSendToOthers(context, source)) {
 		for (const character of context.party.characters) {
-			entries.push({
+			giveEntries.push({
 				id: character.id,
 				label: character.name,
 				intent: giveCurrencyIntent(actor, source, { kind: 'actor', actorId: character.id }),
 			});
 		}
 	}
-	if (!entries.length) return null;
-	return { label: context.localize(`${INV}.giveTo`), entries };
+	const move = currencySection(localize(`${INV}.moveTo`), moveEntries);
+	const give = currencySection(localize(`${INV}.giveTo`), giveEntries);
+	if (!move && !give) return null;
+	return { label: localize(`${INV}.moveCurrency`), move, give };
 }
 
 /** Groups by object type, A to Z; the objects in a container show under it. */

@@ -320,6 +320,7 @@
 					"partyEmpty": "The party inventory is empty.",
 					"partyName": "the party inventory",
 					"moveTo": "Move to",
+					"moveCurrency": "Move currency",
 					"giveTo": "Give to",
 					"give": "Give",
 					"actions": "Actions for {name}",

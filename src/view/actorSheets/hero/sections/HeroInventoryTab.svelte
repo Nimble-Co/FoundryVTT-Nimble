@@ -115,6 +115,7 @@ a stored object comes out of its container.
 				id="nimble-give-coins"
 				class="nimble-u-reset-button give-button"
 				aria-label={currencyGive.label}
+				data-tooltip={currencyGive.label}
 				aria-haspopup="menu"
 				aria-expanded={giveOpen}
 				onclick={() => (giveOpen = !giveOpen)}
@@ -129,16 +130,32 @@ a stored object comes out of its container.
 					tabindex="-1"
 					onpointerdown={(event) => event.stopPropagation()}
 				>
-					{#each currencyGive.entries as entry (entry.id)}
-						<button
-							type="button"
-							class="nimble-u-reset-button"
-							role="menuitem"
-							onclick={() => chooseGive(entry.intent)}
-						>
-							{entry.label}
-						</button>
-					{/each}
+					{#if currencyGive.move}
+						<div class="menu-label">{currencyGive.move.label}</div>
+						{#each currencyGive.move.entries as entry (entry.id)}
+							<button
+								type="button"
+								class="nimble-u-reset-button sub"
+								role="menuitem"
+								onclick={() => chooseGive(entry.intent)}
+							>
+								{entry.label}
+							</button>
+						{/each}
+					{/if}
+					{#if currencyGive.give}
+						<div class="menu-label">{currencyGive.give.label}</div>
+						{#each currencyGive.give.entries as entry (entry.id)}
+							<button
+								type="button"
+								class="nimble-u-reset-button sub"
+								role="menuitem"
+								onclick={() => chooseGive(entry.intent)}
+							>
+								{entry.label}
+							</button>
+						{/each}
+					{/if}
 				</div>
 			{/if}
 		</span>
@@ -314,6 +331,14 @@ a stored object comes out of its container.
 	.menu button:focus-visible {
 		background: var(--nimble-ui-hover);
 		outline: none;
+	}
+	.menu-label {
+		padding: 6px 8px 2px;
+		font: 600 0.75rem/1.2 var(--nimble-primary-font);
+		color: var(--nimble-ui-ink-muted);
+	}
+	.menu button.sub {
+		padding-left: 16px;
 	}
 	.slots {
 		margin-left: auto;

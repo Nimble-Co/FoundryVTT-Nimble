@@ -225,11 +225,9 @@ describe('the party inventory', () => {
 		expect(view.party).toBe(true);
 		expect(view.mineLabel).toBe(`${INV}.mine`);
 		expect(view.partyLabel).toBe(`${INV}.party`);
-		expect(view.currencyGive?.entries.map((entry) => entry.id)).toEqual([
-			'containerHero0001',
-			'bob',
-			'cara',
-		]);
+		expect(view.currencyGive?.label).toBe(`${INV}.moveCurrency`);
+		expect(view.currencyGive?.move?.entries.map((entry) => entry.id)).toEqual(['mine']);
+		expect(view.currencyGive?.give?.entries.map((entry) => entry.id)).toEqual(['bob', 'cara']);
 		expect(view.coins.map((coin) => [coin.coin, coin.value])).toEqual([
 			['gp', 40],
 			['sp', 2],
@@ -387,11 +385,36 @@ describe('the party inventory', () => {
 		]);
 		expect(torch.share?.give).toBeNull();
 		expect(
-			heroInventoryTab(
-				containerHero(),
-				partyContext({ canGiveAway: false }),
-			).currencyGive?.entries.map((entry) => entry.id),
-		).toEqual(['party']);
+			heroInventoryTab(containerHero(), partyContext({ canGiveAway: false })).currencyGive?.move
+				?.entries,
+		).toEqual([
+			{
+				id: 'party',
+				label: `${INV}.party`,
+				intent: {
+					kind: 'giveCurrency',
+					source: 'actor',
+					sourceActorId: 'containerHero0001',
+					destination: { kind: 'stash' },
+				},
+			},
+		]);
+		expect(
+			heroInventoryTab(containerHero(), partyContext({ canGiveAway: false })).currencyGive?.give,
+		).toBeNull();
+	});
+
+	it('gives party coins to the open character when this user cannot take them', () => {
+		const view = heroInventoryTab(containerHero(), partyContext({ canTake: false }), {
+			party: true,
+		});
+
+		expect(view.currencyGive?.move).toBeNull();
+		expect(view.currencyGive?.give?.entries.map((entry) => entry.id)).toEqual([
+			'containerHero0001',
+			'bob',
+			'cara',
+		]);
 	});
 
 	it('hides the menu when this user cannot move the object', () => {
