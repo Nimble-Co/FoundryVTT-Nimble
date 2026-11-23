@@ -692,6 +692,42 @@ describe('NimbleObjectItem._preCreate stacking', () => {
 		return incoming._preCreate({} as never, {} as never, {} as never);
 	}
 
+	it('does not fold a stack into a container of the same name', async () => {
+		const pack = createObject('pack', {
+			name: 'Torch',
+			objectSizeType: 'smallSized',
+			isContainer: true,
+		});
+		const dropped = createObject('dropped-torch', {
+			name: 'Torch',
+			objectSizeType: 'smallSized',
+			quantity: 3,
+		});
+
+		await dropOnto([pack], dropped);
+
+		expect(pack.update).not.toHaveBeenCalled();
+		expect(basePreCreate).toHaveBeenCalled();
+	});
+
+	it('does not fold a container into a stack of the same name', async () => {
+		const stack = createObject('loose-torch', {
+			name: 'Torch',
+			objectSizeType: 'smallSized',
+			quantity: 3,
+		});
+		const dropped = createObject('dropped-pack', {
+			name: 'Torch',
+			objectSizeType: 'smallSized',
+			isContainer: true,
+		});
+
+		await dropOnto([stack], dropped);
+
+		expect(stack.update).not.toHaveBeenCalled();
+		expect(basePreCreate).toHaveBeenCalled();
+	});
+
 	it('folds a new stack into one already carried in the same place', async () => {
 		const carried = createObject('carried-arrows', {
 			name: 'Arrows',

@@ -71,7 +71,8 @@ function prepared(
  * What has to change so `request.quantity` of `request.itemId` leaves `sourceItems`
  * and arrives loose on `destinationItems`. A container moves whole, with its contents.
  * A shorter count of a stack stays behind as the same document. Returns null when
- * the item is missing, is not an object, or the count is below 1.
+ * the item is missing, is not an object, the count is below 1, or the object
+ * stores a quantity of 0.
  */
 export function planItemTransfer(
 	sourceItems: readonly TransferItem[],
@@ -90,7 +91,7 @@ export function planItemTransfer(
 		? sourceItems.filter((item) => item._id !== root._id && containerIdOf(item) === root._id)
 		: [];
 	const have = quantityOf(root);
-	if (!container && carriesQuantity(root) && have < 1) return null;
+	if (have < 1) return null;
 	const split = !container && carriesQuantity(root) && asked < have;
 	const moved = split ? asked : have;
 

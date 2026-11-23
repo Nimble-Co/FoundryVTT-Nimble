@@ -29,7 +29,7 @@ function storedItems(stash: ReturnType<typeof readPartyStash>): PartyInventorySh
 			id: `coin-${coin}`,
 			name: localize('NIMBLE.actorSheet.hero.inventory.coinBalance', {
 				count: String(stash.currency[coin]),
-				coin,
+				coin: localize(`NIMBLE.currencyAbbreviations.${coin}`),
 			}),
 			icon: 'fa-solid fa-coins',
 			quantity: '',

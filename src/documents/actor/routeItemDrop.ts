@@ -24,6 +24,7 @@ type DroppedItemData = {
 type ObjectStackingFields = {
 	objectSizeType?: string;
 	containerId?: string;
+	container?: { enabled?: boolean };
 };
 
 export type ItemDropOutcome =
@@ -197,8 +198,8 @@ async function resolveSpellScrollDrop(
 function findStackedItemId(actor: Actor.Implementation, item: ItemSource): string | null {
 	if (item.type !== 'object') return null;
 
-	const { objectSizeType, containerId } = (item.system ?? {}) as ObjectStackingFields;
-	if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(objectSizeType ?? '')) return null;
+	const { objectSizeType, containerId, container } = (item.system ?? {}) as ObjectStackingFields;
+	if (container?.enabled || !OBJECT_SIZE_TYPES_WITH_QUANTITY.has(objectSizeType ?? '')) return null;
 
 	const existing = actor.items.find((candidate) => {
 		if (candidate.type !== 'object' || candidate.name !== item.name) return false;
@@ -206,6 +207,7 @@ function findStackedItemId(actor: Actor.Implementation, item: ItemSource): strin
 		const candidateSystem = (candidate as { system?: ObjectStackingFields }).system;
 
 		return (
+			candidateSystem?.container?.enabled !== true &&
 			(candidateSystem?.containerId ?? '') === (containerId ?? '') &&
 			OBJECT_SIZE_TYPES_WITH_QUANTITY.has(candidateSystem?.objectSizeType ?? '')
 		);

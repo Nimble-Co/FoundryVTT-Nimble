@@ -161,7 +161,7 @@ export async function transferObject(
 	if (!held) return;
 	const have = quantityOf(held.system);
 	const container = isContainer(held.system);
-	if (!container && carriesQuantity(held.system) && have < 1) return;
+	if (have < 1) return;
 	const equipped = held.system.equipped === true;
 	const destination = destinationPhrase(actor, intent.destination);
 	const equippedNote = equipped

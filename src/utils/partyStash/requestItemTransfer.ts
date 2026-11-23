@@ -187,35 +187,73 @@ function enqueue(job: () => Promise<void>): Promise<void> {
 	return run;
 }
 
-async function createOnActor(actor: HeldActor, items: TransferItem[]): Promise<void> {
+function createdIds(result: unknown): string[] {
+	if (!Array.isArray(result)) return [];
+	return result.flatMap((entry) => {
+		if (!entry || typeof entry !== 'object') return [];
+		const id = (entry as { id?: unknown }).id;
+		return typeof id === 'string' && id.length > 0 ? [id] : [];
+	});
+}
+
+/** Creates the documents. Returns the ids that actually landed. */
+async function createOnActor(actor: HeldActor, items: TransferItem[]): Promise<string[]> {
 	const containers = items.filter((item) => {
 		const container = item.system?.container as { enabled?: boolean } | undefined;
 		return container?.enabled === true;
 	});
 	const rest = items.filter((item) => !containers.includes(item));
+	const created: string[] = [];
 	if (containers.length) {
-		await actor.createEmbeddedDocuments('Item', containers, { keepId: true });
+		created.push(
+			...createdIds(await actor.createEmbeddedDocuments('Item', containers, { keepId: true })),
+		);
 	}
 	if (rest.length) {
-		await actor.createEmbeddedDocuments('Item', rest, { keepId: true });
+		created.push(
+			...createdIds(await actor.createEmbeddedDocuments('Item', rest, { keepId: true })),
+		);
 	}
+	return created;
 }
 
+function creationLanded(expected: TransferItem[], created: readonly string[]): boolean {
+	const present = new Set(created);
+	return expected.every((item) => present.has(item._id));
+}
+
+async function removePartialCreate(
+	actor: HeldActor,
+	expected: TransferItem[],
+	created: readonly string[],
+): Promise<void> {
+	const present = new Set(created);
+	const ids = expected.map((item) => item._id).filter((id) => present.has(id));
+	if (ids.length) await actor.deleteEmbeddedDocuments('Item', ids);
+}
+
+/** Applies one side. A destination that did not take the documents returns false. */
 async function applyPlanToActor(
 	actor: HeldActor,
 	plan: ItemTransferPlan,
 	side: 'source' | 'destination',
-) {
+): Promise<boolean> {
 	if (side === 'destination') {
 		if (plan.merge) {
 			const item = actor.items.get(plan.merge.id);
-			if (!item) return;
+			if (!item) return false;
 			const current = Math.floor(Number(item.toObject().system?.quantity ?? 1));
 			const quantity = (Number.isFinite(current) && current > 0 ? current : 1) + plan.merge.add;
 			await item.update({ 'system.quantity': quantity });
 		}
-		if (plan.add.length) await createOnActor(actor, plan.add);
-		return;
+		if (plan.add.length) {
+			const created = await createOnActor(actor, plan.add);
+			if (!creationLanded(plan.add, created)) {
+				await removePartialCreate(actor, plan.add, created);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	if (plan.sourceQuantity) {
@@ -223,6 +261,7 @@ async function applyPlanToActor(
 		await item?.update({ 'system.quantity': plan.sourceQuantity.quantity });
 	}
 	if (plan.removeIds.length) await actor.deleteEmbeddedDocuments('Item', plan.removeIds);
+	return true;
 }
 
 function applyPlanToStash(
@@ -307,7 +346,10 @@ async function applyMove(userId: string, request: ItemTransferRequest): Promise<
 	const stashTouched = request.source === 'stash' || request.destination.kind === 'stash';
 	const nextStash: PartyStash = { currency: { ...stash.currency }, items: [...stash.items] };
 	if (request.destination.kind === 'stash') applyPlanToStash(nextStash, plan, 'destination');
-	if (destinationActor) await applyPlanToActor(destinationActor, plan, 'destination');
+	if (destinationActor) {
+		const landed = await applyPlanToActor(destinationActor, plan, 'destination');
+		if (!landed) return;
+	}
 	if (request.source === 'stash') applyPlanToStash(nextStash, plan, 'source');
 	if (sourceActor) await applyPlanToActor(sourceActor, plan, 'source');
 	if (stashTouched) await writePartyStash(nextStash);
@@ -591,7 +633,8 @@ async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
 		newItemId,
 	);
 	if (!plan) return;
-	await applyPlanToActor(destinationActor, plan, 'destination');
+	const landed = await applyPlanToActor(destinationActor, plan, 'destination');
+	if (!landed) return;
 	await postChat(sender, plan, destinationActor.name ?? '');
 	getSocket()?.emit?.(SOCKET_NAME, {
 		type: REQUEST_TYPE,

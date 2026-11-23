@@ -48,6 +48,27 @@ describe('transferObject', () => {
 		expect(request).not.toHaveBeenCalled();
 	});
 
+	it('does not confirm a container or a slot-sized object whose stored quantity is 0', async () => {
+		const pack = actorWith({
+			id: 'torch',
+			name: 'Pack',
+			type: 'object',
+			system: { quantity: 0, equipped: false, container: { enabled: true } },
+		});
+		const sword = actorWith({
+			id: 'torch',
+			name: 'Sword',
+			type: 'object',
+			system: { quantity: 0, objectSizeType: 'slots', equipped: false },
+		});
+
+		await transferObject(pack, move);
+		await transferObject(sword, move);
+
+		expect(dialog().confirm).not.toHaveBeenCalled();
+		expect(request).not.toHaveBeenCalled();
+	});
+
 	it('treats a missing quantity as one object', async () => {
 		dialog().confirm.mockResolvedValue(true);
 		const actor = actorWith({

@@ -34,6 +34,23 @@ describe('PartyInventorySheet', () => {
 		) as { _prepareContext?: (options: object) => Promise<object> };
 		const original = sheetPrototype._prepareContext;
 		sheetPrototype._prepareContext = async () => ({});
+		const i18n = game.i18n as {
+			localize: (key: string) => string;
+			format: (key: string, data?: Record<string, string>) => string;
+		};
+		const originalLocalize = i18n.localize.bind(i18n);
+		const originalFormat = i18n.format.bind(i18n);
+		i18n.localize = (key: string) => {
+			if (key === 'NIMBLE.currencyAbbreviations.gp') return 'po';
+			if (key === 'NIMBLE.currencyAbbreviations.cp') return 'pc';
+			return originalLocalize(key);
+		};
+		i18n.format = (key: string, data?: Record<string, string>) => {
+			if (key === 'NIMBLE.actorSheet.hero.inventory.coinBalance') {
+				return `${data?.coin}: ${data?.count}`;
+			}
+			return originalFormat(key, data);
+		};
 		try {
 			const sheet = new PartyInventorySheet({ document: { name: 'Party Inventory' } } as never);
 			const context = await (
@@ -44,9 +61,11 @@ describe('PartyInventorySheet', () => {
 				}
 			)._prepareContext({});
 
-			expect(context.items.map((item) => item.name)).toEqual(['2 gp', '4 cp', 'Torch']);
+			expect(context.items.map((item) => item.name)).toEqual(['po: 2', 'pc: 4', 'Torch']);
 			expect(context.items.map((item) => item.quantity)).toEqual(['', '', 'x3']);
 		} finally {
+			i18n.localize = originalLocalize;
+			i18n.format = originalFormat;
 			sheetPrototype._prepareContext = original;
 			world.actors = previousActors;
 			world.settings = previousSettings;

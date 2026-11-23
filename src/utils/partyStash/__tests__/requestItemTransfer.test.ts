@@ -52,7 +52,9 @@ function character(
 			if ('system.currency.sp' in data) currency.sp = data['system.currency.sp'] ?? 0;
 			if ('system.currency.cp' in data) currency.cp = data['system.currency.cp'] ?? 0;
 		}),
-		createEmbeddedDocuments: vi.fn(async () => undefined),
+		createEmbeddedDocuments: vi.fn(async (_name: string, data: { _id?: string }[]) =>
+			(data ?? []).map((item) => ({ id: item._id })),
+		),
 		deleteEmbeddedDocuments: vi.fn(async () => undefined),
 		docs,
 	};
@@ -154,9 +156,12 @@ describe('requestItemTransfer', () => {
 		ada.deleteEmbeddedDocuments.mockImplementation(async () => {
 			calls.push('delete');
 		});
-		bob.createEmbeddedDocuments.mockImplementation(async () => {
-			calls.push('create');
-		});
+		bob.createEmbeddedDocuments.mockImplementation(
+			async (_name: string, data: { _id?: string }[]) => {
+				calls.push('create');
+				return (data ?? []).map((item) => ({ id: item._id }));
+			},
+		);
 		useWorld('gm', 'gm', [ada, bob]);
 
 		await requestItemTransfer({
@@ -185,6 +190,54 @@ describe('requestItemTransfer', () => {
 				content: expect.stringContaining('Guide gave Torch to Bob'),
 			}),
 		);
+	});
+
+	it('keeps the source when the destination creates nothing', async () => {
+		const torch = { _id: 'torch', name: 'Torch', type: 'object', system: { quantity: 3 } };
+		const ada = character('ada', 'Ada', [torch], true);
+		const bob = character('bob', 'Bob', [], false);
+		bob.createEmbeddedDocuments.mockResolvedValue([]);
+		useWorld('gm', 'gm', [ada, bob]);
+
+		await requestItemTransfer({
+			source: 'actor',
+			sourceActorId: 'ada',
+			itemId: 'torch',
+			quantity: 1,
+			destination: { kind: 'actor', actorId: 'bob' },
+		});
+
+		expect(ada.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(ChatMessage.create).not.toHaveBeenCalled();
+	});
+
+	it('drops a partial create and keeps the source when the rest does not land', async () => {
+		const pack = {
+			_id: 'pack',
+			name: 'Pack',
+			type: 'object',
+			system: { container: { enabled: true } },
+		};
+		const rope = { _id: 'rope', name: 'Rope', type: 'object', system: { containerId: 'pack' } };
+		const ada = character('ada', 'Ada', [pack, rope], true);
+		const bob = character('bob', 'Bob', [], false);
+		bob.createEmbeddedDocuments.mockImplementation(
+			async (_name: string, data: { _id?: string }[]) =>
+				data.some((item) => item._id === 'pack') ? [{ id: 'pack' }] : [],
+		);
+		useWorld('gm', 'gm', [ada, bob]);
+
+		await requestItemTransfer({
+			source: 'actor',
+			sourceActorId: 'ada',
+			itemId: 'pack',
+			quantity: 1,
+			destination: { kind: 'actor', actorId: 'bob' },
+		});
+
+		expect(bob.deleteEmbeddedDocuments).toHaveBeenCalledWith('Item', ['pack']);
+		expect(ada.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(ChatMessage.create).not.toHaveBeenCalled();
 	});
 
 	it('moves a container before its contents', async () => {

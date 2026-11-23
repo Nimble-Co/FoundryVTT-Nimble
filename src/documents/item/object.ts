@@ -121,12 +121,17 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	) {
 		if (this.isEmbedded) this.#discardUnknownContainerId();
 
-		// Update quantity if object already exists and is stackable or smallSized
-		if (this.isEmbedded && OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)) {
+		// A container is one object. It does not join a stack, and a stack does not join it.
+		if (
+			this.isEmbedded &&
+			!this.system.container.enabled &&
+			OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)
+		) {
 			// Arrows in a quiver and arrows on the belt are separate piles.
 			const existing = this.actor?.items.find(
 				(i) =>
 					i instanceof NimbleObjectItem &&
+					!i.system.container.enabled &&
 					i.name === this.name &&
 					i.type === 'object' &&
 					i.system.containerId === this.system.containerId &&

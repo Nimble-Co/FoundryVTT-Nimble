@@ -169,6 +169,11 @@ describe('planItemTransfer', () => {
 
 		const zero = [object('torch', { quantity: 0, objectSizeType: 'stackable' }, 'Torch')];
 		expect(planItemTransfer(zero, [], { itemId: 'torch', quantity: 1 }, refuseNewId)).toBeNull();
+
+		const bag = [object('pack', { quantity: 0, container: { enabled: true } }, 'Pack')];
+		expect(planItemTransfer(bag, [], { itemId: 'pack', quantity: 1 }, refuseNewId)).toBeNull();
+		const sword = [object('sword', { quantity: 0, objectSizeType: 'slots' }, 'Sword')];
+		expect(planItemTransfer(sword, [], { itemId: 'sword', quantity: 1 }, refuseNewId)).toBeNull();
 	});
 
 	it('refuses a missing item, a non-object, and a count below 1', () => {
