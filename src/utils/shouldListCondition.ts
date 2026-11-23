@@ -14,7 +14,5 @@ export default function shouldListCondition(
 }
 
 function isMonsterScoped(conditionId: string): boolean {
-	const scopes = (CONFIG.NIMBLE as { conditionScopes?: Record<string, string> } | undefined)
-		?.conditionScopes;
-	return scopes?.[conditionId] === 'monster';
+	return CONFIG.NIMBLE?.monsterConditions?.has(conditionId) ?? false;
 }

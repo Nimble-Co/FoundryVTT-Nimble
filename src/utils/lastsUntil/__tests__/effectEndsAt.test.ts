@@ -104,9 +104,9 @@ describe('effectEndsAt', () => {
 		const effect = makeEffect({
 			lastsUntil: [
 				moment({ kind: 'event', who: 'holder', event: 'die' }),
-				moment({ kind: 'event', who: 'linked', event: 'die' }),
+				moment({ kind: 'event', who: 'held', event: 'die' }),
 			],
-			flags: { [SYSTEM_ID]: { linkedActorUuid: bruno.uuid } },
+			flags: { [SYSTEM_ID]: { heldActorUuid: bruno.uuid } },
 		});
 
 		expect(effectEndsAt(effect, dies(bruno), combat)).toBe(true);

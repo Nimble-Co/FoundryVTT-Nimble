@@ -1,4 +1,4 @@
-import { linkedActorUuidOf } from '#utils/actor/linkedActor.js';
+import { heldActorOf } from '#utils/actor/heldActor.js';
 import {
 	type CoreDurationUnits,
 	describeLastsUntil,
@@ -30,16 +30,6 @@ export function sourceCreature(effect: LastsUntilEffect): Creature | null {
 		| null;
 	if (!document) return null;
 	return document.documentName === 'Actor' ? document : (document.actor ?? null);
-}
-
-/** The creature the effect is tied to, stamped on it when it was applied. */
-export function linkedCreature(effect: LastsUntilEffect): Creature | null {
-	const uuid = linkedActorUuidOf(effect);
-	if (!uuid) return null;
-	const document = fromUuidSync(uuid as never, { strict: false }) as
-		| (Creature & { documentName?: string })
-		| null;
-	return document?.documentName === 'Actor' ? document : null;
 }
 
 /** The name of the document in the effect's origin: the item, or the creature. */
@@ -83,13 +73,13 @@ export function effectLastsUntil(effect: LastsUntilEffect, holder: Creature | nu
 	};
 	const source = sourceCreature(effect);
 	const sourceName = source && source.uuid !== holder?.uuid ? (source.name ?? null) : null;
-	const linked = linkedCreature(effect);
+	const held = heldActorOf(effect);
 	return describeLastsUntil({
 		moments: system.lastsUntil ?? [],
 		usedUp: usedUpOf(system),
 		coreDuration: coreDurationOf(effect),
 		escape: hasEscape(system),
-		reader: holderReader(sourceName, linked?.name ?? null),
+		reader: holderReader(sourceName, held?.name ?? null),
 		localize,
 		format: localize,
 	});

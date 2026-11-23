@@ -80,16 +80,16 @@ describe('effectSubject isClockTurn', () => {
 	});
 });
 
-describe('effectSubject linked', () => {
+describe('effectSubject held', () => {
 	it('reads the creature the effect is tied to from its flag', () => {
 		const effect = Object.assign(makeEffect(), {
-			flags: { [SYSTEM_ID]: { linkedActorUuid: bystander.uuid } },
+			flags: { [SYSTEM_ID]: { heldActorUuid: bystander.uuid } },
 		});
 
-		expect(effectSubject(effect, turnEnd, combat).linked).toBe(bystander);
+		expect(effectSubject(effect, turnEnd, combat).held).toBe(bystander);
 	});
 
-	it('has no linked creature when the effect names none', () => {
-		expect(effectSubject(makeEffect(), turnEnd, combat).linked).toBeNull();
+	it('has no held creature when the effect names none', () => {
+		expect(effectSubject(makeEffect(), turnEnd, combat).held).toBeNull();
 	});
 });

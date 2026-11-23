@@ -339,7 +339,7 @@ describe('ApplyConditionRule', () => {
 			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 
-		it('records the attacker as the link on a condition applied to the target', async () => {
+		it('does not tie Swallowed to the attacker, since it does not end when they die', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();
 			const rule = createApplyConditionRule(
@@ -349,8 +349,21 @@ describe('ApplyConditionRule', () => {
 
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
+			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toBeUndefined();
+		});
+
+		it('ties Latched to the attacker, since it ends when the creature they hold dies', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'latched', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
 			expect(lastAppliedEffect()?.sourceData[`flags.${SYSTEM_ID}`]).toEqual({
-				linkedActorUuid: attackerActor.uuid,
+				heldActorUuid: attackerActor.uuid,
 			});
 		});
 

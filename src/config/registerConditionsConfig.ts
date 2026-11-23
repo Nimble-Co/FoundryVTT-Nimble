@@ -49,8 +49,6 @@ export const STATUS_EFFECT_IDS = {
 
 export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFECT_IDS];
 
-export type ConditionScope = 'general' | 'monster';
-
 /** Points core's blindness (vision, detection, the blindness vision mode) at the Blinded condition. */
 export function registerSpecialStatusEffects() {
 	CONFIG.specialStatusEffects.BLIND = STATUS_EFFECT_IDS.blinded;
@@ -205,12 +203,8 @@ export default function registerConditionsConfig() {
 		petrified: ['incapacitated'] as const,
 	};
 
-	// Only the exceptions are listed; an unlisted id is general-scoped, which keeps GM-defined
-	// custom conditions general without the custom-condition merge having to know about scopes.
-	const conditionScopes: Record<string, ConditionScope> = {
-		latched: 'monster',
-		swallowed: 'monster',
-	};
+	/** Monster features inflict these. An id not in the set stays in the pickers, including a GM's custom condition. */
+	const monsterConditions = new Set<string>(['latched', 'swallowed']);
 
 	const conditionStackableConditions = new Set(['wounded']);
 
@@ -256,7 +250,7 @@ export default function registerConditionsConfig() {
 			eventMoment('die', 'source'),
 			{ ...eventMoment('gain', 'source'), effectName: 'incapacitated' },
 		],
-		latched: [eventMoment('die', 'holder'), eventMoment('die', 'linked')],
+		latched: [eventMoment('die', 'holder'), eventMoment('die', 'held')],
 		slowed: [HOLDER_NEXT_TURN_END],
 		concentration: [
 			eventMoment('zeroHp', 'holder'),
@@ -321,7 +315,7 @@ export default function registerConditionsConfig() {
 		conditionDescriptions,
 		conditionDefaultImages,
 		conditionLinkedConditions,
-		conditionScopes,
+		monsterConditions,
 		conditionStackableConditions,
 		conditionOverlayConditions,
 		conditionMinorConditions,

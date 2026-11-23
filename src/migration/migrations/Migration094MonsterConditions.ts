@@ -11,7 +11,7 @@ const GREAT_WORM = 'Compendium.nimble.nimble-monsters.Actor.lQ83gZRlm3bTgsbp';
 const SWALLOWED_ITEM = `${GREAT_WORM}.Item.Zp4cNwRt9LkGvHqD`;
 
 const HELD_CREATURE_FLAG = 'heldCreature';
-const LINKED_ACTOR_FLAG = 'linkedActorUuid';
+const HELD_ACTOR_FLAG = 'heldActorUuid';
 
 /** A copy of the condition rules added after these effects were first made. */
 const CONDITION_RULES: Record<string, Json> = {
@@ -34,7 +34,7 @@ function isRecord(value: unknown): value is Json {
 	return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-function dieMoment(who: 'holder' | 'linked'): Json {
+function dieMoment(who: 'holder' | 'held'): Json {
 	return {
 		kind: 'event',
 		boundary: null,
@@ -48,7 +48,7 @@ function dieMoment(who: 'holder' | 'linked'): Json {
 	};
 }
 
-const LATCHED_LASTS_UNTIL = [dieMoment('holder'), dieMoment('linked')];
+const LATCHED_LASTS_UNTIL = [dieMoment('holder'), dieMoment('held')];
 
 function statusesOf(effect: Json): string[] {
 	return Array.isArray(effect.statuses)
@@ -91,13 +91,13 @@ function heldUuid(actor: Json): string | null {
 	return held.uuid;
 }
 
-function linkedUuid(effect: Json): string | null {
-	const uuid = systemFlags(effect)?.[LINKED_ACTOR_FLAG];
+function heldActorUuid(effect: Json): string | null {
+	const uuid = systemFlags(effect)?.[HELD_ACTOR_FLAG];
 	return typeof uuid === 'string' && uuid ? uuid : null;
 }
 
 function copyHeldCreature(effect: Json, actor: Json): void {
-	if (linkedUuid(effect)) return;
+	if (heldActorUuid(effect)) return;
 	const uuid = heldUuid(actor);
 	if (!uuid) return;
 	const flags: Json = isRecord(effect.flags) ? effect.flags : {};
@@ -105,7 +105,7 @@ function copyHeldCreature(effect: Json, actor: Json): void {
 	const existing = flags[SYSTEM_ID];
 	const bag: Json = isRecord(existing) ? existing : {};
 	flags[SYSTEM_ID] = bag;
-	bag[LINKED_ACTOR_FLAG] = uuid;
+	bag[HELD_ACTOR_FLAG] = uuid;
 }
 
 function giveLatchedAnEnd(effect: Json): void {

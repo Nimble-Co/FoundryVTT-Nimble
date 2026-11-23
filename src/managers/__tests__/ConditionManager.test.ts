@@ -9,7 +9,7 @@ function setConfiguredConditions(
 		linked?: Record<string, readonly string[]>;
 		stackable?: string[];
 		lastsUntil?: Record<string, object[]>;
-		scopes?: Record<string, string>;
+		monster?: string[];
 	} = {},
 ): void {
 	(CONFIG as unknown as { NIMBLE: Record<string, unknown> }).NIMBLE = {
@@ -20,7 +20,7 @@ function setConfiguredConditions(
 		conditionLinkedConditions: relationships.linked ?? {},
 		conditionStackableConditions: new Set<string>(relationships.stackable ?? []),
 		conditionLastsUntil: relationships.lastsUntil ?? {},
-		conditionScopes: relationships.scopes ?? {},
+		monsterConditions: new Set<string>(relationships.monster ?? []),
 	};
 }
 
@@ -153,7 +153,7 @@ describe('ConditionManager', () => {
 		it('keeps monster-scoped conditions in CONFIG.statusEffects, so they can be applied', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', swallowed: 'Swallowed' },
-				{ scopes: { swallowed: 'monster' } },
+				{ monster: ['swallowed'] },
 			);
 			manager.initialize();
 			manager.configureStatusEffects();
@@ -164,7 +164,7 @@ describe('ConditionManager', () => {
 		it('publishes every registered condition, since an absent id cannot be applied at all', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', swallowed: 'Swallowed', latched: 'Latched' },
-				{ scopes: { swallowed: 'monster', latched: 'monster' } },
+				{ monster: ['swallowed', 'latched'] },
 			);
 			manager.initialize();
 			manager.configureStatusEffects();
@@ -178,7 +178,7 @@ describe('ConditionManager', () => {
 		it('still registers a monster-scoped condition, so it can be applied and read', () => {
 			setConfiguredConditions(
 				{ blinded: 'Blinded', swallowed: 'Swallowed' },
-				{ scopes: { swallowed: 'monster' } },
+				{ monster: ['swallowed'] },
 			);
 			manager.initialize();
 

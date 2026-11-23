@@ -19,7 +19,7 @@ beforeEach(() => {
 			latched: 'Latched',
 			swallowed: 'Swallowed',
 		},
-		conditionScopes: { latched: 'monster', swallowed: 'monster' },
+		monsterConditions: new Set(['latched', 'swallowed']),
 	};
 	config.statusEffects = [
 		{ id: 'prone', name: 'Prone', img: 'icons/prone.svg' },

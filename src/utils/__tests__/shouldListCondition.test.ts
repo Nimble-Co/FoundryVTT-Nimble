@@ -5,7 +5,7 @@ import shouldListCondition from '../shouldListCondition.js';
 describe('shouldListCondition', () => {
 	beforeEach(() => {
 		vi.stubGlobal('CONFIG', {
-			NIMBLE: { conditionScopes: { latched: 'monster', swallowed: 'monster' } },
+			NIMBLE: { monsterConditions: new Set(['latched', 'swallowed']) },
 		});
 	});
 
@@ -17,7 +17,7 @@ describe('shouldListCondition', () => {
 		expect(shouldListCondition('prone')).toBe(true);
 	});
 
-	it('lists a condition the scope dictionary does not mention, so custom GM conditions stay pickable', () => {
+	it('lists a condition the monster set does not mention, so custom GM conditions stay pickable', () => {
 		expect(shouldListCondition('homebrewHexed')).toBe(true);
 	});
 
@@ -33,8 +33,8 @@ describe('shouldListCondition', () => {
 		expect(shouldListCondition('swallowed', new Set(['latched']))).toBe(false);
 	});
 
-	it('lists every condition when the scope dictionary is missing', () => {
-		(CONFIG.NIMBLE as { conditionScopes?: unknown }).conditionScopes = undefined;
+	it('lists every condition when the monster set is missing', () => {
+		(CONFIG.NIMBLE as { monsterConditions?: unknown }).monsterConditions = undefined;
 
 		expect(shouldListCondition('latched')).toBe(true);
 	});

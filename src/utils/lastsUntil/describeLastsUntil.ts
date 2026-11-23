@@ -1,5 +1,6 @@
 import type { HeldAppliesTo, HeldUsedUp } from '#types/heldChange.d.ts';
 import {
+	type EventSubject,
 	type LastsUntilEvent,
 	NEXT_TURN_COUNTS,
 } from '../../models/activeEffect/nimbleEffectChoices.js';
@@ -19,7 +20,7 @@ export interface LastsUntilReader {
 	holder: Person;
 	source: Person;
 	/** The creature the effect is tied to. Unnamed, it reads as "the creature they hold". */
-	linked?: Person;
+	held?: Person;
 }
 
 /** A card that puts the effect on its targets: they hold it, you used the card. */
@@ -37,12 +38,12 @@ export const CARD_SELF_READER: LastsUntilReader = {
 /** The sheet of the holder. With no source name, or the holder as source, the source is "you". */
 export function holderReader(
 	sourceName: string | null,
-	linkedName: string | null = null,
+	heldName: string | null = null,
 ): LastsUntilReader {
 	return {
 		holder: { kind: 'you' },
 		source: sourceName ? { kind: 'named', name: sourceName } : { kind: 'you' },
-		...(linkedName ? { linked: { kind: 'named' as const, name: linkedName } } : {}),
+		...(heldName ? { held: { kind: 'named' as const, name: heldName } } : {}),
 	};
 }
 
@@ -97,14 +98,15 @@ export interface DescribeInput {
 	format: Format;
 }
 
+const READERS: Record<EventSubject, (input: DescribeInput) => Person> = {
+	source: (input) => input.reader.source,
+	held: (input) =>
+		input.reader.held ?? { kind: 'named', name: input.localize(`${WORDS}.heldCreature`) },
+	holder: (input) => input.reader.holder,
+};
+
 function readerPerson(who: Moment['who'], input: DescribeInput): Person {
-	if (who === 'source') return input.reader.source;
-	if (who === 'linked') {
-		return (
-			input.reader.linked ?? { kind: 'named', name: input.localize(`${WORDS}.linkedCreature`) }
-		);
-	}
-	return input.reader.holder;
+	return READERS[who ?? 'holder'](input);
 }
 
 function possessive(person: Person, input: DescribeInput): string {

@@ -30,9 +30,9 @@ The first moment that happens ends the effect. An effect with no moment stays un
 :::
 
 ::: details Each thing they or you can do
-They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something. The creature they hold can drop to 0 HP or die.
+They can attack, move, cast a spell, cast a tiered spell, make a roll (an attack, a save or a check), deal damage, take damage, be Healed, drop to 0 HP, die, gain or apply something, or lose its temp HP. You can attack, cast a spell, drop to 0 HP, die, lose Concentration, use this again, gain or apply something. The creature they hold can drop to 0 HP or die. That choice is in the list only when the effect already names that creature, already has a moment about them, or carries a condition whose Lasts Until uses them, such as Latched.
 
-- **The creature they hold** is only ever set by the feature that applied the effect, such as Latch On. An effect applied by hand has none, and a moment about them ends nothing.
+- **The creature they hold** is set by the feature that applied the effect, such as Latch On. An effect applied by hand has none, and a moment about them ends nothing.
 
 - **Take damage** can name damage types. Turn on **fire** and **radiant** for "until they take fire or radiant damage". With none on, any damage ends it.
 - **Gain** and **apply** name a condition, or an effect by its name ("an effect named..."). A condition also counts the conditions that count as it, so gaining Stunned is a gain of Incapacitated. To end an effect when any effect of a group goes on, give each effect of the group the same custom condition, and name that condition. An effect never ends on its own gain.

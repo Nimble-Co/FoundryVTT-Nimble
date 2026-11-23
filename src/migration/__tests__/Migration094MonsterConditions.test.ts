@@ -61,9 +61,9 @@ describe('Migration094MonsterConditions', () => {
 		]);
 		expect(effect.system.lastsUntil).toEqual([
 			expect.objectContaining({ kind: 'event', event: 'die', who: 'holder' }),
-			expect.objectContaining({ kind: 'event', event: 'die', who: 'linked' }),
+			expect.objectContaining({ kind: 'event', event: 'die', who: 'held' }),
 		]);
-		expect(effect.flags?.[SYSTEM_ID]?.linkedActorUuid).toBe('Actor.hero');
+		expect(effect.flags?.[SYSTEM_ID]?.heldActorUuid).toBe('Actor.hero');
 	});
 
 	it('leaves a Latched effect that already ends, and already names its creature', async () => {
@@ -74,7 +74,7 @@ describe('Migration094MonsterConditions', () => {
 				rules: [{ id: 'latchedAttacks', type: 'attackOutcome' }],
 				lastsUntil,
 			},
-			flags: { [SYSTEM_ID]: { linkedActorUuid: 'Actor.kept' } },
+			flags: { [SYSTEM_ID]: { heldActorUuid: 'Actor.kept' } },
 		};
 
 		await migration().alwaysUpdateEffect(
@@ -84,7 +84,7 @@ describe('Migration094MonsterConditions', () => {
 
 		expect(effect.system.rules).toEqual([{ id: 'latchedAttacks', type: 'attackOutcome' }]);
 		expect(effect.system.lastsUntil).toBe(lastsUntil);
-		expect(effect.flags[SYSTEM_ID].linkedActorUuid).toBe('Actor.kept');
+		expect(effect.flags[SYSTEM_ID].heldActorUuid).toBe('Actor.kept');
 	});
 
 	it('does not change an effect stored on an item', async () => {
