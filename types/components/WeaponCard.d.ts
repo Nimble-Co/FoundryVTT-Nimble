@@ -14,8 +14,12 @@ export interface WeaponCardProps {
 	icon?: string;
 	damage?: string | null;
 	properties?: string[];
-	/** Advisory text shown beneath the tags, for a requirement the hero does not meet. */
+	/**
+	 * Full advisory for a requirement the hero does not meet. Shown as the
+	 * tooltip on the warning. `noticeLabel` is the short text beside the icon.
+	 */
 	notice?: string | null;
+	noticeLabel?: string | null;
 	description?: string | null;
 	isExpanded?: boolean;
 	disabled?: boolean;

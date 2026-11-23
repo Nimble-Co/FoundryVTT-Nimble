@@ -35,8 +35,8 @@ export interface WeaponAttackCheck {
  *
  * Being equipped is the only hard condition: a weapon you are not holding is
  * not one you can swing. A Strength requirement is surfaced as a notice
- * instead, see `getStrengthShortfall`, because the book leaves what an
- * under-strength hero may do with the weapon to the table.
+ * instead, see `getStrengthShortfall`. The hover text states the numbers and
+ * that a weapon used without proficiency cannot crit.
  */
 export function checkWeaponAttack(weapon: WeaponItem): WeaponAttackCheck {
 	if (weapon.system.objectType !== 'weapon') return { allowed: true };

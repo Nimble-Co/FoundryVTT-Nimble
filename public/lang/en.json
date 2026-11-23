@@ -7486,7 +7486,8 @@
 				"notEquipped": "{name} is currently not equipped."
 			},
 			"notices": {
-				"strengthShortfall": "Requires Strength {required}, you have {current}. Ask your GM."
+				"notEnoughStrength": "Not enough Strength",
+				"strengthShortfall": "Requires Strength {required}. You have {current}. Weapons used without proficiency cannot crit."
 			}
 		}
 	}

@@ -13,6 +13,7 @@
 		damage = null,
 		properties = [],
 		notice = null,
+		noticeLabel = null,
 		description = null,
 		isExpanded = false,
 		disabled = false,
@@ -74,9 +75,14 @@
 				</div>
 			{/if}
 			{#if notice}
-				<span class="weapon-card__notice">
-					<i class="fa-solid fa-triangle-exclamation"></i>
-					{notice}
+				<span
+					class="weapon-card__notice"
+					data-tooltip={notice}
+					data-tooltip-direction="UP"
+					aria-label={notice}
+				>
+					<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+					<span>{noticeLabel || notice}</span>
 				</span>
 			{/if}
 		</div>
@@ -188,10 +194,22 @@
 
 		&__notice {
 			display: flex;
-			align-items: center;
+			align-items: flex-start;
 			gap: 0.25rem;
+			min-width: 0;
 			font-size: var(--nimble-xs-text);
+			line-height: 1.3;
+			// The shared icon colour is a dark brown for a pale warning chip. On this
+			// card the sentence sits on the card fill, so dark mode needs a light amber.
 			color: var(--nimble-warning-icon-color);
+
+			span {
+				min-width: 0;
+			}
+
+			:global(.theme-dark) & {
+				color: hsl(45, 85%, 68%);
+			}
 		}
 
 		&__name {

@@ -60,7 +60,7 @@ Some rows ask you to choose first. Then a choice step opens under the row: Asses
 
 Only equipped weapons are offered as attacks, here and in the opportunity attack list. Unarmed strikes are always available, so you are never left with nothing to attack with. Attacking with a weapon you are not holding is refused, with a message saying so.
 
-A weapon whose Strength requirement you do not meet still shows up and can still be used. It carries a warning instead, naming the Strength it asks for and the Strength you have. What that costs you is your GM's call: they may wave it through, ask for disadvantage, or rule it out.
+A weapon whose Strength requirement you do not meet still shows up and can still be used. Its row shows a warning icon and "Not enough Strength". Hover that warning for the Strength it asks for, the Strength you have, and the rule that a weapon used without proficiency cannot crit.
 
 You can drag an action from here to the macro hotbar for one-click access; see [Macros & the Hotbar](../gm/macros.md).
 
@@ -68,7 +68,7 @@ You can drag an action from here to the macro hotbar for one-click access; see [
 
 Your equipment and loot. Click a row to use the item (attack with a weapon, drink a potion); this posts a chat card. Weapons, armor and shields have an **EQUIP** tag: click it to equip or unequip the item. You can create new items here with **Create Object**, or drag them in from the compendiums. The coins and, if your table tracks them, your inventory slots are at the top of the tab. When you are over your slot limit, the slots show a warning.
 
-Equipping is never blocked. An equipped weapon whose Strength requirement you do not meet is marked with a warning you can hover for the details, and it is left to your GM to decide what to do about it.
+Equipping is never blocked. An equipped weapon whose Strength requirement you do not meet is marked with a warning you can hover for the same details.
 
 Items set up as containers, such as a chest, a backpack, a pouch or a quiver, show their contents indented under them. The row of a container shows how much of its capacity is in use, or **Empty**.
 

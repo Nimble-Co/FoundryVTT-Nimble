@@ -62,8 +62,9 @@
 
 	/**
 	 * A Strength requirement the character does not meet is reported, never
-	 * enforced: equipping and attacking both stay available, and the GM rules on
-	 * what wielding it costs.
+	 * enforced. Equipping and attacking both stay available. The warning's
+	 * tooltip names the numbers and that a weapon used without proficiency
+	 * cannot crit.
 	 */
 	function getStrengthNotice(item): string | null {
 		if (!item.reactive.system.equipped) return null;

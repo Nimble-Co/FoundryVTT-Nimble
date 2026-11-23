@@ -140,8 +140,8 @@ export function createAttackPanelState(
 
 	/**
 	 * A Strength requirement the character does not meet is reported, never
-	 * enforced: the book leaves what an under-strength hero may do with the
-	 * weapon to the table, so the row says so and the GM rules on it.
+	 * enforced. The row marks it, and the tooltip names the numbers and that a
+	 * weapon used without proficiency cannot crit.
 	 */
 	function getStrengthNotice(item: Item): string | null {
 		const shortfall = getStrengthShortfall(getActor().reactive, item as never);
