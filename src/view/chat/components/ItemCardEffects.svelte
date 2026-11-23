@@ -53,10 +53,14 @@
 					<DefendReactions />
 				{/if}
 
-				{#if game.user?.isGM}
+				{#if game.user?.isGM || messageDocument?.mayApplyCardDamage?.()}
 					<section class="nimble-effect">
-						<LatchedMissButton />
-						<ApplyDamageButton nodes={nodeGroup} />
+						{#if game.user?.isGM}
+							<LatchedMissButton />
+						{/if}
+						{#if messageDocument?.mayApplyCardDamage?.()}
+							<ApplyDamageButton nodes={nodeGroup} />
+						{/if}
 					</section>
 				{/if}
 

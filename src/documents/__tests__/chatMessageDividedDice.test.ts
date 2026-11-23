@@ -79,7 +79,7 @@ function node(id: string, forTarget: string, roll: object, more: object = {}) {
 
 /** Goblin takes 2d12 (5, 7) + 3; Orc takes 1d12 (4). */
 function dividedCard(isCritical = false) {
-	return new NimbleChatMessage({
+	const card = new NimbleChatMessage({
 		type: 'feature',
 		system: {
 			targets: [GOBLIN, ORC],
@@ -93,6 +93,8 @@ function dividedCard(isCritical = false) {
 			},
 		},
 	} as unknown as ChatMessage.CreateData);
+	Object.assign(card, { update: vi.fn().mockResolvedValue(card) });
+	return card;
 }
 
 function world(orcArmor = 'none') {

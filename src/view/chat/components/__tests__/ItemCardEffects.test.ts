@@ -59,6 +59,10 @@ function createMessage(groups: unknown[][], effects: unknown[] = []) {
 		},
 		canApplyAllDamage: () => true,
 		canApplyDamage: () => true,
+		mayApplyCardDamage: () =>
+			(globalThis as unknown as { game: { user?: { isGM?: boolean } } }).game.user?.isGM === true,
+		isDamageApplied: () => false,
+		undoAppliedDamage: () => undefined,
 		canRollDeferredDamage: () => true,
 		applyAllDamage: () => undefined,
 		applyDamage: () => undefined,
@@ -219,6 +223,31 @@ describe('ItemCardEffects apply-damage controls', () => {
 		});
 
 		expect(applyButtons()).toHaveLength(0);
+	});
+
+	it('lets a player who owns a target apply, and shows Damage Applied without undo', () => {
+		gameStub().user = { isGM: false };
+		const message = createMessage([[damageNode('a', 'slashing', 8)]]);
+		message.mayApplyCardDamage = () => true;
+
+		render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
+
+		expect(applyButtons()).toHaveLength(1);
+		expect(screen.queryByRole('button', { name: 'Undo Damage' })).toBeNull();
+	});
+
+	it('shows Damage Applied to the GM, with undo, and will not apply again', () => {
+		const message = createMessage([[damageNode('a', 'slashing', 8)]]);
+		message.isDamageApplied = () => true;
+		message.undoAppliedDamage = vi.fn();
+
+		render(ItemCardEffectsTestHarness, { props: { messageDocument: message } });
+
+		const applied = screen.getByRole('button', { name: 'Damage Applied' });
+		expect(applied).toBeDisabled();
+		expect(applyButtons()).toHaveLength(0);
+		screen.getByRole('button', { name: 'Undo Damage' }).click();
+		expect(message.undoAppliedDamage).toHaveBeenCalledTimes(1);
 	});
 });
 

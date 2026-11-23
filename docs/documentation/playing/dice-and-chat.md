@@ -69,7 +69,7 @@ A feature that divides the dice, such as Grim Harrow, shows a row for each targe
 - **Header:** the item and the result. The result names the weapon a feature attacked with, "Hit with Longsword", or the feature you attacked through, "Hit (Coordinated Strike!)". An opportunity attack says so: "Hit (opportunity attack)". A free cast with no roll says "Free (Coordinated Strike!)".
 - **Cost:** what the use spent or sacrificed, such as **Cost: 2 mana (Stretch Time)**. A spent charge is one line at the bottom: "Combat Dice: spent 1, 2 of 3 left".
 - **Roll boxes:** the total of each roll. Click the arrow, or hover the total, to see the dice.
-- **Apply Damage** *(GM only)*: applies the damage to the card's targets. **Reduced Damage** tells why a target took less.
+- **Apply Damage**: the GM, or a player who owns one of the card's targets, applies the damage. **Reduced Damage** tells why a target will take less, and only the GM sees that preview. After it is applied, every user sees the amount that was removed, and that number stays. A target that took nothing shows 0. The button says **Damage Applied** and will not apply again. The GM can undo it, which puts the hit points back and shows the preview again.
 - **Targets:** the tokens you targeted when you rolled. You can add or remove tokens.
 - **Save:** rolls for the selected tokens.
 - **Effects:** **Apply to Targets** puts an effect on the targets. An effect for the user goes on by itself (**Apply to You** with Feature Effects off). See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
