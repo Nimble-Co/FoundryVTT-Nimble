@@ -71,6 +71,16 @@ describe('DamageBackRule', () => {
 		expect(rule.answersAttack({ isCritical: false, trigger: 'attacked' })).toBe(true);
 	});
 
+	it('answers a miss, and not a hit or another moment', () => {
+		const rule = makeRule({ trigger: 'missed', onlyCrits: true, attackDelivery: 'any' });
+		expect(rule.answersAttack({ isCritical: false, trigger: 'missed' })).toBe(true);
+		expect(rule.answersAttack({ isCritical: true, trigger: 'missed' })).toBe(true);
+		expect(rule.answersAttack({ isCritical: false, trigger: 'attacked' })).toBe(false);
+		expect(rule.answersAttack({ isCritical: true, trigger: 'damaged' })).toBe(false);
+		const damaged = makeRule({ trigger: 'damaged', onlyCrits: false, attackDelivery: 'any' });
+		expect(damaged.answersAttack({ isCritical: false, trigger: 'missed' })).toBe(false);
+	});
+
 	it('answers only the delivery of its filter', () => {
 		const rule = makeRule({ trigger: 'attacked', attackDelivery: 'melee' });
 		const on = (delivery: 'melee' | 'ranged' | null) =>

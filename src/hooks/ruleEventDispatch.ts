@@ -477,6 +477,7 @@ export default function registerRuleEventDispatch(): void {
 	didRegister = true;
 
 	onHook(systemHookName('damageApplied'), handleDamageApplied as HookFn);
+	onHook(systemHookName('attackMissed'), handleDamageApplied as HookFn);
 	onHook(systemHookName('discardedCritTriggered'), handleDiscardedCritTriggered as HookFn);
 	onHook(systemHookName('useItem'), handleUseItem as HookFn);
 	onHook('combatTurn', handleCombatTurn as HookFn);

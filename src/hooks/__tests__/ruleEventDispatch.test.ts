@@ -46,7 +46,7 @@ vi.mock('../../utils/actor/actorHealthState.js', async () => {
 	};
 });
 
-import { SYSTEM_ID } from '#system';
+import { SYSTEM_ID, systemHookName } from '#system';
 import { getActorHealthState } from '../../utils/actor/actorHealthState.js';
 import registerRuleEventDispatch from '../ruleEventDispatch.js';
 
@@ -111,6 +111,7 @@ describe('ruleEventDispatch', () => {
 
 	it('registers the expected hook event names', () => {
 		expect(handlers.has('nimble.damageApplied')).toBe(true);
+		expect(handlers.has(systemHookName('attackMissed'))).toBe(true);
 		expect(handlers.has('combatTurn')).toBe(true);
 		expect(handlers.has('updateActor')).toBe(true);
 		expect(handlers.has('nimble.saveResolved')).toBe(true);

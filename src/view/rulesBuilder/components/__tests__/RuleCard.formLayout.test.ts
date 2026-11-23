@@ -515,6 +515,18 @@ describe('RuleCard with a form layout (damageBack)', () => {
 		expect(shown).toContain('damageType');
 		expect(shown).not.toContain('onlyCrits');
 	});
+
+	it('asks for a formula when an attack misses, and not for crits or an answered attack', () => {
+		const { container } = render(RuleCard, {
+			rule: initialRule('damageBack', { trigger: 'missed', amount: 'formula' }),
+			manager,
+		});
+		const shown = shownFields(container);
+		expect(shown).toContain('formula');
+		expect(shown).toContain('damageType');
+		expect(shown).not.toContain('onlyCrits');
+		expect(shown).not.toContain('answeredAttack');
+	});
 });
 
 describe('RuleCard without a form layout', () => {

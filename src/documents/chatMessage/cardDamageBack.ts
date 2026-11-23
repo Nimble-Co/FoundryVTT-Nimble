@@ -36,7 +36,7 @@ export interface DamageBackRecord {
 
 export type DamageBackAction = 'deal' | 'double';
 
-type DamageBackTrigger = 'damaged' | 'attacked' | 'tempHpReduced';
+type DamageBackTrigger = 'damaged' | 'attacked' | 'missed' | 'tempHpReduced';
 
 interface DamageBackRuleLike {
 	id?: string | null;
@@ -237,15 +237,16 @@ export class CardDamageBack {
 		const damageType = rule.amount === 'formula' ? (rule.damageType ?? '') : '';
 		let amount = 0;
 		let roll: Record<string, unknown> | null = null;
+		const fromDamageTaken = context.trigger !== 'attacked' && context.trigger !== 'missed';
 		if (rule.amount === 'formula' && rule.formula?.trim()) {
 			const rolled = await rollAmount(rule.formula.trim(), rule.rollData(), {
 				purpose: 'for the attacker',
 			});
 			amount = rolled.amount;
 			roll = rolled.roll ? (rolled.roll.toJSON() as Record<string, unknown>) : null;
-		} else if (context.trigger !== 'attacked' && rule.amount === 'critDice') {
+		} else if (fromDamageTaken && rule.amount === 'critDice') {
 			amount = context.critDiceTotal;
-		} else if (context.trigger !== 'attacked' && (rule.amount ?? 'taken') === 'taken') {
+		} else if (fromDamageTaken && (rule.amount ?? 'taken') === 'taken') {
 			amount = context.taken;
 		}
 		if (amount > 0 && !ignoreArmor && this.#host.damageAfterDefenses) {
@@ -329,12 +330,13 @@ export class CardDamageBack {
 	}
 
 	/**
-	 * Each creature the card attacks gives its Attacked rules to each attacker of the card. With
-	 * `answered`, only the rules of that effect that also answer the attack it reacts to.
+	 * Each holder gives the rules of this card moment to each attacker. With `answered`, only the
+	 * rules of that effect that also answer the attack it reacts to.
 	 */
-	async afterAttack(
+	async #giveBack(
 		holders: readonly AttackedCreature[],
-		answered: { effectId: string } | null = null,
+		trigger: 'attacked' | 'missed',
+		answered: { effectId: string } | null,
 	): Promise<void> {
 		const attackers = this.#attackers();
 		if (attackers.length < 1 || holders.length < 1) return;
@@ -347,14 +349,10 @@ export class CardDamageBack {
 						if (!rule.answeredAttack || rule.parentDocument?.id !== answered.effectId) continue;
 					}
 					for (const attacker of attackers) {
-						const attack = {
-							trigger: 'attacked' as const,
-							isCritical: false,
-							delivery: attacker.delivery,
-						};
+						const attack = { trigger, isCritical: false, delivery: attacker.delivery };
 						if (rule.answersAttack?.(attack) !== true) continue;
 						const record = await this.#recordFor(rule, holder, attacker, {
-							trigger: 'attacked',
+							trigger,
 							taken: 0,
 							critDiceTotal: 0,
 						});
@@ -365,6 +363,22 @@ export class CardDamageBack {
 			return this.#add(records);
 		});
 		await this.#endAnswered(ending);
+	}
+
+	/**
+	 * Each creature the card attacks gives its Attacked rules to each attacker of the card. With
+	 * `answered`, only the rules of that effect that also answer the attack it reacts to.
+	 */
+	async afterAttack(
+		holders: readonly AttackedCreature[],
+		answered: { effectId: string } | null = null,
+	): Promise<void> {
+		await this.#giveBack(holders, 'attacked', answered);
+	}
+
+	/** Each creature an attack misses gives its miss rules to each attacker of the card. */
+	async afterMiss(holders: readonly AttackedCreature[]): Promise<void> {
+		await this.#giveBack(holders, 'missed', null);
 	}
 
 	/**

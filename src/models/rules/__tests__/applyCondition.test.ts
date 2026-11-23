@@ -309,6 +309,21 @@ describe('ApplyConditionRule', () => {
 			expect(conditionsAppliedTo(targetActor)).toEqual([]);
 		});
 
+		it('fires onMiss only when the attack misses', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onMiss' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor));
+			expect(conditionsAppliedTo(targetActor)).toEqual([]);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isMiss: true }));
+			expect(conditionsAppliedTo(targetActor)).toEqual(['dazed']);
+		});
+
 		it('fires onHit trigger only when not critical', async () => {
 			const attackerActor = createMockActor();
 			const targetActor = createMockActor();

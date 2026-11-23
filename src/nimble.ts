@@ -1,5 +1,6 @@
 import './support/installSupportLog.js';
 import registerActionEconomySystemHooks from './hooks/actionEconomySystem.js';
+import { registerAttackMissHooks } from './hooks/attackMiss.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import { registerBankedDamageReductionExpiryHooks } from './hooks/bankedDamageReductionExpiry.js';
 import canvasInit from './hooks/canvasInit.js';
@@ -199,6 +200,7 @@ registerSaverStepsHooks();
 registerPoolEmptyEffectHooks();
 registerDieResultEffectHooks();
 registerDamageBackOnAttackHooks();
+registerAttackMissHooks();
 registerEndTimedEffectsQuery();
 registerEndWaitingQuery();
 registerCardEventsQuery();
