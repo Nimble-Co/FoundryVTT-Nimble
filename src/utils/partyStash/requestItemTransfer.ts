@@ -292,16 +292,34 @@ function applyPlanToStash(
 	stash.items = [...stash.items, ...plan.add];
 }
 
+function itemTransferChatKey(stashMove: boolean, moved: number): string {
+	if (stashMove && moved === 1) return 'NIMBLE.actorSheet.hero.inventory.moved';
+	if (stashMove) return 'NIMBLE.actorSheet.hero.inventory.movedCount';
+	if (moved === 1) return 'NIMBLE.actorSheet.hero.inventory.gave';
+	return 'NIMBLE.actorSheet.hero.inventory.gaveCount';
+}
+
+function coinTransferChatKey(stashMove: boolean): string {
+	if (stashMove) return 'NIMBLE.actorSheet.hero.inventory.movedCoins';
+	return 'NIMBLE.actorSheet.hero.inventory.gaveCoins';
+}
+
+function formatCoinAmount(spent: PartyCurrency): string {
+	const parts = (['gp', 'sp', 'cp'] as const)
+		.filter((coin) => spent[coin] > 0)
+		.map((coin) => `${spent[coin]} ${localize(`NIMBLE.currencyAbbreviations.${coin}`)}`);
+	return new Intl.ListFormat(game.i18n.lang || 'en', { style: 'short', type: 'unit' }).format(
+		parts,
+	);
+}
+
 async function postChat(
 	user: StashUser,
 	plan: ItemTransferPlan,
 	destination: string,
+	stashMove: boolean,
 ): Promise<void> {
-	const key =
-		plan.moved === 1
-			? 'NIMBLE.actorSheet.hero.inventory.gave'
-			: 'NIMBLE.actorSheet.hero.inventory.gaveCount';
-	const content = `<p>${localize(key, {
+	const content = `<p>${localize(itemTransferChatKey(stashMove, plan.moved), {
 		user: escapeHtml(user.name || localize('NIMBLE.actorSheet.hero.inventory.someone')),
 		item: escapeHtml(plan.name),
 		destination: escapeHtml(destination),
@@ -358,7 +376,7 @@ async function applyMove(userId: string, request: ItemTransferRequest): Promise<
 		request.destination.kind === 'stash'
 			? localize('NIMBLE.actorSheet.hero.inventory.partyName')
 			: (destinationActor?.name ?? '');
-	await postChat(user, plan, destinationName);
+	await postChat(user, plan, destinationName, stashTouched);
 }
 
 function senderMayMove(
@@ -532,24 +550,21 @@ async function applyGiveCurrency(userId: string, request: CurrencyTransferReques
 		request.destination.kind === 'stash'
 			? localize('NIMBLE.actorSheet.hero.inventory.partyName')
 			: (destinationActor?.name ?? '');
-	await postGaveCoins(user, spent, destinationName);
+	await postGaveCoins(user, spent, destinationName, touchesStash(request));
 }
 
 async function postGaveCoins(
 	user: StashUser,
 	spent: PartyCurrency,
 	destinationName: string,
+	stashMove: boolean,
 ): Promise<void> {
-	const amount = (['gp', 'sp', 'cp'] as const)
-		.filter((coin) => spent[coin] > 0)
-		.map((coin) => `${spent[coin]} ${coin}`)
-		.join(', ');
 	await ChatMessage.create({
 		user: user.id,
 		speaker: { alias: user.name ?? '' },
-		content: `<p>${localize('NIMBLE.actorSheet.hero.inventory.gaveCoins', {
+		content: `<p>${localize(coinTransferChatKey(stashMove), {
 			user: escapeHtml(user.name || localize('NIMBLE.actorSheet.hero.inventory.someone')),
-			amount: escapeHtml(amount),
+			amount: escapeHtml(formatCoinAmount(spent)),
 			destination: escapeHtml(destinationName),
 		})}</p>`,
 	} as ChatMessage.CreateData);
@@ -611,7 +626,7 @@ async function applyReceiveCurrency(message: PartyStashReceiveCurrencyMessage): 
 		sp: next.sp + spent.sp,
 		cp: next.cp + spent.cp,
 	});
-	await postGaveCoins(sender, spent, destinationActor.name ?? '');
+	await postGaveCoins(sender, spent, destinationActor.name ?? '', false);
 }
 
 async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
@@ -635,7 +650,7 @@ async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
 	if (!plan) return;
 	const landed = await applyPlanToActor(destinationActor, plan, 'destination');
 	if (!landed) return;
-	await postChat(sender, plan, destinationActor.name ?? '');
+	await postChat(sender, plan, destinationActor.name ?? '', false);
 	getSocket()?.emit?.(SOCKET_NAME, {
 		type: REQUEST_TYPE,
 		op: 'release',

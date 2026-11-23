@@ -299,6 +299,11 @@ describe('requestItemTransfer', () => {
 		});
 
 		expect(ada.docs[0]?.update).toHaveBeenCalledWith({ 'system.quantity': 3 });
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				content: expect.stringContaining('Guide gave 2 Torch to Bob'),
+			}),
+		);
 		expect(ada.deleteEmbeddedDocuments).not.toHaveBeenCalled();
 		expect(bob.createEmbeddedDocuments).toHaveBeenCalledWith(
 			'Item',
@@ -332,7 +337,38 @@ describe('requestItemTransfer', () => {
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				user: 'ada',
-				content: expect.stringContaining('Ada gave Gem to Ada'),
+				content: expect.stringContaining('Ada moved Gem to Ada'),
+			}),
+		);
+	});
+
+	it('says a partial take from the stash moved that many', async () => {
+		stash.items = [
+			{
+				_id: 'torch',
+				name: 'Torch',
+				type: 'object',
+				system: { quantity: 3, objectSizeType: 'stackable' },
+			},
+		];
+		const ada = character('ada', 'Ada', [], true);
+		useWorld('gm', 'gm', [ada]);
+
+		listener?.({
+			type: 'partyStash',
+			op: 'move',
+			userId: 'ada',
+			source: 'stash',
+			sourceActorId: 'ada',
+			itemId: 'torch',
+			quantity: 2,
+			destination: { kind: 'actor', actorId: 'ada' },
+		});
+		await vi.waitFor(() => expect(ChatMessage.create).toHaveBeenCalled());
+
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				content: expect.stringContaining('Ada moved 2 Torch to Ada'),
 			}),
 		);
 	});
@@ -451,6 +487,12 @@ describe('requestItemTransfer', () => {
 		expect(ui.notifications.warn).not.toHaveBeenCalled();
 		expect(ada.deleteEmbeddedDocuments).toHaveBeenCalledWith('Item', ['torch']);
 		expect(stash.items.map((item) => item._id)).toEqual(['torch']);
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				user: 'ada',
+				content: expect.stringContaining('Ada moved Torch to the party inventory'),
+			}),
+		);
 	});
 
 	it('asks the other character to receive an object when no GM is connected', async () => {
@@ -529,6 +571,39 @@ describe('requestCurrencyTransfer', () => {
 		expect(stash.currency).toEqual({ gp: 4, sp: 0, cp: 0 });
 	});
 
+	it('says a stash coin move was moved, using the localized denomination', async () => {
+		const ada = character('ada', 'Ada', [], true, { gp: 10, sp: 2, cp: 0 });
+		const party = partyHolder();
+		useWorld('ada', null, [ada, party as unknown as ReturnType<typeof character>]);
+		const i18n = game.i18n as {
+			localize: (key: string) => string;
+		};
+		const originalLocalize = i18n.localize.bind(i18n);
+		i18n.localize = (key: string) => {
+			if (key === 'NIMBLE.currencyAbbreviations.gp') return 'po';
+			if (key === 'NIMBLE.currencyAbbreviations.sp') return 'pa';
+			return originalLocalize(key);
+		};
+		try {
+			await requestCurrencyTransfer({
+				source: 'actor',
+				sourceActorId: 'ada',
+				destination: { kind: 'stash' },
+				gp: 4,
+				sp: 2,
+				cp: 0,
+			});
+
+			expect(ChatMessage.create).toHaveBeenCalledWith(
+				expect.objectContaining({
+					content: expect.stringContaining('Ada moved 4 po, 2 pa to the party inventory'),
+				}),
+			);
+		} finally {
+			i18n.localize = originalLocalize;
+		}
+	});
+
 	it('spends coins here and asks the other character to add them when no GM is connected', async () => {
 		users.get('ada')!.role = 2;
 		const ada = character('ada', 'Ada', [], true, { gp: 12, sp: 0, cp: 3 });
@@ -558,6 +633,11 @@ describe('requestCurrencyTransfer', () => {
 		listener?.(received);
 		await vi.waitFor(() => expect(bob.system.currency.gp).toBe(6));
 		expect(bob.system.currency.cp).toBe(3);
+		expect(ChatMessage.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				content: expect.stringContaining('Ada gave 5 gp, 3 cp to Bob'),
+			}),
+		);
 		users.get('ada')!.role = 1;
 	});
 });
