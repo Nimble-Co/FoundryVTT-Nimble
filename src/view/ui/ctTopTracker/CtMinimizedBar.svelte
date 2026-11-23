@@ -168,16 +168,20 @@
 		border-radius: 50%;
 		object-fit: cover;
 	}
-	/* Fixed width, not content width: the strip is centre-anchored, so a longer name would
-	   slide the turn arrows out from under the pointer. */
+	/* 11rem basis, not the name's own width: the strip is centre-anchored, so a longer
+	   name would slide the turn arrows. It shrinks when the bar is capped at 90vw. */
 	.nimble-ct__minimized-name {
-		flex: none;
+		flex: 0 1 11rem;
 		width: 11rem;
+		min-width: 0;
 		overflow: hidden;
 		font-size: 0.8rem;
 		color: var(--nimble-ct-chrome-color);
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+	.nimble-ct__minimized :global(.nimble-ct__icon-button) {
+		flex: none;
 	}
 	.nimble-ct__minimized-name--idle {
 		color: color-mix(in srgb, var(--nimble-ct-chrome-color) 62%, transparent);
