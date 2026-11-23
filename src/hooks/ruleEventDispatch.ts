@@ -3,6 +3,7 @@ import type { MovementRecord } from '#types/movement.js';
 import type {
 	ActorDyingContext,
 	ActorHealthContext,
+	ChargePoolGainContext,
 	EncounterEndContext,
 	InitiativeRolledContext,
 	ItemActivatedContext,
@@ -88,6 +89,14 @@ interface NimblePoolChangedPayload {
 	previousFaces?: number[];
 	newFaces?: number[];
 	reason?: string;
+}
+
+interface NimbleChargePoolChangedPayload {
+	actor?: ActorWithRules | null;
+	poolId?: string;
+	poolLabel?: string;
+	previousValue?: number;
+	newValue?: number;
 }
 
 interface NimbleConditionAppliedPayload {
@@ -242,6 +251,37 @@ async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<voi
 		poolLabel: payload.poolLabel,
 	};
 	await dispatch(actor, 'onPoolGain', context);
+}
+
+/**
+ * The identifier of the charge pool a charge-pool-changed event added charges
+ * to, or null when the count did not rise. Actor-scoped pool ids carry an
+ * "actor:" prefix; rules name the bare identifier.
+ */
+function gainedChargePoolIdentifier(
+	payload: NimbleChargePoolChangedPayload | null | undefined,
+): string | null {
+	if (!payload) return null;
+	const { previousValue, newValue } = payload;
+	if (typeof previousValue !== 'number' || typeof newValue !== 'number') return null;
+	if (!Number.isFinite(previousValue) || !Number.isFinite(newValue)) return null;
+	if (newValue <= previousValue) return null;
+	const poolId = payload.poolId ?? '';
+	const bare = poolId.startsWith('actor:') ? poolId.slice('actor:'.length) : poolId;
+	return bare || null;
+}
+
+// The charge-pool hook fires only on the client that changed the pool.
+async function handleChargePoolChanged(payload: NimbleChargePoolChangedPayload): Promise<void> {
+	const poolIdentifier = gainedChargePoolIdentifier(payload);
+	const actor = payload?.actor ?? null;
+	if (poolIdentifier === null || !actor) return;
+	const context: ChargePoolGainContext = {
+		actor: actor as unknown as ChargePoolGainContext['actor'],
+		poolIdentifier,
+		poolLabel: payload.poolLabel,
+	};
+	await dispatch(actor, 'onChargePoolGain', context);
 }
 
 function handleActorUpdate(
@@ -490,6 +530,7 @@ export default function registerRuleEventDispatch(): void {
 	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);
 	onHook(systemHookName('movementFinished'), handleMovementFinished as HookFn);
 	onHook(systemHookName('dicePool.changed'), handlePoolChanged as HookFn);
+	onHook(systemHookName('chargePool.changed'), handleChargePoolChanged as HookFn);
 	onHook('nimbleCombatTurnStart', handleActiveGmTurnStart as HookFn);
 }
 

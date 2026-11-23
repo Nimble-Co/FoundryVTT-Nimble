@@ -17,6 +17,7 @@ import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
 import { offerMovement } from '../../utils/movement/postMovementOfferCard.js';
 import { withWidget } from './_widgetOption.js';
 import {
+	type ChargePoolGainContext,
 	type InitiativeRolledContext,
 	type ItemActivatedContext,
 	type ItemUsedContext,
@@ -28,6 +29,7 @@ import {
 const TRIGGERS = [
 	'onActivation',
 	'onPoolGain',
+	'onChargePoolGain',
 	'onInitiativeRolled',
 	'onTurnStart',
 	'onCritReceived',
@@ -60,6 +62,17 @@ function schema() {
 				hint: 'NIMBLE.rules.freeMove.poolIdentifier.hint',
 				widget: 'dicePoolPicker',
 				showWhen: (data: Record<string, unknown>) => data.trigger === 'onPoolGain',
+			}),
+		),
+		chargePoolGainIdentifier: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.freeMove.chargePoolGainIdentifier.label',
+				hint: 'NIMBLE.rules.freeMove.chargePoolGainIdentifier.hint',
+				widget: 'chargePoolPicker',
+				showWhen: (data: Record<string, unknown>) => data.trigger === 'onChargePoolGain',
 			}),
 		),
 		distance: new fields.StringField(
@@ -158,10 +171,12 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		'onActiveGmTurnStart',
 		'onAttackReceived',
 		'onPoolGain',
+		'onChargePoolGain',
 	];
 
 	declare trigger: FreeMoveTrigger;
 	declare poolIdentifier: string;
+	declare chargePoolGainIdentifier: string;
 	declare distance: string;
 	declare recipient: 'self' | 'allies' | 'selfAndAllies';
 	declare within: number;
@@ -182,6 +197,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			new Map([
 				['trigger', 'string'],
 				['poolIdentifier', 'string'],
+				['chargePoolGainIdentifier', 'string'],
 				['distance', 'string'],
 				['recipient', 'string'],
 				['within', 'number'],
@@ -280,6 +296,20 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 			: await askOwner(this.actor, { kind: 'move', name: ruleLabel(this) });
 		if (!accepted) return;
 		await this.#offer({ key: `${REASONS}.onWound` }, null, null);
+	}
+
+	override async onChargePoolGain(context: ChargePoolGainContext): Promise<void> {
+		if (!this.isOnActor) return;
+		if (!this.test()) return;
+		if (this.trigger !== 'onChargePoolGain') return;
+		const identifier = this.chargePoolGainIdentifier.trim();
+		if (!identifier || identifier !== context.poolIdentifier) return;
+		const pool = context.poolLabel || identifier;
+		await this.#offer(
+			{ key: `${REASONS}.onChargePoolGain`, data: { pool } },
+			null,
+			this.#useHost(),
+		);
 	}
 
 	/** A rule of this item raised pool dice, or would with some held. */

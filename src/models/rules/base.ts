@@ -193,6 +193,16 @@ interface PoolGainContext {
 	poolLabel?: string;
 }
 
+// Context passed to onChargePoolGain. Fires on the client that changed the pool
+// when one of the actor's charge pools gains one or more charges. A dice-pool
+// gain does not fire it. `poolIdentifier` is the bare identifier, without the
+// `actor:` scope prefix.
+interface ChargePoolGainContext {
+	actor: NimbleBaseActor;
+	poolIdentifier: string;
+	poolLabel?: string;
+}
+
 function originItemOf(effect: ActiveEffect): NimbleBaseItem | null {
 	if (effect.parent instanceof Item) return effect.parent as object as NimbleBaseItem;
 	if (!effect.origin) return null;
@@ -680,6 +690,11 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/** Hook called when one of the actor's charge pools gains charges, on the client that changed it. */
+	async onChargePoolGain(_context: ChargePoolGainContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
@@ -751,4 +766,5 @@ export {
 	type RoundChangedContext,
 	type MovementFinishedContext,
 	type PoolGainContext,
+	type ChargePoolGainContext,
 };
