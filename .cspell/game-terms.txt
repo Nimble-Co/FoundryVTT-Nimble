@@ -26,6 +26,7 @@ wyrdlings
 bumblewise
 
 # Classes
+multiclassing
 Oathsworn
 Shadowmancer
 Songweaver

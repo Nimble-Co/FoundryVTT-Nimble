@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CharacterLevelDownDialogProps } from '#types/components/CharacterLevelDownDialog.d.ts';
+	import localize from '#utils/localize.js';
 
 	import { createLevelDownState } from './CharacterLevelDownDialogState.svelte.ts';
 
@@ -17,6 +18,8 @@
 	const characterClass = $derived(state.characterClass);
 	const currentLevel = $derived(state.currentLevel);
 	const newLevel = $derived(state.newLevel);
+	const removesClass = $derived(state.removesClass);
+	const removedClassName = $derived(state.removedClassName);
 	const skillChanges = $derived(state.skillChanges);
 	const abilityChanges = $derived(state.abilityChanges);
 	const willRemoveSubclass = $derived(state.willRemoveSubclass);
@@ -34,9 +37,15 @@
 		<div class="nimble-level-down-info">
 			<h3 class="nimble-heading" data-heading-variant="section">{actor.name}</h3>
 			<p class="nimble-level-transition">
-				<span class="nimble-level-current">{levelDownDialog.level} {currentLevel}</span>
-				<i class="fa-solid fa-arrow-right"></i>
-				<span class="nimble-level-new">{levelDownDialog.level} {newLevel}</span>
+				{#if removesClass}
+					<span class="nimble-level-new">
+						{localize('NIMBLE.levelDownDialog.classRemoved', { name: removedClassName })}
+					</span>
+				{:else}
+					<span class="nimble-level-current">{levelDownDialog.level} {currentLevel}</span>
+					<i class="fa-solid fa-arrow-right"></i>
+					<span class="nimble-level-new">{levelDownDialog.level} {newLevel}</span>
+				{/if}
 			</p>
 		</div>
 	</section>

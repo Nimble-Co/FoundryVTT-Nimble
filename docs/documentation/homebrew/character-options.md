@@ -11,7 +11,7 @@ Five item types shape what a character *is*. Here is what each one contributes t
 | **Ancestry** | Traits, delivered as rules. A character has exactly one: dropping a new ancestry automatically removes the old one. |
 | **Background** | A description plus any rules you attach. Also one per character, replaced automatically. |
 | **Boon** | A minor, major, or epic perk: description plus rules. Characters can hold several. |
-| **Class** | The big one: it becomes the character's starting class at level 1, sets starting HP from its hit die size, adds a hit die, and drives every future level-up. Only one class can be dropped per character. |
+| **Class** | The big one: it becomes the character's starting class at level 1, sets starting HP from its hit die size, adds a hit die, and drives every future level-up. Only one class can be dropped per character. With Multiclassing on, a further class is added from the level up dialog, not by dropping a class item. |
 | **Subclass** | Attaches to a class by name and adds its own features at the subclass levels (3, 7, 11, 15). |
 
 The common thread: ancestries, backgrounds, boons, classes, and subclasses all carry a **Rules** tab, and rules are how they actually change the character. If you have not read [Rules Builder Basics](../rules-builder/index.md) yet, start there.

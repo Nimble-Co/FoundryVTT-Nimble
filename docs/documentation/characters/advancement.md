@@ -16,6 +16,8 @@ Click **Level Up** at the bottom of the rail. You do not need edit mode. The but
 
 The dialog title shows the jump you're making (for example, "Level Up (2 → 3)"). Depending on the level, you'll see some or all of these sections:
 
+When the GM turns **Multiclassing** on, the dialog asks which class gains the level before anything else. Pick a class you already have, or a new one. A new class starts at level 1: you get that class's level 1 features, its equipment proficiencies, and one hit die of its size. The hit point roll is that die. It does not grant the class's starting hit points or its starting gear. Saving throws follow the class with the strictly highest level. When two classes share that level, your saves stay as they are. With the setting off, this choice is absent and your class gains the level as usual.
+
 - **HP Increase.** Your hit die is shown (including any die size bonuses from features). Choose **Roll Hit Dice** (the die is rolled with advantage and your maximum HP goes up by the result) or **Take Average** for the fixed value shown on the button. Either way, your current HP rises by the same amount and you gain one hit die.
 - **Ability score increase.** At levels where your class grants a stat increase, pick the ability (or abilities, when the class offers two) to raise.
 - **Skill points.** Assign exactly one new skill point. You may also move one existing point from one skill to another at the same time. No skill can go above 12 points.

@@ -2,6 +2,7 @@ import { SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
 
 /** Structural type for what the factory accesses on a class item */
 interface ClassItemShape {
+	name?: string;
 	system?: { classLevel?: number; hitDieSize?: number };
 }
 
@@ -21,7 +22,9 @@ interface LevelDownActor {
 	};
 	classes: Record<string, ClassItemShape | undefined>;
 	items: {
-		filter(fn: (i: { type: string }) => boolean): Array<{ name: string; img?: string }>;
+		filter(
+			fn: (i: { type: string; system?: { parentClass?: string } }) => boolean,
+		): Array<{ name: string; img?: string }>;
 		get(id: string): { name: string; img?: string } | undefined;
 	};
 }
@@ -47,6 +50,8 @@ export function createLevelDownState(
 
 	const currentLevel = $derived(characterClass?.system?.classLevel ?? 1);
 	const newLevel = $derived(currentLevel - 1);
+	const removesClass = $derived(Boolean(lastHistory) && currentLevel <= 1);
+	const removedClassName = $derived(characterClass?.name || lastHistory?.classIdentifier || '');
 
 	// Get skill names for display
 	const skillChanges = $derived(
@@ -70,7 +75,14 @@ export function createLevelDownState(
 
 	// Check if subclass will be removed
 	const willRemoveSubclass = $derived(lastHistory?.level <= SUBCLASS_LEVEL);
-	const subclasses = $derived(getActor().items.filter((i) => i.type === 'subclass'));
+	const classIdentifier = $derived(lastHistory?.classIdentifier ?? '');
+	const subclasses = $derived(
+		getActor().items.filter((item) => {
+			if (item.type !== 'subclass') return false;
+			const parent = item.system?.parentClass ?? '';
+			return parent === '' || parent === classIdentifier;
+		}),
+	);
 	const hasSubclass = $derived(subclasses.length > 0);
 
 	// Get granted features that will be removed
@@ -105,6 +117,12 @@ export function createLevelDownState(
 		},
 		get newLevel() {
 			return newLevel;
+		},
+		get removesClass() {
+			return removesClass;
+		},
+		get removedClassName() {
+			return removedClassName;
 		},
 		get skillChanges() {
 			return skillChanges;

@@ -97,6 +97,8 @@ The combat tracker at the top of the screen isn't configured from the settings m
 
 The remaining settings (the Combat System panel toggle, debug mode, and the rest) are documented in the [Settings Reference](../reference/settings.md), each with its default and whether it affects the whole world or just one user.
 
+**Multiclassing** is off by default. Turn it on to let a hero take a level in another class when they level up. The book treats this as a variant for the GM to allow.
+
 ## Related pages
 
 - [Settings Reference](../reference/settings.md)

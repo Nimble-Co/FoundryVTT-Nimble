@@ -1,7 +1,9 @@
 import { incrementDieSize } from '#managers/HitDiceManager.js';
 import { poolCountText } from '#utils/chargePool/poolHeading.js';
+import { levelUpAtCap } from '#utils/classProgression/multiclassLevel.ts';
 import { getPendingActionsLocalizationKey } from '#utils/combat/pendingActionWording.js';
 import { signedNumber } from '#utils/signedNumber.ts';
+import { multiclassingEnabled } from '../../../settings/multiclassSettings.js';
 import type { PoolKind } from '../parts/types.ts';
 import { MOVEMENT_ICONS } from '../shared/movement.ts';
 import { portraitOf } from '../shared/portrait.ts';
@@ -203,7 +205,6 @@ export interface HeroRest extends HeroAction {
 const RAIL = 'NIMBLE.actorSheet.hero.rail';
 const METER = 'NIMBLE.actorSheet.hero.meter';
 const TURN = 'NIMBLE.actorSheet.hero.turn';
-const MAX_LEVEL = 20;
 const dieNumber = (dieSize: string | null) => (dieSize ? Number(dieSize.replace(/^d/, '')) : null);
 const firstOfType = (actor: HeroActorLike, type: string): ItemLike | undefined =>
 	actor.items.find((item) => item.type === type);
@@ -212,14 +213,17 @@ const firstOfType = (actor: HeroActorLike, type: string): ItemLike | undefined =
 function meta(actor: HeroActorLike, context: HeroSheetContext): string {
 	const { format } = context;
 	const ancestry = firstOfType(actor, 'ancestry');
-	const characterClass = firstOfType(actor, 'class');
+	const classes = actor.items.filter((item) => item.type === 'class');
+	const characterClass = classes[0];
 	const subclass = firstOfType(actor, 'subclass');
+	const level = classes.reduce((sum, item) => sum + Number(item.system.classLevel ?? 1), 0);
 	const line = [
-		characterClass
-			? format(`${RAIL}.metaLevel`, { level: String(characterClass.system.classLevel ?? 1) })
-			: '',
+		characterClass ? format(`${RAIL}.metaLevel`, { level: String(level) }) : '',
 		ancestry?.name ?? '',
-		characterClass?.name ?? '',
+		classes
+			.map((item) => item.name)
+			.filter(Boolean)
+			.join(', '),
 	]
 		.filter(Boolean)
 		.join(' ');
@@ -489,11 +493,12 @@ function turn(context: HeroSheetContext): HeroTurnView | null {
 
 function levelUp(actor: HeroActorLike, context: HeroSheetContext): HeroRailView['levelUp'] {
 	const label = context.localize('NIMBLE.prompts.levelUp');
-	const characterClass = firstOfType(actor, 'class');
-	if (!characterClass) {
+	const classes = actor.items.filter((item) => item.type === 'class');
+	if (!classes.length) {
 		return { label, intent: null, tooltip: context.localize(`${RAIL}.levelUpNoClass`) };
 	}
-	if (Number(characterClass.system.classLevel ?? 1) >= MAX_LEVEL) {
+	const classLevels = classes.map((item) => Number(item.system.classLevel ?? 1));
+	if (levelUpAtCap(classLevels, multiclassingEnabled())) {
 		return { label, intent: null, tooltip: context.localize(`${RAIL}.levelUpMax`) };
 	}
 	return {

@@ -12,10 +12,12 @@ import getEpicBoons from '#utils/classProgression/getEpicBoons.ts';
 import getSubclassChoices from '#utils/classProgression/getSubclassChoices.ts';
 import getSubclassFeaturesFromIndex from '#utils/classProgression/getSubclassFeatures.ts';
 import getChoicesFromCompendium from '#utils/documents/getChoicesFromCompendium.ts';
+import localize from '#utils/localize.js';
 import isLevelUpOptionApplicable from '#utils/optionSwap/isLevelUpOptionApplicable.ts';
 import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
 import { buildSpellIndex } from '#utils/spell/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/spell/getSpellsFromIndex.ts';
+import { multiclassingEnabled } from '../../settings/multiclassSettings.js';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
@@ -23,8 +25,90 @@ import { collectKnownSchools, collectSpellGrants, type RulesArray } from './spel
 
 /** Structural type for what the factory accesses on a class item */
 interface ClassItemShape {
-	system?: { classLevel?: number };
+	name?: string;
 	identifier: string;
+	ASI?: Record<string, number>;
+	system?: {
+		classLevel?: number;
+		hitDieSize?: number;
+		identifier?: string;
+		keyAbilityScores?: string[];
+		abilityScoreData?: Record<string, { statIncreaseType?: string }>;
+	};
+}
+
+interface LevelUpClassOption {
+	key: string;
+	kind: 'owned' | 'new';
+	identifier: string;
+	name: string;
+	uuid?: string;
+	classLevel: number;
+	hitDieSize: number;
+	keyAbilityScores: string[];
+	abilityScoreData: Record<string, { statIncreaseType?: string }>;
+	ASI?: Record<string, number>;
+}
+
+function classIdentifierOf(document: { name?: string; system?: { identifier?: string } }): string {
+	if (document.system?.identifier) return document.system.identifier;
+	const name = document.name ?? '';
+	const slugify = (name as { slugify?: (options: { strict: boolean }) => string }).slugify;
+	return slugify ? slugify.call(name, { strict: true }) : name;
+}
+
+function ownedClassOptions(actor: LevelUpDocument): LevelUpClassOption[] {
+	return Object.values(actor.classes ?? {})
+		.filter((entry): entry is ClassItemShape => Boolean(entry))
+		.map((entry) => ({
+			key: `owned:${entry.identifier}`,
+			kind: 'owned' as const,
+			identifier: entry.identifier,
+			name: entry.name ?? entry.identifier,
+			classLevel: entry.system?.classLevel ?? 1,
+			hitDieSize: entry.system?.hitDieSize ?? 6,
+			keyAbilityScores: entry.system?.keyAbilityScores ?? [],
+			abilityScoreData: entry.system?.abilityScoreData ?? {},
+			ASI: entry.ASI,
+		}));
+}
+
+async function loadNewClassOptions(ownedIdentifiers: Set<string>): Promise<LevelUpClassOption[]> {
+	const uuids = getChoicesFromCompendium('class');
+	const loaded = await Promise.all(
+		uuids.map(async (uuid): Promise<LevelUpClassOption | null> => {
+			const document = await fromUuid(uuid as `Item.${string}`);
+			if (!document) return null;
+			const item = document as {
+				name?: string;
+				uuid?: string;
+				system?: ClassItemShape['system'];
+			};
+			const identifier = classIdentifierOf(item);
+			if (!identifier || ownedIdentifiers.has(identifier)) return null;
+			return {
+				key: `new:${uuid}`,
+				kind: 'new',
+				identifier,
+				name: item.name ?? identifier,
+				uuid,
+				classLevel: 0,
+				hitDieSize: item.system?.hitDieSize ?? 6,
+				keyAbilityScores: item.system?.keyAbilityScores ?? [],
+				abilityScoreData: item.system?.abilityScoreData ?? {},
+			};
+		}),
+	);
+
+	const seen = new Set<string>();
+	return loaded
+		.filter((option): option is LevelUpClassOption => option !== null)
+		.filter((option) => {
+			if (seen.has(option.identifier)) return false;
+			seen.add(option.identifier);
+			return true;
+		})
+		.sort((left, right) => left.name.localeCompare(right.name));
 }
 
 /** Structural type for what the factory accesses on the actor document */
@@ -54,16 +138,56 @@ export function createLevelUpState(
 	getDialog: () => { submit(data: Record<string, unknown>): void },
 ) {
 	const { forms, levelUpDialog } = CONFIG.NIMBLE;
+	const multiclass = multiclassingEnabled();
 
 	const boons = getChoicesFromCompendium('boon');
 
-	// Derived character info
-	const characterClass = $derived(
+	const initialClassOptions = multiclass ? ownedClassOptions(getDocument()) : [];
+	let classOptions = $state<LevelUpClassOption[]>(initialClassOptions);
+	let classesLoading = $state(multiclass);
+	let selectedClassKey = $state('');
+
+	if (multiclass) {
+		const ownedIdentifiers = new Set(initialClassOptions.map((option) => option.identifier));
+		loadNewClassOptions(ownedIdentifiers)
+			.then((options) => {
+				classOptions = [...classOptions, ...options];
+				classesLoading = false;
+			})
+			.catch((error) => {
+				console.warn('Nimble | Failed to load classes:', error);
+				classesLoading = false;
+			});
+	}
+
+	const selectedClassOption = $derived(
+		classOptions.find((option) => option.key === selectedClassKey) ?? null,
+	);
+
+	// Derived character info. With multiclassing off this is the hero's class, as before.
+	const firstClass = $derived(
 		getDocument()?.classes
 			? (Object.values(getDocument().classes)[0] as ClassItemShape | undefined)
 			: undefined,
 	);
-	const level = $derived(characterClass?.system?.classLevel ?? 1);
+	const characterClass = $derived(
+		multiclass
+			? selectedClassOption
+				? {
+						identifier: selectedClassOption.identifier,
+						name: selectedClassOption.name,
+						ASI: selectedClassOption.ASI ?? {},
+						system: {
+							classLevel: selectedClassOption.classLevel,
+							hitDieSize: selectedClassOption.hitDieSize,
+							keyAbilityScores: selectedClassOption.keyAbilityScores,
+							abilityScoreData: selectedClassOption.abilityScoreData,
+						},
+					}
+				: undefined
+			: firstClass,
+	);
+	const level = $derived(characterClass?.system?.classLevel ?? (multiclass ? 0 : 1));
 	const levelingTo = $derived(level + 1);
 
 	// Subclass state (level 3)
@@ -120,7 +244,9 @@ export function createLevelUpState(
 	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
 	let selectedFeatureOptions: Map<string, string> = $state(new Map());
 	let selectedOptionSubItems: Map<string, string[]> = $state(new Map());
-	let featuresLoading = $state(true);
+	let featuresLoading = $state(!multiclass);
+	let featureRequest = 0;
+	let appliedClassKey = '';
 
 	// Spell grants state
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
@@ -156,21 +282,46 @@ export function createLevelUpState(
 	// Load class features when dialog opens, and re-run when a subclass is selected.
 	// Reading selectedSubclass synchronously ensures Svelte tracks it as a dependency.
 	$effect(() => {
+		if (!multiclass) return;
+		const key = selectedClassKey;
+		if (key === appliedClassKey) return;
+		const previous = appliedClassKey;
+		appliedClassKey = key;
+		if (!previous) return;
+
+		selectedSubclass = null;
+		selectedEpicBoon = null;
+		selectedAbilityScores = null;
+		selectedBoon = null;
+		chooseBoon = false;
+		selectedClassFeatures = new Map();
+		selectedFeatureOptions = new Map();
+		selectedOptionSubItems = new Map();
+		selectedSchools = new Map();
+		selectedSpells = new Map();
+		confirmedSchools = new Set();
+	});
+
+	$effect(() => {
+		const request = ++featureRequest;
 		const currentSelectedSubclass = selectedSubclass;
 
 		if (!characterClass) {
 			featuresLoading = false;
+			classFeatures = null;
 			return;
 		}
 
 		featuresLoading = true;
+		const parentClassIdentifier = characterClass.identifier;
+		const featuresForLevel = levelingTo;
 		Promise.all([buildClassFeatureIndex(), buildSubclassFeatureIndex()])
 			.then(async ([classIndex, subclassIndex]) => {
-				const parentClassIdentifier = characterClass.identifier;
+				if (request !== featureRequest) return;
 				const rawFeatures = await getClassFeaturesFromIndex(
 					classIndex,
 					parentClassIdentifier,
-					levelingTo,
+					featuresForLevel,
 					{ ownedFeatureUuids, promoteDuplicateSources: true },
 				);
 
@@ -199,7 +350,7 @@ export function createLevelUpState(
 							subclassIndex,
 							parentClassIdentifier,
 							subclassGroup,
-							levelingTo,
+							featuresForLevel,
 						)
 					: [];
 
@@ -209,6 +360,7 @@ export function createLevelUpState(
 					(feature) => !ownedFeatureUuids.has(feature.uuid ?? ''),
 				);
 
+				if (request !== featureRequest) return;
 				classFeatures = {
 					autoGrant: filteredAutoGrant,
 					selectionGroups: rawFeatures.selectionGroups,
@@ -218,6 +370,7 @@ export function createLevelUpState(
 				featuresLoading = false;
 			})
 			.catch((err) => {
+				if (request !== featureRequest) return;
 				console.warn('Nimble | Failed to load class features:', err);
 				featuresLoading = false;
 			});
@@ -416,7 +569,10 @@ export function createLevelUpState(
 				? selectedAbilityScores?.length === 2
 				: selectedAbilityScores) || !hasStatIncrease;
 
+		const classChosen = !multiclass || Boolean(selectedClassKey);
+
 		return (
+			classChosen &&
 			abilityScoreComplete &&
 			skillPointChangesAssigned &&
 			!overMax &&
@@ -459,6 +615,15 @@ export function createLevelUpState(
 	// Actions
 	function submit() {
 		getDialog().submit({
+			...(multiclass && selectedClassOption
+				? {
+						classChoice: {
+							kind: selectedClassOption.kind,
+							identifier: selectedClassOption.identifier,
+							uuid: selectedClassOption.uuid,
+						},
+					}
+				: {}),
 			selectedAbilityScore: selectedAbilityScores,
 			selectedSubclass,
 			selectedEpicBoon,
@@ -483,6 +648,9 @@ export function createLevelUpState(
 
 	function getSubmitButtonTooltip() {
 		if (!isComplete) {
+			if (multiclass && !selectedClassKey) {
+				return localize('NIMBLE.levelUpDialog.chooseAClass');
+			}
 			if (skillPointsOverMax) {
 				return levelUpDialog.skillPointsOverMax;
 			} else {
@@ -507,6 +675,23 @@ export function createLevelUpState(
 
 	return {
 		boons,
+		multiclass,
+		get classOptions() {
+			return classOptions;
+		},
+		get classesLoading() {
+			return classesLoading;
+		},
+		get selectedClassKey() {
+			return selectedClassKey;
+		},
+		set selectedClassKey(value: string) {
+			selectedClassKey = value;
+		},
+		get selectedHitDieSize() {
+			if (!multiclass) return undefined;
+			return selectedClassOption?.hitDieSize ?? null;
+		},
 		get characterClass() {
 			return characterClass;
 		},

@@ -10,6 +10,7 @@ import { registerChaosTableSettings } from './chaosTableSettings.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerLanguageSettings } from './languageSettings.js';
+import { registerMulticlassSettings } from './multiclassSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 import { registerAutomationSettings } from './registerAutomationSettings.js';
 import { registerDiceSoNiceSettings } from './registerDiceSoNiceSettings.js';
@@ -91,6 +92,7 @@ export default function registerSystemSettings() {
 	);
 
 	registerActorSheetSettings();
+	registerMulticlassSettings();
 	registerAdjacencySettings();
 
 	registerAutomationSettings();

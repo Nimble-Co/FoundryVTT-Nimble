@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
+	import { multiclassingEnabled } from '../../settings/multiclassSettings.js';
+	import { levelUpAtCap } from '#utils/classProgression/multiclassLevel.ts';
 	import localize from '#utils/localize.js';
 	import { temporaryUseSources } from '#utils/chargePool/helpers.js';
 	import { poolHeading } from '#utils/chargePool/poolHeading.js';
@@ -77,6 +79,15 @@
 	let currentTab = $state(playerCharacterSheetState.currentTab);
 	let isBloodied = $derived(playerCharacterSheetState.isBloodied);
 	let classItem = $derived(playerCharacterSheetState.classItem);
+	let levelUpAtMaximum = $derived.by(() => {
+		const classes = actor.reactive.items.filter((item: { type?: string }) => item.type === 'class');
+		return levelUpAtCap(
+			classes.map((item: { system?: { classLevel?: number } }) =>
+				Number(item.system?.classLevel ?? 1),
+			),
+			multiclassingEnabled(),
+		);
+	});
 	let wounds = $derived(playerCharacterSheetState.wounds);
 	let mana = $derived(playerCharacterSheetState.mana);
 	let hasMana = $derived(playerCharacterSheetState.hasMana);
@@ -411,7 +422,7 @@
 			aria-label={localize('NIMBLE.prompts.levelUp')}
 			data-tooltip={localize('NIMBLE.prompts.levelUp')}
 			onclick={() => actor.triggerLevelUp()}
-			disabled={!classItem || classItem?.system?.classLevel >= 20}
+			disabled={!classItem || levelUpAtMaximum}
 			type="button"
 		>
 			<i class="fa-solid fa-arrow-up-right-dots"></i>
