@@ -4,19 +4,42 @@ import {
 	blankHero,
 	containerHero,
 	heroContext,
+	objectItem,
 } from '../../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
 import { createSheetUiState } from '../../../shared/sheetUiState.ts';
 import { heroInventoryTab } from '../../heroInventoryTab.ts';
-import type { HeroActorLike } from '../../heroSource.ts';
+import type { HeroActorLike, HeroSheetContext } from '../../heroSource.ts';
 import HeroInventoryTab from '../HeroInventoryTab.svelte';
 
 const INV = 'NIMBLE.actorSheet.hero.inventory';
 const SHARED = 'NIMBLE.actorSheet.shared';
 
-function renderTab(actor: HeroActorLike = containerHero(), editing = false) {
+function partyContext(overrides: Partial<HeroSheetContext['party']> = {}): HeroSheetContext {
+	return heroContext({
+		party: {
+			currency: { gp: 40, sp: 0, cp: 0 },
+			items: [objectItem('torch', 'Torch', { quantity: 3, objectSizeType: 'stackable' })],
+			characters: [{ id: 'bob', name: 'Bob' }],
+			canGive: true,
+			canTake: true,
+			canGiveAway: true,
+			...overrides,
+		},
+	});
+}
+
+function renderTab(
+	actor: HeroActorLike = containerHero(),
+	editing = false,
+	options: { party?: boolean; context?: HeroSheetContext } = {},
+) {
 	const ui = $state({ ...createSheetUiState('inventory'), editing });
 	const perform = vi.fn();
-	render(HeroInventoryTab, { view: heroInventoryTab(actor, heroContext()), ui, perform });
+	render(HeroInventoryTab, {
+		view: heroInventoryTab(actor, options.context ?? heroContext(), { party: options.party }),
+		ui,
+		perform,
+	});
 	return { ui, perform };
 }
 
@@ -98,16 +121,40 @@ describe('HeroInventoryTab', () => {
 		});
 	});
 
-	it('types a quantity in edit mode', async () => {
-		const { perform } = renderTab(containerHero(), true);
-		const quantity = screen.getByRole('spinbutton', {
+	it('types a quantity on the row, before the ellipsis and the edit button', async () => {
+		const { perform } = renderTab();
+		const row = rowEl('torch');
+		if (!row) throw new Error('no torch row');
+		const bar = row.querySelector('.rw');
+		if (!bar) throw new Error('no row bar');
+		const quantity = within(row).getByRole('spinbutton', {
 			name: new RegExp(`${INV}.quantityOf.*Torch`),
 		});
+		const menu = within(row).getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) });
+		const edit = within(row).getByRole('button', { name: 'Configure Torch' });
+
+		expect(bar.contains(quantity)).toBe(true);
+		expect(within(row).queryByText(`${INV}.quantity {"count":"3"}`)).toBeNull();
+		expect(quantity.compareDocumentPosition(menu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(menu.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(getComputedStyle(menu).position).not.toBe('absolute');
 
 		await fireEvent.input(quantity, { target: { value: '5' } });
 		await fireEvent.blur(quantity);
 
 		expect(perform).toHaveBeenCalledWith({ kind: 'setQuantity', itemId: 'torch', value: 5 });
+		expect(within(rowEl('rope')!).queryByRole('spinbutton')).toBeNull();
+		expect(within(rowEl('leather')!).queryByRole('spinbutton')).toBeNull();
+	});
+
+	it('keeps a single quantity field in edit mode', () => {
+		renderTab(containerHero(), true);
+		const row = rowEl('torch');
+		if (!row) throw new Error('no torch row');
+
+		expect(
+			within(row).getAllByRole('spinbutton', { name: new RegExp(`${INV}.quantityOf.*Torch`) }),
+		).toHaveLength(1);
 	});
 
 	it('asks before it deletes, and Keep deletes nothing', async () => {
@@ -197,6 +244,189 @@ describe('HeroInventoryTab', () => {
 			expect(rowEl('backpack')?.classList.contains('drop-over')).toBe(true);
 			await fireEvent.dragEnter(rowEl('torch')!);
 			expect(rowEl('torch')?.classList.contains('drop-over')).toBe(false);
+		});
+	});
+
+	describe('the party inventory', () => {
+		it('switches the list when the Party Inventory tab is chosen', async () => {
+			const { ui } = renderTab();
+			const mine = screen.getByRole('tab', { name: `${INV}.mine` });
+			const party = screen.getByRole('tab', { name: `${INV}.party` });
+
+			expect(mine).toHaveAttribute('aria-selected', 'true');
+			expect(party).toHaveAttribute('aria-selected', 'false');
+			await fireEvent.click(party);
+
+			expect(ui.partyInventory).toBe(true);
+		});
+
+		it('gives coins from the button beside the coins', async () => {
+			const { perform } = renderTab(containerHero(), false, { context: partyContext() });
+
+			await fireEvent.click(screen.getByRole('button', { name: `${INV}.moveCurrency` }));
+			expect(screen.getByText(`${INV}.moveTo`)).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: `${INV}.moveTo` })).toBeNull();
+			expect(screen.queryByRole('menuitem', { name: 'Backpack' })).toBeNull();
+			await fireEvent.click(screen.getByRole('menuitem', { name: 'Bob' }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'giveCurrency',
+				source: 'actor',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'actor', actorId: 'bob' },
+			});
+		});
+
+		it('returns focus to the coin button when Escape closes its menu', async () => {
+			renderTab(containerHero(), false, { context: partyContext() });
+			const button = screen.getByRole('button', { name: `${INV}.moveCurrency` });
+
+			await fireEvent.click(button);
+			screen.getAllByRole('menuitem')[0]?.focus();
+			await fireEvent.keyDown(document, { key: 'Escape' });
+
+			expect(screen.queryByRole('menu')).toBeNull();
+			expect(document.activeElement).toBe(button);
+		});
+
+		it('hides Create Object, edits the shared coins, and ignores a drop', async () => {
+			const { perform } = renderTab(containerHero(), false, {
+				party: true,
+				context: partyContext(),
+			});
+			const gold = screen.getByRole('spinbutton', { name: new RegExp(`${INV}.coin.*gp`) });
+
+			expect(screen.queryByRole('button', { name: `${INV}.create` })).toBeNull();
+			expect(gold).toHaveValue(40);
+			await fireEvent.input(gold, { target: { value: '20' } });
+			await fireEvent.blur(gold);
+			expect(perform).toHaveBeenCalledWith({ kind: 'setPartyCurrency', coin: 'gp', value: 20 });
+
+			await fireEvent.drop(screen.getByText('NIMBLE.objectTypeHeadings.misc'), {
+				dataTransfer: {
+					getData: () => JSON.stringify({ type: 'Item', uuid: 'Item.lantern' }),
+					types: ['text/plain'],
+				},
+			});
+			expect(perform).toHaveBeenCalledOnce();
+		});
+
+		it('locks the coin fields when this user cannot take from the party inventory', () => {
+			renderTab(containerHero(), false, {
+				party: true,
+				context: partyContext({ canTake: false, canGiveAway: false }),
+			});
+
+			const gold = screen.getByRole('spinbutton', { name: new RegExp(`${INV}.coin.*gp`) });
+			expect(gold.classList.contains('rest')).toBe(true);
+			expect(screen.queryByRole('button', { name: new RegExp(`${INV}.actions`) })).toBeNull();
+		});
+
+		it('moves an object to the party inventory from the menu, and does not use it', async () => {
+			const { perform } = renderTab();
+
+			await fireEvent.click(
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
+			);
+			expect(screen.getByText(`${INV}.moveTo`)).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: `${INV}.moveTo` })).toBeNull();
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.party` }));
+
+			expect(perform).toHaveBeenCalledOnce();
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'transferObject',
+				itemId: 'torch',
+				source: 'actor',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'party' },
+			});
+		});
+
+		it('stores an object in a container from Move to', async () => {
+			const { perform } = renderTab();
+
+			await fireEvent.click(
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
+			);
+			await fireEvent.click(screen.getByRole('menuitem', { name: 'Backpack' }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'storeIn',
+				itemId: 'torch',
+				containerId: 'backpack',
+			});
+		});
+
+		it('opens the menu on a right-click, and Give to lists the other character', async () => {
+			const { perform } = renderTab(containerHero(), false, { context: partyContext() });
+
+			await fireEvent.contextMenu(rowEl('torch')!);
+			expect(screen.getByText(`${INV}.giveTo`)).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: `${INV}.giveTo` })).toBeNull();
+			await fireEvent.click(screen.getByRole('menuitem', { name: 'Bob' }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'transferObject',
+				itemId: 'torch',
+				source: 'actor',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'actor', actorId: 'bob' },
+			});
+		});
+
+		it('closes the menu on a click outside and on Escape', async () => {
+			renderTab();
+			const open = () =>
+				fireEvent.click(screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }));
+			const trigger = () =>
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) });
+
+			await open();
+			expect(screen.getByRole('menu')).toBeInTheDocument();
+			screen.getAllByRole('menuitem')[0]?.focus();
+			await fireEvent.pointerDown(document.body);
+			expect(screen.queryByRole('menu')).toBeNull();
+			expect(document.activeElement).not.toBe(trigger());
+
+			await open();
+			screen.getAllByRole('menuitem')[0]?.focus();
+			await fireEvent.keyDown(document, { key: 'Escape' });
+			expect(screen.queryByRole('menu')).toBeNull();
+			expect(document.activeElement).toBe(trigger());
+		});
+
+		it('shows a party inventory stack as text, with the ellipsis after it', () => {
+			renderTab(containerHero(), false, { party: true, context: partyContext() });
+			const row = rowEl('torch');
+			if (!row) throw new Error('no torch row');
+			const count = within(row).getByText(`${INV}.quantity {"count":"3"}`);
+			const menu = within(row).getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) });
+
+			expect(
+				within(row).queryByRole('spinbutton', { name: new RegExp(`${INV}.quantityOf.*Torch`) }),
+			).toBeNull();
+			expect(count.compareDocumentPosition(menu) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+			expect(getComputedStyle(menu).position).not.toBe('absolute');
+		});
+
+		it('moves a party inventory object onto this character', async () => {
+			const { perform } = renderTab(containerHero(), false, {
+				party: true,
+				context: partyContext(),
+			});
+
+			await fireEvent.click(
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }),
+			);
+			await fireEvent.click(screen.getByRole('menuitem', { name: `${INV}.mine` }));
+
+			expect(perform).toHaveBeenCalledWith({
+				kind: 'transferObject',
+				itemId: 'torch',
+				source: 'party',
+				sourceActorId: 'containerHero0001',
+				destination: { kind: 'actor', actorId: 'containerHero0001' },
+			});
 		});
 	});
 });

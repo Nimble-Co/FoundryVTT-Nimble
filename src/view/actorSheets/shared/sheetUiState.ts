@@ -20,6 +20,10 @@ export interface SheetUiState {
 	choiceStep: string | null;
 	/** id of the ConfirmBar that asks now */
 	confirm: string | null;
+	/** the Inventory tab is showing the party inventory */
+	partyInventory: boolean;
+	/** id of the row whose move menu is open */
+	menuRowId: string | null;
 	/** a new serial flashes the row again */
 	flash: { rowId: string; serial: number } | null;
 }
@@ -33,6 +37,8 @@ export function createSheetUiState(tab: string): SheetUiState {
 		cardsStartOpen: true,
 		choiceStep: null,
 		confirm: null,
+		partyInventory: false,
+		menuRowId: null,
 		flash: null,
 	};
 }
@@ -50,6 +56,17 @@ export function revealIn(ui: SheetUiState, request: RevealRequest): void {
 export function showTab(ui: SheetUiState, tab: string): void {
 	ui.tab = tab;
 	ui.confirm = null;
+	ui.menuRowId = null;
+}
+
+export function setPartyInventory(ui: SheetUiState, party: boolean): void {
+	ui.partyInventory = party;
+	ui.confirm = null;
+	ui.menuRowId = null;
+}
+
+export function setMenuRow(ui: SheetUiState, rowId: string | null): void {
+	ui.menuRowId = rowId;
 }
 
 export function setEditing(ui: SheetUiState, editing: boolean): void {

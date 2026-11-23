@@ -3,8 +3,10 @@ import {
 	blankHero,
 	containerHero,
 	heroContext,
+	objectItem,
 } from '../../../../../tests/fixtures/actorSheets/heroFixtures.ts';
 import { heroInventoryTab } from '../heroInventoryTab.ts';
+import type { HeroSheetContext } from '../heroSource.ts';
 
 const INV = 'NIMBLE.actorSheet.hero.inventory';
 
@@ -54,8 +56,10 @@ describe('heroInventoryTab', () => {
 		});
 	});
 
-	it('shows the quantity of a stack, and not a quantity of 1', () => {
+	it('shows the quantity of a stack, and none on a single object', () => {
 		const view = heroInventoryTab(containerHero(), heroContext());
+		const quantityField = (id: string) =>
+			rowOf(view, id).fields.find((field) => field.kind === 'quantity');
 
 		expect(rowOf(view, 'torch').cost).toEqual({
 			text: `${INV}.quantity {"count":"3"}`,
@@ -65,13 +69,17 @@ describe('heroInventoryTab', () => {
 			actions: undefined,
 			pool: undefined,
 		});
-		expect(rowOf(view, 'rope').cost.text).toBeUndefined();
-		expect(rowOf(view, 'torch').fields[0]).toEqual({
+		expect(quantityField('torch')).toEqual({
 			kind: 'quantity',
 			itemId: 'torch',
 			label: `${INV}.quantityOf {"name":"Torch"}`,
 			value: 3,
 		});
+		expect(quantityField('rations')).toMatchObject({ kind: 'quantity', value: 5 });
+		for (const id of ['rope', 'leather', 'potion']) {
+			expect(quantityField(id)).toBeUndefined();
+			expect(rowOf(view, id).cost.text).toBeUndefined();
+		}
 	});
 
 	it('gives the EQUIP tag to weapons, armor, shields and objects with rules, never to a stored object', () => {
@@ -185,5 +193,265 @@ describe('heroInventoryTab', () => {
 		expect(view.createObject.intent).toEqual({ kind: 'createItem', itemType: 'object' });
 		expect(view.empty).toBe(`${INV}.none`);
 		expect(view.groups).toEqual([]);
+	});
+});
+
+function partyContext(overrides: Partial<HeroSheetContext['party']> = {}): HeroSheetContext {
+	return heroContext({
+		party: {
+			currency: { gp: 40, sp: 2, cp: 1 },
+			items: [
+				objectItem('torch', 'Torch', { quantity: 3, objectSizeType: 'stackable' }),
+				objectItem('backpack', 'Backpack', { capacity: 10 }),
+				objectItem('rope', 'Rope', { containerId: 'backpack' }),
+				objectItem('sack', 'Sack', { capacity: 4 }),
+			],
+			characters: [
+				{ id: 'bob', name: 'Bob' },
+				{ id: 'cara', name: 'Cara' },
+			],
+			canGive: true,
+			canTake: true,
+			canGiveAway: true,
+			...overrides,
+		},
+	});
+}
+
+describe('the party inventory', () => {
+	it('shows the shared coins and objects, with no slot limit', () => {
+		const view = heroInventoryTab(containerHero(), partyContext(), { party: true });
+
+		expect(view.party).toBe(true);
+		expect(view.mineLabel).toBe(`${INV}.mine`);
+		expect(view.partyLabel).toBe(`${INV}.party`);
+		expect(view.currencyGive?.label).toBe(`${INV}.moveCurrency`);
+		expect(view.currencyGive?.move?.entries.map((entry) => entry.id)).toEqual(['mine']);
+		expect(view.currencyGive?.give?.entries.map((entry) => entry.id)).toEqual(['bob', 'cara']);
+		expect(view.coins.map((coin) => [coin.coin, coin.value])).toEqual([
+			['gp', 40],
+			['sp', 2],
+			['cp', 1],
+		]);
+		expect(view.coinsLocked).toBe(false);
+		expect(view.slots).toBeNull();
+		expect(view.createObject.intent).toEqual({ kind: 'createItem', itemType: 'object' });
+		expect(view.empty).toBeNull();
+		expect(layout(view)).toEqual([
+			['NIMBLE.objectTypeHeadings.misc', ['Backpack', '  Rope', 'Sack', 'Torch']],
+		]);
+	});
+
+	it('shows an empty party inventory, and locks the coins when this user cannot take from it', () => {
+		const empty = heroInventoryTab(
+			containerHero(),
+			partyContext({ items: [], characters: [], currency: { gp: 0, sp: 0, cp: 0 } }),
+			{ party: true },
+		);
+		expect(empty.empty).toBe(`${INV}.partyEmpty`);
+		expect(empty.groups).toEqual([]);
+
+		const locked = heroInventoryTab(
+			containerHero(),
+			partyContext({ canTake: false, canGiveAway: false }),
+			{ party: true },
+		);
+		expect(locked.coinsLocked).toBe(true);
+		expect(locked.currencyGive).toBeNull();
+		expect(rowOf(locked, 'torch').share).toBeUndefined();
+	});
+
+	it('offers Move to my inventory and Give to, and does not equip or edit a party inventory row', () => {
+		const torch = rowOf(
+			heroInventoryTab(containerHero(), partyContext(), { party: true }),
+			'torch',
+		);
+		const destination = { kind: 'actor' as const, actorId: 'containerHero0001' };
+
+		expect(torch.use).toBeNull();
+		expect(torch.choice).toBeNull();
+		expect(torch.edit).toBeNull();
+		expect(torch.drag).toBeNull();
+		expect(torch.equip).toBeUndefined();
+		expect(torch.storeIn).toBeUndefined();
+		expect(torch.dropInto).toBeUndefined();
+		expect(torch.remove).toBeUndefined();
+		expect(torch.fields).toEqual([]);
+		expect(torch.share).toEqual({
+			label: `${INV}.actions {"name":"Torch"}`,
+			move: {
+				label: `${INV}.moveTo`,
+				entries: [
+					{
+						id: 'mine',
+						label: `${INV}.mine`,
+						intent: {
+							kind: 'transferObject',
+							itemId: 'torch',
+							source: 'party',
+							sourceActorId: 'containerHero0001',
+							destination,
+						},
+					},
+				],
+			},
+			give: {
+				label: `${INV}.giveTo`,
+				entries: [
+					{
+						id: 'bob',
+						label: 'Bob',
+						intent: {
+							kind: 'transferObject',
+							itemId: 'torch',
+							source: 'party',
+							sourceActorId: 'containerHero0001',
+							destination: { kind: 'actor', actorId: 'bob' },
+						},
+					},
+					{
+						id: 'cara',
+						label: 'Cara',
+						intent: {
+							kind: 'transferObject',
+							itemId: 'torch',
+							source: 'party',
+							sourceActorId: 'containerHero0001',
+							destination: { kind: 'actor', actorId: 'cara' },
+						},
+					},
+				],
+			},
+		});
+	});
+
+	it('indents what a container holds, and skips the capacity numbers', () => {
+		const view = heroInventoryTab(containerHero(), partyContext(), { party: true });
+
+		expect(rowOf(view, 'rope').indent).toBe(true);
+		expect(rowOf(view, 'backpack').cost.text).toBeUndefined();
+		expect(rowOf(view, 'backpack').summary).toBeUndefined();
+		expect(rowOf(view, 'sack').cost.text).toBe(`${INV}.empty`);
+	});
+
+	it('offers Move to party inventory and Give to on the character sheet', () => {
+		const torch = rowOf(heroInventoryTab(containerHero(), partyContext()), 'torch');
+
+		expect(torch.share?.move).toEqual({
+			label: `${INV}.moveTo`,
+			entries: [
+				{
+					id: 'party',
+					label: `${INV}.party`,
+					intent: {
+						kind: 'transferObject',
+						itemId: 'torch',
+						source: 'actor',
+						sourceActorId: 'containerHero0001',
+						destination: { kind: 'party' },
+					},
+				},
+				{
+					id: 'backpack',
+					label: 'Backpack',
+					intent: { kind: 'storeIn', itemId: 'torch', containerId: 'backpack' },
+				},
+				{
+					id: 'pouch',
+					label: 'Pouch',
+					intent: { kind: 'storeIn', itemId: 'torch', containerId: 'pouch' },
+				},
+			],
+		});
+		expect(
+			rowOf(heroInventoryTab(containerHero(), partyContext()), 'rope').share?.move?.entries.map(
+				(entry) => entry.id,
+			),
+		).toEqual(['party', 'pouch']);
+		expect(torch.share?.give?.entries.map((entry) => entry.id)).toEqual(['bob', 'cara']);
+		expect(torch.use).not.toBeNull();
+		expect(
+			rowOf(heroInventoryTab(containerHero(), partyContext()), 'backpack').share?.move?.entries.map(
+				(entry) => entry.id,
+			),
+		).toEqual(['party']);
+	});
+
+	it('keeps Move to party inventory when this player cannot give to other characters', () => {
+		const torch = rowOf(
+			heroInventoryTab(containerHero(), partyContext({ canGiveAway: false })),
+			'torch',
+		);
+
+		expect(torch.share?.move?.entries.map((entry) => entry.id)).toEqual([
+			'party',
+			'backpack',
+			'pouch',
+		]);
+		expect(torch.share?.give).toBeNull();
+		expect(
+			heroInventoryTab(containerHero(), partyContext({ canGiveAway: false })).currencyGive?.move
+				?.entries,
+		).toEqual([
+			{
+				id: 'party',
+				label: `${INV}.party`,
+				intent: {
+					kind: 'giveCurrency',
+					source: 'actor',
+					sourceActorId: 'containerHero0001',
+					destination: { kind: 'party' },
+				},
+			},
+		]);
+		expect(
+			heroInventoryTab(containerHero(), partyContext({ canGiveAway: false })).currencyGive?.give,
+		).toBeNull();
+	});
+
+	it('gives party coins to the open character when this user cannot take them', () => {
+		const view = heroInventoryTab(containerHero(), partyContext({ canTake: false }), {
+			party: true,
+		});
+
+		expect(view.currencyGive?.move).toBeNull();
+		expect(view.currencyGive?.give?.entries.map((entry) => entry.id)).toEqual([
+			'containerHero0001',
+			'bob',
+			'cara',
+		]);
+	});
+
+	it('hides the menu when this user cannot move the object', () => {
+		const own = heroInventoryTab(containerHero(), partyContext({ canGive: false }));
+		expect(rowOf(own, 'torch').share?.move?.entries.map((entry) => entry.id)).toEqual([
+			'backpack',
+			'pouch',
+		]);
+		expect(rowOf(own, 'torch').share?.give).toBeNull();
+
+		const mine = heroInventoryTab(containerHero(), partyContext({ characters: [] }), {
+			party: true,
+		});
+		expect(rowOf(mine, 'torch').share).toEqual({
+			label: `${INV}.actions {"name":"Torch"}`,
+			move: {
+				label: `${INV}.moveTo`,
+				entries: [
+					{
+						id: 'mine',
+						label: `${INV}.mine`,
+						intent: {
+							kind: 'transferObject',
+							itemId: 'torch',
+							source: 'party',
+							sourceActorId: 'containerHero0001',
+							destination: { kind: 'actor', actorId: 'containerHero0001' },
+						},
+					},
+				],
+			},
+			give: null,
+		});
 	});
 });

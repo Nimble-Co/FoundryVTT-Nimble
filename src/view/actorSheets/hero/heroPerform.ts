@@ -21,10 +21,13 @@ import { runMoveAction } from '#utils/heroicActions/move.js';
 import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
 import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
+import { requestPartyCurrency } from '#utils/partyInventory/requestItemTransfer.ts';
 import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 import { isSheetIntent } from '../shared/sheetIntent.ts';
 import { performSheetIntent } from '../shared/sheetPerform.ts';
+import { giveCurrency } from './giveCurrency.ts';
 import { combatantOf, mayAddAction } from './heroActions.ts';
 import type {
 	HeroConfigureTarget,
@@ -32,6 +35,7 @@ import type {
 	HeroPerform,
 	HeroSettingsField,
 } from './heroIntent.ts';
+import { transferObject } from './transferObject.ts';
 
 type CombatWithLateJoin = Combat & {
 	ensureCharacterCombatantForActorInCurrentScene?: (
@@ -178,7 +182,9 @@ const NEW_ITEM_NAMES: Record<Extract<HeroIntent, { kind: 'createItem' }>['itemTy
 async function setQuantity(actor: NimbleCharacter, itemId: string, value: number): Promise<void> {
 	const item = actor.items.get(itemId);
 	if (!item) return;
-	if ((item.system as { containerId?: string }).containerId) {
+	const system = item.system as { containerId?: string; objectSizeType?: string };
+	if (!OBJECT_SIZE_TYPES_WITH_QUANTITY.has(system.objectSizeType ?? '')) return;
+	if (system.containerId) {
 		await actor.updateStoredObjectQuantity(itemId, value);
 		return;
 	}
@@ -349,6 +355,15 @@ export function createHeroPerform(actor: NimbleCharacter, sheet: HeroPerformShee
 				return;
 			case 'opportunityAttack':
 				await useOpportunityAttack(actor, intent.weaponId);
+				return;
+			case 'transferObject':
+				await transferObject(actor, intent);
+				return;
+			case 'setPartyCurrency':
+				await requestPartyCurrency(intent.coin, intent.value);
+				return;
+			case 'giveCurrency':
+				await giveCurrency(actor, intent);
 				return;
 			default: {
 				const unknown: never = intent;

@@ -237,4 +237,29 @@ describe('routeItemDrop', () => {
 
 		expect(outcome).toEqual({ kind: 'stacked', itemType: 'object', itemIds: ['torches'] });
 	});
+
+	it('does not report a same-name container as the stack that took the copy', async () => {
+		const actor = createActor('character', {
+			items: [
+				{
+					id: 'pack',
+					name: 'Torch',
+					type: 'object',
+					system: {
+						objectSizeType: 'smallSized',
+						containerId: '',
+						container: { enabled: true },
+					},
+				},
+			],
+			createResult: () => [],
+		});
+
+		const outcome = await drop(
+			actor,
+			droppedItem({ type: 'object', name: 'Torch', system: { objectSizeType: 'smallSized' } }),
+		);
+
+		expect(outcome).toEqual({ kind: 'refused' });
+	});
 });

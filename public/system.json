@@ -82,6 +82,10 @@
 			"soloMonster": {
 				"htmlFields": [],
 				"filePathFields": {}
+			},
+			"partyInventory": {
+				"htmlFields": [],
+				"filePathFields": {}
 			}
 		},
 		"ChatMessage": {

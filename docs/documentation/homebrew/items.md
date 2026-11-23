@@ -211,7 +211,7 @@ A hero who wears armor or a shield that their armor proficiencies do not include
 A consumable is an object that does something when used and is expected to run out. The compendium **Healing Potion** is the template to copy: Object Type **Consumable**, size 0.5 slots, and an activation with a single **Healing** effect of `2d4+4` costing 1 Action. When a player drinks it with no target selected, the healing is applied to their own token by default.
 
 ::: warning Quantity is yours to manage
-Activating a consumable does not automatically reduce its quantity. When a consumable is spent, have players turn on **Edit** and type the new quantity on its row in the Inventory tab, or delete the item.
+Activating a consumable does not automatically reduce its quantity. A stack or a small item shows a count on its row: turn on **Edit** and type the new count. A single object, such as a potion, you delete when it is spent.
 :::
 
 For items with limited uses that recharge, such as wands and once-per-rest trinkets, use **charges** instead of quantity:

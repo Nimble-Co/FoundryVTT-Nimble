@@ -64,6 +64,16 @@ You can drag an action from here to the macro hotbar for one-click access; see [
 
 Your equipment and loot. Click a row to use the item (attack with a weapon, drink a potion); this posts a chat card. Weapons, armor and shields have an **EQUIP** tag: click it to equip or unequip the item. You can create new items here with **Create Object**, or drag them in from the compendiums. The coins and, if your table tracks them, your inventory slots are at the top of the tab. When you are over your slot limit, the slots show a warning.
 
+**My Inventory** and **Party Inventory** sit above the coins. Party Inventory is the gear and coins the party shares. It has no slot limit, and Create Object stays on My Inventory. You type the party coins the same way you type your own when you can edit them.
+
+The hand button beside the coins says **Move currency** when you rest on it. Its menu matches an object's: **Move to**, then **Give to**. Coins are one pile on a list, so Move to is only Party Inventory, or My Inventory when you are looking at the party's coins. It does not offer a backpack. Give to is each other character. Each coin has a number and a slider, starting at everything that list holds. That amount leaves the list and is added where you send it.
+
+A stack, such as torches or rations, and a small item show a count on the row, and you can type it there. The count sits before the ellipsis and the edit button. A rope or a suit of armor is one object and has no count. The ellipsis, or a right-click, opens Move to and Give to. Move to is its own row: Party Inventory first, then each container you carry, such as a backpack. A container does not list another container. Give to is its own row, with each other hero indented under it. Choosing one opens a confirmation before the object moves. Any player can put their own objects into the party inventory, and take party objects onto a character they own. A trusted player can also send objects and coins to any character. A move you can save does not need a GM connected. If the other character is offline and no GM is connected, that character has to be online to receive it. A GM has to open the world once before players can save the party inventory. That save stays with the world, named Party Inventory. It is not a monster, it cannot be deleted, and it does not show up in the Actors sidebar. Opening it lists the items and coins stored there.
+
+::: details What a move does
+One confirmation opens. A single object uses the title Move and the item's name. A stack asks how many in that same dialog: type the number, or drag the slider to the whole stack or to a point in between. A number past the stack becomes the whole stack. An equipped object uses the title Unequip and the item's name, and says it will be unequipped before it moves. An equipped stack puts the count in that dialog. Choosing a container stores the object in it. A container brings its contents. The object is not copied. Chat says who moved what.
+:::
+
 Items set up as containers, such as a chest, a backpack, a pouch or a quiver, show their contents indented under them. The row of a container shows how much of its capacity is in use, or **Empty**.
 
 - **To put something in**, drag it onto the container's row.

@@ -1649,6 +1649,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `countBy()` | `src/utils/countBy.ts` | How many times each value appears in a list, as a map in order of first appearance |
 | `formatGroupName()` | `src/utils/formatGroupName.ts` | Title a kebab-case group key (`thrill-of-the-hunt` ⇒ `Thrill Of The Hunt`) |
 | `stripHtml()` | `src/utils/stripHtml.ts` | Drop HTML tags from a string |
+| `COIN_DENOMINATIONS`, `isCoinDenomination()` | `src/utils/coins.ts` | The gp, sp, and cp denominations, and the language key for each abbreviation |
 | `getItemSource()` | `src/utils/documents/getItemSource.ts` | Whether a document lives in a compendium pack or the world, from its UUID |
 | `cardSchemaHas()` | `src/utils/documents/cardSchemaHas.ts` | Whether the data model of a chat card type has a field, such as `incomingReactions` or `movementOffers`. Check it before a write of that field: Foundry drops a key the schema does not declare |
 | `identifierOf()` | `src/utils/documents/itemIdentifier.ts` | The identifier of an item, from item data or a document: its own `identifier`, else `system.identifier`, else an empty string |

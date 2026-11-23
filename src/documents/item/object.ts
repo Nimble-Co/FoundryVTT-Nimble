@@ -8,6 +8,7 @@ import { getSpellScrollData } from '#utils/spell/createScrollFromSpell.js';
 import knowsSpellSchool from '#utils/spell/knowsSpellSchool.js';
 import { getSpellSchoolLabel } from '#utils/spell/spellLabels.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantity.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
@@ -70,15 +71,6 @@ function syncRuleSourcesToEquippedState(item: NimbleObjectItem): void {
 	} as Record<string, unknown>);
 }
 
-/**
- * Object sizes that carry a quantity, and so fold into an item of the same name
- * already carried instead of creating a second document.
- */
-export const OBJECT_SIZE_TYPES_WITH_QUANTITY: ReadonlySet<string> = new Set([
-	'stackable',
-	'smallSized',
-]);
-
 export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	declare system: NimbleObjectData;
 
@@ -129,12 +121,17 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	) {
 		if (this.isEmbedded) this.#discardUnknownContainerId();
 
-		// Update quantity if object already exists and is stackable or smallSized
-		if (this.isEmbedded && OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)) {
+		// A container is one object. It does not join a stack, and a stack does not join it.
+		if (
+			this.isEmbedded &&
+			!this.system.container.enabled &&
+			OBJECT_SIZE_TYPES_WITH_QUANTITY.has(this.system.objectSizeType)
+		) {
 			// Arrows in a quiver and arrows on the belt are separate piles.
 			const existing = this.actor?.items.find(
 				(i) =>
 					i instanceof NimbleObjectItem &&
+					!i.system.container.enabled &&
 					i.name === this.name &&
 					i.type === 'object' &&
 					i.system.containerId === this.system.containerId &&

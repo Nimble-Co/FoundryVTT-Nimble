@@ -172,6 +172,14 @@ export function heroContext(overrides?: Partial<HeroSheetContext>): HeroSheetCon
 		formula: (text) => text.replace(/@[\w.]+/g, '3'),
 		enrichedNotes: '',
 		enrichedDescriptions: {},
+		party: {
+			currency: { gp: 0, sp: 0, cp: 0 },
+			items: [],
+			characters: [],
+			canGive: true,
+			canTake: true,
+			canGiveAway: true,
+		},
 		...overrides,
 	};
 }
@@ -382,6 +390,7 @@ export function objectItem(
 	name: string,
 	options: {
 		objectType?: string;
+		objectSizeType?: string;
 		quantity?: number;
 		containerId?: string;
 		equipped?: boolean;
@@ -396,6 +405,7 @@ export function objectItem(
 		name,
 		system: {
 			objectType: options.objectType ?? 'misc',
+			objectSizeType: options.objectSizeType,
 			quantity: options.quantity ?? 1,
 			containerId: options.containerId ?? '',
 			equipped: options.equipped ?? false,
@@ -430,15 +440,24 @@ export function containerHero(overrides?: DeepPartial<HeroActorLike>): HeroActor
 	hero.items = [
 		...hero.items,
 		weaponItem('longsword', 'Longsword'),
-		objectItem('leather', 'Leather Armor', { objectType: 'armor', equipped: true }),
-		objectItem('shield', 'Wooden Shield', { objectType: 'shield' }),
-		objectItem('potion', 'Healing Potion', { objectType: 'consumable', quantity: 2 }),
-		objectItem('torch', 'Torch', { quantity: 3 }),
+		objectItem('leather', 'Leather Armor', {
+			objectType: 'armor',
+			objectSizeType: 'slots',
+			equipped: true,
+		}),
+		objectItem('shield', 'Wooden Shield', { objectType: 'shield', objectSizeType: 'slots' }),
+		objectItem('potion', 'Healing Potion', {
+			objectType: 'consumable',
+			objectSizeType: 'slots',
+			quantity: 2,
+		}),
+		objectItem('torch', 'Torch', { objectSizeType: 'stackable', quantity: 3 }),
 		objectItem('backpack', 'Backpack', { capacity: 10 }),
 		objectItem('pouch', 'Pouch', { capacity: 2 }),
-		objectItem('rope', 'Rope', { containerId: 'backpack' }),
+		objectItem('rope', 'Rope', { objectSizeType: 'slots', containerId: 'backpack' }),
 		objectItem('rations', 'Rations', {
 			objectType: 'consumable',
+			objectSizeType: 'stackable',
 			quantity: 5,
 			containerId: 'backpack',
 		}),

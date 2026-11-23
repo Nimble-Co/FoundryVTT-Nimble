@@ -1,3 +1,4 @@
+import { hidePartyInventoryHolder } from '../documents/actor/partyInventoryHolder.js';
 import registerKeybindings from '../registerKeyBindings.js';
 import registerSystemSettings from '../settings/index.js';
 import { preparePackIndexes } from '../utils/documents/preparePackIndexes.js';
@@ -41,6 +42,7 @@ function makeApplicationDialogResizable(appClass: any): boolean {
 }
 
 export default function setup() {
+	hidePartyInventoryHolder();
 	preparePackIndexes();
 	registerKeybindings();
 	registerSystemSettings();

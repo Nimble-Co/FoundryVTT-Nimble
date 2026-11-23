@@ -10,6 +10,8 @@ Nimble needs no modules. Some popular modules work with it out of the box becaus
 
 [Item Piles](https://foundryvtt.com/packages/item-piles) adds loot piles, containers and merchants. When the module is active, Nimble sets it up for you. There is nothing to configure, and the "system not supported" message does not appear.
 
+[Party Inventory](../characters/character-sheet.md#inventory) holds the gear and coins the party shares. Players move objects and coins between a character and that list, and hand an object to another character from the same menu. That shared chest and that hand-off are the part some tables were doing with Item Piles, or with a character everyone owns. Loot piles, merchants, and Item Piles containers stay with the module.
+
 What is set up:
 
 - **Currency.** Gold, silver and copper are read from and written to the actor, which for a player character means the coin fields on the sheet. Gold is the main currency. 10 silver is 1 gold, as in the Core Rules. Copper is not in the Core Rules; the system counts 10 copper as 1 silver.

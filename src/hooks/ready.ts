@@ -1,4 +1,5 @@
 import { mount, unmount } from 'svelte';
+import { ensurePartyInventoryHolder } from '../documents/actor/partyInventoryHolder.js';
 import {
 	beginWorldMigration,
 	warnPlayerOfPendingMigration,
@@ -19,6 +20,7 @@ import { registerCardSocketListener } from '../utils/chat/cardOperations.js';
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
 import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
+import { registerPartyInventorySocketListener } from '../utils/partyInventory/requestItemTransfer.js';
 // Their modules define the card operations and notices the socket listener runs.
 import '../utils/defend/defendRequests.js';
 import '../utils/incomingReactions/incomingAttackReactions.js';
@@ -66,6 +68,8 @@ export default async function ready() {
 	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
+	registerPartyInventorySocketListener();
+	void ensurePartyInventoryHolder();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');

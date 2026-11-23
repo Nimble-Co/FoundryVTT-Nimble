@@ -20,8 +20,11 @@ import {
 	HEROIC_REACTIONS,
 } from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
+import { isTrustedPlayer, type TransferItem } from '#utils/partyInventory/planItemTransfer.ts';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import prepareActorConditions from '#view/dataPreparationHelpers/prepareActorConditions.js';
+import { readPartyInventory } from '../../../documents/actor/partyInventoryHolder.js';
+import { PARTY_INVENTORY_HOOK } from '../../../settings/partyInventorySetting.js';
 import { localizeAll } from '../shared/configLabels.ts';
 import {
 	conditionLike,
@@ -32,6 +35,7 @@ import {
 	registerRedrawHooks,
 } from '../shared/documentLikes.ts';
 import { portraitFlags } from '../shared/portrait.ts';
+import type { ItemLike } from '../shared/sheetSource.ts';
 import { baseMaxActions, combatantOf, mayAddAction } from './heroActions.ts';
 import { heroItemStates } from './heroItemState.ts';
 import type {
@@ -199,14 +203,61 @@ export interface HeroSourceExtras {
 	enrichedDescriptions: () => Record<string, string>;
 }
 
+function storedItem(item: TransferItem): ItemLike {
+	return {
+		id: item._id,
+		uuid: '',
+		name: typeof item.name === 'string' ? item.name : '',
+		img: typeof item.img === 'string' ? item.img : '',
+		type: 'object',
+		system: { ...(item.system ?? {}) },
+		rules: [],
+	};
+}
+
+function worldActors(): {
+	id?: string | null;
+	name?: string | null;
+	type?: string;
+	isOwner?: boolean;
+}[] {
+	const actors = game.actors as
+		| Iterable<{ id?: string | null; name?: string | null; type?: string; isOwner?: boolean }>
+		| undefined;
+	return actors ? [...actors] : [];
+}
+
+/** The shared inventory, and whether this user may move objects on the open sheet or out of the party inventory. */
+function partyOf(actor: NimbleCharacter): HeroSheetContext['party'] {
+	const inventory = readPartyInventory();
+	const userIsGm = game.user?.isGM === true;
+	const actors = worldActors();
+	const characters = actors
+		.filter((entry) => entry.type === 'character' && entry.id && entry.id !== actor.id)
+		.map((entry) => ({ id: entry.id ?? '', name: entry.name ?? '' }))
+		.sort((left, right) => left.name.localeCompare(right.name));
+	return {
+		currency: { ...inventory.currency },
+		items: inventory.items.map(storedItem),
+		characters,
+		canGive: userIsGm || actor.isOwner === true,
+		canTake: userIsGm || actor.isOwner === true,
+		canGiveAway: userIsGm || isTrustedPlayer(game.user),
+	};
+}
+
 /** Builds the plain view-model input of the character sheet from `actor.reactive`. */
 export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtras) {
 	const subscribeCombat = createSubscriber(registerCombatStateHooks);
 	const subscribePools = createSubscriber((update) => registerRedrawHooks(POOL_HOOKS, update));
+	const subscribeParty = createSubscriber((update) =>
+		registerRedrawHooks([PARTY_INVENTORY_HOOK, 'createActor', 'deleteActor'], update),
+	);
 
 	return (): HeroSource => {
 		subscribeCombat();
 		subscribePools();
+		subscribeParty();
 		const hero = actorLike(actor);
 		const rollData = actor.getRollData();
 		const formula = (text: string) => Roll.replaceFormulaData(text, rollData, { missing: '0' });
@@ -238,6 +289,7 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 				getUnarmedDamageFormula(actor as unknown as Parameters<typeof getUnarmedDamageFormula>[0]),
 			),
 			formula,
+			party: partyOf(actor),
 		};
 		return { actor: hero, context };
 	};
