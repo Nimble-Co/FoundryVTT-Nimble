@@ -1,4 +1,5 @@
 import { mount, unmount } from 'svelte';
+import { ensurePartyInventoryHolder } from '../documents/actor/partyInventoryHolder.js';
 import {
 	beginWorldMigration,
 	warnPlayerOfPendingMigration,
@@ -13,14 +14,13 @@ import {
 	applyLanguageCustomizations,
 	loadAncestryLanguageDefaults,
 } from '../settings/languageSettings.js';
-import { ensurePartyStashHolder } from '../settings/partyStashSetting.js';
 import { openWorldMigrationWindow } from '../settings/registerWorldMigrationMenu.js';
 import { registerMarkTargetSocketListener } from '../utils/actor/markTargetEffects.js';
 import { registerCardSocketListener } from '../utils/chat/cardOperations.js';
 import { registerCombatTurnSocketListener } from '../utils/combat/combatTurnActions.js';
 import { registerGrantedActionOfferSocketListener } from '../utils/combat/grantedActionOffers.js';
 import { registerCombatantActionDeltaSocketListener } from '../utils/combat/requestCombatantActionDelta.js';
-import { registerPartyStashSocketListener } from '../utils/partyStash/requestItemTransfer.js';
+import { registerPartyInventorySocketListener } from '../utils/partyInventory/requestItemTransfer.js';
 // Their modules define the card operations and notices the socket listener runs.
 import '../utils/defend/defendRequests.js';
 import '../utils/incomingReactions/incomingAttackReactions.js';
@@ -68,8 +68,8 @@ export default async function ready() {
 	registerRerollRollingHook();
 	registerMarkTargetSocketListener();
 	registerCombatantActionDeltaSocketListener();
-	registerPartyStashSocketListener();
-	void ensurePartyStashHolder();
+	registerPartyInventorySocketListener();
+	void ensurePartyInventoryHolder();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');

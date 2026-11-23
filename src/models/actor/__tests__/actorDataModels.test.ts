@@ -2,7 +2,7 @@ import actorDataModels from '../actorDataModels.js';
 
 type FieldLike = { fields?: Record<string, FieldLike>; initial?: unknown; nullable?: boolean };
 
-/** Coins on a character or monster live on the actor. Party coins live on the stash flag. */
+/** Coins on a character or monster live on the actor. Party coins live on the party inventory flag. */
 const actorsWithCurrency = Object.keys(actorDataModels).filter((type) => type !== 'partyInventory');
 
 describe('actor currency schema', () => {

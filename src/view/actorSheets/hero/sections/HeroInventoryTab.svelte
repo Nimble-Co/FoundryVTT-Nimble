@@ -1,7 +1,7 @@
 <!--
 @component
 The Inventory tab. My Inventory and Party Inventory sit above the coins.
-Create Object and the slot count stay on My Inventory. The party stash has no slot limit.
+Create Object and the slot count stay on My Inventory. The party inventory has no slot limit.
 The hand button beside the coins opens Give to.
 A stored object shows indented under its container. An Item dropped on the list, not on a row, goes in loose:
 a stored object comes out of its container.

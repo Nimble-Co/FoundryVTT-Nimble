@@ -1,6 +1,6 @@
+import { hidePartyInventoryHolder } from '../documents/actor/partyInventoryHolder.js';
 import registerKeybindings from '../registerKeyBindings.js';
 import registerSystemSettings from '../settings/index.js';
-import { hidePartyStashHolder } from '../settings/partyStashSetting.js';
 import { preparePackIndexes } from '../utils/documents/preparePackIndexes.js';
 import registerCompendiumSpellsFilter from './compendiumSpellsFilter.js';
 
@@ -42,7 +42,7 @@ function makeApplicationDialogResizable(appClass: any): boolean {
 }
 
 export default function setup() {
-	hidePartyStashHolder();
+	hidePartyInventoryHolder();
 	preparePackIndexes();
 	registerKeybindings();
 	registerSystemSettings();

@@ -311,7 +311,7 @@ describe('HeroInventoryTab', () => {
 			expect(perform).toHaveBeenCalledOnce();
 		});
 
-		it('locks the coin fields when this user cannot take from the stash', () => {
+		it('locks the coin fields when this user cannot take from the party inventory', () => {
 			renderTab(containerHero(), false, {
 				party: true,
 				context: partyContext({ canTake: false, canGiveAway: false }),
@@ -338,7 +338,7 @@ describe('HeroInventoryTab', () => {
 				itemId: 'torch',
 				source: 'actor',
 				sourceActorId: 'containerHero0001',
-				destination: { kind: 'stash' },
+				destination: { kind: 'party' },
 			});
 		});
 
@@ -395,7 +395,7 @@ describe('HeroInventoryTab', () => {
 			expect(document.activeElement).toBe(trigger());
 		});
 
-		it('shows a stash stack as text, with the ellipsis after it', () => {
+		it('shows a party inventory stack as text, with the ellipsis after it', () => {
 			renderTab(containerHero(), false, { party: true, context: partyContext() });
 			const row = rowEl('torch');
 			if (!row) throw new Error('no torch row');
@@ -409,7 +409,7 @@ describe('HeroInventoryTab', () => {
 			expect(getComputedStyle(menu).position).not.toBe('absolute');
 		});
 
-		it('moves a stash object onto this character', async () => {
+		it('moves a party inventory object onto this character', async () => {
 			const { perform } = renderTab(containerHero(), false, {
 				party: true,
 				context: partyContext(),
@@ -423,7 +423,7 @@ describe('HeroInventoryTab', () => {
 			expect(perform).toHaveBeenCalledWith({
 				kind: 'transferObject',
 				itemId: 'torch',
-				source: 'stash',
+				source: 'party',
 				sourceActorId: 'containerHero0001',
 				destination: { kind: 'actor', actorId: 'containerHero0001' },
 			});

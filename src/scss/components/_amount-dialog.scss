@@ -1,0 +1,25 @@
+.nimble-amount-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 16rem;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__denomination {
+    width: 2rem;
+  }
+
+  &__slider {
+    flex: 1;
+    width: 100%;
+  }
+
+  &__amount {
+    width: 5rem;
+  }
+}

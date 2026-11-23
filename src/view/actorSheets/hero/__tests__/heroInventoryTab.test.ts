@@ -242,7 +242,7 @@ describe('the party inventory', () => {
 		]);
 	});
 
-	it('shows an empty stash, and locks the coins when this user cannot take from it', () => {
+	it('shows an empty party inventory, and locks the coins when this user cannot take from it', () => {
 		const empty = heroInventoryTab(
 			containerHero(),
 			partyContext({ items: [], characters: [], currency: { gp: 0, sp: 0, cp: 0 } }),
@@ -261,7 +261,7 @@ describe('the party inventory', () => {
 		expect(rowOf(locked, 'torch').share).toBeUndefined();
 	});
 
-	it('offers Move to my inventory and Give to, and does not equip or edit a stash row', () => {
+	it('offers Move to my inventory and Give to, and does not equip or edit a party inventory row', () => {
 		const torch = rowOf(
 			heroInventoryTab(containerHero(), partyContext(), { party: true }),
 			'torch',
@@ -288,7 +288,7 @@ describe('the party inventory', () => {
 						intent: {
 							kind: 'transferObject',
 							itemId: 'torch',
-							source: 'stash',
+							source: 'party',
 							sourceActorId: 'containerHero0001',
 							destination,
 						},
@@ -304,7 +304,7 @@ describe('the party inventory', () => {
 						intent: {
 							kind: 'transferObject',
 							itemId: 'torch',
-							source: 'stash',
+							source: 'party',
 							sourceActorId: 'containerHero0001',
 							destination: { kind: 'actor', actorId: 'bob' },
 						},
@@ -315,7 +315,7 @@ describe('the party inventory', () => {
 						intent: {
 							kind: 'transferObject',
 							itemId: 'torch',
-							source: 'stash',
+							source: 'party',
 							sourceActorId: 'containerHero0001',
 							destination: { kind: 'actor', actorId: 'cara' },
 						},
@@ -348,7 +348,7 @@ describe('the party inventory', () => {
 						itemId: 'torch',
 						source: 'actor',
 						sourceActorId: 'containerHero0001',
-						destination: { kind: 'stash' },
+						destination: { kind: 'party' },
 					},
 				},
 				{
@@ -400,7 +400,7 @@ describe('the party inventory', () => {
 					kind: 'giveCurrency',
 					source: 'actor',
 					sourceActorId: 'containerHero0001',
-					destination: { kind: 'stash' },
+					destination: { kind: 'party' },
 				},
 			},
 		]);
@@ -444,7 +444,7 @@ describe('the party inventory', () => {
 						intent: {
 							kind: 'transferObject',
 							itemId: 'torch',
-							source: 'stash',
+							source: 'party',
 							sourceActorId: 'containerHero0001',
 							destination: { kind: 'actor', actorId: 'containerHero0001' },
 						},

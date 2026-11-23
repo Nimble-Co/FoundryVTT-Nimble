@@ -20,10 +20,11 @@ import {
 	HEROIC_REACTIONS,
 } from '#utils/incomingReactions/heroicActions.js';
 import localize from '#utils/localize.js';
-import { isTrustedPlayer, type TransferItem } from '#utils/partyStash/planItemTransfer.ts';
+import { isTrustedPlayer, type TransferItem } from '#utils/partyInventory/planItemTransfer.ts';
 import { getTargetedTokens, getTargetName } from '#utils/tokens/targeting.js';
 import prepareActorConditions from '#view/dataPreparationHelpers/prepareActorConditions.js';
-import { PARTY_STASH_HOOK, readPartyStash } from '../../../settings/partyStashSetting.js';
+import { readPartyInventory } from '../../../documents/actor/partyInventoryHolder.js';
+import { PARTY_INVENTORY_HOOK } from '../../../settings/partyInventorySetting.js';
 import { localizeAll } from '../shared/configLabels.ts';
 import {
 	conditionLike,
@@ -202,7 +203,7 @@ export interface HeroSourceExtras {
 	enrichedDescriptions: () => Record<string, string>;
 }
 
-function stashItem(item: TransferItem): ItemLike {
+function storedItem(item: TransferItem): ItemLike {
 	return {
 		id: item._id,
 		uuid: '',
@@ -226,9 +227,9 @@ function worldActors(): {
 	return actors ? [...actors] : [];
 }
 
-/** The shared stash, and whether this user may move objects on the open sheet or out of the stash. */
+/** The shared inventory, and whether this user may move objects on the open sheet or out of the party inventory. */
 function partyOf(actor: NimbleCharacter): HeroSheetContext['party'] {
-	const stash = readPartyStash();
+	const inventory = readPartyInventory();
 	const userIsGm = game.user?.isGM === true;
 	const actors = worldActors();
 	const characters = actors
@@ -236,8 +237,8 @@ function partyOf(actor: NimbleCharacter): HeroSheetContext['party'] {
 		.map((entry) => ({ id: entry.id ?? '', name: entry.name ?? '' }))
 		.sort((left, right) => left.name.localeCompare(right.name));
 	return {
-		currency: { ...stash.currency },
-		items: stash.items.map(stashItem),
+		currency: { ...inventory.currency },
+		items: inventory.items.map(storedItem),
 		characters,
 		canGive: userIsGm || actor.isOwner === true,
 		canTake: userIsGm || actor.isOwner === true,
@@ -250,7 +251,7 @@ export function createHeroSource(actor: NimbleCharacter, extras: HeroSourceExtra
 	const subscribeCombat = createSubscriber(registerCombatStateHooks);
 	const subscribePools = createSubscriber((update) => registerRedrawHooks(POOL_HOOKS, update));
 	const subscribeParty = createSubscriber((update) =>
-		registerRedrawHooks([PARTY_STASH_HOOK, 'createActor', 'deleteActor'], update),
+		registerRedrawHooks([PARTY_INVENTORY_HOOK, 'createActor', 'deleteActor'], update),
 	);
 
 	return (): HeroSource => {

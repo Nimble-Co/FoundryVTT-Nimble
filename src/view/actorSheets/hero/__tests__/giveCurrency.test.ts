@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NimbleCharacter } from '#documents/actor/character.js';
-import * as transferApi from '#utils/partyStash/requestItemTransfer.ts';
+import * as transferApi from '#utils/partyInventory/requestItemTransfer.ts';
 import { giveCurrency } from '../giveCurrency.ts';
 
 const request = vi.spyOn(transferApi, 'requestCurrencyTransfer').mockResolvedValue(true);
@@ -15,7 +15,7 @@ const give = {
 	kind: 'giveCurrency' as const,
 	source: 'actor' as const,
 	sourceActorId: 'ada',
-	destination: { kind: 'stash' as const },
+	destination: { kind: 'party' as const },
 };
 
 afterEach(() => {
@@ -33,6 +33,7 @@ describe('giveCurrency', () => {
 			}) => {
 				expect(config.content).toContain('data-coin-slider="gp"');
 				expect(config.content).toContain('max="12"');
+				expect(config.content).not.toContain('style=');
 				const root = document.createElement('div');
 				root.innerHTML = config.content;
 				config.render(new Event('render'), { element: root });
@@ -62,7 +63,7 @@ describe('giveCurrency', () => {
 		expect(request).toHaveBeenCalledWith({
 			source: 'actor',
 			sourceActorId: 'ada',
-			destination: { kind: 'stash' },
+			destination: { kind: 'party' },
 			gp: 4,
 			sp: 0,
 			cp: 3,

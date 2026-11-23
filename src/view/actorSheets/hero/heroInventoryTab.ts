@@ -1,11 +1,10 @@
+import { COIN_ABBREVIATION, COIN_DENOMINATIONS } from '#utils/coins.ts';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { byName } from '../shared/rowOrder.ts';
 import type { ItemLike } from '../shared/sheetSource.ts';
 import type { HeroIntent } from './heroIntent.ts';
 import { type HeroRowGroup, type HeroRowView, itemRow } from './heroRows.ts';
 import type { HeroActorLike, HeroSheetContext } from './heroSource.ts';
-
-const INV = 'NIMBLE.actorSheet.hero.inventory';
 
 /** The Inventory groups in order. Shields go with the armor. */
 const GROUPS: { id: string; types: string[] }[] = [
@@ -14,7 +13,6 @@ const GROUPS: { id: string; types: string[] }[] = [
 	{ id: 'consumable', types: ['consumable'] },
 	{ id: 'misc', types: ['misc'] },
 ];
-const COINS = ['gp', 'sp', 'cp'];
 const EQUIPPABLE = new Set(['weapon', 'armor', 'shield']);
 
 export interface HeroCoinView {
@@ -32,14 +30,14 @@ export interface HeroCurrencyDestination {
 }
 
 export interface HeroInventoryTabView {
-	/** the list is the party stash */
+	/** the list is the party inventory */
 	party: boolean;
 	/** accessible name of the My Inventory / Party Inventory tabs */
 	listsLabel: string;
 	mineLabel: string;
 	partyLabel: string;
 	coins: HeroCoinView[];
-	/** the coin fields do not edit: this user cannot move objects from the stash */
+	/** the coin fields do not edit: this user cannot move objects from the party inventory */
 	coinsLocked: boolean;
 	/** null: this user has nowhere to send the coins on this list */
 	currencyGive: {
@@ -48,7 +46,7 @@ export interface HeroInventoryTabView {
 		move: { label: string; entries: HeroCurrencyDestination[] } | null;
 		give: { label: string; entries: HeroCurrencyDestination[] } | null;
 	} | null;
-	/** null: the hero does not track inventory slots, or the list is the party stash */
+	/** null: the hero does not track inventory slots, or the list is the party inventory */
 	slots: { text: string; label: string; over: string | null } | null;
 	createObject: { label: string; intent: HeroIntent };
 	groups: HeroRowGroup[];
@@ -82,8 +80,8 @@ function canEquip(item: ItemLike): boolean {
 function transferIntent(
 	actor: HeroActorLike,
 	itemId: string,
-	source: 'actor' | 'stash',
-	destination: { kind: 'stash' } | { kind: 'actor'; actorId: string },
+	source: 'actor' | 'party',
+	destination: { kind: 'party' } | { kind: 'actor'; actorId: string },
 ): HeroIntent {
 	return {
 		kind: 'transferObject',
@@ -96,23 +94,23 @@ function transferIntent(
 
 function giveCurrencyIntent(
 	actor: HeroActorLike,
-	source: 'actor' | 'stash',
-	destination: { kind: 'stash' } | { kind: 'actor'; actorId: string },
+	source: 'actor' | 'party',
+	destination: { kind: 'party' } | { kind: 'actor'; actorId: string },
 ): HeroIntent {
 	return { kind: 'giveCurrency', source, sourceActorId: actor.id, destination };
 }
 
-/** A trusted player can send to any character. Anyone can send their own objects to the stash. */
-function canSendToOthers(context: HeroSheetContext, source: 'actor' | 'stash'): boolean {
-	return context.party.canGiveAway && (source === 'stash' || context.party.canGive);
+/** A trusted player can send to any character. Anyone can send their own objects to the party inventory. */
+function canSendToOthers(context: HeroSheetContext, source: 'actor' | 'party'): boolean {
+	return context.party.canGiveAway && (source === 'party' || context.party.canGive);
 }
 
-/** Move to the stash, a container, or back onto this sheet. Give to is the other characters. */
+/** Move to the party inventory, a container, or back onto this sheet. Give to is the other characters. */
 function shareMenu(
 	actor: HeroActorLike,
 	item: ItemLike,
 	context: HeroSheetContext,
-	source: 'actor' | 'stash',
+	source: 'actor' | 'party',
 	containers: ItemLike[],
 ): HeroRowView['share'] {
 	const { localize, format } = context;
@@ -120,15 +118,15 @@ function shareMenu(
 	if (source === 'actor' && context.party.canGive) {
 		moveEntries.push({
 			id: 'party',
-			label: localize(`${INV}.party`),
-			intent: transferIntent(actor, item.id, 'actor', { kind: 'stash' }),
+			label: localize('NIMBLE.actorSheet.hero.inventory.party'),
+			intent: transferIntent(actor, item.id, 'actor', { kind: 'party' }),
 		});
 	}
-	if (source === 'stash' && context.party.canTake) {
+	if (source === 'party' && context.party.canTake) {
 		moveEntries.push({
 			id: 'mine',
-			label: localize(`${INV}.mine`),
-			intent: transferIntent(actor, item.id, 'stash', { kind: 'actor', actorId: actor.id }),
+			label: localize('NIMBLE.actorSheet.hero.inventory.mine'),
+			intent: transferIntent(actor, item.id, 'party', { kind: 'actor', actorId: actor.id }),
 		});
 	}
 	if (source === 'actor' && !isContainer(item)) {
@@ -151,9 +149,13 @@ function shareMenu(
 		: [];
 	if (!moveEntries.length && !giveEntries.length) return undefined;
 	return {
-		label: format(`${INV}.actions`, { name: item.name }),
-		move: moveEntries.length ? { label: localize(`${INV}.moveTo`), entries: moveEntries } : null,
-		give: giveEntries.length ? { label: localize(`${INV}.giveTo`), entries: giveEntries } : null,
+		label: format('NIMBLE.actorSheet.hero.inventory.actions', { name: item.name }),
+		move: moveEntries.length
+			? { label: localize('NIMBLE.actorSheet.hero.inventory.moveTo'), entries: moveEntries }
+			: null,
+		give: giveEntries.length
+			? { label: localize('NIMBLE.actorSheet.hero.inventory.giveTo'), entries: giveEntries }
+			: null,
 	};
 }
 
@@ -177,11 +179,17 @@ function objectRow(
 	if (isContainer(item)) {
 		const { capacity } = containerOf(item);
 		const used = options.party ? 0 : (actor.system.inventory.containerCapacityUsage[item.id] ?? 0);
-		if (!options.stored.length) text = localize(`${INV}.empty`);
+		if (!options.stored.length) text = localize('NIMBLE.actorSheet.hero.inventory.empty');
 		else if (!options.party && typeof capacity === 'number') {
-			text = format(`${INV}.capacity`, { used: String(used), capacity: String(capacity) });
+			text = format('NIMBLE.actorSheet.hero.inventory.capacity', {
+				used: String(used),
+				capacity: String(capacity),
+			});
 			if (used > capacity) {
-				summary = format(`${INV}.overCapacity`, { used: String(used), capacity: String(capacity) });
+				summary = format('NIMBLE.actorSheet.hero.inventory.overCapacity', {
+					used: String(used),
+					capacity: String(capacity),
+				});
 				summaryTone = 'warn';
 			}
 		}
@@ -195,12 +203,14 @@ function objectRow(
 			};
 		}
 	} else if (counted) {
-		if (quantity !== 1) text = format(`${INV}.quantity`, { count: String(quantity) });
-		facts.push([localize(`${INV}.facts.quantity`), String(quantity)]);
+		if (quantity !== 1)
+			text = format('NIMBLE.actorSheet.hero.inventory.quantity', { count: String(quantity) });
+		facts.push([localize('NIMBLE.actorSheet.hero.inventory.facts.quantity'), String(quantity)]);
 	}
 
 	const holder = options.containers.find((container) => container.id === storedIn(item));
-	if (holder) facts.push([localize(`${INV}.facts.storedIn`), holder.name]);
+	if (holder)
+		facts.push([localize('NIMBLE.actorSheet.hero.inventory.facts.storedIn'), holder.name]);
 
 	const others = isContainer(item)
 		? []
@@ -221,10 +231,10 @@ function objectRow(
 		storeIn: others.length
 			? {
 					itemId: item.id,
-					label: format(`${INV}.storeIn`, { name }),
+					label: format('NIMBLE.actorSheet.hero.inventory.storeIn', { name }),
 					value: holder?.id ?? '',
 					options: [
-						{ value: '', label: localize(`${INV}.loose`) },
+						{ value: '', label: localize('NIMBLE.actorSheet.hero.inventory.loose') },
 						...others.map((container) => ({ value: container.id, label: container.name })),
 					],
 				}
@@ -236,15 +246,15 @@ function objectRow(
 					{
 						kind: 'quantity',
 						itemId: item.id,
-						label: format(`${INV}.quantityOf`, { name }),
+						label: format('NIMBLE.actorSheet.hero.inventory.quantityOf', { name }),
 						value: quantity,
 					},
 					...row.fields,
 				]
 			: row.fields,
-		share: shareMenu(actor, item, context, options.party ? 'stash' : 'actor', options.containers),
+		share: shareMenu(actor, item, context, options.party ? 'party' : 'actor', options.containers),
 	};
-	// A stash row is data, not an item on this actor: it cannot be used, equipped, or edited.
+	// A party inventory row is data, not an item on this actor: it cannot be used, equipped, or edited.
 	if (!options.party) return view;
 	return {
 		...view,
@@ -267,27 +277,27 @@ function currencySection(
 	return entries.length ? { label, entries } : null;
 }
 
-/** Coins are one stash per list. Move to is that other stash. Give to is a character. */
+/** Coins belong to the list they are on. Move to sends them to the other list. Give to is a character. */
 function currencyGive(
 	actor: HeroActorLike,
 	context: HeroSheetContext,
 	party: boolean,
 ): HeroInventoryTabView['currencyGive'] {
 	const { localize } = context;
-	const source: 'actor' | 'stash' = party ? 'stash' : 'actor';
+	const source: 'actor' | 'party' = party ? 'party' : 'actor';
 	const moveEntries: HeroCurrencyDestination[] = [];
 	if (!party && context.party.canGive) {
 		moveEntries.push({
 			id: 'party',
-			label: localize(`${INV}.party`),
-			intent: giveCurrencyIntent(actor, 'actor', { kind: 'stash' }),
+			label: localize('NIMBLE.actorSheet.hero.inventory.party'),
+			intent: giveCurrencyIntent(actor, 'actor', { kind: 'party' }),
 		});
 	}
 	if (party && context.party.canTake) {
 		moveEntries.push({
 			id: 'mine',
-			label: localize(`${INV}.mine`),
-			intent: giveCurrencyIntent(actor, 'stash', { kind: 'actor', actorId: actor.id }),
+			label: localize('NIMBLE.actorSheet.hero.inventory.mine'),
+			intent: giveCurrencyIntent(actor, 'party', { kind: 'actor', actorId: actor.id }),
 		});
 	}
 	const giveEntries: HeroCurrencyDestination[] = [];
@@ -295,7 +305,7 @@ function currencyGive(
 		giveEntries.push({
 			id: actor.id,
 			label: actor.name,
-			intent: giveCurrencyIntent(actor, 'stash', { kind: 'actor', actorId: actor.id }),
+			intent: giveCurrencyIntent(actor, 'party', { kind: 'actor', actorId: actor.id }),
 		});
 	}
 	if (canSendToOthers(context, source)) {
@@ -307,10 +317,10 @@ function currencyGive(
 			});
 		}
 	}
-	const move = currencySection(localize(`${INV}.moveTo`), moveEntries);
-	const give = currencySection(localize(`${INV}.giveTo`), giveEntries);
+	const move = currencySection(localize('NIMBLE.actorSheet.hero.inventory.moveTo'), moveEntries);
+	const give = currencySection(localize('NIMBLE.actorSheet.hero.inventory.giveTo'), giveEntries);
 	if (!move && !give) return null;
-	return { label: localize(`${INV}.moveCurrency`), move, give };
+	return { label: localize('NIMBLE.actorSheet.hero.inventory.moveCurrency'), move, give };
 }
 
 /** Groups by object type, A to Z; the objects in a container show under it. */
@@ -356,15 +366,15 @@ export function heroInventoryTab(
 	return {
 		party,
 		listsLabel: localize('NIMBLE.actorSheet.hero.tabs.inventory'),
-		mineLabel: localize(`${INV}.mine`),
-		partyLabel: localize(`${INV}.party`),
+		mineLabel: localize('NIMBLE.actorSheet.hero.inventory.mine'),
+		partyLabel: localize('NIMBLE.actorSheet.hero.inventory.party'),
 		currencyGive: currencyGive(actor, context, party),
-		coins: COINS.map((coin) => {
-			const label = localize(`NIMBLE.currencyAbbreviations.${coin}`);
+		coins: COIN_DENOMINATIONS.map((coin) => {
+			const label = localize(COIN_ABBREVIATION[coin]);
 			return {
 				coin,
 				label,
-				name: format(`${INV}.coin`, { coin: label }),
+				name: format('NIMBLE.actorSheet.hero.inventory.coin', { coin: label }),
 				value: Number(currency[coin] ?? 0),
 			};
 		}),
@@ -373,15 +383,24 @@ export function heroInventoryTab(
 			party || actor.flags.trackInventorySlots === false
 				? null
 				: {
-						text: format(`${INV}.slots`, slotData),
-						label: localize(`${INV}.slotsLabel`),
-						over: usedSlots > totalSlots ? format(`${INV}.overSlots`, slotData) : null,
+						text: format('NIMBLE.actorSheet.hero.inventory.slots', slotData),
+						label: localize('NIMBLE.actorSheet.hero.inventory.slotsLabel'),
+						over:
+							usedSlots > totalSlots
+								? format('NIMBLE.actorSheet.hero.inventory.overSlots', slotData)
+								: null,
 					},
 		createObject: {
-			label: localize(`${INV}.create`),
+			label: localize('NIMBLE.actorSheet.hero.inventory.create'),
 			intent: { kind: 'createItem', itemType: 'object' },
 		},
 		groups,
-		empty: objects.length ? null : localize(party ? `${INV}.partyEmpty` : `${INV}.none`),
+		empty: objects.length
+			? null
+			: localize(
+					party
+						? 'NIMBLE.actorSheet.hero.inventory.partyEmpty'
+						: 'NIMBLE.actorSheet.hero.inventory.none',
+				),
 	};
 }

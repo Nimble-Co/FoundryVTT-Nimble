@@ -71,16 +71,16 @@ export type HeroIntent =
 	| {
 			kind: 'transferObject';
 			itemId: string;
-			source: 'actor' | 'stash';
+			source: 'actor' | 'party';
 			sourceActorId: string;
-			destination: { kind: 'stash' } | { kind: 'actor'; actorId: string };
+			destination: { kind: 'party' } | { kind: 'actor'; actorId: string };
 	  }
 	| { kind: 'setPartyCurrency'; coin: string; value: number }
 	| {
 			kind: 'giveCurrency';
-			source: 'actor' | 'stash';
+			source: 'actor' | 'party';
 			sourceActorId: string;
-			destination: { kind: 'stash' } | { kind: 'actor'; actorId: string };
+			destination: { kind: 'party' } | { kind: 'actor'; actorId: string };
 	  }
 	| { kind: 'setDetail'; detail: HeroDetail; value: string }
 	| { kind: 'setField'; field: HeroSettingsField; value: number | string | boolean | null }

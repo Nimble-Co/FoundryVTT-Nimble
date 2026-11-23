@@ -184,7 +184,7 @@ export interface HeroSheetContext {
 	enrichedNotes: string;
 	/** by item id, the description as Foundry enriches it; only rows that are open have one */
 	enrichedDescriptions: Record<string, string>;
-	/** the party's shared stash, and who this user may move objects for */
+	/** the party's shared inventory, and who this user may move objects for */
 	party: {
 		currency: Record<string, number>;
 		items: ItemLike[];
@@ -192,7 +192,7 @@ export interface HeroSheetContext {
 		characters: { id: string; name: string }[];
 		/** this user may move objects off the character whose sheet is open */
 		canGive: boolean;
-		/** this user may move objects that are in the party stash onto this character */
+		/** this user may move objects that are in the party inventory onto this character */
 		canTake: boolean;
 		/** a trusted player may send objects and coins to any character */
 		canGiveAway: boolean;

@@ -1,8 +1,8 @@
+import { COIN_ABBREVIATION, COIN_DENOMINATIONS } from '#utils/coins.ts';
 import type { MonsterIntent, MonsterSettingsFlag } from './monsterIntent.ts';
 import type { MonsterActorLike, MonsterSheetContext } from './monsterSource.ts';
 
 const SET = 'NIMBLE.actorSheet.monster.settings';
-const COINS = ['gp', 'sp', 'cp'];
 
 /** The intent that saves a new value of a setting. */
 type SetIntent<T> = (value: T) => MonsterIntent;
@@ -117,11 +117,11 @@ export function monsterSettingsTab(
 			{
 				...group(
 					'coins',
-					COINS.map((coin) => ({
+					COIN_DENOMINATIONS.map((coin) => ({
 						kind: 'number',
 						id: `coin-${coin}`,
 						label: format(`${SET}.coin`, {
-							coin: localize(`NIMBLE.currencyAbbreviations.${coin}`),
+							coin: localize(COIN_ABBREVIATION[coin]),
 						}),
 						value: Number(system.currency[coin] ?? 0),
 						min: 0,

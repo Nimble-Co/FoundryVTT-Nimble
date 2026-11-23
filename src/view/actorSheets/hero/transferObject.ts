@@ -1,11 +1,10 @@
 import type { NimbleCharacter } from '#documents/actor/character.js';
+import { readPartyInventory } from '#documents/actor/partyInventoryHolder.js';
 import localize from '#utils/localize.ts';
-import { requestItemTransfer } from '#utils/partyStash/requestItemTransfer.ts';
+import { requestItemTransfer } from '#utils/partyInventory/requestItemTransfer.ts';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
-import { readPartyStash } from '../../../settings/partyStashSetting.ts';
+import { bindQuantityAmountSlider, quantityAmountDialog } from './amountDialog.ts';
 import type { HeroIntent } from './heroIntent.ts';
-
-const INV = 'NIMBLE.actorSheet.hero.inventory';
 
 type TransferIntent = Extract<HeroIntent, { kind: 'transferObject' }>;
 
@@ -43,7 +42,7 @@ function heldOf(
 		if (!item || item.type !== 'object') return null;
 		return { name: item.name, system: item.system as unknown as Record<string, unknown> };
 	}
-	const stored = readPartyStash().items.find((item) => item._id === intent.itemId);
+	const stored = readPartyInventory().items.find((item) => item._id === intent.itemId);
 	if (!stored) return null;
 	return {
 		name: typeof stored.name === 'string' ? stored.name : '',
@@ -51,58 +50,24 @@ function heldOf(
 	};
 }
 
-function clampQuantity(raw: string, have: number): number {
-	const value = Math.floor(Number(raw));
-	if (!Number.isFinite(value)) return 1;
-	return Math.min(have, Math.max(1, value));
-}
-
-/** The number and the slider show the same amount. Dragging jumps, typing sets the slider. */
-function bindQuantitySlider(root: ParentNode, have: number): void {
-	const amount = root.querySelector<HTMLInputElement>('input[name="quantity"]');
-	const slider = root.querySelector<HTMLInputElement>('input[data-quantity-slider]');
-	if (!amount || !slider) return;
-	slider.addEventListener('input', () => {
-		amount.value = String(clampQuantity(slider.value, have));
-	});
-	amount.addEventListener('input', () => {
-		const value = Math.floor(Number(amount.value));
-		if (!Number.isFinite(value)) return;
-		slider.value = String(Math.min(have, Math.max(1, value)));
-	});
-	amount.addEventListener('change', () => {
-		const next = clampQuantity(amount.value, have);
-		amount.value = String(next);
-		slider.value = String(next);
-	});
-}
-
-function quantityDialogContent(question: string, have: number): string {
-	return `<div class="nimble-how-many" style="display:flex;flex-direction:column;gap:10px;min-width:16rem">
-		<label id="nimble-how-many-label" for="nimble-how-many-amount">${question}</label>
-		<input type="range" data-quantity-slider min="1" max="${have}" step="1" value="${have}" aria-labelledby="nimble-how-many-label" style="width:100%">
-		<input id="nimble-how-many-amount" type="number" name="quantity" min="1" max="${have}" step="1" value="${have}" style="width:6rem">
-	</div>`;
-}
-
 async function askQuantity(
 	name: string,
 	have: number,
 	equippedNote: string | null,
 ): Promise<number | null> {
-	const question = localize(`${INV}.howMany`, { name: escapeHtml(name) });
+	const question = localize('NIMBLE.actorSheet.hero.inventory.howMany', { name: escapeHtml(name) });
 	const note = equippedNote ? `<p>${equippedNote}</p>` : '';
 	const chosen = (await foundry.applications.api.DialogV2.wait({
 		window: {
 			title: equippedNote
-				? localize(`${INV}.unequipToGiveTitle`, { name })
-				: localize(`${INV}.howManyTitle`),
+				? localize('NIMBLE.actorSheet.hero.inventory.unequipToGiveTitle', { name })
+				: localize('NIMBLE.actorSheet.hero.inventory.howManyTitle'),
 		},
-		content: `${note}${quantityDialogContent(question, have)}`,
+		content: `${note}${quantityAmountDialog(question, have)}`,
 		buttons: [
 			{
 				action: 'move',
-				label: localize(`${INV}.howManyConfirm`),
+				label: localize('NIMBLE.actorSheet.hero.inventory.howManyConfirm'),
 				default: true,
 				callback: (_event: Event, button: HTMLButtonElement) => {
 					const field = button.form?.elements.namedItem('quantity') as { value?: string } | null;
@@ -111,7 +76,7 @@ async function askQuantity(
 			},
 		],
 		render: (_event: Event, dialog: { element: ParentNode }) => {
-			bindQuantitySlider(dialog.element, have);
+			bindQuantityAmountSlider(dialog.element, have);
 		},
 		rejectClose: false,
 		modal: true,
@@ -133,12 +98,12 @@ function destinationPhrase(
 	actor: NimbleCharacter,
 	destination: TransferIntent['destination'],
 ): string {
-	if (destination.kind === 'stash') return localize(`${INV}.partyName`);
+	if (destination.kind === 'party') return localize('NIMBLE.actorSheet.hero.inventory.partyName');
 	const name =
 		actorName(destination.actorId) ||
 		(destination.actorId === actor.id ? actor.name : '') ||
 		destination.actorId;
-	return localize(`${INV}.namedInventory`, { name: escapeHtml(name) });
+	return localize('NIMBLE.actorSheet.hero.inventory.namedInventory', { name: escapeHtml(name) });
 }
 
 async function confirmText(title: string, body: string): Promise<boolean> {
@@ -165,21 +130,27 @@ export async function transferObject(
 	const equipped = held.system.equipped === true;
 	const destination = destinationPhrase(actor, intent.destination);
 	const equippedNote = equipped
-		? localize(`${INV}.unequipToGive`, { name: escapeHtml(held.name), destination })
+		? localize('NIMBLE.actorSheet.hero.inventory.unequipToGive', {
+				name: escapeHtml(held.name),
+				destination,
+			})
 		: null;
 	let quantity: number | null = have;
 	if (!container && carriesQuantity(held.system) && have > 1) {
 		quantity = await askQuantity(held.name, have, equippedNote);
 	} else if (equippedNote) {
 		const accepted = await confirmText(
-			localize(`${INV}.unequipToGiveTitle`, { name: held.name }),
+			localize('NIMBLE.actorSheet.hero.inventory.unequipToGiveTitle', { name: held.name }),
 			equippedNote,
 		);
 		quantity = accepted ? have : null;
 	} else {
 		const accepted = await confirmText(
-			localize(`${INV}.moveConfirmTitle`, { name: held.name }),
-			localize(`${INV}.moveConfirm`, { name: escapeHtml(held.name), destination }),
+			localize('NIMBLE.actorSheet.hero.inventory.moveConfirmTitle', { name: held.name }),
+			localize('NIMBLE.actorSheet.hero.inventory.moveConfirm', {
+				name: escapeHtml(held.name),
+				destination,
+			}),
 		);
 		quantity = accepted ? have : null;
 	}

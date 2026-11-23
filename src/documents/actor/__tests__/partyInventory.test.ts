@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PARTY_INVENTORY_NAME } from '../../../settings/partyStashSetting.ts';
 import { NimblePartyInventory } from '../partyInventory.ts';
+import { partyInventoryStoredName } from '../partyInventoryHolder.ts';
 
 describe('NimblePartyInventory', () => {
 	function actor(): NimblePartyInventory {
@@ -35,8 +35,8 @@ describe('NimblePartyInventory', () => {
 		expect(await deleting._preDelete({}, {})).toBe(false);
 	});
 
-	it('is named Party Inventory', () => {
-		expect(PARTY_INVENTORY_NAME).toBe('Party Inventory');
+	it('is named Party Inventory in English', () => {
+		expect(partyInventoryStoredName()).toBe('Party Inventory');
 	});
 
 	it('keeps the party name when a rename comes in, and leaves the image alone', async () => {
@@ -52,7 +52,28 @@ describe('NimblePartyInventory', () => {
 		} finally {
 			parent._preUpdate = original;
 		}
-		expect(changes.name).toBe(PARTY_INVENTORY_NAME);
+		expect(changes.name).toBe('Party Inventory');
 		expect(changes.img).toBe('icons/svg/mystery-man.svg');
+	});
+
+	it('stores the name in the language of the client that saves it', async () => {
+		const i18n = game.i18n as { localize: (key: string) => string };
+		const original = i18n.localize;
+		i18n.localize = (key: string) =>
+			key === 'NIMBLE.actorSheet.hero.inventory.party' ? 'Inventaire' : original(key);
+		const inventory = actor();
+		const parent = Object.getPrototypeOf(NimblePartyInventory.prototype) as {
+			_preUpdate?: (...args: unknown[]) => Promise<unknown>;
+		};
+		const originalUpdate = parent._preUpdate;
+		parent._preUpdate = async () => true;
+		const changes = { name: 'Goblin' };
+		try {
+			await inventory._preUpdate(changes as never, {} as never, {} as never);
+		} finally {
+			parent._preUpdate = originalUpdate;
+			i18n.localize = original;
+		}
+		expect(changes.name).toBe('Inventaire');
 	});
 });

@@ -20,7 +20,7 @@ export interface SheetUiState {
 	choiceStep: string | null;
 	/** id of the ConfirmBar that asks now */
 	confirm: string | null;
-	/** the Inventory tab is showing the party stash */
+	/** the Inventory tab is showing the party inventory */
 	partyInventory: boolean;
 	/** id of the row whose move menu is open */
 	menuRowId: string | null;

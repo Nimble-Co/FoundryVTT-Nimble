@@ -206,14 +206,14 @@ describe('mayTransferItem', () => {
 			mayTransferItem({
 				...player,
 				source: 'actor',
-				destination: 'stash',
+				destination: 'party',
 				ownsSource: true,
 			}),
 		).toBe(true);
 		expect(
 			mayTransferItem({
 				...player,
-				source: 'stash',
+				source: 'party',
 				destination: 'actor',
 				ownsDestination: true,
 			}),
@@ -222,7 +222,7 @@ describe('mayTransferItem', () => {
 			mayTransferItem({
 				...player,
 				source: 'actor',
-				destination: 'stash',
+				destination: 'party',
 			}),
 		).toBe(false);
 		expect(
@@ -235,7 +235,7 @@ describe('mayTransferItem', () => {
 		).toBe(false);
 	});
 
-	it('lets a trusted player send objects to any character, from their own inventory or the stash', () => {
+	it('lets a trusted player send objects to any character, from their own inventory or the party inventory', () => {
 		expect(
 			mayTransferItem({
 				...player,
@@ -249,7 +249,7 @@ describe('mayTransferItem', () => {
 			mayTransferItem({
 				...player,
 				trusted: true,
-				source: 'stash',
+				source: 'party',
 				destination: 'actor',
 			}),
 		).toBe(true);

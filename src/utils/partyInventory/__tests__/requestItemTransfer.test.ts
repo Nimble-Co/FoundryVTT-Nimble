@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-	registerPartyStashSocketListener,
+	registerPartyInventorySocketListener,
 	requestCurrencyTransfer,
 	requestItemTransfer,
 	requestPartyCurrency,
@@ -76,11 +76,11 @@ const socket = {
 };
 
 let listener: ((payload: unknown) => void) | undefined;
-let stash = { currency: { gp: 0, sp: 0, cp: 0 }, items: [] as ItemData[] };
+let inventory = { currency: { gp: 0, sp: 0, cp: 0 }, items: [] as ItemData[] };
 const settings = {
-	get: () => structuredClone(stash),
-	set: vi.fn(async (_scope: string, _key: string, value: typeof stash) => {
-		stash = value;
+	get: () => structuredClone(inventory),
+	set: vi.fn(async (_scope: string, _key: string, value: typeof inventory) => {
+		inventory = value;
 	}),
 };
 
@@ -89,7 +89,7 @@ const saved: Record<string, unknown> = {};
 let originalCreate: typeof ChatMessage.create | undefined;
 
 beforeEach(() => {
-	stash = { currency: { gp: 0, sp: 0, cp: 0 }, items: [] };
+	inventory = { currency: { gp: 0, sp: 0, cp: 0 }, items: [] };
 	settings.set.mockClear();
 	socket.emit.mockClear();
 	vi.mocked(ui.notifications.warn).mockClear();
@@ -100,7 +100,7 @@ beforeEach(() => {
 		listener = callback;
 	});
 	gameRecord().socket = socket;
-	registerPartyStashSocketListener();
+	registerPartyInventorySocketListener();
 	originalCreate ??= ChatMessage.create;
 	ChatMessage.create = vi.fn(async () => undefined) as typeof ChatMessage.create;
 });
@@ -138,8 +138,8 @@ describe('requestItemTransfer', () => {
 			listener = callback;
 		});
 		gameRecord().socket = socket;
-		registerPartyStashSocketListener();
-		registerPartyStashSocketListener();
+		registerPartyInventorySocketListener();
+		registerPartyInventorySocketListener();
 		expect(socket.on).toHaveBeenCalledTimes(1);
 	});
 
@@ -316,16 +316,16 @@ describe('requestItemTransfer', () => {
 		);
 	});
 
-	it('takes an object out of the stash for a player who owns a character', async () => {
-		stash.items = [{ _id: 'gem', name: 'Gem', type: 'object', system: { quantity: 1 } }];
+	it('takes an object out of the party inventory for a player who owns a character', async () => {
+		inventory.items = [{ _id: 'gem', name: 'Gem', type: 'object', system: { quantity: 1 } }];
 		const ada = character('ada', 'Ada', [], true);
 		useWorld('gm', 'gm', [ada]);
 
 		listener?.({
-			type: 'partyStash',
+			type: 'partyInventory',
 			op: 'move',
 			userId: 'ada',
-			source: 'stash',
+			source: 'party',
 			sourceActorId: 'ada',
 			itemId: 'gem',
 			quantity: 1,
@@ -333,7 +333,7 @@ describe('requestItemTransfer', () => {
 		});
 		await vi.waitFor(() => expect(ada.createEmbeddedDocuments).toHaveBeenCalled());
 
-		expect(stash.items).toEqual([]);
+		expect(inventory.items).toEqual([]);
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				user: 'ada',
@@ -342,8 +342,8 @@ describe('requestItemTransfer', () => {
 		);
 	});
 
-	it('says a partial take from the stash moved that many', async () => {
-		stash.items = [
+	it('says a partial take from the party inventory moved that many', async () => {
+		inventory.items = [
 			{
 				_id: 'torch',
 				name: 'Torch',
@@ -355,10 +355,10 @@ describe('requestItemTransfer', () => {
 		useWorld('gm', 'gm', [ada]);
 
 		listener?.({
-			type: 'partyStash',
+			type: 'partyInventory',
 			op: 'move',
 			userId: 'ada',
-			source: 'stash',
+			source: 'party',
 			sourceActorId: 'ada',
 			itemId: 'torch',
 			quantity: 2,
@@ -380,7 +380,7 @@ describe('requestItemTransfer', () => {
 		useWorld('gm', 'gm', [ada, bob]);
 
 		listener?.({
-			type: 'partyStash',
+			type: 'partyInventory',
 			op: 'move',
 			userId: 'spy',
 			source: 'actor',
@@ -418,7 +418,7 @@ describe('requestItemTransfer', () => {
 
 		await expect(
 			requestItemTransfer({
-				source: 'stash',
+				source: 'party',
 				sourceActorId: 'ada',
 				itemId: 'gem',
 				quantity: 1,
@@ -428,7 +428,7 @@ describe('requestItemTransfer', () => {
 
 		expect(socket.emit).toHaveBeenCalledWith(
 			expect.stringContaining('system.'),
-			expect.objectContaining({ type: 'partyStash', op: 'move', userId: 'ada' }),
+			expect.objectContaining({ type: 'partyInventory', op: 'move', userId: 'ada' }),
 		);
 	});
 
@@ -443,7 +443,7 @@ describe('requestItemTransfer', () => {
 				sourceActorId: 'ada',
 				itemId: 'torch',
 				quantity: 1,
-				destination: { kind: 'stash' },
+				destination: { kind: 'party' },
 			}),
 		).resolves.toBe(false);
 
@@ -460,12 +460,12 @@ describe('requestItemTransfer', () => {
 			type: 'npc',
 			testUserPermission: () => true,
 			getFlag: (_scope: string, key: string) => {
-				if (key === 'partyStashHolder') return true;
-				if (key === 'partyStash') return stash;
+				if (key === 'partyInventoryHolder') return true;
+				if (key === 'partyInventory') return inventory;
 				return undefined;
 			},
-			setFlag: vi.fn(async (_scope: string, key: string, value: typeof stash) => {
-				if (key === 'partyStash') stash = value;
+			setFlag: vi.fn(async (_scope: string, key: string, value: typeof inventory) => {
+				if (key === 'partyInventory') inventory = value;
 			}),
 			items: { get: () => undefined, [Symbol.iterator]: () => [].values() },
 			createEmbeddedDocuments: vi.fn(async () => undefined),
@@ -479,14 +479,14 @@ describe('requestItemTransfer', () => {
 				sourceActorId: 'ada',
 				itemId: 'torch',
 				quantity: 1,
-				destination: { kind: 'stash' },
+				destination: { kind: 'party' },
 			}),
 		).resolves.toBe(true);
 
 		expect(socket.emit).not.toHaveBeenCalled();
 		expect(ui.notifications.warn).not.toHaveBeenCalled();
 		expect(ada.deleteEmbeddedDocuments).toHaveBeenCalledWith('Item', ['torch']);
-		expect(stash.items.map((item) => item._id)).toEqual(['torch']);
+		expect(inventory.items.map((item) => item._id)).toEqual(['torch']);
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({
 				user: 'ada',
@@ -537,12 +537,12 @@ describe('requestCurrencyTransfer', () => {
 			type: 'npc',
 			testUserPermission: () => true,
 			getFlag: (_scope: string, key: string) => {
-				if (key === 'partyStashHolder') return true;
-				if (key === 'partyStash') return stash;
+				if (key === 'partyInventoryHolder') return true;
+				if (key === 'partyInventory') return inventory;
 				return undefined;
 			},
-			setFlag: vi.fn(async (_scope: string, key: string, value: typeof stash) => {
-				if (key === 'partyStash') stash = value;
+			setFlag: vi.fn(async (_scope: string, key: string, value: typeof inventory) => {
+				if (key === 'partyInventory') inventory = value;
 			}),
 			items: { get: () => undefined, [Symbol.iterator]: () => [].values() },
 			createEmbeddedDocuments: vi.fn(async () => undefined),
@@ -559,7 +559,7 @@ describe('requestCurrencyTransfer', () => {
 			requestCurrencyTransfer({
 				source: 'actor',
 				sourceActorId: 'ada',
-				destination: { kind: 'stash' },
+				destination: { kind: 'party' },
 				gp: 4,
 				sp: 0,
 				cp: 9,
@@ -568,10 +568,10 @@ describe('requestCurrencyTransfer', () => {
 
 		expect(socket.emit).not.toHaveBeenCalled();
 		expect(ada.system.currency).toEqual({ gp: 6, sp: 1, cp: 0 });
-		expect(stash.currency).toEqual({ gp: 4, sp: 0, cp: 0 });
+		expect(inventory.currency).toEqual({ gp: 4, sp: 0, cp: 0 });
 	});
 
-	it('says a stash coin move was moved, using the localized denomination', async () => {
+	it('says a party inventory coin move was moved, using the localized denomination', async () => {
 		const ada = character('ada', 'Ada', [], true, { gp: 10, sp: 2, cp: 0 });
 		const party = partyHolder();
 		useWorld('ada', null, [ada, party as unknown as ReturnType<typeof character>]);
@@ -588,7 +588,7 @@ describe('requestCurrencyTransfer', () => {
 			await requestCurrencyTransfer({
 				source: 'actor',
 				sourceActorId: 'ada',
-				destination: { kind: 'stash' },
+				destination: { kind: 'party' },
 				gp: 4,
 				sp: 2,
 				cp: 0,
@@ -643,20 +643,20 @@ describe('requestCurrencyTransfer', () => {
 });
 
 describe('requestPartyCurrency', () => {
-	it('sets one coin for someone who can take from the stash, and ignores anyone else', async () => {
+	it('sets one coin for someone who can take from the party inventory, and ignores anyone else', async () => {
 		const ada = character('ada', 'Ada', [], true);
 		useWorld('gm', 'gm', [ada]);
 
-		listener?.({ type: 'partyStash', op: 'currency', userId: 'ada', coin: 'gp', value: 9 });
-		await vi.waitFor(() => expect(stash.currency.gp).toBe(9));
+		listener?.({ type: 'partyInventory', op: 'currency', userId: 'ada', coin: 'gp', value: 9 });
+		await vi.waitFor(() => expect(inventory.currency.gp).toBe(9));
 
 		settings.set.mockClear();
-		listener?.({ type: 'partyStash', op: 'currency', userId: 'spy', coin: 'gp', value: 1 });
+		listener?.({ type: 'partyInventory', op: 'currency', userId: 'spy', coin: 'gp', value: 1 });
 		await new Promise((resolve) => setTimeout(resolve, 0));
-		expect(stash.currency.gp).toBe(9);
+		expect(inventory.currency.gp).toBe(9);
 		expect(settings.set).not.toHaveBeenCalled();
 
 		await requestPartyCurrency('sp', 4);
-		expect(stash.currency.sp).toBe(4);
+		expect(inventory.currency.sp).toBe(4);
 	});
 });

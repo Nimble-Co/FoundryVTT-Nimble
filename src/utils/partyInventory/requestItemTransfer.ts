@@ -1,14 +1,13 @@
 import { SYSTEM_ID } from '#system';
+import { COIN_ABBREVIATION, COIN_DENOMINATIONS, isCoinDenomination } from '#utils/coins.ts';
 import { isActiveGM } from '#utils/isActiveGM.ts';
 import localize from '#utils/localize.ts';
 import {
-	canWritePartyStash,
-	type PartyCurrency,
-	type PartyStash,
-	partyCoin,
-	readPartyStash,
-	writePartyStash,
-} from '../../settings/partyStashSetting.ts';
+	canWritePartyInventory,
+	readPartyInventory,
+	writePartyInventory,
+} from '../../documents/actor/partyInventoryHolder.ts';
+import type { PartyCurrency, PartyInventory } from '../../settings/partyInventorySetting.ts';
 import {
 	type ItemTransferPlan,
 	isTrustedPlayer,
@@ -18,12 +17,12 @@ import {
 } from './planItemTransfer.ts';
 
 const SOCKET_NAME = `system.${SYSTEM_ID}`;
-const REQUEST_TYPE = 'partyStash';
+const REQUEST_TYPE = 'partyInventory';
 
-export type TransferSource = 'actor' | 'stash';
+export type TransferSource = 'actor' | 'party';
 
 export interface TransferDestination {
-	kind: 'actor' | 'stash';
+	kind: 'actor' | 'party';
 	actorId?: string;
 }
 
@@ -35,13 +34,13 @@ export interface ItemTransferRequest {
 	destination: TransferDestination;
 }
 
-interface PartyStashMoveMessage extends ItemTransferRequest {
+interface PartyInventoryMoveMessage extends ItemTransferRequest {
 	type: typeof REQUEST_TYPE;
 	op: 'move';
 	userId: string;
 }
 
-interface PartyStashCoinMessage {
+interface PartyInventoryCoinMessage {
 	type: typeof REQUEST_TYPE;
 	op: 'currency';
 	userId: string;
@@ -58,20 +57,20 @@ export interface CurrencyTransferRequest {
 	cp: number;
 }
 
-interface PartyStashCoinsMessage extends CurrencyTransferRequest {
+interface PartyInventoryCoinsMessage extends CurrencyTransferRequest {
 	type: typeof REQUEST_TYPE;
 	op: 'giveCurrency';
 	userId: string;
 }
 
 /** The destination character creates the objects, then the sender removes them. */
-interface PartyStashReceiveMessage extends ItemTransferRequest {
+interface PartyInventoryReceiveMessage extends ItemTransferRequest {
 	type: typeof REQUEST_TYPE;
 	op: 'receive';
 	userId: string;
 }
 
-interface PartyStashReleaseMessage {
+interface PartyInventoryReleaseMessage {
 	type: typeof REQUEST_TYPE;
 	op: 'release';
 	userId: string;
@@ -81,19 +80,19 @@ interface PartyStashReleaseMessage {
 }
 
 /** The sender already subtracted these coins. The destination adds them. */
-interface PartyStashReceiveCurrencyMessage extends CurrencyTransferRequest {
+interface PartyInventoryReceiveCurrencyMessage extends CurrencyTransferRequest {
 	type: typeof REQUEST_TYPE;
 	op: 'receiveCurrency';
 	userId: string;
 }
 
 type PartyMessage =
-	| PartyStashMoveMessage
-	| PartyStashCoinMessage
-	| PartyStashCoinsMessage
-	| PartyStashReceiveMessage
-	| PartyStashReleaseMessage
-	| PartyStashReceiveCurrencyMessage;
+	| PartyInventoryMoveMessage
+	| PartyInventoryCoinMessage
+	| PartyInventoryCoinsMessage
+	| PartyInventoryReceiveMessage
+	| PartyInventoryReleaseMessage
+	| PartyInventoryReceiveCurrencyMessage;
 
 interface HeldItem {
 	toObject(): TransferItem;
@@ -116,7 +115,7 @@ interface HeldActor {
 	deleteEmbeddedDocuments(name: string, ids: string[]): Promise<unknown>;
 }
 
-interface StashUser {
+interface TransferUser {
 	id?: string;
 	name?: string | null;
 	isGM: boolean;
@@ -133,8 +132,8 @@ function getSocket():
 	return game.socket as ReturnType<typeof getSocket>;
 }
 
-function userById(userId: string): StashUser | null {
-	const users = game.users as unknown as { get?: (id: string) => StashUser | null };
+function userById(userId: string): TransferUser | null {
+	const users = game.users as unknown as { get?: (id: string) => TransferUser | null };
 	return users.get?.(userId) ?? null;
 }
 
@@ -143,13 +142,13 @@ function actorById(actorId: string): HeldActor | null {
 	return actors.get?.(actorId) ?? null;
 }
 
-function ownsActor(actor: HeldActor, user: StashUser): boolean {
+function ownsActor(actor: HeldActor, user: TransferUser): boolean {
 	if (user.isGM) return true;
 	const level = CONST.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
 	return Boolean(actor.testUserPermission?.(user, level));
 }
 
-function ownsACharacter(user: StashUser): boolean {
+function ownsACharacter(user: TransferUser): boolean {
 	if (user.isGM) return true;
 	const actors = game.actors as Iterable<HeldActor> | undefined;
 	if (!actors) return false;
@@ -264,14 +263,14 @@ async function applyPlanToActor(
 	return true;
 }
 
-function applyPlanToStash(
-	stash: PartyStash,
+function applyPlanToInventory(
+	inventory: PartyInventory,
 	plan: ItemTransferPlan,
 	side: 'source' | 'destination',
 ): void {
 	if (side === 'source') {
 		const remove = new Set(plan.removeIds);
-		stash.items = stash.items.flatMap((item) => {
+		inventory.items = inventory.items.flatMap((item) => {
 			if (remove.has(item._id)) return [];
 			if (plan.sourceQuantity && item._id === plan.sourceQuantity.id) {
 				return [{ ...item, system: { ...item.system, quantity: plan.sourceQuantity.quantity } }];
@@ -282,53 +281,50 @@ function applyPlanToStash(
 	}
 
 	if (plan.merge) {
-		stash.items = stash.items.map((item) => {
+		inventory.items = inventory.items.map((item) => {
 			if (item._id !== plan.merge?.id) return item;
 			const current = Math.floor(Number(item.system?.quantity ?? 1));
 			const quantity = (Number.isFinite(current) && current > 0 ? current : 1) + plan.merge.add;
 			return { ...item, system: { ...item.system, quantity } };
 		});
 	}
-	stash.items = [...stash.items, ...plan.add];
+	inventory.items = [...inventory.items, ...plan.add];
 }
 
-function itemTransferChatKey(stashMove: boolean, moved: number): string {
-	if (stashMove && moved === 1) return 'NIMBLE.actorSheet.hero.inventory.moved';
-	if (stashMove) return 'NIMBLE.actorSheet.hero.inventory.movedCount';
+function itemTransferChatKey(partyMove: boolean, moved: number): string {
+	if (partyMove && moved === 1) return 'NIMBLE.actorSheet.hero.inventory.moved';
+	if (partyMove) return 'NIMBLE.actorSheet.hero.inventory.movedCount';
 	if (moved === 1) return 'NIMBLE.actorSheet.hero.inventory.gave';
 	return 'NIMBLE.actorSheet.hero.inventory.gaveCount';
 }
 
-function coinTransferChatKey(stashMove: boolean): string {
-	if (stashMove) return 'NIMBLE.actorSheet.hero.inventory.movedCoins';
+function coinTransferChatKey(partyMove: boolean): string {
+	if (partyMove) return 'NIMBLE.actorSheet.hero.inventory.movedCoins';
 	return 'NIMBLE.actorSheet.hero.inventory.gaveCoins';
 }
 
 function formatCoinAmount(spent: PartyCurrency): string {
-	const parts = (['gp', 'sp', 'cp'] as const)
-		.filter((coin) => spent[coin] > 0)
-		.map((coin) => `${spent[coin]} ${localize(`NIMBLE.currencyAbbreviations.${coin}`)}`);
+	const parts = COIN_DENOMINATIONS.filter((coin) => spent[coin] > 0).map(
+		(coin) => `${spent[coin]} ${localize(COIN_ABBREVIATION[coin])}`,
+	);
 	return new Intl.ListFormat(game.i18n.lang || 'en', { style: 'short', type: 'unit' }).format(
 		parts,
 	);
 }
 
-async function postChat(
-	user: StashUser,
-	plan: ItemTransferPlan,
-	destination: string,
-	stashMove: boolean,
+async function postTransferChat(
+	user: TransferUser,
+	key: string,
+	fields: Record<string, string>,
 ): Promise<void> {
-	const content = `<p>${localize(itemTransferChatKey(stashMove, plan.moved), {
+	const data: Record<string, string> = {
 		user: escapeHtml(user.name || localize('NIMBLE.actorSheet.hero.inventory.someone')),
-		item: escapeHtml(plan.name),
-		destination: escapeHtml(destination),
-		count: String(plan.moved),
-	})}</p>`;
+	};
+	for (const [name, value] of Object.entries(fields)) data[name] = escapeHtml(value);
 	await ChatMessage.create({
 		user: user.id,
 		speaker: { alias: user.name ?? '' },
-		content,
+		content: `<p>${localize(key, data)}</p>`,
 	} as ChatMessage.CreateData);
 }
 
@@ -343,16 +339,16 @@ async function applyMove(userId: string, request: ItemTransferRequest): Promise<
 			? actorById(request.destination.actorId)
 			: null;
 	if (request.destination.kind === 'actor' && !destinationActor) return;
-	if (request.source === 'stash' && request.destination.kind === 'stash') return;
+	if (request.source === 'party' && request.destination.kind === 'party') return;
 	if (request.source === 'actor' && destinationActor && sourceActor?.id === destinationActor.id) {
 		return;
 	}
 
 	if (!senderMayMove(user, request, sourceActor, destinationActor)) return;
 
-	const stash = readPartyStash();
-	const sourceItems = sourceActor ? itemsOf(sourceActor) : stash.items;
-	const destinationItems = destinationActor ? itemsOf(destinationActor) : stash.items;
+	const inventory = readPartyInventory();
+	const sourceItems = sourceActor ? itemsOf(sourceActor) : inventory.items;
+	const destinationItems = destinationActor ? itemsOf(destinationActor) : inventory.items;
 	const plan = planItemTransfer(
 		sourceItems,
 		destinationItems,
@@ -361,26 +357,34 @@ async function applyMove(userId: string, request: ItemTransferRequest): Promise<
 	);
 	if (!plan) return;
 
-	const stashTouched = request.source === 'stash' || request.destination.kind === 'stash';
-	const nextStash: PartyStash = { currency: { ...stash.currency }, items: [...stash.items] };
-	if (request.destination.kind === 'stash') applyPlanToStash(nextStash, plan, 'destination');
+	const inventoryTouched = request.source === 'party' || request.destination.kind === 'party';
+	const nextInventory: PartyInventory = {
+		currency: { ...inventory.currency },
+		items: [...inventory.items],
+	};
+	if (request.destination.kind === 'party')
+		applyPlanToInventory(nextInventory, plan, 'destination');
 	if (destinationActor) {
 		const landed = await applyPlanToActor(destinationActor, plan, 'destination');
 		if (!landed) return;
 	}
-	if (request.source === 'stash') applyPlanToStash(nextStash, plan, 'source');
+	if (request.source === 'party') applyPlanToInventory(nextInventory, plan, 'source');
 	if (sourceActor) await applyPlanToActor(sourceActor, plan, 'source');
-	if (stashTouched) await writePartyStash(nextStash);
+	if (inventoryTouched) await writePartyInventory(nextInventory);
 
 	const destinationName =
-		request.destination.kind === 'stash'
+		request.destination.kind === 'party'
 			? localize('NIMBLE.actorSheet.hero.inventory.partyName')
 			: (destinationActor?.name ?? '');
-	await postChat(user, plan, destinationName, stashTouched);
+	await postTransferChat(user, itemTransferChatKey(inventoryTouched, plan.moved), {
+		item: plan.name,
+		destination: destinationName,
+		count: String(plan.moved),
+	});
 }
 
 function senderMayMove(
-	user: StashUser,
+	user: TransferUser,
 	request: { source: TransferSource; destination: TransferDestination },
 	sourceActor: HeldActor | null,
 	destinationActor: HeldActor | null,
@@ -395,17 +399,17 @@ function senderMayMove(
 	});
 }
 
-function mayEditPartyCoins(user: StashUser): boolean {
+function mayEditPartyCoins(user: TransferUser): boolean {
 	return user.isGM || isTrustedPlayer(user) || ownsACharacter(user);
 }
 
 async function applyCurrency(userId: string, coin: string, value: number): Promise<void> {
 	const user = userById(userId);
-	if (!user || !partyCoin(coin) || !mayEditPartyCoins(user)) return;
+	if (!user || !isCoinDenomination(coin) || !mayEditPartyCoins(user)) return;
 	const number = Math.floor(Number(value));
-	const stash = readPartyStash();
-	stash.currency[coin] = Number.isFinite(number) && number > 0 ? number : 0;
-	await writePartyStash(stash);
+	const inventory = readPartyInventory();
+	inventory.currency[coin] = Number.isFinite(number) && number > 0 ? number : 0;
+	await writePartyInventory(inventory);
 }
 
 function coinBag(source: Record<string, number> | PartyCurrency | undefined): PartyCurrency {
@@ -428,15 +432,15 @@ async function writeActorCoins(actor: HeldActor, coins: PartyCurrency): Promise<
 	});
 }
 
-function listedUsers(): StashUser[] {
-	const collection = game.users as Iterable<StashUser> | undefined;
+function listedUsers(): TransferUser[] {
+	const collection = game.users as Iterable<TransferUser> | undefined;
 	const listed =
 		collection && typeof collection[Symbol.iterator] === 'function'
 			? [...collection].filter((user) => user && typeof user === 'object' && 'isGM' in user)
 			: [];
 	if (listed.length) return listed;
 	const ids = [game.user?.id, (game.users as { activeGM?: { id?: string | null } })?.activeGM?.id];
-	const found: StashUser[] = [];
+	const found: TransferUser[] = [];
 	for (const id of ids) {
 		if (!id || found.some((user) => user.id === id)) continue;
 		const user = userById(id);
@@ -445,7 +449,7 @@ function listedUsers(): StashUser[] {
 	return found;
 }
 
-function userIsActive(user: StashUser): boolean {
+function userIsActive(user: TransferUser): boolean {
 	if (user.active === true) return true;
 	if (user.active === false) return false;
 	if (user.id && user.id === game.user?.id) return true;
@@ -470,15 +474,15 @@ function moveActors(request: {
 	};
 }
 
-function touchesStash(request: {
+function touchesInventory(request: {
 	source: TransferSource;
 	destination: TransferDestination;
 }): boolean {
-	return request.source === 'stash' || request.destination.kind === 'stash';
+	return request.source === 'party' || request.destination.kind === 'party';
 }
 
 function userCanWriteMove(
-	user: StashUser,
+	user: TransferUser,
 	request: { source: TransferSource; sourceActorId: string; destination: TransferDestination },
 ): boolean {
 	const { sourceActor, destinationActor } = moveActors(request);
@@ -489,7 +493,7 @@ function userCanWriteMove(
 	) {
 		return false;
 	}
-	if (touchesStash(request) && !canWritePartyStash(user)) return false;
+	if (touchesInventory(request) && !canWritePartyInventory(user)) return false;
 	return true;
 }
 
@@ -498,8 +502,8 @@ function activeGmOnline(): boolean {
 	return Boolean(users?.activeGM?.id) || Boolean(game.user?.isGM);
 }
 
-function warnParty(key: string, data?: Record<string, string>): void {
-	ui.notifications?.warn(localize(`NIMBLE.actorSheet.hero.inventory.${key}`, data));
+function warnInventory(message: string): void {
+	ui.notifications?.warn(message);
 }
 
 async function applyGiveCurrency(userId: string, request: CurrencyTransferRequest): Promise<void> {
@@ -511,7 +515,7 @@ async function applyGiveCurrency(userId: string, request: CurrencyTransferReques
 	if (sourceActor && destinationActor && sourceActor.id === destinationActor.id) return;
 	if (!senderMayMove(user, request, sourceActor, destinationActor)) return;
 
-	const sourceCoins = sourceActor ? actorCoins(sourceActor) : readPartyStash().currency;
+	const sourceCoins = sourceActor ? actorCoins(sourceActor) : readPartyInventory().currency;
 	const spent: PartyCurrency = {
 		gp: Math.min(sourceCoins.gp, Math.max(0, Math.floor(Number(request.gp)) || 0)),
 		sp: Math.min(sourceCoins.sp, Math.max(0, Math.floor(Number(request.sp)) || 0)),
@@ -526,7 +530,7 @@ async function applyGiveCurrency(userId: string, request: CurrencyTransferReques
 	};
 	const destinationCoins = destinationActor
 		? actorCoins(destinationActor)
-		: readPartyStash().currency;
+		: readPartyInventory().currency;
 	const nextDestination: PartyCurrency = {
 		gp: destinationCoins.gp + spent.gp,
 		sp: destinationCoins.sp + spent.sp,
@@ -535,44 +539,30 @@ async function applyGiveCurrency(userId: string, request: CurrencyTransferReques
 
 	if (destinationActor) await writeActorCoins(destinationActor, nextDestination);
 	else {
-		const stash = readPartyStash();
-		stash.currency = nextDestination;
-		await writePartyStash(stash);
+		const inventory = readPartyInventory();
+		inventory.currency = nextDestination;
+		await writePartyInventory(inventory);
 	}
 	if (sourceActor) await writeActorCoins(sourceActor, nextSource);
 	else {
-		const stash = readPartyStash();
-		stash.currency = nextSource;
-		await writePartyStash(stash);
+		const inventory = readPartyInventory();
+		inventory.currency = nextSource;
+		await writePartyInventory(inventory);
 	}
 
 	const destinationName =
-		request.destination.kind === 'stash'
+		request.destination.kind === 'party'
 			? localize('NIMBLE.actorSheet.hero.inventory.partyName')
 			: (destinationActor?.name ?? '');
-	await postGaveCoins(user, spent, destinationName, touchesStash(request));
-}
-
-async function postGaveCoins(
-	user: StashUser,
-	spent: PartyCurrency,
-	destinationName: string,
-	stashMove: boolean,
-): Promise<void> {
-	await ChatMessage.create({
-		user: user.id,
-		speaker: { alias: user.name ?? '' },
-		content: `<p>${localize(coinTransferChatKey(stashMove), {
-			user: escapeHtml(user.name || localize('NIMBLE.actorSheet.hero.inventory.someone')),
-			amount: escapeHtml(formatCoinAmount(spent)),
-			destination: escapeHtml(destinationName),
-		})}</p>`,
-	} as ChatMessage.CreateData);
+	await postTransferChat(user, coinTransferChatKey(touchesInventory(request)), {
+		amount: formatCoinAmount(spent),
+		destination: destinationName,
+	});
 }
 
 /** Spends the coins on the sender's character. The destination adds them when it receives the message. */
 async function handCoinsToOwner(
-	message: PartyStashCoinsMessage,
+	message: PartyInventoryCoinsMessage,
 	sourceActor: HeldActor,
 	destinationActor: HeldActor,
 ): Promise<boolean> {
@@ -580,7 +570,11 @@ async function handCoinsToOwner(
 		(user) => userIsActive(user) && ownsActor(destinationActor, user),
 	);
 	if (!ownerOnline) {
-		warnParty('needsOnline', { name: destinationActor.name ?? '' });
+		warnInventory(
+			localize('NIMBLE.actorSheet.hero.inventory.needsOnline', {
+				name: destinationActor.name ?? '',
+			}),
+		);
 		return false;
 	}
 	if (!getSocket()?.emit) return false;
@@ -607,13 +601,13 @@ async function handCoinsToOwner(
 		gp: taken.spent.gp,
 		sp: taken.spent.sp,
 		cp: taken.spent.cp,
-	} satisfies PartyStashReceiveCurrencyMessage);
+	} satisfies PartyInventoryReceiveCurrencyMessage);
 	return true;
 }
 
-async function applyReceiveCurrency(message: PartyStashReceiveCurrencyMessage): Promise<void> {
+async function applyReceiveCurrency(message: PartyInventoryReceiveCurrencyMessage): Promise<void> {
 	const sender = userById(message.userId);
-	const me = game.user as StashUser | null | undefined;
+	const me = game.user as TransferUser | null | undefined;
 	const { sourceActor, destinationActor } = moveActors(message);
 	if (!sender || !me || !sourceActor || !destinationActor) return;
 	if (!ownsActor(destinationActor, me)) return;
@@ -626,10 +620,13 @@ async function applyReceiveCurrency(message: PartyStashReceiveCurrencyMessage): 
 		sp: next.sp + spent.sp,
 		cp: next.cp + spent.cp,
 	});
-	await postGaveCoins(sender, spent, destinationActor.name ?? '', false);
+	await postTransferChat(sender, coinTransferChatKey(false), {
+		amount: formatCoinAmount(spent),
+		destination: destinationActor.name ?? '',
+	});
 }
 
-async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
+async function applyReceive(message: PartyInventoryReceiveMessage): Promise<void> {
 	const sender = userById(message.userId);
 	const destinationActor =
 		message.destination.kind === 'actor' && message.destination.actorId
@@ -638,7 +635,7 @@ async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
 	const sourceActor = message.source === 'actor' ? actorById(message.sourceActorId) : null;
 	if (!sender || !destinationActor || !sourceActor) return;
 	if (!senderMayMove(sender, message, sourceActor, destinationActor)) return;
-	const me = game.user as StashUser | null | undefined;
+	const me = game.user as TransferUser | null | undefined;
 	if (!me || !ownsActor(destinationActor, me)) return;
 
 	const plan = planItemTransfer(
@@ -650,7 +647,11 @@ async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
 	if (!plan) return;
 	const landed = await applyPlanToActor(destinationActor, plan, 'destination');
 	if (!landed) return;
-	await postChat(sender, plan, destinationActor.name ?? '', false);
+	await postTransferChat(sender, itemTransferChatKey(false, plan.moved), {
+		item: plan.name,
+		destination: destinationActor.name ?? '',
+		count: String(plan.moved),
+	});
 	getSocket()?.emit?.(SOCKET_NAME, {
 		type: REQUEST_TYPE,
 		op: 'release',
@@ -658,11 +659,11 @@ async function applyReceive(message: PartyStashReceiveMessage): Promise<void> {
 		sourceActorId: message.sourceActorId,
 		removeIds: plan.removeIds,
 		sourceQuantity: plan.sourceQuantity,
-	} satisfies PartyStashReleaseMessage);
+	} satisfies PartyInventoryReleaseMessage);
 }
 
-async function applyRelease(message: PartyStashReleaseMessage): Promise<void> {
-	const me = game.user as StashUser | null | undefined;
+async function applyRelease(message: PartyInventoryReleaseMessage): Promise<void> {
+	const me = game.user as TransferUser | null | undefined;
 	if (!me || me.id !== message.userId) return;
 	const sourceActor = actorById(message.sourceActorId);
 	if (!sourceActor || !ownsActor(sourceActor, me)) return;
@@ -679,14 +680,14 @@ function shouldApplyRelayedMove(message: {
 	sourceActorId: string;
 	destination: TransferDestination;
 }): boolean {
-	const me = game.user as StashUser | null | undefined;
+	const me = game.user as TransferUser | null | undefined;
 	if (!me || !userCanWriteMove(me, message)) return false;
 	if (me.isGM) return isActiveGM();
 	return !activeGmOnline();
 }
 
 async function send(message: PartyMessage): Promise<boolean> {
-	const me = game.user as StashUser | null | undefined;
+	const me = game.user as TransferUser | null | undefined;
 	if (!me?.id) return false;
 
 	if (message.op === 'move' || message.op === 'giveCurrency') {
@@ -729,16 +730,20 @@ async function send(message: PartyMessage): Promise<boolean> {
 				getSocket()?.emit?.(SOCKET_NAME, { ...message, op: 'receive' });
 				return true;
 			}
-			warnParty('needsOnline', { name: destinationActor.name ?? '' });
+			warnInventory(
+				localize('NIMBLE.actorSheet.hero.inventory.needsOnline', {
+					name: destinationActor.name ?? '',
+				}),
+			);
 			return false;
 		}
-		warnParty('partyNotReady');
+		warnInventory(localize('NIMBLE.actorSheet.hero.inventory.partyNotReady'));
 		return false;
 	}
 
 	if (message.op === 'currency') {
 		if (!mayEditPartyCoins(me)) return false;
-		if (canWritePartyStash(me)) {
+		if (canWritePartyInventory(me)) {
 			await enqueue(() => applyCurrency(message.userId, message.coin, message.value));
 			return true;
 		}
@@ -746,7 +751,7 @@ async function send(message: PartyMessage): Promise<boolean> {
 			getSocket()?.emit?.(SOCKET_NAME, message);
 			return true;
 		}
-		warnParty('partyNotReady');
+		warnInventory(localize('NIMBLE.actorSheet.hero.inventory.partyNotReady'));
 		return false;
 	}
 
@@ -774,7 +779,7 @@ export async function requestPartyCurrency(coin: string, value: number): Promise
 let listening = false;
 
 /** Listens for party-inventory moves. Safe to call once from `ready`. */
-export function registerPartyStashSocketListener(): void {
+export function registerPartyInventorySocketListener(): void {
 	if (listening) return;
 	listening = true;
 	getSocket()?.on?.(SOCKET_NAME, (payload) => {
@@ -802,8 +807,8 @@ export function registerPartyStashSocketListener(): void {
 			return;
 		}
 		if (message.op !== 'currency') return;
-		const me = game.user as StashUser | null | undefined;
-		if (!me || !canWritePartyStash(me) || (me.isGM && !isActiveGM())) return;
+		const me = game.user as TransferUser | null | undefined;
+		if (!me || !canWritePartyInventory(me) || (me.isGM && !isActiveGM())) return;
 		const coins = message;
 		void enqueue(() => applyCurrency(coins.userId, coins.coin, coins.value));
 	});

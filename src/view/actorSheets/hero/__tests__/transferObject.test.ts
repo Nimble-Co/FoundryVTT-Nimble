@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NimbleCharacter } from '#documents/actor/character.js';
-import * as transferApi from '#utils/partyStash/requestItemTransfer.ts';
+import * as transferApi from '#utils/partyInventory/requestItemTransfer.ts';
 import { transferObject } from '../transferObject.ts';
 
 const request = vi.spyOn(transferApi, 'requestItemTransfer').mockResolvedValue(true);
@@ -24,7 +24,7 @@ const move = {
 	itemId: 'torch',
 	source: 'actor' as const,
 	sourceActorId: 'ada',
-	destination: { kind: 'stash' as const },
+	destination: { kind: 'party' as const },
 };
 
 afterEach(() => {
@@ -111,6 +111,7 @@ describe('transferObject', () => {
 			}) => {
 				expect(config.content).toContain('type="range"');
 				expect(config.content).toContain('max="3"');
+				expect(config.content).not.toContain('style=');
 				const root = document.createElement('div');
 				root.innerHTML = config.content;
 				config.render(new Event('render'), { element: root });
@@ -289,7 +290,7 @@ describe('transferObject', () => {
 
 		await transferObject(actor, {
 			...move,
-			source: 'stash',
+			source: 'party',
 			destination: { kind: 'actor', actorId: 'ada' },
 		});
 
@@ -300,7 +301,7 @@ describe('transferObject', () => {
 			}),
 		);
 		expect(request).toHaveBeenCalledWith(
-			expect.objectContaining({ source: 'stash', destination: { kind: 'actor', actorId: 'ada' } }),
+			expect.objectContaining({ source: 'party', destination: { kind: 'actor', actorId: 'ada' } }),
 		);
 		world.settings = previous;
 	});
@@ -336,7 +337,7 @@ describe('transferObject', () => {
 		world.actors = previous;
 	});
 
-	it('reads a stash object from the party inventory', async () => {
+	it('reads a party inventory object from the party inventory', async () => {
 		dialog().confirm.mockResolvedValue(true);
 		const world = game as unknown as { settings: { get?: () => unknown } };
 		const previous = world.settings;
@@ -350,11 +351,11 @@ describe('transferObject', () => {
 		await transferObject(actorWith(null), {
 			...move,
 			itemId: 'gem',
-			source: 'stash',
+			source: 'party',
 		});
 
 		expect(request).toHaveBeenCalledWith(
-			expect.objectContaining({ source: 'stash', itemId: 'gem' }),
+			expect.objectContaining({ source: 'party', itemId: 'gem' }),
 		);
 		world.settings = previous;
 	});

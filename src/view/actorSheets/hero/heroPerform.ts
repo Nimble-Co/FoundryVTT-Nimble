@@ -21,7 +21,7 @@ import { runMoveAction } from '#utils/heroicActions/move.js';
 import { useChatReaction, useOpportunityAttack } from '#utils/heroicActions/reactions.js';
 import { strikeUnarmed } from '#utils/heroicActions/unarmedStrike.js';
 import localize from '#utils/localize.js';
-import { requestPartyCurrency } from '#utils/partyStash/requestItemTransfer.ts';
+import { requestPartyCurrency } from '#utils/partyInventory/requestItemTransfer.ts';
 import { openPdfExportDialog } from '#view/dialogs/openPdfExportDialog.ts';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';

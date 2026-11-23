@@ -1,11 +1,11 @@
 /**
  * Plans a move of one object between two inventories. The caller applies the plan.
- * Nothing here reads Foundry: the same rules cover a character and the party stash.
+ * Nothing here reads Foundry: the same rules cover a character and the party inventory.
  */
 
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantity.js';
 
-/** A plain item, as `toObject()` stores it or as the party stash holds it. */
+/** A plain item, as `toObject()` stores it or as the party inventory holds it. */
 export interface TransferItem {
 	_id: string;
 	name?: string;
@@ -143,17 +143,17 @@ export function isTrustedPlayer(
 export function mayTransferItem(input: {
 	isGM: boolean;
 	trusted: boolean;
-	source: 'actor' | 'stash';
-	destination: 'actor' | 'stash';
+	source: 'actor' | 'party';
+	destination: 'actor' | 'party';
 	ownsSource: boolean;
 	ownsDestination: boolean;
 }): boolean {
 	if (input.isGM) return true;
-	if (input.source === 'stash' && input.destination === 'stash') return false;
-	if (input.source === 'actor' && input.destination === 'stash') return input.ownsSource;
-	if (input.destination === 'actor' && input.ownsDestination && input.source === 'stash')
+	if (input.source === 'party' && input.destination === 'party') return false;
+	if (input.source === 'actor' && input.destination === 'party') return input.ownsSource;
+	if (input.destination === 'actor' && input.ownsDestination && input.source === 'party')
 		return true;
 	if (!input.trusted || input.destination !== 'actor') return false;
-	if (input.source === 'stash') return true;
+	if (input.source === 'party') return true;
 	return input.ownsSource;
 }

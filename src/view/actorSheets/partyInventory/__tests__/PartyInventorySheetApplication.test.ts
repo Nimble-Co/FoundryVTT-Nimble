@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SYSTEM_ID } from '#system';
-import { PARTY_STASH_SETTING } from '../../../../settings/partyStashSetting.ts';
+import { PARTY_INVENTORY_SETTING } from '../../../../settings/partyInventorySetting.ts';
 import PartyInventorySheet from '../PartyInventorySheetApplication.svelte.ts';
 
 const world = game as unknown as {
@@ -15,7 +15,7 @@ describe('PartyInventorySheet', () => {
 		world.actors = [];
 		world.settings = {
 			get: (scope, key) =>
-				scope === SYSTEM_ID && key === PARTY_STASH_SETTING
+				scope === SYSTEM_ID && key === PARTY_INVENTORY_SETTING
 					? {
 							currency: { gp: 2, sp: 0, cp: 4 },
 							items: [
@@ -69,6 +69,19 @@ describe('PartyInventorySheet', () => {
 			sheetPrototype._prepareContext = original;
 			world.actors = previousActors;
 			world.settings = previousSettings;
+		}
+	});
+
+	it('titles the window with the localized party name', () => {
+		const i18n = game.i18n as { localize: (key: string) => string };
+		const original = i18n.localize;
+		i18n.localize = (key: string) =>
+			key === 'NIMBLE.actorSheet.hero.inventory.party' ? 'Inventaire' : original(key);
+		try {
+			const sheet = new PartyInventorySheet({ document: { name: 'Goblin' } } as never);
+			expect(sheet.title).toBe('Inventaire');
+		} finally {
+			i18n.localize = original;
 		}
 	});
 });

@@ -1,59 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { SYSTEM_ID } from '#system';
-
-const world = game as unknown as { actors: unknown; user: unknown };
-
+import { emptyPartyInventory } from '../../../settings/partyInventorySetting.ts';
 import {
-	emptyPartyStash,
-	ensurePartyStashHolder,
-	hidePartyStashHolder,
-	normalizePartyStash,
-	PARTY_INVENTORY_NAME,
-	partyCoin,
+	ensurePartyInventoryHolder,
+	hidePartyInventoryHolder,
 	partyInventoryIdentity,
 	partyInventoryReplacement,
-} from '../partyStashSetting.ts';
+	partyInventoryStoredName,
+} from '../partyInventoryHolder.ts';
 
-describe('normalizePartyStash', () => {
-	it('starts empty', () => {
-		expect(emptyPartyStash()).toEqual({ currency: { gp: 0, sp: 0, cp: 0 }, items: [] });
-	});
+const world = game as unknown as { actors: unknown; user: unknown };
+const torch = { _id: 'torch', type: 'object', name: 'Torch', system: { quantity: 2 } };
 
-	it('keeps object rows and drops a bad coin or a non-object', () => {
-		expect(
-			normalizePartyStash({
-				currency: { gp: 4.8, sp: -3, cp: 'nope' },
-				items: [
-					{ _id: 'torch', type: 'object', name: 'Torch', system: { quantity: 2 } },
-					{ _id: '', type: 'object', name: 'Blank' },
-					{ _id: 'rage', type: 'feature', name: 'Rage' },
-					null,
-				],
-			}),
-		).toEqual({
-			currency: { gp: 4, sp: 0, cp: 0 },
-			items: [{ _id: 'torch', type: 'object', name: 'Torch', system: { quantity: 2 } }],
-		});
-	});
-
-	it('reads an empty stash from anything that is not the setting', () => {
-		expect(normalizePartyStash(null)).toEqual(emptyPartyStash());
-		expect(normalizePartyStash('nope')).toEqual(emptyPartyStash());
-	});
-
-	it('names the three coins', () => {
-		expect(partyCoin('gp')).toBe(true);
-		expect(partyCoin('pp')).toBe(false);
-	});
-});
-
-describe('hidePartyStashHolder', () => {
+describe('hidePartyInventoryHolder', () => {
 	it('leaves the party inventory actor out of the actors sidebar', () => {
 		const previous = world.actors;
 		const hero = { name: 'Ada', getFlag: () => undefined };
 		const holder = {
 			name: 'Party Inventory',
-			getFlag: (scope: string, key: string) => scope === SYSTEM_ID && key === 'partyStashHolder',
+			getFlag: (scope: string, key: string) =>
+				scope === SYSTEM_ID && key === 'partyInventoryHolder',
 		};
 		const contents = [hero, holder];
 		const collection = {
@@ -65,7 +31,7 @@ describe('hidePartyStashHolder', () => {
 		};
 		world.actors = collection;
 		try {
-			hidePartyStashHolder();
+			hidePartyInventoryHolder();
 			expect(collection.shown).toEqual([hero]);
 			collection.initializeTree();
 			expect(collection.shown).toEqual([hero]);
@@ -74,9 +40,6 @@ describe('hidePartyStashHolder', () => {
 		}
 	});
 });
-
-const torch = { _id: 'torch', type: 'object', name: 'Torch', system: { quantity: 2 } };
-const partyName = { name: PARTY_INVENTORY_NAME };
 
 describe('partyInventoryReplacement', () => {
 	it('creates a party inventory actor from the setting when none exists', () => {
@@ -87,58 +50,74 @@ describe('partyInventoryReplacement', () => {
 				{ default: 3 },
 			),
 		).toEqual({
-			...partyName,
+			name: 'Party Inventory',
 			type: 'partyInventory',
 			ownership: { default: 3 },
 			flags: {
 				[SYSTEM_ID]: {
-					partyStashHolder: true,
-					partyStash: { currency: { gp: 4, sp: 0, cp: 0 }, items: [torch] },
+					partyInventoryHolder: true,
+					partyInventory: { currency: { gp: 4, sp: 0, cp: 0 }, items: [torch] },
 				},
 			},
 		});
 	});
 
-	it('copies the stash and ownership off a creature holder, without its creature data', () => {
+	it('copies the inventory and ownership off a creature holder, without its creature data', () => {
 		const replacement = partyInventoryReplacement(
 			{
 				type: 'npc',
 				ownership: { default: 3 },
 				getFlag: () => ({ currency: { gp: 2, sp: 1, cp: 0 }, items: [torch] }),
 			},
-			emptyPartyStash(),
+			emptyPartyInventory(),
 			{ default: 0 },
 		);
 		expect(replacement?.type).toBe('partyInventory');
 		expect(replacement?.ownership).toEqual({ default: 3 });
-		expect(replacement?.flags[SYSTEM_ID].partyStash.items).toEqual([torch]);
+		expect(replacement?.flags[SYSTEM_ID].partyInventory.items).toEqual([torch]);
 		expect(replacement).not.toHaveProperty('system');
 	});
 
 	it('leaves a party inventory actor alone', () => {
 		expect(
 			partyInventoryReplacement(
-				{ type: 'partyInventory', getFlag: () => emptyPartyStash() },
-				emptyPartyStash(),
+				{ type: 'partyInventory', getFlag: () => emptyPartyInventory() },
+				emptyPartyInventory(),
 				{ default: 3 },
 			),
 		).toBeNull();
+	});
+
+	it('names the replacement in the language of this client', () => {
+		const i18n = game.i18n as { localize: (key: string) => string };
+		const original = i18n.localize;
+		i18n.localize = (key: string) =>
+			key === 'NIMBLE.actorSheet.hero.inventory.party' ? 'Inventaire' : original(key);
+		try {
+			expect(partyInventoryReplacement(null, emptyPartyInventory(), { default: 3 })?.name).toBe(
+				'Inventaire',
+			);
+		} finally {
+			i18n.localize = original;
+		}
 	});
 });
 
 describe('partyInventoryIdentity', () => {
 	it('gives a party inventory actor the party name when it still has another name', () => {
-		expect(partyInventoryIdentity({ type: 'partyInventory', name: 'Goblin' })).toEqual(partyName);
+		expect(partyInventoryIdentity({ type: 'partyInventory', name: 'Goblin' })).toEqual({
+			name: partyInventoryStoredName(),
+		});
 	});
 
 	it('leaves a party inventory actor that already has the party name', () => {
 		expect(
-			partyInventoryIdentity({ type: 'partyInventory', name: PARTY_INVENTORY_NAME }),
+			partyInventoryIdentity({ type: 'partyInventory', name: partyInventoryStoredName() }),
 		).toBeNull();
 	});
 });
 
-describe('ensurePartyStashHolder', () => {
+describe('ensurePartyInventoryHolder', () => {
 	const actorClass = Actor as unknown as {
 		create?: (data: unknown) => Promise<unknown>;
 	};
@@ -154,8 +133,8 @@ describe('ensurePartyStashHolder', () => {
 			ownership: { default: 3 },
 			getFlag: (scope: string, key: string) => {
 				if (scope !== SYSTEM_ID) return undefined;
-				if (key === 'partyStashHolder') return true;
-				if (key === 'partyStash') return { currency: { gp: 2, sp: 0, cp: 0 }, items: [torch] };
+				if (key === 'partyInventoryHolder') return true;
+				if (key === 'partyInventory') return { currency: { gp: 2, sp: 0, cp: 0 }, items: [torch] };
 				return undefined;
 			},
 			delete: async () => {
@@ -169,7 +148,7 @@ describe('ensurePartyStashHolder', () => {
 			return { id: 'party' };
 		};
 		try {
-			await ensurePartyStashHolder();
+			await ensurePartyInventoryHolder();
 			expect(created).toHaveLength(1);
 			expect(created[0]).toMatchObject({
 				type: 'partyInventory',
@@ -191,7 +170,8 @@ describe('ensurePartyStashHolder', () => {
 		let deleted = false;
 		const npc = {
 			type: 'npc',
-			getFlag: (scope: string, key: string) => scope === SYSTEM_ID && key === 'partyStashHolder',
+			getFlag: (scope: string, key: string) =>
+				scope === SYSTEM_ID && key === 'partyInventoryHolder',
 			delete: async () => {
 				deleted = true;
 			},
@@ -202,7 +182,7 @@ describe('ensurePartyStashHolder', () => {
 			throw new Error('create failed');
 		};
 		try {
-			await expect(ensurePartyStashHolder()).rejects.toThrow('create failed');
+			await expect(ensurePartyInventoryHolder()).rejects.toThrow('create failed');
 			expect(deleted).toBe(false);
 		} finally {
 			world.actors = previousActors;
@@ -221,7 +201,8 @@ describe('ensurePartyStashHolder', () => {
 			type: 'partyInventory',
 			name: 'Goblin',
 			img: 'icons/svg/mystery-man.svg',
-			getFlag: (scope: string, key: string) => scope === SYSTEM_ID && key === 'partyStashHolder',
+			getFlag: (scope: string, key: string) =>
+				scope === SYSTEM_ID && key === 'partyInventoryHolder',
 			update: async (data: unknown) => {
 				updates.push(data);
 			},
@@ -235,8 +216,8 @@ describe('ensurePartyStashHolder', () => {
 			throw new Error('created');
 		};
 		try {
-			await ensurePartyStashHolder();
-			expect(updates).toEqual([partyName]);
+			await ensurePartyInventoryHolder();
+			expect(updates).toEqual([{ name: 'Party Inventory' }]);
 			expect(deleted).toBe(false);
 		} finally {
 			world.actors = previousActors;

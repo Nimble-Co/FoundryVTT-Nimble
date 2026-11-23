@@ -1,4 +1,8 @@
 import {
+	partyInventoryStoredName,
+	readPartyInventory,
+} from '#documents/actor/partyInventoryHolder.js';
+import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
@@ -6,13 +10,11 @@ import type {
 	PartyInventorySheetItem,
 	PartyInventorySheetProps,
 } from '#types/components/actorSheets/PartyInventorySheet.d.ts';
+import { COIN_ABBREVIATION, COIN_DENOMINATIONS } from '#utils/coins.ts';
 import localize from '#utils/localize.js';
-import type { TransferItem } from '#utils/partyStash/planItemTransfer.ts';
+import type { TransferItem } from '#utils/partyInventory/planItemTransfer.ts';
 import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../../models/item/objectQuantity.js';
-import { readPartyStash } from '../../../settings/partyStashSetting.js';
 import PartyInventorySheetComponent from './PartyInventorySheet.svelte';
-
-const COINS = ['gp', 'sp', 'cp'] as const;
 
 function quantityOf(item: TransferItem): number {
 	const number = Math.floor(Number(item.system?.quantity));
@@ -23,19 +25,19 @@ function carriesQuantity(item: TransferItem): boolean {
 	return OBJECT_SIZE_TYPES_WITH_QUANTITY.has(String(item.system?.objectSizeType ?? ''));
 }
 
-function storedItems(stash: ReturnType<typeof readPartyStash>): PartyInventorySheetItem[] {
-	const coins = COINS.filter((coin) => stash.currency[coin] > 0).map(
+function storedItems(inventory: ReturnType<typeof readPartyInventory>): PartyInventorySheetItem[] {
+	const coins = COIN_DENOMINATIONS.filter((coin) => inventory.currency[coin] > 0).map(
 		(coin): PartyInventorySheetItem => ({
 			id: `coin-${coin}`,
 			name: localize('NIMBLE.actorSheet.hero.inventory.coinBalance', {
-				count: String(stash.currency[coin]),
-				coin: localize(`NIMBLE.currencyAbbreviations.${coin}`),
+				count: String(inventory.currency[coin]),
+				coin: localize(COIN_ABBREVIATION[coin]),
 			}),
 			icon: 'fa-solid fa-coins',
 			quantity: '',
 		}),
 	);
-	const items = stash.items.flatMap((item): PartyInventorySheetItem[] => {
+	const items = inventory.items.flatMap((item): PartyInventorySheetItem[] => {
 		const name = item.name?.trim();
 		if (!name) return [];
 		const quantity = quantityOf(item);
@@ -57,7 +59,7 @@ function storedItems(stash: ReturnType<typeof readPartyStash>): PartyInventorySh
 function sheetProps(): PartyInventorySheetProps {
 	return {
 		empty: localize('NIMBLE.actorSheet.hero.inventory.partyEmpty'),
-		items: storedItems(readPartyStash()),
+		items: storedItems(readPartyInventory()),
 	};
 }
 
@@ -84,6 +86,10 @@ export default class PartyInventorySheet extends SvelteApplicationMixin(
 	/** The list is read here. Moves happen on a character's Inventory tab. */
 	override get isEditable(): boolean {
 		return false;
+	}
+
+	override get title(): string {
+		return partyInventoryStoredName();
 	}
 
 	protected override async _prepareContext(
