@@ -12,8 +12,6 @@ import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantit
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
-export { OBJECT_SIZE_TYPES_WITH_QUANTITY };
-
 /** The check a scroll's wielder must pass when they know no spell of its school. */
 const SPELL_SCROLL_ARCANA_DC = 10;
 

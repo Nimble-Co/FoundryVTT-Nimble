@@ -5,8 +5,8 @@ import getSpellScrollTemplateTier from '#utils/spell/getSpellScrollTemplateTier.
 import openSpellScrollDialog, {
 	type ScrollDialogActor,
 } from '#view/dialogs/openSpellScrollDialog.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantity.js';
 import { shouldIncludeSpellDescriptionOnScrolls } from '../../settings/spellScrollSettings.js';
-import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { NimbleCharacter } from './character.js';
 
 type ItemSource = Record<string, unknown>;

@@ -27,7 +27,10 @@ function storedItems(stash: ReturnType<typeof readPartyStash>): PartyInventorySh
 	const coins = COINS.filter((coin) => stash.currency[coin] > 0).map(
 		(coin): PartyInventorySheetItem => ({
 			id: `coin-${coin}`,
-			name: `${stash.currency[coin]} ${coin}`,
+			name: localize('NIMBLE.actorSheet.hero.inventory.coinBalance', {
+				count: String(stash.currency[coin]),
+				coin,
+			}),
 			icon: 'fa-solid fa-coins',
 			quantity: '',
 		}),

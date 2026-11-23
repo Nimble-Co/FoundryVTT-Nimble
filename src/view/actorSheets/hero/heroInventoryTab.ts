@@ -131,7 +131,7 @@ function shareMenu(
 			intent: transferIntent(actor, item.id, 'stash', { kind: 'actor', actorId: actor.id }),
 		});
 	}
-	if (source === 'actor') {
+	if (source === 'actor' && !isContainer(item)) {
 		const heldIn = storedIn(item);
 		for (const container of containers) {
 			if (container.id === item.id || container.id === heldIn) continue;

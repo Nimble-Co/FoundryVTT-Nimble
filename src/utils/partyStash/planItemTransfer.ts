@@ -42,8 +42,11 @@ function containerIdOf(item: TransferItem): string {
 }
 
 function quantityOf(item: TransferItem): number {
-	const value = Math.floor(Number(systemOf(item).quantity ?? 1));
-	return Number.isFinite(value) && value > 0 ? value : 1;
+	const raw = systemOf(item).quantity;
+	if (raw == null || raw === '') return 1;
+	const value = Math.floor(Number(raw));
+	if (!Number.isFinite(value)) return 1;
+	return value > 0 ? value : 0;
 }
 
 function carriesQuantity(item: TransferItem): boolean {
@@ -87,6 +90,7 @@ export function planItemTransfer(
 		? sourceItems.filter((item) => item._id !== root._id && containerIdOf(item) === root._id)
 		: [];
 	const have = quantityOf(root);
+	if (!container && carriesQuantity(root) && have < 1) return null;
 	const split = !container && carriesQuantity(root) && asked < have;
 	const moved = split ? asked : have;
 
@@ -103,6 +107,7 @@ export function planItemTransfer(
 					(item) =>
 						item._id !== root._id &&
 						item.type === 'object' &&
+						!isContainer(item) &&
 						item.name === root.name &&
 						carriesQuantity(item) &&
 						containerIdOf(item) === '',

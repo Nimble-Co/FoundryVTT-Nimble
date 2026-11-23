@@ -18,8 +18,11 @@ function escapeHtml(value: string): string {
 }
 
 function quantityOf(system: Record<string, unknown>): number {
-	const value = Math.floor(Number(system.quantity ?? 1));
-	return Number.isFinite(value) && value > 0 ? value : 1;
+	const raw = system.quantity;
+	if (raw == null || raw === '') return 1;
+	const value = Math.floor(Number(raw));
+	if (!Number.isFinite(value)) return 1;
+	return value > 0 ? value : 0;
 }
 
 function carriesQuantity(system: Record<string, unknown>): boolean {
@@ -158,6 +161,7 @@ export async function transferObject(
 	if (!held) return;
 	const have = quantityOf(held.system);
 	const container = isContainer(held.system);
+	if (!container && carriesQuantity(held.system) && have < 1) return;
 	const equipped = held.system.equipped === true;
 	const destination = destinationPhrase(actor, intent.destination);
 	const equippedNote = equipped

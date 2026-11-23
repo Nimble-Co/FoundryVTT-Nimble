@@ -85,6 +85,33 @@ describe('planItemTransfer', () => {
 		expect(plan?.removeIds).toEqual(['torch']);
 	});
 
+	it('does not merge a stack into a container of the same name', () => {
+		const source = [object('torch', { quantity: 2, objectSizeType: 'smallSized' }, 'Torch')];
+		const destination = [
+			object(
+				'pack',
+				{
+					quantity: 1,
+					objectSizeType: 'smallSized',
+					container: { enabled: true },
+					containerId: '',
+				},
+				'Torch',
+			),
+		];
+
+		const plan = planItemTransfer(
+			source,
+			destination,
+			{ itemId: 'torch', quantity: 2 },
+			refuseNewId,
+		);
+
+		expect(plan?.merge).toBeNull();
+		expect(plan?.add).toHaveLength(1);
+		expect(plan?.add[0]?._id).toBe('torch');
+	});
+
 	it('does not merge into itself, or into a stack that does not carry a quantity', () => {
 		const torch = object('torch', { quantity: 2, objectSizeType: 'stackable' }, 'Torch');
 		const other = object('other', { quantity: 2, objectSizeType: 'medium' }, 'Torch');
@@ -132,6 +159,16 @@ describe('planItemTransfer', () => {
 		expect(
 			planItemTransfer(source, [], { itemId: 'torch', quantity: 2.9 }, () => 'part')?.moved,
 		).toBe(2);
+	});
+
+	it('treats a missing quantity as one, and refuses a stored zero', () => {
+		const missing = [object('torch', { objectSizeType: 'stackable' }, 'Torch')];
+		expect(
+			planItemTransfer(missing, [], { itemId: 'torch', quantity: 1 }, refuseNewId)?.moved,
+		).toBe(1);
+
+		const zero = [object('torch', { quantity: 0, objectSizeType: 'stackable' }, 'Torch')];
+		expect(planItemTransfer(zero, [], { itemId: 'torch', quantity: 1 }, refuseNewId)).toBeNull();
 	});
 
 	it('refuses a missing item, a non-object, and a count below 1', () => {

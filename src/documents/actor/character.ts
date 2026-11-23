@@ -38,6 +38,7 @@ import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.
 import { offersActionCostChange } from '../../managers/itemActivation/useOptionActivation.js';
 import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
+import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../../models/item/objectQuantity.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { addCardEvents } from '../../utils/chat/cardEvents.js';
@@ -82,7 +83,6 @@ import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
-import { OBJECT_SIZE_TYPES_WITH_QUANTITY } from '../item/object.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
 import { conditionRollOptions } from './conditionRollOptions.js';

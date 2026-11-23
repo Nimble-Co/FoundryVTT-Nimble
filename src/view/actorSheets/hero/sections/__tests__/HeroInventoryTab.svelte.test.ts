@@ -277,6 +277,18 @@ describe('HeroInventoryTab', () => {
 			});
 		});
 
+		it('returns focus to the coin button when Escape closes its menu', async () => {
+			renderTab(containerHero(), false, { context: partyContext() });
+			const button = screen.getByRole('button', { name: `${INV}.moveCurrency` });
+
+			await fireEvent.click(button);
+			screen.getAllByRole('menuitem')[0]?.focus();
+			await fireEvent.keyDown(document, { key: 'Escape' });
+
+			expect(screen.queryByRole('menu')).toBeNull();
+			expect(document.activeElement).toBe(button);
+		});
+
 		it('hides Create Object, edits the shared coins, and ignores a drop', async () => {
 			const { perform } = renderTab(containerHero(), false, {
 				party: true,
@@ -366,15 +378,21 @@ describe('HeroInventoryTab', () => {
 			renderTab();
 			const open = () =>
 				fireEvent.click(screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) }));
+			const trigger = () =>
+				screen.getByRole('button', { name: new RegExp(`${INV}.actions.*Torch`) });
 
 			await open();
 			expect(screen.getByRole('menu')).toBeInTheDocument();
+			screen.getAllByRole('menuitem')[0]?.focus();
 			await fireEvent.pointerDown(document.body);
 			expect(screen.queryByRole('menu')).toBeNull();
+			expect(document.activeElement).not.toBe(trigger());
 
 			await open();
+			screen.getAllByRole('menuitem')[0]?.focus();
 			await fireEvent.keyDown(document, { key: 'Escape' });
 			expect(screen.queryByRole('menu')).toBeNull();
+			expect(document.activeElement).toBe(trigger());
 		});
 
 		it('shows a stash stack as text, with the ellipsis after it', () => {

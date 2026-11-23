@@ -58,6 +58,7 @@ and a loose row leaves it loose. The container shows a ring while you drag over 
 		const onKey = (event: KeyboardEvent) => {
 			if (event.key !== 'Escape') return;
 			event.preventDefault();
+			button?.focus();
 			setMenuRow(ui, null);
 		};
 		document.addEventListener('pointerdown', closeFrom, true);

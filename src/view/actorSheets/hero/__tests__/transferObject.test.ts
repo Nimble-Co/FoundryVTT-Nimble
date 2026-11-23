@@ -34,6 +34,34 @@ afterEach(() => {
 });
 
 describe('transferObject', () => {
+	it('does not move a stack whose stored quantity is 0', async () => {
+		const actor = actorWith({
+			id: 'torch',
+			name: 'Torch',
+			type: 'object',
+			system: { quantity: 0, objectSizeType: 'stackable', equipped: false },
+		});
+
+		await transferObject(actor, move);
+
+		expect(dialog().confirm).not.toHaveBeenCalled();
+		expect(request).not.toHaveBeenCalled();
+	});
+
+	it('treats a missing quantity as one object', async () => {
+		dialog().confirm.mockResolvedValue(true);
+		const actor = actorWith({
+			id: 'torch',
+			name: 'Torch',
+			type: 'object',
+			system: { equipped: false },
+		});
+
+		await transferObject(actor, move);
+
+		expect(request).toHaveBeenCalledWith(expect.objectContaining({ quantity: 1, itemId: 'torch' }));
+	});
+
 	it('asks before moving one object to the party inventory', async () => {
 		dialog().confirm.mockResolvedValue(true);
 		const actor = actorWith({

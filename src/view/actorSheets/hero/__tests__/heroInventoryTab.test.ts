@@ -370,6 +370,11 @@ describe('the party inventory', () => {
 		).toEqual(['party', 'pouch']);
 		expect(torch.share?.give?.entries.map((entry) => entry.id)).toEqual(['bob', 'cara']);
 		expect(torch.use).not.toBeNull();
+		expect(
+			rowOf(heroInventoryTab(containerHero(), partyContext()), 'backpack').share?.move?.entries.map(
+				(entry) => entry.id,
+			),
+		).toEqual(['party']);
 	});
 
 	it('keeps Move to party inventory when this player cannot give to other characters', () => {

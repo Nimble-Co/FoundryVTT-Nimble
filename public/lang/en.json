@@ -315,6 +315,7 @@
 					"overSlots": "You are over your inventory slot limit: {used} / {total}.",
 					"coinsLabel": "Coins",
 					"coin": "{coin} coins",
+					"coinBalance": "{count} {coin}",
 					"mine": "My Inventory",
 					"party": "Party Inventory",
 					"partyEmpty": "The party inventory is empty.",

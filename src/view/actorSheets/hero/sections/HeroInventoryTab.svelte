@@ -53,6 +53,7 @@ a stored object comes out of its container.
 		const onKey = (event: KeyboardEvent) => {
 			if (event.key !== 'Escape') return;
 			event.preventDefault();
+			button?.focus();
 			giveOpen = false;
 		};
 		document.addEventListener('pointerdown', closeFrom, true);
