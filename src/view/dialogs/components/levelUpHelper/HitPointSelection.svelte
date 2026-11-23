@@ -1,4 +1,5 @@
 <script lang="ts">
+	import localize from '#utils/localize.js';
 	import type { NimbleCharacter } from '../../../../documents/actor/character.js';
 	import type { NimbleClassItem } from '../../../../documents/item/class.js';
 	import { incrementDieSize } from '../../../../managers/HitDiceManager.js';
@@ -6,9 +7,11 @@
 	interface Props {
 		document: NimbleCharacter;
 		hitPointRollSelection: string;
+		/** Omit to use the hero's class. Null means a class has not been chosen yet. */
+		hitDieSize?: number | null;
 	}
 
-	let { document, hitPointRollSelection = $bindable() }: Props = $props();
+	let { document, hitPointRollSelection = $bindable(), hitDieSize }: Props = $props();
 
 	const characterClass: NimbleClassItem | undefined = $derived(
 		document?.classes
@@ -16,13 +19,19 @@
 			: undefined,
 	);
 
-	const baseHitDieSize = $derived(characterClass?.system?.hitDieSize ?? 6);
+	const baseHitDieSize = $derived(
+		hitDieSize === undefined ? (characterClass?.system?.hitDieSize ?? 6) : hitDieSize,
+	);
 	const hitDiceSizeBonus = $derived(
 		(document?.system?.attributes as { hitDiceSizeBonus?: number } | undefined)?.hitDiceSizeBonus ??
 			0,
 	);
-	const effectiveHitDieSize = $derived(incrementDieSize(baseHitDieSize, hitDiceSizeBonus));
-	const averageHp = $derived(Math.ceil((effectiveHitDieSize + 1) / 2));
+	const effectiveHitDieSize = $derived(
+		baseHitDieSize === null ? null : incrementDieSize(baseHitDieSize, hitDiceSizeBonus),
+	);
+	const averageHp = $derived(
+		effectiveHitDieSize === null ? null : Math.ceil((effectiveHitDieSize + 1) / 2),
+	);
 </script>
 
 <section>
@@ -33,47 +42,51 @@
 	</header>
 
 	<div class="nimble-hit-point-selection">
-		<div class="nimble-hit-point-selection__hit-dice">
-			<span class="nimble-hit-point-selection__hit-dice-label">
-				{CONFIG.NIMBLE.levelUpDialog.hitDiceLabel}
-			</span>
-			<span class="nimble-hit-point-selection__die-box">d{effectiveHitDieSize}</span>
-		</div>
+		{#if effectiveHitDieSize === null || averageHp === null}
+			<p class="nimble-hint">{localize('NIMBLE.levelUpDialog.chooseClassHint')}</p>
+		{:else}
+			<div class="nimble-hit-point-selection__hit-dice">
+				<span class="nimble-hit-point-selection__hit-dice-label">
+					{CONFIG.NIMBLE.levelUpDialog.hitDiceLabel}
+				</span>
+				<span class="nimble-hit-point-selection__die-box">d{effectiveHitDieSize}</span>
+			</div>
 
-		<div class="nimble-hit-point-selection__options">
-			<label
-				class="nimble-hit-point-selection__option"
-				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'roll'}
-				data-tooltip={CONFIG.NIMBLE.levelUpDialog.rollHitDiceTooltip}
-			>
-				<i class="fa-solid fa-dice"></i>
-				{CONFIG.NIMBLE.levelUpDialog.rollHitDice}
+			<div class="nimble-hit-point-selection__options">
+				<label
+					class="nimble-hit-point-selection__option"
+					class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'roll'}
+					data-tooltip={CONFIG.NIMBLE.levelUpDialog.rollHitDiceTooltip}
+				>
+					<i class="fa-solid fa-dice"></i>
+					{CONFIG.NIMBLE.levelUpDialog.rollHitDice}
 
-				<input
-					class="nimble-hit-point-selection__input"
-					type="radio"
-					name="{document.id}-hit-points"
-					value="roll"
-					bind:group={hitPointRollSelection}
-				/>
-			</label>
+					<input
+						class="nimble-hit-point-selection__input"
+						type="radio"
+						name="{document.id}-hit-points"
+						value="roll"
+						bind:group={hitPointRollSelection}
+					/>
+				</label>
 
-			<label
-				class="nimble-hit-point-selection__option"
-				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'average'}
-			>
-				<i class="fa-solid fa-gauge"></i>
-				{game.i18n.format(CONFIG.NIMBLE.levelUpDialog.takeAverage, { average: averageHp })}
+				<label
+					class="nimble-hit-point-selection__option"
+					class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'average'}
+				>
+					<i class="fa-solid fa-gauge"></i>
+					{game.i18n.format(CONFIG.NIMBLE.levelUpDialog.takeAverage, { average: averageHp })}
 
-				<input
-					class="nimble-hit-point-selection__input"
-					type="radio"
-					name="{document.id}-hit-points"
-					value="average"
-					bind:group={hitPointRollSelection}
-				/>
-			</label>
-		</div>
+					<input
+						class="nimble-hit-point-selection__input"
+						type="radio"
+						name="{document.id}-hit-points"
+						value="average"
+						bind:group={hitPointRollSelection}
+					/>
+				</label>
+			</div>
+		{/if}
 	</div>
 </section>
 

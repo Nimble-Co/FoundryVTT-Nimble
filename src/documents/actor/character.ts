@@ -4,6 +4,7 @@ import type { NimbleBackgroundItem } from '#documents/item/background.js';
 import type { NimbleBoonItem } from '#documents/item/boon.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import { skipClassDeletionCleanup } from '#documents/item/skipClassDeletionCleanup.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import { SYSTEM_ID, systemHookName } from '#system';
 import type {
@@ -20,6 +21,11 @@ import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/classProgression/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
+import {
+	characterLevel,
+	levelUpAtCap,
+	uniqueHighestClassIdentifier,
+} from '#utils/classProgression/multiclassLevel.ts';
 import localize from '#utils/localize.js';
 import collectHeldPicks, {
 	countHeldPicks,
@@ -40,6 +46,7 @@ import { type OptionChange, RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { MaxHpBonusRule } from '../../models/rules/maxHpBonus.js';
 import { isActionTrackingAutomationEnabled } from '../../settings/automationSettings.js';
+import { multiclassingEnabled } from '../../settings/multiclassSettings.js';
 import { addCardEvents } from '../../utils/chat/cardEvents.js';
 import {
 	consumeCombatantAction,
@@ -61,6 +68,9 @@ import {
 } from '../../utils/reroll/checkCardRollTarget.js';
 import type { RerollingActor } from '../../utils/reroll/rerollEntries.js';
 import calculateRollMode from '../../utils/rolls/calculateRollMode.js';
+import calculateSavingThrowRollModes, {
+	type SavingThrowRollModeRuleData,
+} from '../../utils/rolls/calculateSavingThrowRollModes.js';
 import { checkFormulaReferences } from '../../utils/rolls/formulaReferences.js';
 import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
@@ -184,6 +194,12 @@ interface LevelUpDialogData {
 	spellUuids: string[];
 	/** The schools the player chose, by the id of the school choice rule. */
 	schoolChoices?: Map<string, string[]>;
+	/** Present only when multiclassing is on. The player picked this class. */
+	classChoice?: {
+		kind: 'owned' | 'new';
+		identifier: string;
+		uuid?: string;
+	};
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -1793,9 +1809,21 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	 * @returns true if the level was reset, false if no changes were needed
 	 */
 	async validateLevelHistory(): Promise<boolean> {
-		const characterClass = Object.values(this.classes)?.[0];
+		const classes = Object.values(this.classes);
+		const characterClass = classes[0];
 
 		if (!characterClass) return false;
+
+		if (classes.length > 1) {
+			const expectedHistoryLength =
+				classes.reduce((sum, entry) => sum + entry.system.classLevel, 0) - 1;
+			if (this.system.levelUpHistory.length < expectedHistoryLength) {
+				ui.notifications?.warn(
+					localize('NIMBLE.levelUpDialog.historyInconsistent', { name: this.name ?? '' }),
+				);
+			}
+			return false;
+		}
 
 		const currentClassLevel = characterClass.system.classLevel;
 		const historyLength = this.system.levelUpHistory.length;
@@ -1847,6 +1875,74 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		return false;
 	}
 
+	async #resolveLevelUpClass(choice: NonNullable<LevelUpDialogData['classChoice']>): Promise<{
+		classItem: NimbleClassItem;
+		nextClassLevel: number;
+		levelBefore: number;
+	} | null> {
+		const owned = this.classes[choice.identifier];
+		if (owned) {
+			return {
+				classItem: owned,
+				nextClassLevel: owned.system.classLevel + 1,
+				levelBefore: owned.system.classLevel,
+			};
+		}
+
+		if (choice.kind === 'owned' || !choice.uuid) return null;
+
+		const created = await this.#createAdditionalClass(choice.uuid);
+		if (!created) return null;
+
+		return { classItem: created, nextClassLevel: 1, levelBefore: 0 };
+	}
+
+	async #createAdditionalClass(uuid: string): Promise<NimbleClassItem | null> {
+		const document = await fromUuid(uuid as `Item.${string}`);
+		if (!document) return null;
+
+		const source = (document as Item).toObject() as {
+			_id?: string;
+			system?: { rules?: Array<{ type?: string; disabled?: boolean }> };
+			_stats?: { compendiumSource?: string };
+		};
+		delete source._id;
+		source._stats = { ...(source._stats ?? {}), compendiumSource: uuid };
+		for (const rule of source.system?.rules ?? []) {
+			if (rule.type === 'grantItem') rule.disabled = true;
+		}
+
+		const created = await this.createEmbeddedDocuments(
+			'Item',
+			[source as object as Item.CreateData],
+			{
+				[SYSTEM_ID]: { addClass: true },
+			} as never,
+		);
+		return (created?.[0] as NimbleClassItem | undefined) ?? null;
+	}
+
+	#savingThrowUpdatesForClass(classItem: NimbleClassItem): Record<string, number> {
+		const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows ?? {});
+		const documents = [classItem, this.ancestry, this.ancestryBonus, this.background];
+		const rules = documents.flatMap((document) => {
+			if (!document || typeof document.toObject !== 'function') return [];
+			const source = document.toObject() as {
+				system?: { rules?: SavingThrowRollModeRuleData[] };
+			};
+			return source.system?.rules ?? [];
+		});
+		const rollModes = calculateSavingThrowRollModes(
+			rules,
+			classItem.system.savingThrows ?? {},
+			savingThrowKeys,
+		);
+
+		return Object.fromEntries(
+			savingThrowKeys.map((key) => [`system.savingThrows.${key}.defaultRollMode`, rollModes[key]]),
+		);
+	}
+
 	async triggerLevelUp() {
 		// Validate level history before allowing level up
 		const wasReset = await this.validateLevelHistory();
@@ -1855,13 +1951,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			return;
 		}
 
-		const characterClass = Object.values(this.classes)?.[0];
+		const classes = Object.values(this.classes);
+		let characterClass = classes[0];
 
 		if (!characterClass) return;
 
-		const currentClassLevel = characterClass.system.classLevel;
-
-		if (currentClassLevel >= 20) return;
+		const multiclass = multiclassingEnabled();
+		const classLevels = classes.map((entry) => entry.system.classLevel);
+		if (levelUpAtCap(classLevels, multiclass)) return;
 
 		const levelUpDialogId = this.getLevelUpDialogId();
 		const levelDownDialogId = this.getLevelDownDialogId();
@@ -1869,11 +1966,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Close any open level down dialog when starting level up
 		await GenericDialog.closeById(levelDownDialogId);
 
-		const nextClassLevel = currentClassLevel + 1;
+		const displayedLevel = multiclass
+			? characterLevel(classLevels)
+			: characterClass.system.classLevel;
 
 		// Use singleton pattern to prevent multiple level up dialogs
 		const dialog = GenericDialog.getOrCreate(
-			`${this.name}: Level Up (${currentClassLevel} → ${nextClassLevel})`,
+			`${this.name}: Level Up (${displayedLevel} → ${displayedLevel + 1})`,
 			CharacterLevelUpDialog,
 			{ document: this },
 			{ icon: 'fa-solid fa-arrow-up-right-dots', width: 600, uniqueId: levelUpDialogId },
@@ -1890,12 +1989,33 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (!dialogData) return;
 
 		const typedDialogData = dialogData as unknown as LevelUpDialogData;
+		const levelsBefore = classes.map((entry) => ({
+			identifier: entry.identifier,
+			level: entry.system.classLevel,
+		}));
+		let nextClassLevel = characterClass.system.classLevel + 1;
+		let levelBefore = characterClass.system.classLevel;
+
+		if (multiclass) {
+			const choice = typedDialogData.classChoice;
+			if (!choice?.identifier) return;
+			const resolved = await this.#resolveLevelUpClass(choice);
+			if (!resolved) {
+				ui.notifications?.warn(localize('NIMBLE.levelUpDialog.classUnavailable'));
+				return;
+			}
+			characterClass = resolved.classItem;
+			nextClassLevel = resolved.nextClassLevel;
+			levelBefore = resolved.levelBefore;
+		}
+
 		const actorUpdates: Record<string, unknown> = {};
 		const itemUpdates: Record<string, unknown> = { 'system.classLevel': nextClassLevel };
 
 		const classHitDieSize = characterClass.system.hitDieSize;
-		const currentHitDice = this.system.attributes.hitDice[classHitDieSize.toString()]?.current;
-		const maxHitDice = this.system.attributes.hitDice?.[classHitDieSize.toString()]?.origin ?? [];
+		const hitDiePool = this.system.attributes.hitDice[classHitDieSize.toString()];
+		const currentHitDice = hitDiePool?.current;
+		const maxHitDice = hitDiePool?.origin ?? [];
 		const currentHp = this.system.attributes.hp.value;
 
 		// Apply hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
@@ -1944,7 +2064,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const hp = roll.total!;
 
 		this.outputLevelUpSummary(
-			{ currentClassLevel, ...typedDialogData, hitDiceAdvantageSource },
+			{ currentClassLevel: levelBefore, ...typedDialogData, hitDiceAdvantageSource },
 			roll,
 		);
 
@@ -1957,15 +2077,37 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		actorUpdates['system.attributes.hp.value'] = currentHp + hp;
 
-		actorUpdates[`system.attributes.hitDice.${classHitDieSize}`] = {
-			origin: [...maxHitDice, characterClass.identifier],
-			current: currentHitDice + 1,
-		};
+		actorUpdates[`system.attributes.hitDice.${classHitDieSize}`] = hitDiePool
+			? {
+					origin: [...maxHitDice, characterClass.identifier],
+					current: currentHitDice + 1,
+				}
+			: {
+					origin: [characterClass.identifier],
+					current: 1,
+				};
 
 		actorUpdates['system.classData.levels'] = [
 			...this.system.classData.levels,
 			characterClass.identifier,
 		];
+
+		if (multiclass) {
+			const levelsAfter = levelsBefore.map((entry) =>
+				entry.identifier === characterClass.identifier
+					? { ...entry, level: nextClassLevel }
+					: entry,
+			);
+			if (!levelsBefore.some((entry) => entry.identifier === characterClass.identifier)) {
+				levelsAfter.push({ identifier: characterClass.identifier, level: nextClassLevel });
+			}
+			const beforeHighest = uniqueHighestClassIdentifier(levelsBefore);
+			const afterHighest = uniqueHighestClassIdentifier(levelsAfter);
+			if (afterHighest && afterHighest !== beforeHighest) {
+				const highestClass = this.classes[afterHighest] ?? characterClass;
+				Object.assign(actorUpdates, this.#savingThrowUpdatesForClass(highestClass));
+			}
+		}
 
 		Object.entries(typedDialogData.skillPointChanges).forEach(([skillKey, change]) => {
 			if (change) {
@@ -2001,9 +2143,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const boonData = typedDialogData.selectedEpicBoon.toObject();
 			(boonData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
 				typedDialogData.selectedEpicBoon.uuid ?? undefined;
-			const created = await this.createEmbeddedDocuments('Item', [boonData] as Parameters<
-				typeof this.createEmbeddedDocuments
-			>[1]);
+			const created = await this.createEmbeddedDocuments('Item', [boonData as Item.CreateData]);
 			epicBoonIds = (created ?? [])
 				.map((item) => item.id)
 				.filter((id): id is string => id !== null);
@@ -2190,6 +2330,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		if (!characterClass) return;
 
+		const removingGainedClass = characterClass.system.classLevel <= 1;
 		const actorUpdates: Record<string, any> = {};
 		const itemUpdates: Record<string, any> = {};
 
@@ -2197,8 +2338,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		actorUpdates['system.attributes.hp.value'] =
 			this.system.attributes.hp.value - lastHistory.hpIncrease;
 
-		// Revert hit dice
-		if (lastHistory.hitDieAdded) {
+		// Revert hit dice for a class that stays. A class this level created is cleaned up below.
+		if (lastHistory.hitDieAdded && !removingGainedClass) {
 			const classHitDieSize = characterClass.system.hitDieSize;
 			const currentHitDice =
 				this.system.attributes.hitDice[classHitDieSize.toString()]?.current ?? 0;
@@ -2211,7 +2352,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 
 		// Revert abilities
-		if (Object.keys(lastHistory.abilityIncreases).length > 0) {
+		if (!removingGainedClass && Object.keys(lastHistory.abilityIncreases).length > 0) {
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 
@@ -2243,9 +2384,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			);
 		}
 
-		// Remove all subclasses if reverting from level 3
-		if (lastHistory.level <= 3) {
-			const subclasses = this.items.filter((i) => i.type === 'subclass');
+		// Remove this class's subclass when the reverted level is the one that granted it.
+		if (lastHistory.level <= 3 || removingGainedClass) {
+			const subclasses = this.items.filter((item) => {
+				if (item.type !== 'subclass') return false;
+				const parent = (item.system as { parentClass?: string }).parentClass ?? '';
+				return parent === '' || parent === characterClass.identifier;
+			});
 
 			if (subclasses.length > 0) {
 				const subclassIds = subclasses.map((s) => s.id).filter((id): id is string => id !== null);
@@ -2269,6 +2414,36 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			if (validSpellIds.length > 0) {
 				await this.deleteEmbeddedDocuments('Item', validSpellIds);
 			}
+		}
+
+		if (removingGainedClass) {
+			if (lastHistory.hitDieAdded) {
+				const classHitDieSize = characterClass.system.hitDieSize;
+				const pool = this.system.attributes.hitDice[classHitDieSize.toString()];
+				if (pool) {
+					const remaining = (pool.origin ?? []).filter(
+						(id: string) => id !== characterClass.identifier,
+					);
+					actorUpdates[`system.attributes.hitDice.${classHitDieSize}`] =
+						remaining.length === 0
+							? new foundry.data.operators.ForcedDeletion()
+							: {
+									origin: remaining,
+									current: Math.max(0, (pool.current ?? 0) - 1),
+								};
+				}
+			}
+
+			actorUpdates['system.classData.levels'] = this.system.classData.levels.filter(
+				(id: string) => id !== characterClass.identifier,
+			);
+			actorUpdates['system.levelUpHistory'] = this.system.levelUpHistory.slice(0, -1);
+			await this.update(actorUpdates);
+			skipClassDeletionCleanup(characterClass);
+			if (characterClass.id) {
+				await this.deleteEmbeddedDocuments('Item', [characterClass.id]);
+			}
+			return;
 		}
 
 		await forgetSchoolChoicesAt(this, lastHistory.level);

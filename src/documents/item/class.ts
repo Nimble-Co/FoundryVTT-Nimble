@@ -1,11 +1,23 @@
+import { SYSTEM_ID } from '#system';
 import {
 	type ClassResourceItem,
 	ClassResourceManager,
 } from '../../managers/ClassResourceManager.js';
 import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
+import {
+	classMaximumHp,
+	countsAsStartingClass,
+} from '../../utils/classProgression/multiclassLevel.js';
 import enrichDocumentHTML from '../../utils/documents/enrichDocumentHTML.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { NimbleBaseItem } from './base.svelte.js';
+import { shouldSkipClassCleanup } from './skipClassDeletionCleanup.js';
+
+function operationRequestsAddClass(options: unknown): boolean {
+	if (!options || typeof options !== 'object') return false;
+	const scoped = (options as Record<string, { addClass?: boolean } | undefined>)[SYSTEM_ID];
+	return scoped?.addClass === true;
+}
 
 export class NimbleClassItem extends NimbleBaseItem<'class'> {
 	declare ASI: Record<string, number>;
@@ -65,9 +77,19 @@ export class NimbleClassItem extends NimbleBaseItem<'class'> {
 		this.ASI = asiAccumulator(true);
 		this.totalASI = asiAccumulator(false);
 
-		this.maxHp =
-			CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize] +
-			this.system.hpData.reduce((acc, value) => acc + value, 0);
+		const parent = this.parent as NimbleCharacter | null;
+		const startingHp = CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize] ?? 0;
+		this.maxHp = classMaximumHp({
+			countsStartingHp: countsAsStartingClass({
+				embedded: this.isEmbedded,
+				startingClassIdentifier: this.isEmbedded
+					? parent?.system?.classData?.startingClass
+					: undefined,
+				classIdentifier: this.identifier,
+			}),
+			startingHp,
+			hpData: this.system.hpData,
+		});
 
 		this.hitDice = {
 			size: this.system.hitDieSize,
@@ -118,8 +140,16 @@ export class NimbleClassItem extends NimbleBaseItem<'class'> {
 			const actor = this.parent as NimbleCharacter;
 			const actorUpdates = {};
 			let proceedWithCreate = true;
+			const addingClass = operationRequestsAddClass(options);
 
-			if (Object.keys(actor.classes).length) return false;
+			if (Object.keys(actor.classes).length && !addingClass) return false;
+
+			if (addingClass) {
+				this.updateSource(data);
+				if (actor.classes[this.identifier]) return false;
+				await super._preCreate(data, options, user);
+				return true;
+			}
 
 			// Set up as starting class
 			if (!actor.system.classData.startingClass) {
@@ -281,6 +311,8 @@ export class NimbleClassItem extends NimbleBaseItem<'class'> {
 
 	override _onDelete(options, userId: string) {
 		super._onDelete(options, userId);
+
+		if (shouldSkipClassCleanup(this)) return;
 
 		// Update actor data
 		if (this.isEmbedded) {

@@ -226,17 +226,18 @@ async function createValidatedSubclasses(
 			const parentClass =
 				typeof subclass.system?.parentClass === 'string' ? subclass.system.parentClass : undefined;
 
-			const characterLevel = actor.levels?.character ?? 0;
-			if (characterLevel < 3) {
+			const parentClassItem = Object.values(actor.classes ?? {}).find(
+				(cls) => cls.identifier === parentClass,
+			);
+			const classLevel = parentClassItem?.system?.classLevel ?? actor.levels?.character ?? 0;
+			if (classLevel < 3) {
 				ui.notifications?.warn(
-					localize('NIMBLE.subclassDrop.levelTooLow', { level: String(characterLevel) }),
+					localize('NIMBLE.subclassDrop.levelTooLow', { level: String(classLevel) }),
 				);
 				continue;
 			}
 
-			const hasMatchingClass = Object.values(actor.classes ?? {}).some(
-				(cls) => cls.identifier === parentClass,
-			);
+			const hasMatchingClass = Boolean(parentClassItem);
 
 			if (!hasMatchingClass) {
 				const className = parentClass ? (CONFIG.NIMBLE?.classes?.[parentClass] ?? parentClass) : '';

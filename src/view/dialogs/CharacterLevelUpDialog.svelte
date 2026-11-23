@@ -4,6 +4,7 @@
 	import AbilityScoreIncrease from './components/levelUpHelper/AbilityScoreIncrease.svelte';
 	import EpicBoonSelection from './components/levelUpHelper/EpicBoonSelection.svelte';
 	import HitPointSelection from './components/levelUpHelper/HitPointSelection.svelte';
+	import LevelUpClassChoice from './components/levelUpHelper/LevelUpClassChoice.svelte';
 	import LevelUpClassFeatureSelection from './components/levelUpHelper/LevelUpClassFeatureSelection.svelte';
 	import LevelUpSpellGrants from './components/levelUpHelper/LevelUpSpellGrants.svelte';
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
@@ -32,7 +33,19 @@
 </script>
 
 <section class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.75rem;">
-	<HitPointSelection {document} bind:hitPointRollSelection={state.hitPointRollSelection} />
+	{#if state.multiclass}
+		<LevelUpClassChoice
+			choices={state.classOptions}
+			loading={state.classesLoading}
+			bind:selectedKey={state.selectedClassKey}
+		/>
+	{/if}
+
+	<HitPointSelection
+		{document}
+		hitDieSize={state.multiclass ? state.selectedHitDieSize : undefined}
+		bind:hitPointRollSelection={state.hitPointRollSelection}
+	/>
 
 	<AbilityScoreIncrease
 		{boons}
