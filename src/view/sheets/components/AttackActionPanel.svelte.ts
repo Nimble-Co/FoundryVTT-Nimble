@@ -11,6 +11,7 @@ import { getStrengthShortfall } from '../../../utils/weaponAttackLegality.js';
 /** System data for weapon items */
 interface WeaponSystemData {
 	objectType: string;
+	equipped?: boolean;
 	activation?: {
 		effects?: unknown[];
 		cost?: { type: string; quantity: number };
@@ -61,9 +62,11 @@ export function createAttackPanelState(
 	}
 
 	const weapons = $derived.by(() => {
-		const weaponItems = getActor().reactive.items.filter(
-			(item) => item.type === 'object' && getSystemData(item).objectType === 'weapon',
-		);
+		const weaponItems = getActor().reactive.items.filter((item) => {
+			if (item.type !== 'object') return false;
+			const system = getSystemData(item);
+			return system.objectType === 'weapon' && system.equipped === true;
+		});
 
 		if (!searchTerm) return weaponItems;
 
