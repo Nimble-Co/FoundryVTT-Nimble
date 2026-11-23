@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import {
+	FIRST_ATTACK_HALVE_FLAG,
+	HALVE_FIRST_ATTACK_PATH,
+} from '#utils/damage/firstAttackHalve.js';
 import { ApplyConditionRule } from '../../models/rules/applyCondition.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
@@ -2431,6 +2435,123 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 
 			expect(getModifiers(createModifierMessage('fire'))).toEqual([]);
 		});
+	});
+});
+
+describe('NimbleChatMessage.applyDamage — first attack each round', () => {
+	type Combat = { id: string; round: number; started: boolean };
+
+	function combatGame() {
+		return globals().game as TestGlobals['game'] & { combat?: Combat | null };
+	}
+
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+		combatGame().combat = { id: 'combat-1', round: 1, started: true };
+	});
+
+	afterEach(() => {
+		combatGame().combat = null;
+	});
+
+	function halvingActor() {
+		const stored: Record<string, unknown> = {};
+		return {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				[HALVE_FIRST_ATTACK_PATH]: true,
+				attributes: {
+					armor: 'none',
+					hp: { value: 10, temp: 0, max: 10 },
+					damageResistances: [] as string[],
+					damageImmunities: [] as string[],
+					damageVulnerabilities: [] as string[],
+				},
+				damageReductions: [] as object[],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+			getFlag: (scope: string, key: string) => (scope === SYSTEM_ID ? stored[key] : undefined),
+			setFlag: vi.fn(async (scope: string, key: string, value: unknown) => {
+				if (scope === SYSTEM_ID) stored[key] = value;
+			}),
+		};
+	}
+
+	function attackMessage(id: string, attack = true) {
+		return new NimbleChatMessage({
+			id,
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: attack ? [{ type: 'damage', canCrit: true, canMiss: false }] : [],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('halves the first hit and records the card', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+		expect(actor.setFlag).toHaveBeenCalledWith(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG, {
+			combatId: 'combat-1',
+			round: 1,
+			messageId: 'msg-1',
+		});
+	});
+
+	it('does not halve a second hit in the same round', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 5);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
+	});
+
+	it('halves the first hit of the next round', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+		combatGame().combat = { id: 'combat-1', round: 2, started: true };
+		await attackMessage('msg-3').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 5);
+	});
+
+	it('still halves the same card after it is applied', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = attackMessage('msg-1');
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 5);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 5);
+	});
+
+	it('does not halve damage that is not an attack, or an attack outside a started combat', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1', false).applyDamage(9, { outcome: 'fullDamage' });
+		combatGame().combat = { id: 'combat-1', round: 1, started: false };
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 9);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
+		expect(actor.setFlag).not.toHaveBeenCalled();
 	});
 });
 

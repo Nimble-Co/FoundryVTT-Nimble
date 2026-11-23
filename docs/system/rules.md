@@ -665,6 +665,8 @@ Halving rounds up, matching the heavy-armor convention. The books do not settle 
 
 `getDamageBreakdownForTarget` (the Targets row preview) and `applyAllDamage` (the button) run the same resolver over the same packet set, so for a single target the previewed number is the number removed. One thing the preview does not model: `buildDamageApplicationPlan` gives an actor targeted through two tokens its bank only once, while each token's preview row shows it. `applyDamage(value, options)` survives for callers that own a single node's damage — the minion group attack card, and the per-packet control on save-gated damage — and is a one-packet call into the same path.
 
+`halveFirstAttack` is separate from resistance and from a Defend. It marks the actor in `afterPrepareData`. The first attack against that actor in the current combat round is halved with `Math.ceil`, after armor and resistance, and after a Defend halve. The stamp `{ combatId, round, messageId }` lives at `flags.<id>.firstAttackHalved` and is written only after that attack's damage is applied, so a preview does not use the halve up and the same card still halves. A later card in that round does not. `onRoundChanged` clears the stamp, including when the round counter moves backward. A save or other damage that is not an attack is not halved. Outside a started combat, nothing is halved. There is no button.
+
 The system never hides Active Effects: every enabled AE on an actor renders on the token, on the canvas conditions panel, and in the sheet's effects lists, regardless of what created it. New rules that back their state with an AE get this visibility for free.
 
 ## Modifying incoming attacks (`modifyIncomingAttack`)
