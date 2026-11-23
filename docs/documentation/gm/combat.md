@@ -40,6 +40,12 @@ The Nimble combat tracker sits across the top of the screen and shows one card p
 
 ![The combat tracker at the top of the screen during an active combat, with a character card's resource drawer open](/images/documentation/combat-tracker.png)
 
+If the tracker takes up more room than you want, the chevron on its right-hand controls minimizes it to a slim bar showing the round, whose turn it is, and their remaining actions. The chevron on the bar expands it again. Initiative rolls, resource drawers, and the rest of the controls stay on the full tracker. To remove the tracker entirely, turn off the **Enable Combat Tracker** setting.
+
+::: details Who can use the bar's buttons
+A GM keeps previous turn, next turn, and Start Combat (before the fight begins) on the bar. End Turn is there for the GM and for the player who owns the combatant taking its turn. The minimized choice is remembered on this device, so it doesn't change what anyone else at the table sees.
+:::
+
 The tracker is heavily customizable: width, card size, colors, hit point bar display, what players are allowed to see, and more. Click the gear button on the tracker to open the **Combat Tracker Settings** window, and see the [Settings Reference](../reference/settings.md) for the full list of options rather than hunting for them here.
 
 ::: info The Combat System panel

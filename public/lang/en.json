@@ -6226,7 +6226,15 @@
 			"previousRound": "Previous Round",
 			"previousTurn": "Previous Turn",
 			"nextTurn": "Next Turn",
-			"nextRound": "Next Round"
+			"nextRound": "Next Round",
+			"minimizeTracker": "Minimize Combat Tracker",
+			"expandTracker": "Expand Combat Tracker",
+			"currentRound": "Current Round",
+			"roundBadge": "Round {round}",
+			"combatNotStarted": "Combat Not Started",
+			"noActiveCombatant": "No Active Combatant",
+			"startCombat": "Start Combat",
+			"availableActions": "Available actions: {current} / {max}"
 		},
 		"formulaWarnings": {
 			"actorOnly": "A formula uses {references}, which {actor} does not have. Nimble counts it as 0.",
@@ -6596,6 +6604,10 @@
 			"combatTrackerEnabled": {
 				"name": "Enable Combat Tracker",
 				"hint": "Show the Combat Tracker at the top of the screen"
+			},
+			"combatTrackerMinimized": {
+				"name": "Minimize Combat Tracker",
+				"hint": "Collapse the Combat Tracker to a slim bar showing the round, whose turn it is, and their remaining actions. Set from the tracker's own controls and remembered on this device."
 			},
 			"combatTrackerWidthLevel": {
 				"name": "Combat Tracker Width Level",
