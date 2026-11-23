@@ -77,6 +77,10 @@ import {
 	collectPrimaryDieBonuses,
 	type PrimaryDieBonusRecord,
 } from '../utils/damage/collectPrimaryDieBonuses.js';
+import {
+	damageFormulaChoiceOffers,
+	itemIdentifierOf,
+} from '../utils/damage/damageFormulaChoice.js';
 import { damageMultiplierOf } from '../utils/damage/damageMultiplier.js';
 import { divideDice } from '../utils/damage/divideDice.js';
 import { markDualWieldUse } from '../utils/damage/dualWield.js';
@@ -151,6 +155,7 @@ import {
 	noChosenUseOptions,
 } from '../utils/spell/spellUseOptions.js';
 import { soleTarget } from '../utils/tokens/soleTarget.js';
+import { firstDamageNode } from '../utils/treeManipulation/firstDamageNode.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import { withWeaponEffects } from '../utils/treeManipulation/withWeaponEffects.js';
@@ -1740,6 +1745,32 @@ class ItemActivationManager {
 		return formula.replace(/(\d*)d(\d+)/, `${newCount}d${diceSize}`);
 	}
 
+	/** The default attack has a damage-formula tick. A fast forward never asks. */
+	#asksDamageFormulaChoice(): boolean {
+		const attack = weaponAttackOf(this.#item);
+		const weapon = attack ? this.#weaponOptions[0] : undefined;
+		let item: unknown = this.#item;
+		let formula = '';
+		if (weapon) {
+			formula = weapon.formula;
+			item = null;
+			if (weapon.uuid && weapon.uuid !== UNARMED_STRIKE) {
+				for (const each of (this.actor?.items ?? []) as Iterable<{ uuid?: string }>) {
+					if (each.uuid === weapon.uuid) {
+						item = each;
+						break;
+					}
+				}
+			}
+		} else {
+			const node = firstDamageNode(
+				(this.activationData?.effects ?? []) as Parameters<typeof firstDamageNode>[0],
+			) as { formula?: string } | null;
+			formula = node?.formula ?? '';
+		}
+		return damageFormulaChoiceOffers(this.actor, itemIdentifierOf(item), formula).length > 0;
+	}
+
 	/**
 	 * Resolves the dialog data for the activation, showing a configuration
 	 * dialog when one is required.
@@ -1820,7 +1851,10 @@ class ItemActivationManager {
 		// player's input — so an item that asks for one always gets the dialog.
 		// The same holds for the enhancement a pinned upcast picks from a list.
 		const mustPrompt =
-			this.#hasVariableChargeSpend() || this.#hasPinnedUpcastChoice() || asksResourceAmount;
+			this.#hasVariableChargeSpend() ||
+			this.#hasPinnedUpcastChoice() ||
+			asksResourceAmount ||
+			(this.#item.type !== 'spell' && this.#asksDamageFormulaChoice());
 
 		if (!hasRolls && !isSpell && !mustPrompt && !this.#offersFreeUse()) {
 			// No rolls needed, use default

@@ -344,7 +344,7 @@ Which to reach for:
 
 - The condition is something the system can see (bloodied, unarmored, a toggle being on, a pool being empty): use a default roll mode rule with a `predicate`. It re-resolves every data-prep cycle, so it turns itself on and off.
 - The condition is something only the table knows (what a save is against, what a skill check is being used for): use `situationalRollMode` and put the description in the rule's `label`, which is what the checkbox shows. The `predicate` still gates whether the option is offered, so the two compose.
-- The roll is an attack: neither applies. Attacks are configured in the item activation dialog, where `conditionalBonus` offers a per-attack choice of advantage or bonus damage.
+- The roll is an attack: neither applies. Attacks are configured in the item activation dialog, where `conditionalBonus` offers a per-attack choice of advantage or bonus damage. A `damageFormulaChoice` rule offers a tick in that same window to replace one dice term of the attack's damage when the attack uses a named item. The tick starts off, so declining keeps the item's damage.
 
 Each option renders with the granting item's own image, so no icon has to be authored on the rule or kept in sync with the item. Checking an option moves the roll mode slider itself, so the slider always shows the roll that will be made; the dialog records the adjustment it actually applied, since clamping at the slider's ends can swallow part of it and unchecking has to give back exactly what checking took. The GM's "hide roll" toggle sits beside the roll formula at the bottom of the dialog, well away from the situational options.
 

@@ -715,6 +715,122 @@ describe('the activation dialog damage multiplier tick', () => {
 	});
 });
 
+describe('the activation dialog damage formula choice', () => {
+	const bowmaster = (itemIdentifier: string, from: string, to: string, id: string) => ({
+		type: 'damageFormulaChoice',
+		id,
+		label: 'Versatile Bowmaster',
+		itemIdentifier,
+		from,
+		to,
+		parentDocument: { uuid: 'Item.versatile-bowmaster', name: 'Versatile Bowmaster' },
+	});
+	const rules = [
+		bowmaster('longbow', '1d8', '2d4', 'vb-longbow'),
+		bowmaster('crossbow', '4d4', '2d8', 'vb-crossbow'),
+	];
+	const weapon = (name: string, formula: string) => ({
+		uuid: `Item.${name}`,
+		name,
+		type: 'object',
+		flags: {},
+		rules: [],
+		system: {
+			objectType: 'weapon',
+			equipped: true,
+			activation: {
+				targets: { attackType: 'range' },
+				effects: [{ type: 'damage', formula, damageType: 'piercing' }],
+			},
+		},
+	});
+
+	function open(item: object, items: object[] = []) {
+		user.targets = new Set();
+		return createState({
+			actor: () =>
+				({
+					type: 'character',
+					rules,
+					system: {},
+					items: Object.assign([...items], { contents: items }),
+					getFlag: () => undefined,
+				}) as never,
+			item: () => item as never,
+			hideRollsDefault: false,
+		});
+	}
+
+	it('starts off, and checking it replaces the longbow dice', () => {
+		const state = open({
+			type: 'object',
+			name: 'Longbow',
+			identifier: 'longbow',
+			system: {
+				activation: {
+					effects: [{ type: 'damage', formula: '1d8+@dexterity', damageType: 'piercing' }],
+				},
+			},
+		});
+
+		expect(state.formulaChoices).toEqual([
+			expect.objectContaining({ from: '1d8', to: '2d4', label: 'Versatile Bowmaster' }),
+		]);
+		expect(state.modifiedFormulas[0]?.formula).toBe('1d8+@dexterity');
+
+		state.setFormulaChoice(state.formulaChoices[0]?.key ?? '', true);
+
+		expect(state.modifiedFormulas[0]?.formula).toBe('2d4+@dexterity');
+	});
+
+	it('asks nothing for a weapon that is neither', () => {
+		const state = open({
+			type: 'object',
+			name: 'Shortbow',
+			identifier: 'shortbow',
+			system: {
+				activation: {
+					effects: [{ type: 'damage', formula: '1d6+@dexterity', damageType: 'piercing' }],
+				},
+			},
+		});
+
+		expect(state.formulaChoices).toEqual([]);
+		expect(state.modifiedFormulas[0]?.formula).toBe('1d6+@dexterity');
+	});
+
+	it('follows the weapon a feature attacks with, and keeps a tick for that weapon', () => {
+		const longbow = weapon('Longbow', '1d8+@dexterity');
+		const shortbow = weapon('Shortbow', '1d6+@dexterity');
+		const state = open(
+			{
+				type: 'feature',
+				name: 'Vital Shot',
+				identifier: 'vital-shot',
+				system: {
+					activation: {
+						weaponAttack: 'ranged',
+						targets: {},
+						effects: [{ id: 'd', type: 'damage', formula: '0' }],
+					},
+				},
+			},
+			[longbow, shortbow],
+		);
+
+		expect(state.formulaChoices).toEqual([expect.objectContaining({ from: '1d8', to: '2d4' })]);
+		state.setFormulaChoice(state.formulaChoices[0]?.key ?? '', true);
+		expect(state.modifiedFormulas[0]?.formula).toBe('2d4+@dexterity');
+
+		state.weaponUuid = 'Item.Shortbow';
+		expect(state.formulaChoices).toEqual([]);
+		expect(state.modifiedFormulas[0]?.formula).toBe('1d6+@dexterity');
+
+		state.weaponUuid = 'Item.Longbow';
+		expect(state.modifiedFormulas[0]?.formula).toBe('2d4+@dexterity');
+	});
+});
+
 describe('the activation dialog condition ticks', () => {
 	const spear = {
 		type: 'weapon',

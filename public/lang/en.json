@@ -2091,6 +2091,7 @@
 			"maxActionBonus": "Max Actions Bonus",
 			"damageRecoil": "Damage Recoil",
 			"damageMultiplier": "Damage Multiplier Tick",
+			"damageFormulaChoice": "Damage Formula Choice",
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
 			"poolEmptyEffect": "Effect When Pool Empty",
@@ -3864,6 +3865,21 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool it spends a charge from."
+				}
+			},
+			"damageFormulaChoice": {
+				"description": "Offer a tick in the roll window to replace one dice term of an attack's damage when the attack uses a named item. The tick starts off, so declining keeps the item's damage.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The weapon this choice is for, such as longbow. The attack must use that item. Blank means this item."
+				},
+				"from": {
+					"label": "Instead of",
+					"hint": "The dice in the weapon's damage that this choice replaces, such as 1d8. The choice is not offered when the damage does not contain them."
+				},
+				"to": {
+					"label": "Roll",
+					"hint": "The dice to roll instead, such as 2d4. The rest of the damage formula stays."
 				}
 			},
 			"damageMultiplier": {
@@ -6257,6 +6273,7 @@
 			},
 			"usedThisRound": "You used this in this round.",
 			"freeUse": "Use without a charge",
+			"damageFormulaChoice": "{label}: roll {to} instead of {from}",
 			"maxDamage": {
 				"damage": "Max damage ({feature})",
 				"healing": "Max healing ({feature})",

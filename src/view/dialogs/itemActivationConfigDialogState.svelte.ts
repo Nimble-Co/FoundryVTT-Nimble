@@ -26,6 +26,11 @@ import {
 	deliveryOfAttack,
 	matchesAttackDelivery,
 } from '#utils/damage/attackDelivery.js';
+import {
+	applyDamageFormulaChoices,
+	damageFormulaChoiceOffers,
+	itemIdentifierOf,
+} from '#utils/damage/damageFormulaChoice.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
 import { maxDamageOffers } from '#utils/damage/maxDamageOffers.js';
@@ -152,6 +157,11 @@ export function createItemActivationConfigDialogState(
 	const keptAmount = keptAmountFor(actor, item);
 	let usesKeptAmount = $state(keptAmount !== null && !held.choosing);
 	let usesDamageMultiplier = $state(false);
+	let formulaChoiceChecked = $state<Record<string, boolean>>({});
+
+	function setFormulaChoice(key: string, checked: boolean) {
+		formulaChoiceChecked = { ...formulaChoiceChecked, [key]: checked };
+	}
 
 	const weaponAttack = weaponAttackOf(item);
 	const weapons = weaponOptionsFor(actor, weaponAttack);
@@ -491,7 +501,7 @@ export function createItemActivationConfigDialogState(
 			})),
 	);
 
-	const damageEffects = $derived.by(() => {
+	const baseDamageEffects = $derived.by(() => {
 		const effects = extractDamageEffectsFromItem(options.item());
 		if (!chosenWeapon || !effects[0]) return effects;
 		const [first, ...others] = effects;
@@ -499,6 +509,22 @@ export function createItemActivationConfigDialogState(
 			{ ...first, formula: chosenWeapon.formula, damageType: chosenWeapon.damageType },
 			...others,
 		];
+	});
+	const formulaChoices = $derived(
+		damageFormulaChoiceOffers(
+			actor,
+			itemIdentifierOf(chosenWeapon ? weaponItemOf(weaponUuid) : item),
+			baseDamageEffects[0]?.formula ?? '',
+		),
+	);
+	const damageEffects = $derived.by(() => {
+		const effects = baseDamageEffects;
+		const first = effects[0];
+		if (!first) return effects;
+		const replaced = applyDamageFormulaChoices(first.formula, formulaChoices, formulaChoiceChecked);
+		if (replaced === null) return effects;
+		const [head, ...rest] = effects;
+		return [{ ...head, formula: replaced }, ...rest];
 	});
 
 	const damageFormula = $derived(damageEffects[0]?.formula || '0');
@@ -633,6 +659,13 @@ export function createItemActivationConfigDialogState(
 		set usesDamageMultiplier(value: boolean) {
 			usesDamageMultiplier = value;
 		},
+		get formulaChoices() {
+			return formulaChoices;
+		},
+		get formulaChoiceChecked() {
+			return formulaChoiceChecked;
+		},
+		setFormulaChoice,
 		get usesKeptAmount() {
 			return usesKeptAmount;
 		},
