@@ -169,4 +169,36 @@ describe('dropping to 0 HP', () => {
 		expect(actor.update).not.toHaveBeenCalled();
 		expect(give).not.toHaveBeenCalled();
 	});
+
+	it('treats an attack card as an attack, and setting HP to 0 as not one', async () => {
+		const attacks: boolean[] = [];
+		const actor = hero();
+		actor.rules = [
+			prevent({
+				matchesDrop: (request: { attack?: boolean }) => {
+					attacks.push(request.attack === true);
+					return false;
+				},
+			}),
+		] as unknown as typeof actor.rules;
+
+		const gameWithMessages = game as { messages?: { get?: (id: string) => unknown } };
+		const previous = gameWithMessages.messages;
+		gameWithMessages.messages = {
+			get: (id: string) =>
+				id === 'attack'
+					? { system: { activation: { targets: { attackType: 'melee' }, effects: [] } } }
+					: { system: { activation: { effects: [{ type: 'damage' }] } } },
+		};
+
+		try {
+			await withDamageCard('attack', () => actor.applyDamage(8));
+			await withDamageCard('hazard', () => actor.applyDamage(8));
+			await actor.setCurrentHP(0);
+		} finally {
+			gameWithMessages.messages = previous;
+		}
+
+		expect(attacks).toEqual([true, false, false]);
+	});
 });

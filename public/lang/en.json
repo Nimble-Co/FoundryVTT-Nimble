@@ -4159,7 +4159,23 @@
 				},
 				"moveDistance": {
 					"label": "Move",
-					"hint": "Spaces they may move when this changes the drop. Blank: no move."
+					"hint": "Spaces they may move when this changes the drop. A formula such as @speed is that creature's speed. Blank: no move."
+				},
+				"moveDirection": {
+					"label": "Direction",
+					"hint": "Any direction, or away from the attacker. Away uses the attacker's token as the source of the move. With no attacker token, the move is in any direction.",
+					"choices": {
+						"any": "Any direction",
+						"away": "Away from the attacker"
+					}
+				},
+				"onlyAttack": {
+					"label": "Attacks only",
+					"hint": "When on, this matches an attack that would drop the creature to 0 HP. Setting HP to 0, and damage that is not an attack, do not match. Off: any drop to 0 HP."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the rule changes a drop to 0 HP only while this charge pool has a charge, and a change that sticks spends 1 charge. The move can still be declined. Leave empty for no limit."
 				},
 				"watch": {
 					"label": "Who",

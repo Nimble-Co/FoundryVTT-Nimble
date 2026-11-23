@@ -1,5 +1,6 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
 import { askOwner } from './askOwner.js';
+import type { MoveDirection } from './offerWoundMove.js';
 import type { PendingMove, WoundSource } from './pendingWound.js';
 import { rulesWatching, type WoundCreature } from './rulesWatching.js';
 
@@ -9,6 +10,7 @@ export interface WouldDropPlan {
 	response: 'prevent' | 'floor';
 	woundInstead: number;
 	moveDistance: number;
+	moveDirection?: MoveDirection;
 }
 
 export interface WouldDropOffer {
@@ -19,6 +21,8 @@ export interface WouldDropOffer {
 export interface WouldDropRequest {
 	actor: WoundCreature;
 	source?: WoundSource | null;
+	/** True when the drop comes from an attack card. Setting HP to 0 is not an attack. */
+	attack?: boolean;
 	choose?: (offer: WouldDropOffer) => Promise<boolean>;
 	watchers?: readonly WoundCreature[];
 }
@@ -38,8 +42,9 @@ interface DropRule {
 	choice?: string;
 	label?: string;
 	parentDocument?: { name?: string | null } | null;
-	matchesDrop?: () => boolean;
+	matchesDrop?: (request: WouldDropRequest) => boolean;
 	planDrop?: (mover: WoundCreature) => WouldDropPlan;
+	commitDrop?: () => Promise<void> | void;
 }
 
 async function askDrop(
@@ -52,17 +57,23 @@ async function askDrop(
 }
 
 async function finish(
-	actor: WoundCreature,
+	request: WouldDropRequest,
 	rule: DropRule,
 	plan: WouldDropPlan,
 ): Promise<WouldDropOutcome> {
+	await rule.commitDrop?.();
+	const actor = request.actor;
 	const moves: PendingMove[] = [];
+	const direction = plan.moveDirection === 'away' ? 'away' : 'any';
 	if (plan.moveDistance >= 1) {
 		const name = ruleLabel(rule);
-		moves.push({ actorUuid: actor.uuid ?? '', distance: plan.moveDistance, name });
+		moves.push({ actorUuid: actor.uuid ?? '', distance: plan.moveDistance, name, direction });
 		try {
 			const { offerWoundMove } = await import('./offerWoundMove.js');
-			await offerWoundMove(actor, plan.moveDistance, name);
+			await offerWoundMove(actor, plan.moveDistance, name, {
+				direction,
+				origin: request.source,
+			});
 		} catch {
 			// The move is on the outcome. Posting it must not force the drop through.
 		}
@@ -81,12 +92,12 @@ async function finish(
  */
 export async function resolveWouldDropToZero(request: WouldDropRequest): Promise<WouldDropOutcome> {
 	const watching = rulesWatching<DropRule>(request.actor, 'wouldDropToZero', request.watchers);
-	const matches = (rule: DropRule) => !rule.matchesDrop || rule.matchesDrop();
+	const matches = (rule: DropRule) => !rule.matchesDrop || rule.matchesDrop(request);
 	const automatics = watching.filter(({ rule }) => rule.choice !== 'offer' && matches(rule));
 	const first = automatics[0];
 	if (first) {
 		const plan = first.rule.planDrop?.(request.actor);
-		if (plan) return finish(request.actor, first.rule, plan);
+		if (plan) return finish(request, first.rule, plan);
 	}
 
 	for (const { rule, holder } of watching) {
@@ -99,7 +110,7 @@ export async function resolveWouldDropToZero(request: WouldDropRequest): Promise
 			request.choose,
 		);
 		if (!accepted) continue;
-		return finish(request.actor, rule, plan);
+		return finish(request, rule, plan);
 	}
 
 	return { response: 'land', woundInstead: 0, moves: [] };

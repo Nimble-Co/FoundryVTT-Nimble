@@ -41,7 +41,12 @@ describe('resolveWouldDropToZero', () => {
 		expect(outcome.response).toBe('prevent');
 		expect(outcome.woundInstead).toBe(0);
 		expect(outcome.moves).toEqual([
-			{ actorUuid: actor.uuid, distance: 6, name: "Ha! I'm Over Here!" },
+			{
+				actorUuid: actor.uuid,
+				distance: 6,
+				name: "Ha! I'm Over Here!",
+				direction: 'any',
+			},
 		]);
 	});
 

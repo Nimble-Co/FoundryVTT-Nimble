@@ -3,6 +3,7 @@ import { actorRules, ruleLabel } from '#utils/actor/actorRules.js';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import { raisePoolDiceOnWounds } from '../../hooks/dicePoolTriggers/poolDieToMaxTrigger.js';
 import { askOwner } from './askOwner.js';
+import type { MoveDirection } from './offerWoundMove.js';
 import { rulesWatching, type WoundCreature } from './rulesWatching.js';
 
 export type WoundCause = 'direct' | 'dropToZero' | 'dyingDamage' | 'redirect';
@@ -60,6 +61,7 @@ export interface PendingMove {
 	actorUuid: string;
 	distance: number;
 	name: string;
+	direction?: MoveDirection;
 }
 
 export interface PendingWoundOutcome {
