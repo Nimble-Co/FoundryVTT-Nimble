@@ -226,6 +226,22 @@ describe('postMovementOfferCard', () => {
 		expect(data.system.movementOffers[0].nodeId).toBe(node.id);
 	});
 
+	it('keeps a source name the caller passed', async () => {
+		await postMovementOfferCard(
+			input({
+				node: {
+					kind: 'free',
+					distance: '1',
+					ignoreDifficultTerrain: false,
+					direction: 'away',
+					sourceName: 'Goblin',
+				},
+			}),
+		);
+
+		expect(posted().system.activation.effects[0].sourceName).toBe('Goblin');
+	});
+
 	describe('who sees the card', () => {
 		const gm = { id: 'gm', isGM: true };
 		const users = [gm, ...['alice', 'bob', 'carol', 'dave'].map((id) => ({ id, isGM: false }))];

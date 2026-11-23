@@ -12,9 +12,11 @@ import { NimbleBaseRule } from './base.js';
 
 const DEFEND_OPTION_WAYS = ['withDefend', 'freeDefend', 'extraDefend', 'allyDefends'] as const;
 const DEFEND_OPTION_OUTCOMES = ['none', 'miss', 'noDamage', 'halve'] as const;
+const DEFEND_MOVE_DIRECTIONS = ['any', 'away', 'toward'] as const;
 
 type DefendOptionWay = (typeof DEFEND_OPTION_WAYS)[number];
 type DefendOptionOutcome = (typeof DEFEND_OPTION_OUTCOMES)[number];
+type DefendMoveDirection = (typeof DEFEND_MOVE_DIRECTIONS)[number];
 
 const key = (field: string, part: 'label' | 'hint') => `NIMBLE.rules.defendOption.${field}.${part}`;
 const isWay =
@@ -105,6 +107,28 @@ function schema() {
 			label: key('reminder', 'label'),
 			hint: key('reminder', 'hint'),
 		}),
+		moveDistance: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: key('moveDistance', 'label'),
+				hint: key('moveDistance', 'hint'),
+				widget: 'formula',
+			}),
+		),
+		moveDirection: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: 'any',
+				choices: choiceLabels('defendOption', 'moveDirection', DEFEND_MOVE_DIRECTIONS),
+				label: key('moveDirection', 'label'),
+				hint: key('moveDirection', 'hint'),
+				showWhen: (data: Record<string, unknown>) =>
+					typeof data.moveDistance === 'string' && data.moveDistance.trim() !== '',
+			}),
+		),
 		useItem: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -252,6 +276,8 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare alsoInterpose: boolean;
 	declare attackerEffectId: string;
 	declare reminder: string;
+	declare moveDistance: string;
+	declare moveDirection: DefendMoveDirection;
 	declare useItem: boolean;
 	declare upcastArmor: number;
 	declare withInterpose: boolean;
@@ -299,6 +325,16 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 		return this.resolveSpaces(this.range, 1);
 	}
 
+	/** The free move offered when this option is taken, or null when it has no distance. */
+	moveOffer(): { distance: string; direction: DefendMoveDirection } | null {
+		const distance = (this.moveDistance ?? '').trim();
+		if (!distance) return null;
+		const direction = DEFEND_MOVE_DIRECTIONS.includes(this.moveDirection)
+			? this.moveDirection
+			: 'any';
+		return { distance, direction };
+	}
+
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
@@ -306,6 +342,8 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 				['outcome', 'string'],
 				['armorBonus', 'string'],
 				['reminder', 'string'],
+				['moveDistance', 'string'],
+				['moveDirection', 'string'],
 			]),
 		);
 	}

@@ -33,6 +33,7 @@ import { requestIncomingAttackReaction } from '../incomingReactions/incomingAtta
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
+import { offerDefendOptionMoves } from './defendOptionMove.js';
 import {
 	cardRerollFor,
 	defendOptionEffect,
@@ -528,6 +529,13 @@ async function useInterposeTicks(
 	if (attacker && attackerEffects.length) {
 		await applyAttackerEffects(attacker, attackerEffects, actor.uuid ?? '', applyEffectToActor);
 	}
+	await offerDefendOptionMoves({
+		rules: used.map((pick) => pick.rule),
+		actor,
+		tokenUuid: token,
+		fromName: attacker?.name ?? '',
+		card,
+	});
 }
 
 /**
@@ -669,7 +677,7 @@ export async function openDefendWindow(
 				...(row.pick ? [row.pick.rule] : []),
 				...usedTicks.map((pick) => pick.rule),
 			]);
-	await requestDefend({
+	const written = await requestDefend({
 		messageId: card.id ?? '',
 		tokenUuid: defendedToken,
 		actorUuid: actor.uuid ?? '',
@@ -694,6 +702,16 @@ export async function openDefendWindow(
 	// shows only when the reroll is on the card.
 	for (const pick of rerolls) {
 		await useOptionReroll(card, pick, defendedToken, pick === row.pick);
+	}
+	if (written) {
+		const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
+		await offerDefendOptionMoves({
+			rules: [...(row.pick ? [row.pick.rule] : []), ...usedTicks.map((pick) => pick.rule)],
+			actor,
+			tokenUuid: defendedToken,
+			fromName: attacker?.name ?? '',
+			card,
+		});
 	}
 	return true;
 }

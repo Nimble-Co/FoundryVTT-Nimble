@@ -87,4 +87,32 @@ describe('DefendOptionRule', () => {
 		expect(whirl.turnUseKey).toBe(slipstream.turnUseKey);
 		expect(makeRule().optionCost.turnUseKey).toBeUndefined();
 	});
+
+	it('offers no move when the distance is empty', () => {
+		expect(makeRule().moveOffer()).toBeNull();
+		expect(makeRule({ moveDistance: '   ', moveDirection: 'away' }).moveOffer()).toBeNull();
+	});
+
+	it('offers the distance and direction, and any when the direction is not one', () => {
+		expect(
+			makeRule({ moveDistance: 'floor(@speed / 2)', moveDirection: 'away' }).moveOffer(),
+		).toEqual({ distance: 'floor(@speed / 2)', direction: 'away' });
+		expect(makeRule({ moveDistance: '2', moveDirection: 'sideways' }).moveOffer()).toEqual({
+			distance: '2',
+			direction: 'any',
+		});
+	});
+
+	it('hides the direction until there is a distance', () => {
+		const schema = DefendOptionRule.defineSchema() as unknown as Record<
+			string,
+			{ initial?: unknown; options?: { showWhen?: (data: Record<string, unknown>) => boolean } }
+		>;
+		expect(schema.moveDistance?.initial).toBe('');
+		expect(schema.moveDirection?.initial).toBe('any');
+		const show = schema.moveDirection?.options?.showWhen;
+		expect(show?.({ moveDistance: '' })).toBe(false);
+		expect(show?.({ moveDistance: '  ' })).toBe(false);
+		expect(show?.({ moveDistance: 'floor(@speed / 2)' })).toBe(true);
+	});
 });
