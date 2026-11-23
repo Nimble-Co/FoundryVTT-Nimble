@@ -542,7 +542,7 @@ A recovery entry has `trigger`, `mode` and `value`, and can also set:
 - `notWhenSpent`: a use that spent from this pool gains nothing.
 - `needsFeatureEffects`: gains nothing with Feature Effects off.
 
-`onWound` runs once for each Wound of one update. `onMarkedDeath` runs for each hero who marked the creature, also on an attack of an ally.
+`onWound` runs once for each Wound of one update, and once for each Wound a pending-Wound rule stops. `onMarkedDeath` runs for each hero who marked the creature, also on an attack of an ally.
 
 `hideMax` on the pool shows the count alone, for a pool the book gives no cap. `max` stays as the limit.
 
@@ -779,3 +779,21 @@ An attack with 2 or more targets and no area sets `multiTarget`: the Primary Die
 ### Legacy `forceReroll`
 
 The `forceReroll` modifier is gone; the `reroll` rule does its work. Chat messages are not migrated, so old attack cards can still hold `incomingReactions` entries with `kind: 'forceReroll'` and the `rerollTrigger` / `rerollWithDisadvantage` fields. The card schema still accepts them so those cards validate. Nothing makes such an entry any more: the card does not show it, and the GM socket ignores a request for it.
+
+### Pending Wounds
+
+`giveWounds` asks `alterPendingWound` (`src/utils/wounds/pendingWound.ts`) before it writes. A `pendingWound` rule (`src/models/rules/pendingWound.ts`, group `triggers`) can stop the Wounds, lower the number, set the number, or give them to the source or to the creature with the rule. The amount is a number. The rule sees the source, the cause (`direct`, `dropToZero`, or `redirect`), whether it is a crit, and the headroom left before the last Wound.
+
+A stopped Wound does not land, and `onWound` still runs once for each Wound stopped. Lower and set do not run it for the Wounds they take off. A redirect is pending again for the creature who receives it. A redirect back to someone already in that chain stays where it is.
+
+`woundImmunity` (`src/models/rules/woundImmunity.ts`, group `conditions`) stops every pending Wound on the creature that has it, and those Wounds still run `onWound`. It has no duration of its own: put it on an effect that ends when the turn ends.
+
+`wouldDropToZero` (`src/models/rules/wouldDropToZero.ts`) is a separate event. `resolveWouldDropToZero` reads it when HP would fall from above 0 to 0, from `applyDamage` or `setCurrentHP`. Preventing the drop writes no HP and grants no Wound from that drop. Floor leaves the creature at 1 HP and does not grant that Wound. `woundInstead` is a separate gain. Damage while the creature is already at 0 HP is not this event, and the system does not grant the 2 Wounds (3 on a crit) that such damage can inflict.
+
+Automatic rules run first, in priority order. The first automatic drop wins. A rule set to Ask uses a confirm dialog. A no, or a dialog that is not there, leaves the Wound or the drop as it was.
+
+`watch: allies` plus a move distance is how a companion feature such as Large Protect Me!, or a feature such as Ha! I'm Over Here!, is set. The move is offered to the creature who would take the Wound or the drop. A missing token does not undo the decision.
+
+A voluntary Wound cost and a click on the Wound meter do not go through the pending event.
+
+`safeRestWounds` (`src/models/rules/safeRestWounds.ts`, group `resource`) changes the 1 Wound a safe rest heals. With no such rule, a safe rest still heals 1, and never more than the creature has.

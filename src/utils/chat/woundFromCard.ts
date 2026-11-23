@@ -8,8 +8,8 @@ export const APPLIED_WOUNDS_FLAG = 'appliedWounds';
 type WoundTarget = Parameters<typeof giveWounds>[0];
 
 /** A creature's key in the card record: its uuid, with no dots, so two tokens of one actor differ. */
-function recordKey(actor: { uuid: string }): string {
-	return actor.uuid.replaceAll('.', '_');
+function recordKey(actor: { uuid: string | null }): string {
+	return (actor.uuid ?? '').replaceAll('.', '_');
 }
 
 /** What the Wound step of the card did, by creature. */

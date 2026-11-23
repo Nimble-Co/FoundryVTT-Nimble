@@ -2111,6 +2111,10 @@
 			"grantTargetBonus": "Grant Activation Targets",
 			"ricochet": "Ricochet",
 			"divideDice": "Divide Dice",
+			"pendingWound": "Pending Wound",
+			"safeRestWounds": "Safe Rest Wounds",
+			"wouldDropToZero": "Would Drop to 0 HP",
+			"woundImmunity": "Wound Immunity",
 			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
@@ -4049,6 +4053,141 @@
 			"zeroHpAtEnd": {
 				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
 			},
+			"pendingWound": {
+				"description": "Changes a Wound before it is written. It can stop the Wound, lower it, set the number, or give it to someone else. A stopped Wound still counts for features that watch Wounds. A Wound that is only lowered or set does not. The source, whether it is a crit, and how many Wounds are left before the last one are known here. A voluntary Wound cost, and a click on the Wound meter, do not come through here.",
+				"change": {
+					"label": "Change",
+					"hint": "What happens to the pending Wounds.",
+					"choices": {
+						"negate": "Stop them",
+						"lower": "Lower the number",
+						"set": "Set the number",
+						"redirect": "Give them to someone else"
+					}
+				},
+				"amount": {
+					"label": "Wounds",
+					"hint": "How many this change covers. Blank with Stop or Give them: all of them. Blank with Lower: none. Blank with Set: 0, and that is not a stopped Wound."
+				},
+				"whenAmount": {
+					"label": "Only when the number is",
+					"hint": "The pending number this matches. 0: any number. Unstoppable Force uses 2, and 3 on a crit."
+				},
+				"choice": {
+					"label": "Who decides",
+					"hint": "Apply it, or ask. A no leaves the Wounds as they were.",
+					"choices": {
+						"automatic": "Apply it",
+						"offer": "Ask first"
+					}
+				},
+				"cause": {
+					"label": "Cause",
+					"hint": "Which Wounds this matches.",
+					"choices": {
+						"any": "Any",
+						"direct": "Given directly",
+						"dropToZero": "From dropping to 0 HP",
+						"redirect": "Redirected from someone else"
+					}
+				},
+				"critical": {
+					"label": "Critical",
+					"hint": "Whether the Wound comes from a crit.",
+					"choices": {
+						"any": "Any",
+						"only": "Only a crit",
+						"never": "Not a crit"
+					}
+				},
+				"onlyLastWound": {
+					"label": "Only the last Wound",
+					"hint": "Matches only when these Wounds would fill the track."
+				},
+				"watch": {
+					"label": "Who",
+					"hint": "The creature with the rule, or an ally.",
+					"choices": {
+						"self": "This creature",
+						"allies": "An ally"
+					}
+				},
+				"reach": {
+					"label": "Within spaces",
+					"hint": "How close the ally must be. 0: any distance."
+				},
+				"redirectTo": {
+					"label": "Give the Wounds to",
+					"hint": "The source of the Wound, or the creature whose rule this is.",
+					"choices": {
+						"source": "The source",
+						"watcher": "The creature with this rule"
+					}
+				},
+				"moveDistance": {
+					"label": "Move",
+					"hint": "Spaces the creature who would take the Wound may move when this changes them. Blank: no move. Large Protect Me! uses this with Ask first."
+				}
+			},
+			"wouldDropToZero": {
+				"description": "When the creature would drop from above 0 HP to 0, this can stop the drop or leave them at 1 HP. Stopping the drop also stops the Wound that drop would cause. Damage while they are already at 0 HP is not this. A move here is how a feature such as Ha! I'm Over Here! takes them away instead of the damage.",
+				"response": {
+					"label": "Instead",
+					"hint": "Stop the drop, or leave them at 1 HP.",
+					"choices": {
+						"prevent": "Take no damage",
+						"floor": "Stay at 1 HP"
+					}
+				},
+				"choice": {
+					"label": "Who decides",
+					"hint": "Apply it, or ask. A no lets the drop happen.",
+					"choices": {
+						"automatic": "Apply it",
+						"offer": "Ask first"
+					}
+				},
+				"woundInstead": {
+					"label": "Wounds instead",
+					"hint": "Wounds gained when the drop is stopped or floored. They are a separate gain, not the Wound the drop would cause. Blank: none."
+				},
+				"moveDistance": {
+					"label": "Move",
+					"hint": "Spaces they may move when this changes the drop. Blank: no move."
+				},
+				"watch": {
+					"label": "Who",
+					"hint": "The creature with the rule, or an ally.",
+					"choices": {
+						"self": "This creature",
+						"allies": "An ally"
+					}
+				},
+				"reach": {
+					"label": "Within spaces",
+					"hint": "How close the ally must be. 0: any distance."
+				}
+			},
+			"woundImmunity": {
+				"description": "While this rule applies, Wounds that would land on this creature do not. Those Wounds still count for features that watch Wounds. Put it on an effect that ends at the end of the turn for immunity that lasts that long."
+			},
+			"safeRestWounds": {
+				"description": "Changes the 1 Wound a safe rest heals. Rules run from the lowest priority, and each one sees the number so far. All heals every current Wound. With no rule, a safe rest still heals 1.",
+				"mode": {
+					"label": "Change",
+					"hint": "Add to 1, multiply it, replace it, or heal every current Wound.",
+					"choices": {
+						"add": "Add",
+						"multiply": "Multiply",
+						"replace": "Replace",
+						"all": "Heal every Wound"
+					}
+				},
+				"value": {
+					"label": "Amount",
+					"hint": "Added, multiplied, or used as the new number. 0 with Add leaves the 1 in place."
+				}
+			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",
 				"event": {
@@ -5441,7 +5580,19 @@
 		},
 		"wounds": {
 			"heading": "Wounds",
-			"toggle": "Toggle wound {level}"
+			"toggle": "Toggle wound {level}",
+			"pending": {
+				"chooseTitle": "A Wound is about to land",
+				"use": "Use it",
+				"skip": "Let it land",
+				"offer": "{name} can change {count} pending Wounds. Use it?"
+			},
+			"drop": {
+				"chooseTitle": "About to drop to 0 HP",
+				"use": "Use it",
+				"skip": "Let it happen",
+				"offer": "{name} can change this drop to 0 HP. Use it?"
+			}
 		},
 		"manaConfig": {
 			"configureMana": "Configure Mana",

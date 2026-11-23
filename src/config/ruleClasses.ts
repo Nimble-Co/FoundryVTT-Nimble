@@ -71,6 +71,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { OptionWindowRule } from '../models/rules/optionWindow.js';
+import { PendingWoundRule } from '../models/rules/pendingWound.js';
 import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
 import { PoolEmptyEffectRule } from '../models/rules/poolEmptyEffect.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
@@ -79,6 +80,7 @@ import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { ResourceCostRule } from '../models/rules/resourceCost.js';
 import { RicochetRule } from '../models/rules/ricochet.js';
+import { SafeRestWoundsRule } from '../models/rules/safeRestWounds.js';
 import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -95,6 +97,8 @@ import { TurnDamageRule } from '../models/rules/turnDamage.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 import { UseItemFreeRule } from '../models/rules/useItemFree.js';
 import { UseOptionRule } from '../models/rules/useOption.js';
+import { WouldDropToZeroRule } from '../models/rules/wouldDropToZero.js';
+import { WoundImmunityRule } from '../models/rules/woundImmunity.js';
 import { ZeroHpAtEndRule } from '../models/rules/zeroHpAtEnd.js';
 
 /** Every rule type and its class. A rule type's label key is `NIMBLE.ruleTypes.<type>`. */
@@ -196,5 +200,9 @@ export const RULE_CLASSES = {
 	useItemFree: UseItemFreeRule,
 	useOption: UseOptionRule,
 	unarmedDamage: UnarmedDamageRule,
+	pendingWound: PendingWoundRule,
+	safeRestWounds: SafeRestWoundsRule,
+	wouldDropToZero: WouldDropToZeroRule,
+	woundImmunity: WoundImmunityRule,
 	zeroHpAtEnd: ZeroHpAtEndRule,
 } as const;

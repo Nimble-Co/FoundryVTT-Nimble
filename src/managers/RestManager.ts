@@ -3,6 +3,7 @@ import { systemHookName } from '#system';
 import type { OptionSwapSubmitData } from '#types/optionSwap.d.ts';
 import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/actor/manaRecovery.js';
 import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
+import { woundsHealedOnSafeRest } from '#utils/wounds/safeRestWounds.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 
@@ -321,15 +322,14 @@ class RestManager {
 
 	#restoreWounds() {
 		const { value } = this.#actor.system.attributes.wounds;
+		const healed = woundsHealedOnSafeRest(this.#actor, value);
+		if (healed <= 0) return;
 
 		this.#updates.actor['system.attributes.wounds'] = {
-			value: Math.max(value - 1, 0),
+			value: Math.max(value - healed, 0),
 		};
-
-		if (value !== 0) {
-			this.#recovery.woundsRecovered = 1;
-			this.#summary.push('Recovered 1 wound.');
-		}
+		this.#recovery.woundsRecovered = healed;
+		this.#summary.push(`Recovered ${healed} ${healed === 1 ? 'wound' : 'wounds'}.`);
 	}
 
 	#endInspiration() {
