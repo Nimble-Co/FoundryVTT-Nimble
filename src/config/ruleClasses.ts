@@ -42,6 +42,7 @@ import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.js';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { GrantTargetBonusRule } from '../models/rules/grantTargetBonus.js';
+import { HalfDamageOnKillRule } from '../models/rules/halfDamageOnKill.js';
 import { HalveFirstAttackRule } from '../models/rules/halveFirstAttack.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HeldRollRule } from '../models/rules/heldRoll.js';
@@ -127,6 +128,7 @@ export const RULE_CLASSES = {
 	damageRecoil: DamageRecoilRule,
 	defendOption: DefendOptionRule,
 	damageReduction: DamageReductionRule,
+	halfDamageOnKill: HalfDamageOnKillRule,
 	halveFirstAttack: HalveFirstAttackRule,
 	dyingActionLimit: DyingActionLimitRule,
 	emptyPoolsAtEnd: EmptyPoolsAtEndRule,

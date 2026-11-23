@@ -43,6 +43,7 @@ import {
 	foldBonusIntoPrimaryDamage,
 } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.ts';
+import { offerHalfDamageOnKill } from '#utils/damage/halfDamageOnKill.js';
 import { damageAppliedTo, defendEffectsOf } from '#utils/defend/defendRecords.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
@@ -167,6 +168,10 @@ interface DamageApplicationTarget {
 	usedMaximize: HeldChange | null;
 	/** The damage types that dealt more than 0 to this target. */
 	damageTypes: string[];
+	/** The token this damage was applied through. */
+	tokenUuid: string;
+	/** The outcome-scaled roll, before armor and other defenses. */
+	rolledDamage: number;
 }
 
 /**
@@ -905,6 +910,8 @@ function buildDamageApplicationPlan(params: {
 
 		applicableTargets.push({
 			actor,
+			tokenUuid: uuid,
+			rolledDamage: resolved.components.reduce((sum, part) => sum + part.damageBeforeDefenses, 0),
 			adjustedDamage: resolved.total,
 			usedVulnerabilities: resolved.usedVulnerabilities,
 			usedMaximize,
@@ -1631,8 +1638,7 @@ class NimbleChatMessage extends ChatMessage {
 			return null;
 		}
 
-		const sourceItemId = (this.flags as Record<string, { itemId?: string } | undefined>)?.nimble
-			?.itemId;
+		const sourceItemId = (this.flags?.[SYSTEM_ID] as { itemId?: string } | undefined)?.itemId;
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
 		const recoil = this.cardDamageBack.recoilRules();
@@ -1682,6 +1688,13 @@ class NimbleChatMessage extends ChatMessage {
 					// @ts-expect-error Custom hook
 					Hooks.call('nimbleKillApplied', attacker, target.actor);
 				}
+				await offerHalfDamageOnKill({
+					sourceItem,
+					killedToken: fromUuidSync(target.tokenUuid),
+					rolled: target.rolledDamage,
+					deal: (actor, amount) =>
+						withDamageCard(this.id, () => actor.applyDamage?.(amount) ?? Promise.resolve()),
+				});
 			}
 		}
 

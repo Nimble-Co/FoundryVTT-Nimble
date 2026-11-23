@@ -964,6 +964,12 @@
 			"firstAttack": {
 				"halfModifier": "First attack this round"
 			},
+			"halfDamageOnKill": {
+				"title": "Half the damage",
+				"prompt": "That creature died. Choose another creature within reach, or decline.",
+				"decline": "Decline",
+				"creature": "Creature"
+			},
 			"incomingReactions": {
 				"interpose": "Interpose",
 				"baselineInterpose": "Interpose (Heroic Reaction)",
@@ -2040,6 +2046,7 @@
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
 			"damageReduction": "Damage Reduction",
+			"halfDamageOnKill": "Half Damage on a Kill",
 			"halveFirstAttack": "Halve the First Attack",
 			"dyingActionLimit": "Dying Action Limit",
 			"grantActivation": "Grant Activation",
@@ -2611,6 +2618,13 @@
 			},
 			"halveFirstAttack": {
 				"description": "Halve the damage of the first attack against this creature each round. A second attack in that round is not halved. There is no button."
+			},
+			"halfDamageOnKill": {
+				"description": "When this attack drops a creature to 0 HP, you may deal half the damage that was rolled, rounded down, to another creature within Reach. Declining deals nothing further. The splash ignores armor.",
+				"reach": {
+					"label": "Reach",
+					"hint": "How many spaces the other creature can be from the creature that died."
+				}
 			},
 			"dyingActionLimit": {
 				"description": "Set the maximum number of actions the actor may take while Dying. The highest applicable limit wins, so it never lowers the baseline of 1.",
