@@ -1,17 +1,18 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEventText, MovementOfferHost } from '#types/cardEvent.d.ts';
 import type { OfferCard } from '#types/movement.js';
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { activationEventsOf } from '#utils/chat/activationEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { alliesWithin } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
+import { askOwner } from '#utils/wounds/askOwner.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
 import { hasRuleCharge, withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { type AttackActivation, deliveryOfAttack } from '../../utils/damage/attackDelivery.js';
 import { UNARMED_STRIKE } from '../../utils/damage/weaponAttack.js';
-import localize from '../../utils/localize.js';
 import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
 import { offerMovement } from '../../utils/movement/postMovementOfferCard.js';
 import { withWidget } from './_widgetOption.js';
@@ -274,8 +275,9 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!this.isOnActor || !this.test() || this.trigger !== 'onWound') return;
 		if (!isMovementOffersAutomationEnabled()) return;
 		if (!hasRuleCharge(this.actor, this.chargePoolIdentifier)) return;
-		const name = this.label || this.parentDocument.name || '';
-		const accepted = choose ? await choose() : await askOnWound(name);
+		const accepted = choose
+			? await choose()
+			: await askOwner(this.actor, { kind: 'move', name: ruleLabel(this) });
 		if (!accepted) return;
 		await this.#offer({ key: `${REASONS}.onWound` }, null, null);
 	}
@@ -384,28 +386,6 @@ function isRangedWeaponAttack(card: ChatMessage, item: unknown, actor: Actor): b
 	if (used?.type === 'object' && used.system?.objectType === 'weapon') return true;
 	const weaponUuid = flags?.[SYSTEM_ID]?.weaponUuid;
 	return !!weaponUuid && weaponUuid !== UNARMED_STRIKE;
-}
-
-function escapeName(name: string): string {
-	const escapeHtml = foundry.utils?.escapeHTML;
-	return typeof escapeHtml === 'function' ? escapeHtml(name) : name;
-}
-
-async function askOnWound(name: string): Promise<boolean> {
-	try {
-		const confirm = foundry.applications?.api?.DialogV2?.confirm;
-		if (!confirm) return false;
-		const yes = await confirm({
-			window: { title: localize('NIMBLE.wounds.move.chooseTitle') },
-			content: `<p>${localize('NIMBLE.wounds.move.offer', { name: escapeName(name) })}</p>`,
-			yes: { label: localize('NIMBLE.wounds.move.use') },
-			no: { label: localize('NIMBLE.wounds.move.skip') },
-			rejectClose: false,
-		});
-		return yes === true;
-	} catch {
-		return false;
-	}
 }
 
 function tokenFromUuid(uuid: string): TokenDocument | null {

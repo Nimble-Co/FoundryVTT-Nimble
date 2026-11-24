@@ -796,7 +796,7 @@ A pending-Wound rule with a charge pool matches only while that pool has a charg
 
 `watch: allies` plus a move distance offers the move to the creature who would take the Wound or the drop. A missing token does not undo the decision.
 
-A `freeMove` with trigger `onWound` offers a move after a Wound is written, once for each Wound of that update, on the client that wrote it. The player is asked first. Declining spends nothing and leaves the token where it is. Large Protect Me! uses that before level 7, limited by its encounter charge pool. From level 7 the same pool gates a pending-Wound rule on the hunter (`watch: self`) that stops the Wound and then offers a move of 12. Level 15 raises the pool to 2 per encounter. The move is an offer. The token is not moved for the player.
+A `freeMove` with trigger `onWound` offers a move after a Wound is written, once for each Wound of that update, on the client that wrote it. The player who owns the creature is asked first, on their own client. Declining spends nothing and leaves the token where it is. Large Protect Me! uses that before level 7, limited by its encounter charge pool. From level 7 the same pool gates a pending-Wound rule on the hunter (`watch: self`) that stops the Wound and then offers a move of 12. Level 15 raises the pool to 2 per encounter. The move is an offer. The token is not moved for the player.
 
 A voluntary Wound cost and a click on the Wound meter do not go through the pending event.
 
