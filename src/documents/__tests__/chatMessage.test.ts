@@ -2455,9 +2455,10 @@ describe('NimbleChatMessage.applyDamage — first attack each round', () => {
 		combatGame().combat = null;
 	});
 
-	function halvingActor() {
+	function halvingActor(isOwner = true) {
 		const stored: Record<string, unknown> = {};
 		return {
+			isOwner,
 			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				[HALVE_FIRST_ATTACK_PATH]: true,
@@ -2548,6 +2549,16 @@ describe('NimbleChatMessage.applyDamage — first attack each round', () => {
 			messageId: 'msg-miss',
 		});
 		expect(actor.applyDamage).toHaveBeenCalledWith(9);
+	});
+
+	it('does not write the stamp at apply time on a client that does not own the creature', async () => {
+		const actor = halvingActor(false);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+		expect(actor.setFlag).not.toHaveBeenCalled();
 	});
 
 	it('a card that claimed the halve still halves its own damage', async () => {

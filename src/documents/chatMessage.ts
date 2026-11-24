@@ -1653,7 +1653,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			const halved = this.#halvesFirstAttack(target.actor);
 			await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
-			if (halved) await rememberFirstAttackHalve(target.actor, this.id);
+			if (halved && target.actor.isOwner) await rememberFirstAttackHalve(target.actor, this.id);
 			await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
 			if (target.usedMaximize) await spendHeldChanges([target.usedMaximize], this.#endedLines());
 
