@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Mock } from 'vitest';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID, systemHookName } from '#system';
+import { resolveMoveDistance } from '../../../utils/movement/resolveMoveDistance.js';
 import type { FreeMoveRule as FreeMoveRuleType } from '../freeMove.js';
 
 // tests/setup.ts loads the rules config, so this rule and its imports are
@@ -734,6 +735,43 @@ describe('FreeMoveRule', () => {
 				ignoreDifficultTerrain: true,
 			});
 			expect(lastOffer().token).toBe(harness.heroToken);
+		});
+
+		describe('distance', () => {
+			const RollGlobal = Roll as unknown as {
+				replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
+				safeEval?: (expression: string) => number;
+			};
+			const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+
+			beforeAll(() => {
+				RollGlobal.replaceFormulaData = (formula, data) =>
+					formula.replace(/@speed/g, String(data.speed));
+				RollGlobal.safeEval = (expression) =>
+					Function('floor', `return (${expression});`)(Math.floor) as number;
+			});
+
+			afterAll(() => {
+				RollGlobal.replaceFormulaData = original.replace;
+				RollGlobal.safeEval = original.safeEval;
+			});
+
+			it.each([
+				[7, 3],
+				[6, 3],
+				[5, 2],
+			])('a creature with speed %i can move %i spaces', async (walk, spaces) => {
+				const harness = makeRule(chargeRule);
+				harness.actor.system = { attributes: { movement: { walk }, sizeCategory: 'medium' } };
+				await gainCharges(harness, 'thrill-of-the-hunt', 'Thrill of the Hunt');
+				const { node, actor } = lastOffer();
+				const offered = resolveMoveDistance(
+					node as Parameters<typeof resolveMoveDistance>[0],
+					actor as never,
+					harness.actor as never,
+				);
+				expect(offered).toBe(spaces);
+			});
 		});
 
 		it('does not fire when a dice pool gains dice', async () => {
