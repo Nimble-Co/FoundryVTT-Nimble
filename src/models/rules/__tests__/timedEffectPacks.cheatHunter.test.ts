@@ -41,6 +41,7 @@ const FILES = {
 	pinningShot: `${HUNTER}/thrill-of-the-hunt/pinning-shot.json`,
 	snareTrap: `${HUNTER}/thrill-of-the-hunt/snare-trap.json`,
 	huntersMark: `${HUNTER}/hunter-progression/hunters-mark.json`,
+	packHunter: `${HUNTER}/hunter-subclasses/keeper-of-the-shadowpath/pack-hunter.json`,
 };
 
 function expectOnHit(item: Json, step: Json, damageId: string): void {
@@ -352,7 +353,23 @@ describe("Hunter's Mark", () => {
 				type: 'markTarget',
 				statusCondition: 'marked',
 				effectId: effect._id,
+				endEarlier: true,
 			}),
 		);
+	});
+});
+
+describe('Pack Hunter', () => {
+	const item = readItem(FILES.packHunter);
+
+	it('offers one more quarry within 6 spaces', () => {
+		expect(item.system.rules).toEqual([
+			expect.objectContaining({
+				type: 'additionalMark',
+				id: 'pack-hunter-mark',
+				flagKey: 'quarry',
+				within: 6,
+			}),
+		]);
 	});
 });

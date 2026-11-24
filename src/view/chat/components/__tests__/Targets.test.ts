@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/svelte';
+import { SYSTEM_ID } from '#system';
 import TargetsTestHarness from './Targets.testHarness.svelte';
 
 const baseGame = game;
@@ -112,5 +113,46 @@ describe('Targets', () => {
 		expect(badges[0].textContent?.trim()).toBe('No Damage');
 		expect(badges[0].getAttribute('data-tooltip')).toContain('Epic Resistance');
 		expect(badges[0].closest('.nimble-card')?.textContent).toContain('Goblin Cutthroat');
+	});
+
+	it('lists a creature this card marked that is not a target, with only its Marked button', async () => {
+		const BOAR_TOKEN = 'Scene.s1.Token.boar';
+		const hunter = {
+			getFlag: () => ({
+				quarry: [
+					{ actorUuid: 'Actor.goblin', tokenUuid: GOBLIN_TOKEN, name: 'Goblin Cutthroat' },
+					{ actorUuid: 'Actor.boar', tokenUuid: BOAR_TOKEN, name: 'Boar', cardId: 'msg1' },
+					{ actorUuid: 'Actor.ogre', tokenUuid: null, name: 'Ogre', cardId: 'msg0' },
+				],
+			}),
+		};
+		const item = {
+			uuid: 'Actor.a1.Item.mark',
+			name: 'Mark Quarry',
+			actor: hunter,
+			rules: new Map([['r', { type: 'markTarget', flagKey: 'quarry' }]]),
+		};
+		const message = Object.assign(createMessage(), {
+			flags: { [SYSTEM_ID]: { itemId: 'mark' } },
+			speakerActor: { isOwner: true, items: { get: () => item } },
+		});
+		vi.stubGlobal(
+			'fromUuidSync',
+			vi.fn((uuid: string) =>
+				uuid === BOAR_TOKEN ? { uuid, texture: { src: 'boar.webp' }, object: null } : null,
+			),
+		);
+
+		const { container } = render(TargetsTestHarness, { props: { messageDocument: message } });
+
+		await vi.waitFor(() => {
+			expect(container.querySelectorAll('.nimble-target-list > li').length).toBe(3);
+		});
+		const rows = [...container.querySelectorAll<HTMLElement>('.nimble-target-list > li')];
+		const boarRow = rows.find((row) => row.textContent?.includes('Boar'));
+		expect(boarRow?.querySelector('.nimble-target-mark')?.textContent).toContain('Marked');
+		expect(boarRow?.querySelector('[aria-label="Remove Target"]')).toBeNull();
+		expect(boarRow?.querySelector('img')?.getAttribute('src')).toBe('boar.webp');
+		expect(rows.some((row) => row.textContent?.includes('Ogre'))).toBe(false);
 	});
 });

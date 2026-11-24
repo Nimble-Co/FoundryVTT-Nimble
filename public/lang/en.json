@@ -1480,6 +1480,16 @@
 				"all": "End All"
 			}
 		},
+		"mark": {
+			"additional": {
+				"title": "Mark another creature",
+				"content": "You may also mark another creature within {spaces} spaces of {name}. This costs no action and no charges.",
+				"creature": "{name} ({spaces} spaces away)",
+				"creatureOneSpace": "{name} (1 space away)",
+				"decline": "Don't mark another",
+				"unnamed": "Creature"
+			}
+		},
 		"conditionRollMode": {
 			"label": "{condition} ({name})",
 			"proneMelee": "{condition}, melee attack ({name})",
@@ -2071,6 +2081,7 @@
 			"initiativeBonus": "Initiative Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
+			"additionalMark": "Additional Mark",
 			"markTarget": "Mark Target",
 			"makeCrit": "Make It a Crit",
 			"maxDamage": "Max Damage",
@@ -3368,8 +3379,19 @@
 					"onSpellCastMana": "you spent {mana} or more mana on a spell"
 				}
 			},
+			"additionalMark": {
+				"description": "When a Mark Target rule for the same flag, with End earlier marks on, marks a creature, you may also mark another creature within a number of spaces of it, for free. This costs no action and no charges.",
+				"flagKey": {
+					"label": "Flag key",
+					"hint": "The mark list this follows. It works after each mark that a Mark Target rule with End earlier marks makes for this flag."
+				},
+				"within": {
+					"label": "Within",
+					"hint": "The other creature must be this many spaces from the new mark, or closer. You cannot mark a creature farther away, or a defeated one, this way."
+				}
+			},
 			"markTarget": {
-				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark also ends when its marker effect ends on the creature.",
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. End earlier marks ends every earlier mark of this flag instead, unless the cap is unlimited. A mark also ends when its marker effect ends on the creature.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
@@ -3381,6 +3403,10 @@
 				"maxTargets": {
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
+				},
+				"endEarlier": {
+					"label": "End earlier marks",
+					"hint": "A new mark ends every earlier mark of this flag. Leave off to end only the oldest mark past Max targets. An unlimited cap (Max targets 0 on any rule for this flag) keeps every mark."
 				},
 				"effectId": {
 					"label": "Effect",
@@ -5956,6 +5982,7 @@
 			"removeTarget": "Remove Target",
 			"marked": "Marked",
 			"endMark": "End the mark of {feature}",
+			"markedNotTarget": "This card also marked {name}.",
 			"damagePreview": "Damage this target will take (after armor and reductions)"
 		},
 		"damageModifiers": {

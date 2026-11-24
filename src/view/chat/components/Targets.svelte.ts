@@ -2,14 +2,15 @@ import type { DefendRecord } from '#types/defend.d.ts';
 import { endMark } from '#utils/actor/markLifecycle.ts';
 import { damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
 import localize from '#utils/localize.js';
-import { cardMarkingItem, liveMarksOf, markOnToken } from './cardMarks.ts';
+import { cardMarkingItem, liveMarksOf, markOnToken, marksAddedOnCard } from './cardMarks.ts';
 
 type MarkCard = Parameters<typeof cardMarkingItem>[0];
 type Mark = Parameters<typeof endMark>[1];
 
 /**
- * The marks that the item which posted the card holds on its targets, and a
- * way for the item's owner to end one. Only one end runs at a time.
+ * The marks that the item which posted the card holds on its targets, and on
+ * creatures the card marked that are not targets, and a way for the item's
+ * owner to end one. Only one end runs at a time.
  */
 export function createTargetMarksState(card: MarkCard) {
 	const markingItem = cardMarkingItem(card);
@@ -34,8 +35,20 @@ export function createTargetMarksState(card: MarkCard) {
 			feature: (markingItem as { name?: string } | null)?.name ?? '',
 		}),
 		markOn: (token: Parameters<typeof markOnToken>[1]) => markOnToken(marks, token),
+		addedOn: (targetUuids: readonly string[]) => marksAddedOnCard(marks, card?.id, targetUuids),
 		endMarkOn,
 	};
+}
+
+interface MarkRowToken {
+	texture?: { src?: string | null } | null;
+	object?: unknown;
+}
+
+/** The token of a mark that is not a target row, when it is still on a scene. */
+export function tokenOfMark(mark: Mark): MarkRowToken | null {
+	if (!mark.tokenUuid) return null;
+	return fromUuidSync(mark.tokenUuid as Parameters<typeof fromUuidSync>[0]) as MarkRowToken | null;
 }
 
 interface DefendRowToken {
