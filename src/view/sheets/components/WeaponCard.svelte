@@ -199,16 +199,10 @@
 			min-width: 0;
 			font-size: var(--nimble-xs-text);
 			line-height: 1.3;
-			// The shared icon colour is a dark brown for a pale warning chip. On this
-			// card the sentence sits on the card fill, so dark mode needs a light amber.
-			color: var(--nimble-warning-icon-color);
+			color: var(--nimble-warning-text-color);
 
 			span {
 				min-width: 0;
-			}
-
-			:global(.theme-dark) & {
-				color: hsl(45, 85%, 68%);
 			}
 		}
 
