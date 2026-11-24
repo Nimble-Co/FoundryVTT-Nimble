@@ -88,6 +88,8 @@ A feature that spends dice or a charge to add damage after a hit or a crit is a 
 
 After a hit, a weapon that can ricochet gets a line under **Apply Damage**. The card cannot tell a throw from a stab, so it says "if you threw the Dagger". Target another creature for a button such as **Apply 3 Damage to G2**: half the damage, rounded down, through its armor. Then the line says "G2 took 3 damage."
 
+When an attack with **Half Damage on a Kill** drops a creature to 0 HP, **Apply Damage** asks whoever is applying it to pick another creature within reach of the attacker, or to decline. That creature takes half the damage that was rolled, rounded down. Armor does not reduce it. Declining, or a creature who survives, deals nothing further. Large - Go for the Throat! does this at Reach 4.
+
 ### Attacks from a feature
 
 A feature such as Coordinated Strike! can give creatures an attack. The card gets a section headed by what it spends: **Free Attack**, **Attack (1 action)**, **Opportunity Attack (reaction)** or **Opportunity Attack (free)**. Each creature has its name, a weapon dropdown (with Cantrips when allowed) and an **Attack** button, which only the owner and the GM see. Hover the name to see the feature, a condition the table checks, and how many targets share one attack.

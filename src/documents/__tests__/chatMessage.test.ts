@@ -2598,6 +2598,162 @@ describe('NimbleChatMessage.applyDamage — first attack each round', () => {
 	});
 });
 
+describe('NimbleChatMessage.applyDamage — half damage on a kill', () => {
+	interface Creature {
+		name: string;
+		system: {
+			attributes: {
+				armor: 'none';
+				hp: { value: number; temp: number; max: number };
+				damageResistances: string[];
+				damageImmunities: string[];
+				damageVulnerabilities: string[];
+			};
+			damageReductions: object[];
+		};
+		applyDamage: ReturnType<typeof vi.fn>;
+		update: ReturnType<typeof vi.fn>;
+		getFlag: () => undefined;
+	}
+
+	function creature(name: string, hp: number): Creature {
+		const actor: Creature = {
+			name,
+			system: {
+				attributes: {
+					armor: 'none',
+					hp: { value: hp, temp: 0, max: Math.max(hp, 10) },
+					damageResistances: [],
+					damageImmunities: [],
+					damageVulnerabilities: [],
+				},
+				damageReductions: [],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+			getFlag: () => undefined,
+			applyDamage: vi.fn(async (amount: number) => {
+				actor.system.attributes.hp.value = Math.max(0, actor.system.attributes.hp.value - amount);
+			}),
+		};
+		return actor;
+	}
+
+	function dialogApi() {
+		return (
+			globalThis as unknown as {
+				foundry: { applications: { api: { DialogV2: { wait?: ReturnType<typeof vi.fn> } } } };
+			}
+		).foundry.applications.api.DialogV2;
+	}
+
+	let quarry: Creature;
+	let nearby: Creature;
+
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+		dialogApi().wait = vi.fn();
+		quarry = creature('Quarry', 9);
+		nearby = creature('Nearby', 20);
+		const grid = { isGridless: true, size: 100 };
+		const parent = { grid, tokens: [] as object[] };
+		const killed = {
+			id: 'dead',
+			name: 'Quarry',
+			x: 0,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: quarry,
+			parent,
+		};
+		const near = {
+			id: 'near',
+			name: 'Nearby',
+			x: 200,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: nearby,
+			parent,
+		};
+		const hunterToken = {
+			id: 'hunter',
+			name: 'Hunter',
+			x: -100,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: creature('Hunter', 20),
+			parent,
+		};
+		parent.tokens = [hunterToken, killed, near];
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.s.Token.dead' ? killed : null,
+		);
+		const item = { rules: [{ type: 'halfDamageOnKill', disabled: false, halfOnKill: () => 4 }] };
+		const hunter = {
+			items: { get: (id: string) => (id === 'throat' ? item : null) },
+			getActiveTokens: () => [hunterToken],
+		};
+		const actors = Object.assign([], {
+			get: (id: string) => (id === 'hunter' ? hunter : null),
+		});
+		(globalThis as unknown as { game: { actors: unknown } }).game.actors = actors;
+	});
+
+	afterEach(() => {
+		delete dialogApi().wait;
+		delete (globalThis as unknown as { game: { actors?: unknown } }).game.actors;
+	});
+
+	function attack(id: string) {
+		return new NimbleChatMessage({
+			id,
+			type: 'spell',
+			speaker: { actor: 'hunter' },
+			flags: { [SYSTEM_ID]: { itemId: 'throat' } },
+			system: {
+				targets: ['Scene.s.Token.dead'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [{ type: 'damage', canCrit: true, canMiss: false }],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('deals half the rolled damage, rounded down, when the attack kills', async () => {
+		dialogApi().wait?.mockResolvedValue('token:near');
+
+		await attack('msg-kill').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(quarry.applyDamage).toHaveBeenCalledWith(9);
+		expect(nearby.applyDamage).toHaveBeenCalledWith(4);
+	});
+
+	it('deals nothing further when the splash is declined', async () => {
+		dialogApi().wait?.mockResolvedValue('decline');
+
+		await attack('msg-decline').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(quarry.applyDamage).toHaveBeenCalledWith(9);
+		expect(nearby.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('offers no splash when the creature survives', async () => {
+		quarry.system.attributes.hp.value = 30;
+
+		await attack('msg-live').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(quarry.applyDamage).toHaveBeenCalledWith(9);
+		expect(quarry.system.attributes.hp.value).toBe(21);
+		expect(dialogApi().wait).not.toHaveBeenCalled();
+		expect(nearby.applyDamage).not.toHaveBeenCalled();
+	});
+});
+
 /** ------------------------------------------------------ */
 /**              Incoming Attack Reactions                 */
 /** ------------------------------------------------------ */
