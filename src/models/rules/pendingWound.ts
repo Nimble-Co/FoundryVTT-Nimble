@@ -5,7 +5,7 @@ import { NimbleBaseRule } from './base.js';
 
 const CHANGES = ['negate', 'lower', 'set', 'redirect'] as const;
 const CHOICES = ['automatic', 'offer'] as const;
-const CAUSES = ['any', 'direct', 'dropToZero', 'redirect'] as const;
+const CAUSES = ['any', 'direct', 'dropToZero', 'dyingDamage', 'redirect'] as const;
 const CRITICALS = ['any', 'only', 'never'] as const;
 const WATCHES = ['self', 'allies'] as const;
 const REDIRECTS = ['source', 'watcher'] as const;

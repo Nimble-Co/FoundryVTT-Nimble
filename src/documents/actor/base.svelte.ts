@@ -18,6 +18,7 @@ import { giveWounds } from '../../utils/actor/giveWounds.js';
 import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { currentDamageCard, damageCardOption } from '../../utils/damage/damageCard.js';
+import { damageCardIsCritical } from '../../utils/damage/damageCardIsCritical.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
@@ -740,9 +741,21 @@ class NimbleBaseActor<
 		const updates: Record<string, unknown> = {};
 		if (nextTemp !== temp) updates['system.attributes.hp.temp'] = nextTemp;
 		if (nextHp !== value) updates['system.attributes.hp.value'] = nextHp;
-		if (Object.keys(updates).length < 1) return;
-		updates[`flags.${SYSTEM_ID}.damageTaken`] = damageAmount;
-		await this.#writeHp(updates, cardId);
+		if (Object.keys(updates).length > 0) {
+			updates[`flags.${SYSTEM_ID}.damageTaken`] = damageAmount;
+			await this.#writeHp(updates, cardId);
+		}
+		if (value === 0 && this.type === 'character') await this.#woundWhileDying(cardId);
+	}
+
+	/** Damage taken while Dying causes 2 Wounds, or 3 on a crit. */
+	async #woundWhileDying(cardId: string | null): Promise<void> {
+		const critical = damageCardIsCritical(cardId);
+		await giveWounds(this, critical ? 3 : 2, {
+			cause: 'dyingDamage',
+			critical,
+			source: woundSourceOfCard(cardId),
+		});
 	}
 
 	async setCurrentHP(value: number): Promise<void> {

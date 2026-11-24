@@ -4088,6 +4088,7 @@
 						"any": "Any",
 						"direct": "Given directly",
 						"dropToZero": "From dropping to 0 HP",
+						"dyingDamage": "From damage while Dying",
 						"redirect": "Redirected from someone else"
 					}
 				},

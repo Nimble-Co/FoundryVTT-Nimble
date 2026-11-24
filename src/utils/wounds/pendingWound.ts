@@ -5,7 +5,7 @@ import { raisePoolDiceOnWounds } from '../../hooks/dicePoolTriggers/poolDieToMax
 import { askOwner } from './askOwner.js';
 import { rulesWatching, type WoundCreature } from './rulesWatching.js';
 
-export type WoundCause = 'direct' | 'dropToZero' | 'redirect';
+export type WoundCause = 'direct' | 'dropToZero' | 'dyingDamage' | 'redirect';
 
 export interface WoundSource {
 	uuid?: string | null;
