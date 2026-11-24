@@ -28,7 +28,7 @@ describe('Medium Ferocious', () => {
 	const item = readItem();
 	const rules = item.system.rules as Json[];
 
-	it('follows a quarry crit with an ignore-armor attack that can miss, and offers no button', () => {
+	it('follows a quarry crit with an ignore-armor attack that cannot miss, and offers no button', () => {
 		for (const rule of rules) expectKnownFields(rule);
 
 		expect(item.system.identifier).toBe('medium-ferocious');
@@ -62,7 +62,7 @@ describe('Medium Ferocious', () => {
 			type: 'damage',
 			formula: '@level',
 			ignoreArmor: true,
-			canMiss: true,
+			canMiss: false,
 			canCrit: true,
 			damageType: 'piercing',
 		});

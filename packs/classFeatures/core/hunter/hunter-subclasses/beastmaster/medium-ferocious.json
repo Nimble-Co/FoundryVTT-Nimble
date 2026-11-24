@@ -93,7 +93,7 @@
 					"formula": "@level",
 					"ignoreArmor": true,
 					"canCrit": true,
-					"canMiss": true,
+					"canMiss": false,
 					"parentContext": null,
 					"parentNode": null,
 					"on": {
