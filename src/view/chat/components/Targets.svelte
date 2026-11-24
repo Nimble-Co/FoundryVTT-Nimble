@@ -10,7 +10,12 @@
 	import { isMovementOffersAutomationEnabled } from '../../../settings/automationSettings.js';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
-	import { createTargetDefendsState, createTargetMarksState, defendTip } from './Targets.svelte.ts';
+	import {
+		createTargetDefendsState,
+		createTargetMarksState,
+		defendTip,
+		tokenOfMark,
+	} from './Targets.svelte.ts';
 	import MovementStatusChip from './MovementStatusChip.svelte';
 	import { movementChipsFor } from './moveNodeText.ts';
 
@@ -303,6 +308,44 @@
 			{:else}
 				<li style="color: var(--nimble-medium-text-color);">
 					{localize('NIMBLE.chatTargets.noTargetsSelected')}
+				</li>
+			{/each}
+			{#each targetMarks.addedOn(targets) as addedMark (addedMark.actorUuid)}
+				{@const token = tokenOfMark(addedMark)}
+				<li
+					class="nimble-card nimble-target--moves"
+					onmouseenter={() => tokenHoverIn(token?.object)}
+					onmouseleave={() => tokenHoverOut(token?.object)}
+				>
+					<img
+						class="nimble-card__img"
+						src={token?.texture?.src || 'icons/svg/mystery-man.svg'}
+						alt={addedMark.name}
+					/>
+					<span class="nimble-card__title">
+						<span
+							class="nimble-target-name"
+							data-tooltip={localize('NIMBLE.chatTargets.markedNotTarget', {
+								name: addedMark.name,
+							})}
+						>
+							{addedMark.name}
+						</span>
+					</span>
+					<span class="nimble-target-movement">
+						<button
+							class="nimble-target-mark nimble-u-unstyled-button"
+							type="button"
+							aria-label={targetMarks.endLabel}
+							data-tooltip={targetMarks.endLabel}
+							disabled={targetMarks.ending}
+							onclick={() => targetMarks.endMarkOn(addedMark)}
+						>
+							<i class="fa-solid fa-bullseye" aria-hidden="true"></i>
+							<span>{localize('NIMBLE.chatTargets.marked')}</span>
+							<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+						</button>
+					</span>
 				</li>
 			{/each}
 		</ul>
