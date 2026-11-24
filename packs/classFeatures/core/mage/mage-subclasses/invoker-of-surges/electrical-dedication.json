@@ -1,0 +1,70 @@
+{
+	"folder": "00feffbeaf0d38b2",
+	"name": "Electrical Dedication",
+	"type": "feature",
+	"img": "icons/magic/lightning/bolt-strike-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"id": "AsZusTagR9ydyv6V",
+				"type": "restrictSpellSchools",
+				"allowedSchools": [
+					"lightning"
+				],
+				"exceptionFromSchools": [
+					"ice",
+					"fire"
+				],
+				"exceptionCount": 1
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You give up Spellshaper abilities and you can only cast lightning spells from now on. Choose 1 Ice or Fire spell and treat it as a Lightning spell.</p><p><strong>Power Surge.</strong> After you cast a damaging spell, you may take 4 lightning damage to add 1d8 to the damage. While Charged, if you would become Charged again, gain <em>Supercharged</em>.</p><p><strong>Supercharged Abilities.</strong> When Supercharged you may end the condition to use one of these abilities for free at any time.</p><ul><li><strong>Blur.</strong> Reduce ALL non-lightning damage you take by KEY this round.</li><li><strong>Overload.</strong> When an enemy is damaged, add 1 maximized Power Surge Die.</li><li><strong>Warp.</strong> Teleport up to 8 spaces away; you may swap places with a willing ally.</li></ul>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "invoker-of-surges",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.8.8",
+		"createdTime": 1761540819964,
+		"modifiedTime": 1761540819964,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Vij67KihB4IEf4E6"
+}
