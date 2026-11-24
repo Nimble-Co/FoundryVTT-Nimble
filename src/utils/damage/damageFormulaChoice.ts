@@ -16,29 +16,9 @@ interface ChoiceRule {
 	to?: string;
 	label?: string;
 	id?: string | null;
-	parentDocument?: {
-		name?: string | null;
-		uuid?: string | null;
-		identifier?: string;
-		system?: { identifier?: string };
-	} | null;
+	parentDocument?: { name?: string | null; uuid?: string | null; identifier?: string } | null;
 	appliesTo?: () => boolean;
 	test?: () => boolean;
-}
-
-interface NamedItem {
-	identifier?: string;
-	name?: string;
-	system?: { identifier?: string };
-}
-
-/** The item's identifier, or the slug of its name when none is stored. */
-export function itemIdentifierOf(item: unknown): string {
-	if (!item || typeof item !== 'object') return '';
-	const named = item as NamedItem;
-	const authored = named.identifier?.trim() || named.system?.identifier?.trim() || '';
-	if (authored) return authored;
-	return typeof named.name === 'string' && named.name ? named.name.slugify({ strict: true }) : '';
 }
 
 /**
@@ -57,7 +37,7 @@ export function replaceDiceTerm(formula: string, from: string, to: string): stri
 
 function wantedIdentifier(rule: ChoiceRule): string {
 	const authored = rule.itemIdentifier?.trim() ?? '';
-	return authored || itemIdentifierOf(rule.parentDocument);
+	return authored || (rule.parentDocument?.identifier ?? '');
 }
 
 function rulePasses(rule: ChoiceRule): boolean {

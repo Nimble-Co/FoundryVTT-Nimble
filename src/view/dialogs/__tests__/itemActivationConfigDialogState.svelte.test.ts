@@ -732,6 +732,7 @@ describe('the activation dialog damage formula choice', () => {
 	const weapon = (name: string, formula: string) => ({
 		uuid: `Item.${name}`,
 		name,
+		identifier: name.toLowerCase(),
 		type: 'object',
 		flags: {},
 		rules: [],
@@ -1115,6 +1116,7 @@ describe('the activation dialog weapon pick', () => {
 	const weapon = (name: string, attackType: string, equipped: boolean) => ({
 		uuid: `Item.${name}`,
 		name,
+		identifier: name.toLowerCase(),
 		type: 'object',
 		flags: {},
 		system: {

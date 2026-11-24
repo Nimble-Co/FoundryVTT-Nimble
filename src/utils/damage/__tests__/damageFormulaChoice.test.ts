@@ -84,7 +84,7 @@ describe('damageFormulaChoiceOffers', () => {
 		const onTheBow = {
 			...longbow,
 			itemIdentifier: '',
-			parentDocument: { uuid: 'Item.longbow', name: 'Longbow' },
+			parentDocument: { uuid: 'Item.longbow', name: 'Longbow', identifier: 'longbow' },
 		};
 		expect(offers('longbow', '1d8+@dexterity', [onTheBow])).toHaveLength(1);
 		expect(offers('crossbow', '1d8+@dexterity', [onTheBow])).toEqual([]);

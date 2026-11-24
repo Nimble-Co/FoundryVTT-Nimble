@@ -29,7 +29,6 @@ import {
 import {
 	applyDamageFormulaChoices,
 	damageFormulaChoiceOffers,
-	itemIdentifierOf,
 } from '#utils/damage/damageFormulaChoice.js';
 import { damageMultiplierOf } from '#utils/damage/damageMultiplier.js';
 import { dualWieldOfferFor } from '#utils/damage/dualWield.js';
@@ -513,7 +512,8 @@ export function createItemActivationConfigDialogState(
 	const formulaChoices = $derived(
 		damageFormulaChoiceOffers(
 			actor,
-			itemIdentifierOf(chosenWeapon ? weaponItemOf(weaponUuid) : item),
+			(chosenWeapon ? weaponItemOf(weaponUuid) : (item as { identifier?: string }))?.identifier ??
+				'',
 			baseDamageEffects[0]?.formula ?? '',
 		),
 	);
