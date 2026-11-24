@@ -5,8 +5,136 @@
 	"img": "icons/creatures/claws/claw-talons-glowing-orange.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "small-go-for-the-throat",
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "smallThroatPool",
+				"identifier": "small-go-for-the-throat",
+				"label": "Go for the Throat! (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "smallThroatLv11",
+				"identifier": "",
+				"label": "Go for the Throat! (2/encounter)",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "small-go-for-the-throat",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "smallThroatLv15",
+				"identifier": "",
+				"label": "Go for the Throat! (3/encounter)",
+				"predicate": {
+					"level": {
+						"min": 15
+					}
+				},
+				"priority": 3,
+				"poolType": "charge",
+				"poolIdentifier": "small-go-for-the-throat",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "smallThroatRound",
+				"identifier": "small-go-for-the-throat-round",
+				"label": "Go for the Throat! (1/round)",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				},
+				"priority": 4,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": true,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "onTurnStart",
+						"mode": "refresh",
+						"value": "1"
+					},
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "smallThroatUse",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 5,
+				"poolIdentifier": "small-go-for-the-throat",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "smallThroatRoundUse",
+				"identifier": "",
+				"label": "",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				},
+				"priority": 6,
+				"poolIdentifier": "small-go-for-the-throat-round",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "smallThroatTotH",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 7,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "1"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +148,30 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "smallThroatDmg",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d4+@level",
+					"ignoreArmor": true,
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "smallThroatDmgFull",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "smallThroatDmg"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
