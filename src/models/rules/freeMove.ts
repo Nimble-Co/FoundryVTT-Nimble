@@ -17,7 +17,6 @@ import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
 import { offerMovement } from '../../utils/movement/postMovementOfferCard.js';
 import { withWidget } from './_widgetOption.js';
 import {
-	type ChargePoolGainContext,
 	type InitiativeRolledContext,
 	type ItemActivatedContext,
 	type ItemUsedContext,
@@ -274,13 +273,7 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 	}
 
 	override async onPoolGain(context: PoolGainContext): Promise<void> {
-		if (!this.isOnActor) return;
-		if (!this.test()) return;
-		if (this.trigger !== 'onPoolGain') return;
-		const identifier = this.poolIdentifier.trim();
-		if (!identifier || identifier !== context.poolIdentifier) return;
-		const pool = context.poolLabel || identifier;
-		await this.#offer({ key: `${REASONS}.onPoolGain`, data: { pool } }, null, this.#useHost());
+		await this.#offerOnPoolGain('onPoolGain', this.poolIdentifier, context);
 	}
 
 	/**
@@ -298,18 +291,20 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		await this.#offer({ key: `${REASONS}.onWound` }, null, null);
 	}
 
-	override async onChargePoolGain(context: ChargePoolGainContext): Promise<void> {
-		if (!this.isOnActor) return;
-		if (!this.test()) return;
-		if (this.trigger !== 'onChargePoolGain') return;
-		const identifier = this.chargePoolGainIdentifier.trim();
+	override async onChargePoolGain(context: PoolGainContext): Promise<void> {
+		await this.#offerOnPoolGain('onChargePoolGain', this.chargePoolGainIdentifier, context);
+	}
+
+	async #offerOnPoolGain(
+		trigger: 'onPoolGain' | 'onChargePoolGain',
+		configured: string,
+		context: PoolGainContext,
+	): Promise<void> {
+		if (!this.isOnActor || !this.test() || this.trigger !== trigger) return;
+		const identifier = configured.trim();
 		if (!identifier || identifier !== context.poolIdentifier) return;
 		const pool = context.poolLabel || identifier;
-		await this.#offer(
-			{ key: `${REASONS}.onChargePoolGain`, data: { pool } },
-			null,
-			this.#useHost(),
-		);
+		await this.#offer({ key: `${REASONS}.${trigger}`, data: { pool } }, null, this.#useHost());
 	}
 
 	/** A rule of this item raised pool dice, or would with some held. */

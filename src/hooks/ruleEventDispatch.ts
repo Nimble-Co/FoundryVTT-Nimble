@@ -3,7 +3,6 @@ import type { MovementRecord } from '#types/movement.js';
 import type {
 	ActorDyingContext,
 	ActorHealthContext,
-	ChargePoolGainContext,
 	EncounterEndContext,
 	InitiativeRolledContext,
 	ItemActivatedContext,
@@ -29,7 +28,12 @@ import {
 	hpGained,
 } from '../utils/actor/actorHpChangePaths.js';
 import { originOfCard, originOwnerRules } from '../utils/damage/attackOrigin.js';
-import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
+import {
+	type ChargePoolChangedPayload,
+	gainedChargePoolIdentifier,
+	gainedPoolIdentifier,
+	type PoolChangedPayload,
+} from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { keyedQueue } from '../utils/keyedQueue.js';
 
@@ -82,21 +86,9 @@ interface NimbleInitiativePayload {
 	rollId?: string;
 }
 
-interface NimblePoolChangedPayload {
+interface NimblePoolGainPayload {
 	actor?: ActorWithRules | null;
-	poolId?: string;
 	poolLabel?: string;
-	previousFaces?: number[];
-	newFaces?: number[];
-	reason?: string;
-}
-
-interface NimbleChargePoolChangedPayload {
-	actor?: ActorWithRules | null;
-	poolId?: string;
-	poolLabel?: string;
-	previousValue?: number;
-	newValue?: number;
 }
 
 interface NimbleConditionAppliedPayload {
@@ -240,49 +232,32 @@ async function handleActiveGmTurnStart(
 	await dispatch(actor, 'onActiveGmTurnStart', context);
 }
 
-// The pool-changed hook fires only on the client that changed the pool.
-async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<void> {
-	const poolIdentifier = gainedPoolIdentifier(payload);
-	const actor = payload?.actor ?? null;
-	if (poolIdentifier === null || !actor) return;
-	const context: PoolGainContext = {
-		actor: actor as unknown as PoolGainContext['actor'],
-		poolIdentifier,
-		poolLabel: payload.poolLabel,
+// The pool-changed hooks fire only on the client that changed the pool.
+function poolGainHandler<TPayload extends NimblePoolGainPayload>(
+	methodName: 'onPoolGain' | 'onChargePoolGain',
+	gainedIdentifier: (payload: TPayload) => string | null,
+): (payload: TPayload) => Promise<void> {
+	return async (payload) => {
+		const poolIdentifier = gainedIdentifier(payload);
+		const actor = payload?.actor ?? null;
+		if (poolIdentifier === null || !actor) return;
+		const context: PoolGainContext = {
+			actor: actor as unknown as PoolGainContext['actor'],
+			poolIdentifier,
+			poolLabel: payload.poolLabel,
+		};
+		await dispatch(actor, methodName, context);
 	};
-	await dispatch(actor, 'onPoolGain', context);
 }
 
-/**
- * The identifier of the charge pool a charge-pool-changed event added charges
- * to, or null when the count did not rise. Actor-scoped pool ids carry an
- * "actor:" prefix; rules name the bare identifier.
- */
-function gainedChargePoolIdentifier(
-	payload: NimbleChargePoolChangedPayload | null | undefined,
-): string | null {
-	if (!payload) return null;
-	const { previousValue, newValue } = payload;
-	if (typeof previousValue !== 'number' || typeof newValue !== 'number') return null;
-	if (!Number.isFinite(previousValue) || !Number.isFinite(newValue)) return null;
-	if (newValue <= previousValue) return null;
-	const poolId = payload.poolId ?? '';
-	const bare = poolId.startsWith('actor:') ? poolId.slice('actor:'.length) : poolId;
-	return bare || null;
-}
-
-// The charge-pool hook fires only on the client that changed the pool.
-async function handleChargePoolChanged(payload: NimbleChargePoolChangedPayload): Promise<void> {
-	const poolIdentifier = gainedChargePoolIdentifier(payload);
-	const actor = payload?.actor ?? null;
-	if (poolIdentifier === null || !actor) return;
-	const context: ChargePoolGainContext = {
-		actor: actor as unknown as ChargePoolGainContext['actor'],
-		poolIdentifier,
-		poolLabel: payload.poolLabel,
-	};
-	await dispatch(actor, 'onChargePoolGain', context);
-}
+const handlePoolChanged = poolGainHandler<NimblePoolGainPayload & PoolChangedPayload>(
+	'onPoolGain',
+	gainedPoolIdentifier,
+);
+const handleChargePoolChanged = poolGainHandler<NimblePoolGainPayload & ChargePoolChangedPayload>(
+	'onChargePoolGain',
+	gainedChargePoolIdentifier,
+);
 
 function handleActorUpdate(
 	actor: Actor.Implementation,
