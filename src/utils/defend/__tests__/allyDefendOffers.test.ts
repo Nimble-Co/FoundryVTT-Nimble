@@ -22,7 +22,13 @@ vi.doMock('../defendOptions.js', () => ({
 const { allyDefendOffers, useAllyDefendOffer } = await import('../allyDefendOffers.js');
 
 const PIP = 'Scene.s.Token.pip';
-const exploit = { id: 'ex', resolveRange: () => 4, reminder: 'Force an enemy to Interpose.' };
+const exploit = {
+	id: 'ex',
+	resolveRange: () => 4,
+	reminder: 'Force an enemy to Interpose.',
+	label: 'Exploit',
+	attackOffer: () => null as string | null,
+};
 
 function token(id: string, actorUuid: string, owner = true, rules: unknown[] = []) {
 	return {
@@ -119,6 +125,36 @@ describe('useAllyDefendOffer', () => {
 			use,
 			reminder: 'Exploit: Force an enemy to Interpose.',
 		});
+	});
+
+	it('asks, and a declined attack still writes the Defend', async () => {
+		exploit.attackOffer = () => '1d4+@level';
+		const confirm = foundry.applications.api.DialogV2.confirm as unknown as ReturnType<
+			typeof vi.fn
+		>;
+		confirm.mockResolvedValueOnce(false);
+		const created = vi.fn();
+		(ChatMessage as unknown as { create: ReturnType<typeof vi.fn> }).create = created;
+		const goblin = { uuid: 'Scene.s.Token.goblin', actor: { name: 'Goblin' } };
+		const globals = globalThis as unknown as Globals & {
+			game: { scenes?: unknown; messages?: unknown };
+		};
+		globals.game.scenes = { get: () => ({ tokens: { get: () => goblin } }) };
+		globals.game.messages = {
+			get: () => ({
+				speaker: { scene: 's', token: 'goblin' },
+				constructor: { getSpeakerActor: () => null },
+			}),
+		};
+		pay.mockResolvedValue({ actorUuid: 'Actor.bram', ruleId: 'ex', label: 'Exploit' });
+		const [offer] = allyDefendOffers(card());
+
+		expect(await useAllyDefendOffer('m1', offer as never)).toBe(true);
+
+		expect(confirm).toHaveBeenCalledTimes(1);
+		expect(created).not.toHaveBeenCalled();
+		expect(requestAllyUse).toHaveBeenCalled();
+		exploit.attackOffer = () => null;
 	});
 
 	it('pays nothing when no GM is online to write it', async () => {

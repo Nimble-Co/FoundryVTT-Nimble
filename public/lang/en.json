@@ -953,6 +953,12 @@
 				"allyUse": "{label}: {name} Defended",
 				"optionsUsed": "With: {labels}",
 				"attackerEffect": "The attacker gets {name}.",
+				"attackBack": {
+					"title": "Attack the attacker?",
+					"message": "{name} may attack {attacker} for {formula} damage.",
+					"yes": "Attack",
+					"no": "Skip"
+				},
 				"refused": {
 					"noCard": "This card cannot take a Defend.",
 					"notTarget": "That hero is not a target of this attack.",
@@ -3542,7 +3548,7 @@
 				},
 				"reminder": {
 					"label": "Reminder",
-					"hint": "A line on the attack card for what the table does, for example a move or an attack back."
+					"hint": "A line on the attack card for what the table still does by hand."
 				},
 				"useItem": {
 					"label": "Use this item",
@@ -3595,6 +3601,10 @@
 				"woundCost": {
 					"label": "Wounds",
 					"hint": "The Wounds one use gives the hero."
+				},
+				"attackFormula": {
+					"label": "Attack",
+					"hint": "Damage against the attacker when the hero uses this option, for example 1d4+@level. Leave it empty for no attack. The player is asked first and can skip the attack. The GM applies the damage, and armor applies."
 				}
 			},
 			"damageBack": {
