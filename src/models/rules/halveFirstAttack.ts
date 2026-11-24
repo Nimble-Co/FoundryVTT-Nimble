@@ -22,9 +22,9 @@ declare namespace HalveFirstAttackRule {
 }
 
 /**
- * Halves the first attack against the owner each combat round. The damage
- * path reads {@link HALVE_FIRST_ATTACK_PATH}; the stamp is cleared when the
- * combat round changes, including a rewind.
+ * Halves the first attack against the owner each round. The damage path reads
+ * {@link HALVE_FIRST_ATTACK_PATH}; the stamp is cleared when the owner's turn
+ * starts, as for other 1/round limits.
  */
 class HalveFirstAttackRule extends NimbleBaseRule<HalveFirstAttackRule.Schema> {
 	static override group = 'bonuses';
@@ -32,8 +32,10 @@ class HalveFirstAttackRule extends NimbleBaseRule<HalveFirstAttackRule.Schema> {
 	static override icon = 'fa-solid fa-shield-halved';
 
 	// afterPrepareData still marks the actor when rule automation is off, so
-	// the round reset has to run then too. There is no button for this halve.
-	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = ['onRoundChanged'];
+	// the turn-start reset has to run then too. There is no button for this halve.
+	static override alwaysDispatchedEvents: readonly (keyof NimbleBaseRule)[] = [
+		'onActiveGmTurnStart',
+	];
 
 	static override defineSchema(): HalveFirstAttackRule.Schema {
 		return {
@@ -48,7 +50,7 @@ class HalveFirstAttackRule extends NimbleBaseRule<HalveFirstAttackRule.Schema> {
 		foundry.utils.setProperty(this.actor.system, HALVE_FIRST_ATTACK_PATH, true);
 	}
 
-	override async onRoundChanged(): Promise<void> {
+	override async onActiveGmTurnStart(): Promise<void> {
 		if (!this.isOnActor) return;
 		await this.actor.unsetFlag(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG);
 	}

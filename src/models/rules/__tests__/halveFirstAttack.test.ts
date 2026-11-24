@@ -59,9 +59,11 @@ describe('HalveFirstAttackRule', () => {
 		expect(actor.system[HALVE_FIRST_ATTACK_PATH]).toBeUndefined();
 	});
 
-	it('clears the stamp when the round changes', async () => {
+	it("clears the stamp when the owner's turn starts, also with rule automation off", async () => {
 		const { rule, actor } = createRule();
-		await rule.onRoundChanged();
+		await rule.onActiveGmTurnStart();
 		expect(actor.unsetFlag).toHaveBeenCalledWith(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG);
+		expect(HalveFirstAttackRule.alwaysDispatchedEvents).toContain('onActiveGmTurnStart');
+		expect(HalveFirstAttackRule.alwaysDispatchedEvents).not.toContain('onRoundChanged');
 	});
 });

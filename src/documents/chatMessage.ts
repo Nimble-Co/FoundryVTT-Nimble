@@ -11,6 +11,7 @@ import { runningRule } from '#utils/actor/actorRules.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { cardTargetTokens } from '#utils/chat/cardTargetTokens.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { collectInterposeOffers, spendLineCharges } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
@@ -31,7 +32,7 @@ import {
 } from '#utils/damage/buildDeferredDamagePatch.js';
 import { cardAttackers } from '#utils/damage/cardAttackers.js';
 import {
-	currentFirstAttackCombat,
+	currentFirstAttackCombatId,
 	decideFirstAttackHalve,
 	HALVE_FIRST_ATTACK_PATH,
 	readFirstAttackHalveStamp,
@@ -746,9 +747,11 @@ function spendFlatReductions(
 function resolveDamageForActor(
 	actor: Actor.Implementation,
 	packets: DamagePacket[],
-	availableBank = getBankedDamageReduction(actor),
-	defend: DefendDamage = 0,
-	firstAttackHalve = false,
+	{
+		availableBank = getBankedDamageReduction(actor),
+		defend = 0,
+		firstAttackHalve = false,
+	}: { availableBank?: number; defend?: DefendDamage; firstAttackHalve?: boolean } = {},
 ): ResolvedDamageForActor {
 	const { armor: defendArmor = 0, halve = false } =
 		typeof defend === 'number' ? { armor: defend } : defend;
@@ -885,13 +888,11 @@ function buildDamageApplicationPlan(params: {
 		const usedMaximize = params.areaMaximizeFor?.(actor) ?? null;
 		const ownPackets = packetsFor(params.packets, uuid);
 		const packets = usedMaximize ? maximizedPackets(ownPackets) : ownPackets;
-		const resolved = resolveDamageForActor(
-			actor,
-			packets,
+		const resolved = resolveDamageForActor(actor, packets, {
 			availableBank,
 			defend,
-			params.firstAttackHalveFor?.(actor) === true,
-		);
+			firstAttackHalve: params.firstAttackHalveFor?.(actor) === true,
+		});
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
@@ -1011,7 +1012,7 @@ class NimbleChatMessage extends ChatMessage {
 			resolveDamageForActor(
 				actor as unknown as Actor.Implementation,
 				[{ value: amount, options: { damageType, ...(roll ? { roll: roll as never } : {}) } }],
-				0,
+				{ availableBank: 0 },
 			).total,
 	});
 
@@ -1519,21 +1520,26 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
-	 * This card is the first attack against the creature in the current round.
-	 * Reading the stamp does not spend it.
+	 * This card is the first attack against the creature since its owner's turn
+	 * started. Reading the stamp does not spend it.
 	 */
 	#halvesFirstAttack(actor: Actor.Implementation): boolean {
 		const systemData = this.system as unknown as ActivationCardSystemData;
 		if (!hasAttackRoll(systemData.activation)) return false;
 		if (foundry.utils.getProperty(actor.system, HALVE_FIRST_ATTACK_PATH) !== true) return false;
-		const combat = currentFirstAttackCombat();
 		return decideFirstAttackHalve({
-			hasRule: true,
 			stamp: readFirstAttackHalveStamp(actor),
-			combatId: combat.combatId,
-			round: combat.round,
+			combatId: currentFirstAttackCombatId(),
 			messageId: this.id,
 		});
+	}
+
+	/** The attack uses each target's first-attack halve, hit or miss. */
+	async claimFirstAttackHalves(): Promise<void> {
+		for (const token of cardTargetTokens<{ actor?: Actor.Implementation | null }>(this)) {
+			const { actor } = token;
+			if (actor && this.#halvesFirstAttack(actor)) await rememberFirstAttackHalve(actor, this.id);
+		}
 	}
 
 	/**
@@ -1897,13 +1903,10 @@ class NimbleChatMessage extends ChatMessage {
 		) as Actor | null;
 		const maximize = areaMaximizeOf(this.system as never, attacker)?.(actor);
 		const packets = maximize ? maximizedPackets(damageRolls) : damageRolls;
-		const { components, total } = resolveDamageForActor(
-			actor,
-			packets,
-			undefined,
+		const { components, total } = resolveDamageForActor(actor, packets, {
 			defend,
-			this.#halvesFirstAttack(actor),
-		);
+			firstAttackHalve: this.#halvesFirstAttack(actor),
+		});
 		if (noDamageTargetsOf(this.system).has(targetUuid) || defend?.zero) {
 			return {
 				total: 0,
@@ -1933,8 +1936,10 @@ class NimbleChatMessage extends ChatMessage {
 		if (!actor) return null;
 		if (noDamageTargetsOf(this.system).has(tokenUuid)) return 0;
 		if (typeof defend !== 'number' && defend.zero) return 0;
-		return resolveDamageForActor(actor, packets, undefined, defend, this.#halvesFirstAttack(actor))
-			.total;
+		return resolveDamageForActor(actor, packets, {
+			defend,
+			firstAttackHalve: this.#halvesFirstAttack(actor),
+		}).total;
 	}
 
 	/** A missed attack as a hit on this creature: its defenses read the same damage. */

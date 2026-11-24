@@ -2472,6 +2472,9 @@ describe('NimbleChatMessage.applyDamage — first attack each round', () => {
 			},
 			update: vi.fn().mockResolvedValue(undefined),
 			getFlag: (scope: string, key: string) => (scope === SYSTEM_ID ? stored[key] : undefined),
+			clearStamp: () => {
+				delete stored[FIRST_ATTACK_HALVE_FLAG];
+			},
 			setFlag: vi.fn(async (scope: string, key: string, value: unknown) => {
 				if (scope === SYSTEM_ID) stored[key] = value;
 			}),
@@ -2502,7 +2505,6 @@ describe('NimbleChatMessage.applyDamage — first attack each round', () => {
 		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 		expect(actor.setFlag).toHaveBeenCalledWith(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG, {
 			combatId: 'combat-1',
-			round: 1,
 			messageId: 'msg-1',
 		});
 	});
@@ -2518,15 +2520,45 @@ describe('NimbleChatMessage.applyDamage — first attack each round', () => {
 		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
 	});
 
-	it('halves the first hit of the next round', async () => {
+	it('halves again only after the stamp is cleared, not when the round number changes', async () => {
 		const actor = halvingActor();
 		globals().fromUuidSync.mockReturnValue({ actor });
 
 		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
 		combatGame().combat = { id: 'combat-1', round: 2, started: true };
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+		actor.clearStamp();
 		await attackMessage('msg-3').applyDamage(9, { outcome: 'fullDamage' });
 
-		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 5);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(3, 5);
+	});
+
+	it('uses the halve when the first attack card targets the creature, also on a miss', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-miss').claimFirstAttackHalves();
+		await attackMessage('msg-2').claimFirstAttackHalves();
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.setFlag).toHaveBeenCalledTimes(1);
+		expect(actor.setFlag).toHaveBeenCalledWith(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG, {
+			combatId: 'combat-1',
+			messageId: 'msg-miss',
+		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(9);
+	});
+
+	it('a card that claimed the halve still halves its own damage', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = attackMessage('msg-1');
+		await message.claimFirstAttackHalves();
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 
 	it('still halves the same card after it is applied', async () => {

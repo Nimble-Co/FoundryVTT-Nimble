@@ -1,98 +1,66 @@
 import { describe, expect, it } from 'vitest';
 import { decideFirstAttackHalve, readFirstAttackHalveStamp } from '../firstAttackHalve.js';
 
-const combat = { combatId: 'combat-1', round: 1 };
+const combatId = 'combat-1';
 
 describe('decideFirstAttackHalve', () => {
-	it('halves the first hit of the round', () => {
-		expect(
-			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: null,
-				...combat,
-				messageId: 'msg-1',
-			}),
-		).toBe(true);
+	it('halves the first attack since the stamp was cleared', () => {
+		expect(decideFirstAttackHalve({ stamp: null, combatId, messageId: 'msg-1' })).toBe(true);
 	});
 
-	it('does not halve a second hit in the same round', () => {
+	it('does not halve a second attack before the stamp is cleared', () => {
 		expect(
 			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: { ...combat, messageId: 'msg-1' },
-				...combat,
+				stamp: { combatId, messageId: 'msg-1' },
+				combatId,
 				messageId: 'msg-2',
 			}),
 		).toBe(false);
 	});
 
-	it('halves the first hit of the next round', () => {
+	it('does not halve a second attack when the combat round changes, only when the stamp is cleared', () => {
 		expect(
 			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: { combatId: 'combat-1', round: 1, messageId: 'msg-1' },
-				combatId: 'combat-1',
-				round: 2,
+				stamp: { combatId, messageId: 'msg-1' },
+				combatId,
 				messageId: 'msg-3',
 			}),
-		).toBe(true);
+		).toBe(false);
 	});
 
 	it('still halves the card that already used the halve', () => {
 		expect(
 			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: { ...combat, messageId: 'msg-1' },
-				...combat,
+				stamp: { combatId, messageId: 'msg-1' },
+				combatId,
 				messageId: 'msg-1',
 			}),
 		).toBe(true);
 	});
 
-	it('halves again in a different combat and after the stamp is cleared', () => {
+	it('halves again in a different combat', () => {
 		expect(
 			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: { ...combat, messageId: 'msg-1' },
+				stamp: { combatId, messageId: 'msg-1' },
 				combatId: 'combat-2',
-				round: 1,
 				messageId: 'msg-4',
 			}),
 		).toBe(true);
-		expect(
-			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: null,
-				...combat,
-				messageId: 'msg-5',
-			}),
-		).toBe(true);
 	});
 
-	it('does not halve without the rule, a started combat, or a card id', () => {
-		expect(
-			decideFirstAttackHalve({ hasRule: false, stamp: null, ...combat, messageId: 'msg-1' }),
-		).toBe(false);
-		expect(
-			decideFirstAttackHalve({
-				hasRule: true,
-				stamp: null,
-				combatId: null,
-				round: null,
-				messageId: 'msg-1',
-			}),
-		).toBe(false);
-		expect(decideFirstAttackHalve({ hasRule: true, stamp: null, ...combat, messageId: null })).toBe(
-			false,
-		);
+	it('does not halve without a started combat or a card id', () => {
+		expect(decideFirstAttackHalve({ stamp: null, combatId: null, messageId: 'msg-1' })).toBe(false);
+		expect(decideFirstAttackHalve({ stamp: null, combatId, messageId: null })).toBe(false);
 	});
 });
 
 describe('readFirstAttackHalveStamp', () => {
 	it('reads a complete stamp and ignores anything else', () => {
-		const stamp = { combatId: 'combat-1', round: 2, messageId: 'msg-1' };
-		expect(readFirstAttackHalveStamp({ getFlag: () => stamp })).toEqual(stamp);
-		expect(readFirstAttackHalveStamp({ getFlag: () => ({ combatId: 'combat-1' }) })).toBeNull();
-		expect(readFirstAttackHalveStamp({})).toBeNull();
+		const stamp = { combatId, messageId: 'msg-1' };
+		const actorWith = (value: unknown) => ({ getFlag: () => value });
+		expect(readFirstAttackHalveStamp(actorWith(stamp))).toEqual(stamp);
+		expect(readFirstAttackHalveStamp(actorWith({ ...stamp, round: 2 }))).toEqual(stamp);
+		expect(readFirstAttackHalveStamp(actorWith({ combatId }))).toBeNull();
+		expect(readFirstAttackHalveStamp(actorWith(undefined))).toBeNull();
 	});
 });
