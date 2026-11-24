@@ -3,6 +3,7 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 
 import { DYING_MAX_ACTIONS } from '#utils/actor/actorHealthState.js';
+import type { ReleasedFeature } from '#utils/classProgression/planSubclassOptions.ts';
 import { RecordField } from '../fields/RecordField.js';
 import { abilities, currency, savingThrows } from './common.js';
 import { flattenLegacyCurrency } from './flattenLegacyCurrency.js';
@@ -486,7 +487,7 @@ interface LevelUpHistoryEntry {
 	grantedFeatureIds: string[];
 	grantedSpellIds: string[];
 	/** Features this level removed, restored onto `level` when the level is reverted. */
-	releasedFeatures: Array<{ uuid: string; level: number }>;
+	releasedFeatures: ReleasedFeature[];
 }
 
 declare namespace NimbleCharacterData {

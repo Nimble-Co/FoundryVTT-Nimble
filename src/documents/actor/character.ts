@@ -20,6 +20,7 @@ import findMissingLevelSelections, {
 	type MissingLevelSelection,
 } from '#utils/classProgression/findMissingLevelSelections.ts';
 import { buildClassFeatureIndex } from '#utils/classProgression/getClassFeatures.ts';
+import type { ReleasedFeature, ReleasedPick } from '#utils/classProgression/planSubclassOptions.ts';
 import localize from '#utils/localize.js';
 import collectHeldPicks, {
 	countHeldPicks,
@@ -184,27 +185,22 @@ interface LevelUpDialogData {
 	spellUuids: string[];
 	/** The schools the player chose, by the id of the school choice rule. */
 	schoolChoices?: Map<string, string[]>;
-	/** Thrill of the Hunt picks a companion swap removes. `uuid` is empty when it cannot be restored. */
-	releasedThrillPicks?: Array<{ id: string; uuid: string; level: number }>;
-}
-
-interface ReleasedFeature {
-	uuid: string;
-	level: number;
+	/** Owned features a chosen level-up option gives up. */
+	releasedFeatures?: ReleasedPick[];
 }
 
 /**
- * Deletes the Thrill of the Hunt picks a companion swap gave up.
+ * Deletes the owned features a chosen option gave up.
  *
  * A pick with no compendium uuid is still removed, and is absent from the
  * returned list because a later level-down has nothing to restore it from.
  */
-async function dropReleasedThrillPicks(
+async function dropReleasedFeatures(
 	actor: {
 		items: { get(id: string): unknown };
 		deleteEmbeddedDocuments(type: 'Item', ids: string[]): Promise<unknown>;
 	},
-	picks: ReadonlyArray<{ id: string; uuid: string; level: number }>,
+	picks: readonly ReleasedPick[],
 ): Promise<{ droppedIds: string[]; releasedFeatures: ReleasedFeature[] }> {
 	const present = picks.filter((pick) => pick.id.length > 0 && actor.items.get(pick.id));
 	if (present.length > 0) {
@@ -2086,7 +2082,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		await storeChosenSchools(this, typedDialogData.schoolChoices ?? new Map());
 
 		const grantedFeatureIds = [...epicBoonIds, ...classFeatureIds];
-		const release = await dropReleasedThrillPicks(this, typedDialogData.releasedThrillPicks ?? []);
+		const release = await dropReleasedFeatures(this, typedDialogData.releasedFeatures ?? []);
 
 		// Create spell documents
 		let grantedSpellIds: string[] = [];
@@ -2116,8 +2112,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
-		// Record level up history. A companion swap's released picks leave the earlier
-		// entries that granted them, and this entry remembers how to put them back.
+		// Record level up history. Released features leave the earlier entries that
+		// granted them, and this entry remembers how to put them back.
 		const droppedIds = new Set(release.droppedIds);
 		const priorHistory = this.system.levelUpHistory.map((entry) => {
 			if (!entry.grantedFeatureIds.some((id) => droppedIds.has(id))) return entry;

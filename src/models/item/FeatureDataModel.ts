@@ -65,6 +65,19 @@ const schema = () => ({
 				new fields.NumberField({ required: true, nullable: false, integer: true }),
 				{ required: false, nullable: false, initial: () => [] },
 			),
+			releases: new fields.SchemaField(
+				{
+					group: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					count: new fields.NumberField({
+						required: true,
+						nullable: false,
+						initial: 0,
+						integer: true,
+						min: 0,
+					}),
+				},
+				{ required: false, nullable: false },
+			),
 		}),
 		{ required: false, nullable: false, initial: () => [] },
 	),
@@ -106,6 +119,8 @@ class NimbleFeatureData extends NimbleBaseItemData<
 		selectionGroups: string[];
 		selectionCount: number;
 		applyAtLevels: number[];
+		/** Owned features of `group` the option gives up, earliest first. */
+		releases: { group: string; count: number };
 	}>;
 
 	declare activation: {

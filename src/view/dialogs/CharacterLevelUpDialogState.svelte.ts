@@ -11,10 +11,10 @@ import getClassFeaturesFromIndex, {
 import getEpicBoons from '#utils/classProgression/getEpicBoons.ts';
 import getSubclassChoices from '#utils/classProgression/getSubclassChoices.ts';
 import getSubclassFeaturesFromIndex from '#utils/classProgression/getSubclassFeatures.ts';
-import planBeastmasterChoice, {
+import planSubclassOptions, {
 	type ChoiceFeature,
-	type TrackedPick,
-} from '#utils/classProgression/planBeastmasterChoice.ts';
+	type ReleasedPick,
+} from '#utils/classProgression/planSubclassOptions.ts';
 import getChoicesFromCompendium from '#utils/documents/getChoicesFromCompendium.ts';
 import isLevelUpOptionApplicable from '#utils/optionSwap/isLevelUpOptionApplicable.ts';
 import type { SpellIndex, SpellIndexEntry } from '#utils/spell/getSpells.js';
@@ -33,16 +33,13 @@ interface ClassItemShape {
 
 /** A sheet item reduced to the fields level-up reads. */
 interface LevelUpItem extends ChoiceFeature {
-	id?: string;
 	type: string;
 	name?: string;
 	system?: ChoiceFeature['system'] & {
 		rules?: Array<{ type: string; [key: string]: unknown }>;
 		school?: string;
 		parentClass?: string;
-		group?: string;
 	};
-	_stats?: { compendiumSource?: string };
 }
 
 /** Structural type for what the factory accesses on the actor document */
@@ -214,12 +211,12 @@ export function createLevelUpState(
 						)
 					: [];
 
-				const plan = planBeastmasterChoice({
+				const plan = planSubclassOptions({
 					incoming: subclassFeatures,
 					owned: featureItems(getDocument()),
 					level: levelingTo,
-					optionId: null,
-					thrillPicks: [],
+					optionIds: [],
+					history: [],
 				});
 
 				// Subclass features are resolved separately, so filter already-owned
@@ -490,7 +487,7 @@ export function createLevelUpState(
 						grantedOptionItems: computeGrantedOptionItems(),
 					}
 				: undefined,
-			releasedThrillPicks: thrillPicksToRelease(),
+			releasedFeatures: featuresToRelease(),
 			spellUuids: getGrantedSpellUuids(),
 			schoolChoices: new Map(
 				schoolSelections.flatMap((group) => {
@@ -505,36 +502,16 @@ export function createLevelUpState(
 		return (document.items ?? []).filter((item) => item.type === 'feature');
 	}
 
-	function trackedThrillPicks(document: LevelUpDocument): TrackedPick[] {
-		const history = document.system?.levelUpHistory ?? [];
-		return featureItems(document).flatMap((item) => {
-			if (item.system?.group !== 'thrill-of-the-hunt' || !item.id) return [];
-			const entry = history.find((row) => (row.grantedFeatureIds ?? []).includes(item.id ?? ''));
-			return [{ id: item.id, level: entry?.level ?? Number.MAX_SAFE_INTEGER }];
-		});
-	}
-
-	function thrillPicksToRelease(): Array<{ id: string; uuid: string; level: number }> {
+	function featuresToRelease(): ReleasedPick[] {
 		if (!classFeatures) return [];
 		const document = getDocument();
-		const features = featureItems(document);
-		const selectedSwapId =
-			[...selectedFeatureOptions.values()].find((optionId) => optionId.endsWith('-swap')) ?? null;
-		const plan = planBeastmasterChoice({
+		return planSubclassOptions({
 			incoming: classFeatures.optionFeatures,
-			owned: features,
+			owned: featureItems(document),
 			level: levelingTo,
-			optionId: selectedSwapId,
-			thrillPicks: trackedThrillPicks(document),
-		});
-		return plan.release.map((pick) => {
-			const item = features.find((candidate) => candidate.id === pick.id);
-			return {
-				id: pick.id,
-				uuid: item?._stats?.compendiumSource ?? '',
-				level: pick.level,
-			};
-		});
+			optionIds: [...selectedFeatureOptions.values()],
+			history: document.system?.levelUpHistory ?? [],
+		}).release;
 	}
 
 	function getSubmitButtonTooltip() {

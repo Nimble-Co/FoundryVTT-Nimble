@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import planBeastmasterChoice, { type ChoiceFeature } from '../planBeastmasterChoice.ts';
+import planSubclassOptions, { type ChoiceFeature } from '../planSubclassOptions.ts';
 
 const DIR = 'packs/classFeatures/core/hunter/hunter-subclasses/beastmaster';
 const PACK = 'Compendium.nimble.nimble-class-features.Item.';
@@ -19,6 +19,7 @@ interface PackItem {
 			id: string;
 			applyAtLevels?: number[];
 			rules?: Array<{ type?: string; uuid?: string }>;
+			releases?: { group: string; count: number };
 		}>;
 	};
 }
@@ -68,14 +69,27 @@ function namesFor(uuids: string[]): string[] {
 		.sort();
 }
 
+/** Owned Thrill of the Hunt picks and the history entries that granted them. */
+function thrillPicks(...picks: Array<[string, number]>) {
+	return {
+		owned: picks.map(([id]) => ({
+			id,
+			uuid: `Actor.hunter.Item.${id}`,
+			system: { group: 'thrill-of-the-hunt' },
+			_stats: { compendiumSource: `${PACK}${id}` },
+		})),
+		history: picks.map(([id, level]) => ({ level, grantedFeatureIds: [id] })),
+	};
+}
+
 describe('Beastmaster companion choice', () => {
 	it('offers the size choice when the subclass is taken, and does not auto-grant every size', () => {
-		const plan = planBeastmasterChoice({
+		const plan = planSubclassOptions({
 			incoming: atLevel(3),
 			owned: [],
 			level: 3,
-			optionId: null,
-			thrillPicks: [],
+			optionIds: [],
+			history: [],
 		});
 
 		expect(plan.optionFeatures.map((feature) => feature.name)).toEqual(['Beastmaster']);
@@ -92,15 +106,11 @@ describe('Beastmaster companion choice', () => {
 		['large', ['Large - Alpha Protector']],
 	])('%s grants only that size, and leaves the Thrill of the Hunt picks', (optionId, names) => {
 		expect(namesFor(grantsOf(optionId))).toEqual(names);
-		const plan = planBeastmasterChoice({
+		const plan = planSubclassOptions({
 			incoming: atLevel(3),
-			owned: [],
 			level: 3,
-			optionId,
-			thrillPicks: [
-				{ id: 'shot', level: 2 },
-				{ id: 'trap', level: 2 },
-			],
+			optionIds: [optionId],
+			...thrillPicks(['shot', 2], ['trap', 2]),
 		});
 		expect(plan.release).toEqual([]);
 	});
@@ -116,18 +126,19 @@ describe('Beastmaster companion choice', () => {
 		'%s grants that size and releases the first two Thrill of the Hunt picks',
 		(optionId, names) => {
 			expect(namesFor(grantsOf(optionId))).toEqual(names);
-			const plan = planBeastmasterChoice({
+			expect(
+				beastmaster?.system?.levelUpOptions?.find((option) => option.id === optionId)?.releases,
+			).toEqual({ group: 'thrill-of-the-hunt', count: 2 });
+			const plan = planSubclassOptions({
 				incoming: atLevel(3),
-				owned: [],
 				level: 3,
-				optionId,
-				thrillPicks: [
-					{ id: 'later', level: 4 },
-					{ id: 'second', level: 2 },
-					{ id: 'first', level: 2 },
-				],
+				optionIds: ['other', optionId],
+				...thrillPicks(['later', 4], ['second', 2], ['first', 2]),
 			});
-			expect(plan.release.map((pick) => pick.id)).toEqual(['first', 'second']);
+			expect(plan.release).toEqual([
+				{ id: 'first', uuid: `${PACK}first`, level: 2 },
+				{ id: 'second', uuid: `${PACK}second`, level: 2 },
+			]);
 		},
 	);
 
@@ -141,12 +152,12 @@ describe('Beastmaster companion choice', () => {
 	});
 
 	it('does not add the other sizes at a later level once the choice is on the sheet', () => {
-		const plan = planBeastmasterChoice({
+		const plan = planSubclassOptions({
 			incoming: atLevel(7),
 			owned: beastmaster ? [beastmaster] : [],
 			level: 7,
-			optionId: null,
-			thrillPicks: [],
+			optionIds: [],
+			history: [],
 		});
 
 		expect(plan.optionFeatures).toEqual([]);
@@ -159,14 +170,69 @@ describe('Beastmaster companion choice', () => {
 			uuid: `${PACK}tracker`,
 			system: { subclass: true },
 		};
-		const plan = planBeastmasterChoice({
+		const plan = planSubclassOptions({
 			incoming: [...atLevel(3), other],
 			owned: [],
 			level: 3,
-			optionId: null,
-			thrillPicks: [],
+			optionIds: [],
+			history: [],
 		});
 
 		expect(plan.autoGrant.map((feature) => feature.name)).toEqual(['Skilled Tracker']);
+	});
+});
+
+describe('planSubclassOptions releases', () => {
+	const swap: ChoiceFeature = {
+		uuid: `${PACK}choice`,
+		system: {
+			subclass: true,
+			levelUpOptions: [
+				{ id: 'keep', applyAtLevels: [3], rules: [] },
+				{ id: 'trade', applyAtLevels: [3], rules: [], releases: { group: 'tricks', count: 1 } },
+			],
+		},
+	};
+	const owned = [
+		{ id: 'old', system: { group: 'tricks' }, _stats: { compendiumSource: `${PACK}old` } },
+		{ id: 'new', system: { group: 'tricks' }, _stats: { compendiumSource: `${PACK}new` } },
+		{ id: 'other', system: { group: 'spells' } },
+	];
+	const history = [
+		{ level: 2, grantedFeatureIds: ['old'] },
+		{ level: 5, grantedFeatureIds: ['new'] },
+	];
+
+	it('releases the earliest picks of the group the chosen option names', () => {
+		const plan = planSubclassOptions({
+			incoming: [swap],
+			owned,
+			level: 3,
+			optionIds: ['trade'],
+			history,
+		});
+		expect(plan.release).toEqual([{ id: 'old', uuid: `${PACK}old`, level: 2 }]);
+	});
+
+	it('releases nothing for an option that names no group', () => {
+		const plan = planSubclassOptions({
+			incoming: [swap],
+			owned,
+			level: 3,
+			optionIds: ['keep'],
+			history,
+		});
+		expect(plan.release).toEqual([]);
+	});
+
+	it('keeps a pick with no compendium source, with an empty uuid', () => {
+		const plan = planSubclassOptions({
+			incoming: [swap],
+			owned: [{ id: 'homebrew', system: { group: 'tricks' } }],
+			level: 3,
+			optionIds: ['trade'],
+			history: [{ level: 2, grantedFeatureIds: ['homebrew'] }],
+		});
+		expect(plan.release).toEqual([{ id: 'homebrew', uuid: '', level: 2 }]);
 	});
 });
