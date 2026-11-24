@@ -95,3 +95,4 @@ export { Migration094MonsterConditions } from './Migration094MonsterConditions.j
 export { Migration095WeaponTwoHandedOverride } from './Migration095WeaponTwoHandedOverride.js';
 export { Migration096DefendOptionAttack } from './Migration096DefendOptionAttack.js';
 export { Migration097EndEarlierMarks } from './Migration097EndEarlierMarks.js';
+export { Migration098VersatileBowmaster } from './Migration098VersatileBowmaster.js';

@@ -45,6 +45,8 @@ A line tells what the roll spends: "When you roll, it spends 1 action and 1 from
 
 Some features add a tick, such as **Max damage** or **Dual wield**. A tick that spends a charge adds it to the spend line. A tick with a limit, such as **(1/round)**, hides until the use comes back. One attack spends from a charge pool one time only: when a tick, the use or an **Add Damage** button spent a Combat Die, nothing else spends one.
 
+Some features put a tick in the roll window that rolls different damage dice with one weapon, such as Versatile Bowmaster with a longbow. The tick starts off. Other weapons do not show the tick, and an attack that skips the roll window rolls the weapon's usual damage.
+
 A feature such as Assess can hold a change for your next attack. The creature shows an icon, and the next attack window shows a line for it and ends it. With **Feature Effects** off, the line is a tick box that starts unticked. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
 
 ::: details More about ticks and spell options

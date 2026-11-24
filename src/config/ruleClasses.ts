@@ -22,6 +22,7 @@ import { CritDiceRule } from '../models/rules/critDice.js';
 import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DamageFormulaChoiceRule } from '../models/rules/damageFormulaChoice.js';
 import { DamageMultiplierRule } from '../models/rules/damageMultiplier.js';
 import { DamageRecoilRule } from '../models/rules/damageRecoil.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
@@ -126,6 +127,7 @@ export const RULE_CLASSES = {
 	conditionalBonus: ConditionalBonusRule,
 	conditionImmunity: ConditionImmunityRule,
 	damageBonus: DamageBonusRule,
+	damageFormulaChoice: DamageFormulaChoiceRule,
 	damageBack: DamageBackRule,
 	damageRecoil: DamageRecoilRule,
 	defendOption: DefendOptionRule,

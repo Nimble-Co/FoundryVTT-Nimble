@@ -166,6 +166,26 @@
 		/>
 	{/if}
 
+	{#if state.formulaChoices.length > 0 && !keptInUse}
+		{#each state.formulaChoices as offer (offer.key)}
+			<label class="check">
+				<input
+					type="checkbox"
+					checked={state.formulaChoiceChecked[offer.key] === true}
+					onchange={(event) => state.setFormulaChoice(offer.key, event.currentTarget.checked)}
+				/>
+				<i class="fa-solid fa-right-left" aria-hidden="true"></i>
+				<span
+					>{localize('NIMBLE.rollWindow.damageFormulaChoice', {
+						label: offer.label,
+						to: offer.to,
+						from: offer.from,
+					})}</span
+				>
+			</label>
+		{/each}
+	{/if}
+
 	{#if !rollsNoDice}
 		<RollModeField bind:value={state.selectedRollMode} {rushedAttack} />
 		<SituationalRollModeList
