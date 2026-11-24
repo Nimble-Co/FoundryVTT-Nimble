@@ -12,6 +12,7 @@
 		restoresManaOnRest,
 	} from '#utils/actor/manaRecovery.js';
 	import localize from '#utils/localize.ts';
+	import { woundsHealedOnSafeRest } from '#utils/wounds/safeRestWounds.js';
 	import OptionSwapSection from './components/optionSwap/OptionSwapSection.svelte';
 
 	interface Props {
@@ -80,7 +81,7 @@
 	let manaRecovery = $derived(restoresManaOnSafeRest ? mana.max - mana.current : 0);
 
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
-	let woundRecovery = $derived(Math.min(wounds.value, 1));
+	let woundRecovery = $derived(woundsHealedOnSafeRest(actor, wounds.value));
 
 	// Reactive hit dice computation (mirrors PlayerCharacterSheet pattern)
 	let hitDice = $derived.by(() => {
@@ -277,8 +278,12 @@
 					<span class="recovery-card__label">{CONFIG.NIMBLE.safeRest.wounds}</span>
 					<span class="recovery-card__value">
 						{#if woundRecovery > 0}
-							<span class="recovery-card__change recovery-card__change--positive">-1</span>
-							<span class="recovery-card__detail">({wounds.value} → {wounds.value - 1})</span>
+							<span class="recovery-card__change recovery-card__change--positive"
+								>-{woundRecovery}</span
+							>
+							<span class="recovery-card__detail"
+								>({wounds.value} → {wounds.value - woundRecovery})</span
+							>
 						{:else}
 							<span class="recovery-card__full">{CONFIG.NIMBLE.safeRest.noWounds}</span>
 						{/if}

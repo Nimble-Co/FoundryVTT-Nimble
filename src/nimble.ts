@@ -69,6 +69,7 @@ import { registerEndTimedEffectsQuery } from './utils/lastsUntil/endEffects.js';
 import { registerEndWaitingQuery } from './utils/lastsUntil/endWaiting.js';
 import { registerEscapeHooks } from './utils/lastsUntil/escapeFollow.js';
 import { registerSaveRequestHooks } from './utils/saveRequest/saveRequests.js';
+import { registerAskOwnerQuery } from './utils/wounds/askOwner.js';
 import './scss/main.scss';
 import { SYSTEM_ID, systemHookName } from '#system';
 import {
@@ -204,6 +205,7 @@ registerEndWaitingQuery();
 registerCardEventsQuery();
 registerApplyEffectQuery();
 registerGiveWoundsQuery();
+registerAskOwnerQuery();
 registerUseItemForFreeQuery();
 registerMinionGroupTokenBadges();
 registerMovementHistoryRefresh();

@@ -509,6 +509,19 @@ abstract class NimbleBaseRule<
 		return Number.isFinite(value) ? Math.max(minimum, Math.floor(value)) : minimum;
 	}
 
+	/** Spaces a creature may move, from a formula where `@speed` is that creature's walk speed. */
+	protected resolveMoveSpaces(formula: string, mover: unknown): number {
+		const text = formula?.trim() ?? '';
+		if (!text) return 0;
+		const walk = (mover as { system?: { attributes?: { movement?: { walk?: unknown } } } } | null)
+			?.system?.attributes?.movement?.walk;
+		const extraRollData = { stacks: this.stacks, speed: Number(walk) || 0 };
+		const rollData = { ...this.rollData(this.actor), ...extraRollData };
+		this.checkReferences(text, this.actor, { rollData, extraRollData });
+		const value = Number(getDeterministicBonus(text, rollData as NimbleRollData));
+		return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+	}
+
 	/** Matches dice notation: 1d6, 2d8+5, bare d20 — but not identifiers like "id6". */
 	static #DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
 
