@@ -790,7 +790,7 @@ A stopped Wound does not land, and `onWound` still runs once for each Wound stop
 
 `wouldDropToZero` (`src/models/rules/wouldDropToZero.ts`) is a separate event. `resolveWouldDropToZero` reads it when HP would fall from above 0 to 0, from `applyDamage` or `setCurrentHP`. Preventing the drop writes no HP and grants no Wound from that drop. Floor leaves the creature at 1 HP and does not grant that Wound. `woundInstead` is a separate gain. Damage while the creature is already at 0 HP is not this event, and the system does not grant the 2 Wounds (3 on a crit) that such damage can inflict.
 
-Automatic rules run first, in priority order. The first automatic drop wins. A rule set to Ask uses a confirm dialog. A no, or a dialog that is not there, leaves the Wound or the drop as it was.
+Automatic rules run first, in priority order. The first automatic drop wins. A rule set to Ask asks the player who owns the creature with that rule, on their own client (`askOwner`). When no such player is online, the client that runs the event asks. A no, a closed dialog, or no answer leaves the Wound or the drop as it was. A move distance reads `@speed` as the walk speed of the creature who moves. A Wound from a card names the actor that speaks the card as its source; a condition rule names its own actor, and turn damage the actor of its rule.
 
 `watch: allies` plus a move distance is how a companion feature such as Large Protect Me!, or a feature such as Ha! I'm Over Here!, is set. The move is offered to the creature who would take the Wound or the drop. A missing token does not undo the decision.
 
