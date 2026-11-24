@@ -8,6 +8,7 @@ import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTr
 import type { AreaMaximizeFor, HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
+import { sideTokenOf } from '#utils/actor/isEnemyAttacker.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
@@ -1541,6 +1542,13 @@ class NimbleChatMessage extends ChatMessage {
 		});
 	}
 
+	/** The token the card speaks for, else the attacker's own token. */
+	#attackerToken(sourceActor: Actor.Implementation | null): unknown {
+		const { scene, token } = this.speaker ?? {};
+		const spoken = scene && token ? game.scenes?.get(scene)?.tokens.get(token) : null;
+		return spoken ?? (sourceActor ? sideTokenOf(sourceActor as never) : null);
+	}
+
 	/** The attack uses each target's first-attack halve, hit or miss. */
 	async claimFirstAttackHalves(): Promise<void> {
 		for (const token of cardTargetTokens<{ actor?: Actor.Implementation | null }>(this)) {
@@ -1691,9 +1699,9 @@ class NimbleChatMessage extends ChatMessage {
 				await offerHalfDamageOnKill({
 					sourceItem,
 					killedToken: fromUuidSync(target.tokenUuid),
+					attackerToken: this.#attackerToken(sourceActor),
 					rolled: target.rolledDamage,
-					deal: (actor, amount) =>
-						withDamageCard(this.id, () => actor.applyDamage?.(amount) ?? Promise.resolve()),
+					deal: (actor, amount) => withDamageCard(this.id, () => actor.applyDamage(amount)),
 				});
 			}
 		}

@@ -5,15 +5,13 @@ import { spacesBetween } from '#utils/movement/spacesBetween.js';
 interface KillSplashRule {
 	type?: string;
 	disabled?: boolean;
-	reach?: number;
-	halfOnKill?: () => number | null;
-	appliesTo?: () => boolean;
+	halfOnKill(): number | null;
 }
 
 interface SplashActor {
 	id?: string | null;
 	name?: string | null;
-	applyDamage?: (amount: number) => Promise<unknown>;
+	applyDamage(amount: number): Promise<unknown>;
 	system?: object;
 }
 
@@ -24,24 +22,13 @@ interface SplashToken {
 	parent?: { tokens?: Iterable<SplashToken> } | null;
 }
 
-function finiteReach(value: unknown): number {
-	const reach = Math.trunc(Number(value));
-	if (!Number.isFinite(reach) || reach < 0) return 0;
-	return reach;
-}
-
 /** The reach of the first applicable rule, or null when the item has none. */
 function reachOf(item: unknown): number | null {
 	const holder = item as { rules?: unknown } | null;
 	for (const rule of actorRules<KillSplashRule>(holder)) {
 		if (rule?.type !== 'halfDamageOnKill' || rule.disabled) continue;
-		if (typeof rule.halfOnKill === 'function') {
-			const reach = rule.halfOnKill();
-			if (reach == null) continue;
-			return finiteReach(reach);
-		}
-		if (typeof rule.appliesTo === 'function' && !rule.appliesTo()) continue;
-		return finiteReach(rule.reach);
+		const reach = rule.halfOnKill();
+		if (reach != null) return reach;
 	}
 	return null;
 }
@@ -50,15 +37,19 @@ function hitPoints(actor: SplashActor): number {
 	return Number(foundry.utils.getProperty(actor, 'system.attributes.hp.value') ?? 0);
 }
 
-function creaturesWithin(origin: SplashToken, reach: number): SplashToken[] {
+function isSameCreature(token: SplashToken, other: SplashToken): boolean {
+	if (token === other || (token.id && token.id === other.id)) return true;
+	if (!token.actor || !other.actor) return false;
+	return token.actor === other.actor || (!!token.actor.id && token.actor.id === other.actor.id);
+}
+
+/** Living creatures within reach of the attacker, other than the attacker and the one that died. */
+function creaturesWithin(attacker: SplashToken, killed: SplashToken, reach: number): SplashToken[] {
 	const found: SplashToken[] = [];
-	for (const other of origin.parent?.tokens ?? []) {
-		if (other === origin || (other.id && other.id === origin.id)) continue;
-		const actor = other.actor;
-		if (!actor || actor === origin.actor) continue;
-		if (origin.actor?.id && actor.id && actor.id === origin.actor.id) continue;
-		if (!(hitPoints(actor) > 0)) continue;
-		if (spacesBetween(origin as never, other as never, undefined, reach) <= reach)
+	for (const other of attacker.parent?.tokens ?? []) {
+		if (!other.actor || isSameCreature(other, attacker) || isSameCreature(other, killed)) continue;
+		if (!(hitPoints(other.actor) > 0)) continue;
+		if (spacesBetween(attacker as never, other as never, undefined, reach) <= reach)
 			found.push(other);
 	}
 	return found;
@@ -70,22 +61,25 @@ function choiceId(token: SplashToken, index: number): string {
 
 /**
  * Ask the client applying the damage to deal half the rolled amount, rounded
- * down, to another living creature within reach. Declining or closing deals
- * nothing. A roll that halves to 0 offers nothing.
+ * down, to another living creature within reach of the attacker. Declining or
+ * closing deals nothing. A roll that halves to 0 offers nothing, and so does
+ * an attacker with no token on the scene of the kill.
  */
 export async function offerHalfDamageOnKill(input: {
 	sourceItem: unknown;
 	killedToken: unknown;
+	attackerToken: unknown;
 	rolled: number;
 	deal: (actor: SplashActor, amount: number) => Promise<unknown>;
 }): Promise<void> {
 	const reach = reachOf(input.sourceItem);
 	const killed = input.killedToken as SplashToken | null;
-	if (reach == null || !killed) return;
+	const attacker = input.attackerToken as SplashToken | null;
+	if (reach == null || !killed || !attacker?.parent || attacker.parent !== killed.parent) return;
 	const amount = Math.floor(Number(input.rolled) / 2);
 	if (!Number.isFinite(amount) || amount < 1) return;
 
-	const choices = creaturesWithin(killed, reach);
+	const choices = creaturesWithin(attacker, killed, reach);
 	if (choices.length < 1) return;
 
 	const chosen: unknown = await foundry.applications.api.DialogV2.wait({

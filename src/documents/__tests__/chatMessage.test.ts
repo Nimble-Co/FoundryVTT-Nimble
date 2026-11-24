@@ -2677,12 +2677,25 @@ describe('NimbleChatMessage.applyDamage — half damage on a kill', () => {
 			actor: nearby,
 			parent,
 		};
-		parent.tokens = [killed, near];
+		const hunterToken = {
+			id: 'hunter',
+			name: 'Hunter',
+			x: -100,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: creature('Hunter', 20),
+			parent,
+		};
+		parent.tokens = [hunterToken, killed, near];
 		globals().fromUuidSync.mockImplementation((uuid: string) =>
 			uuid === 'Scene.s.Token.dead' ? killed : null,
 		);
-		const item = { rules: [{ type: 'halfDamageOnKill', reach: 4, disabled: false }] };
-		const hunter = { items: { get: (id: string) => (id === 'throat' ? item : null) } };
+		const item = { rules: [{ type: 'halfDamageOnKill', disabled: false, halfOnKill: () => 4 }] };
+		const hunter = {
+			items: { get: (id: string) => (id === 'throat' ? item : null) },
+			getActiveTokens: () => [hunterToken],
+		};
 		const actors = Object.assign([], {
 			get: (id: string) => (id === 'hunter' ? hunter : null),
 		});

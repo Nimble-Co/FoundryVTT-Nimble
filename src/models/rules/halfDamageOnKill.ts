@@ -47,7 +47,7 @@ class HalfDamageOnKillRule extends NimbleBaseRule<HalfDamageOnKillRule.Schema> {
 		return super.tooltipInfo(new Map([['reach', 'number']]));
 	}
 
-	/** Spaces from the creature that died. Null when this rule does not apply. */
+	/** Spaces from the attacker. Null when this rule does not apply. */
 	halfOnKill(): number | null {
 		if (!this.isOnActor || !this.appliesTo()) return null;
 		return Math.max(0, Math.trunc(Number(this.reach) || 0));

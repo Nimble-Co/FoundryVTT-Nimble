@@ -966,7 +966,7 @@
 			},
 			"halfDamageOnKill": {
 				"title": "Half the damage",
-				"prompt": "That creature died. Choose another creature within reach, or decline.",
+				"prompt": "That creature died. Choose another creature within reach of the attacker, or decline.",
 				"decline": "Decline",
 				"creature": "Creature"
 			},
@@ -2623,7 +2623,7 @@
 				"description": "When this attack drops a creature to 0 HP, you may deal half the damage that was rolled, rounded down, to another creature within Reach. Declining deals nothing further. The splash ignores armor.",
 				"reach": {
 					"label": "Reach",
-					"hint": "How many spaces the other creature can be from the creature that died."
+					"hint": "How many spaces the other creature can be from the attacker."
 				}
 			},
 			"dyingActionLimit": {

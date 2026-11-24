@@ -60,7 +60,7 @@ function dialog() {
 }
 
 function rule(reach = 4) {
-	return { rules: [{ type: 'halfDamageOnKill', reach, disabled: false }] };
+	return { rules: [{ type: 'halfDamageOnKill', disabled: false, halfOnKill: () => reach }] };
 }
 
 describe('offerHalfDamageOnKill', () => {
@@ -68,11 +68,12 @@ describe('offerHalfDamageOnKill', () => {
 		dialogApi().wait = vi.fn();
 	});
 
-	it('deals half the roll, rounded down, to a creature within reach', async () => {
-		const [killed, near, far] = scene([
-			{ id: 'killed', x: 0, hp: 0 },
+	it('deals half the roll, rounded down, to a creature within reach of the attacker', async () => {
+		const [hunter, killed, near, nearKilled] = scene([
+			{ id: 'hunter', x: 0, hp: 20 },
+			{ id: 'killed', x: 500, hp: 0 },
 			{ id: 'near', x: 200, hp: 12 },
-			{ id: 'far', x: 1000, hp: 12 },
+			{ id: 'nearKilled', x: 700, hp: 12 },
 		]);
 		dialog().mockResolvedValue('token:near');
 		const deal = vi.fn().mockResolvedValue(undefined);
@@ -80,6 +81,7 @@ describe('offerHalfDamageOnKill', () => {
 		await offerHalfDamageOnKill({
 			sourceItem: rule(),
 			killedToken: killed,
+			attackerToken: hunter,
 			rolled: 9,
 			deal,
 		});
@@ -89,12 +91,35 @@ describe('offerHalfDamageOnKill', () => {
 		);
 		expect(buttons).toEqual(['token:near', 'decline']);
 		expect(deal).toHaveBeenCalledWith(near.actor, 4);
-		expect(deal).not.toHaveBeenCalledWith(far.actor, expect.anything());
+		expect(deal).not.toHaveBeenCalledWith(nearKilled.actor, expect.anything());
+	});
+
+	it('offers nothing when the attacker has no token on the scene of the kill', async () => {
+		const [killed] = scene([
+			{ id: 'killed', x: 0, hp: 0 },
+			{ id: 'near', x: 200, hp: 12 },
+		]);
+		const [elsewhere] = scene([{ id: 'hunter', x: 0, hp: 20 }]);
+		const deal = vi.fn().mockResolvedValue(undefined);
+
+		for (const attackerToken of [null, elsewhere]) {
+			await offerHalfDamageOnKill({
+				sourceItem: rule(),
+				killedToken: killed,
+				attackerToken,
+				rolled: 9,
+				deal,
+			});
+		}
+
+		expect(dialog()).not.toHaveBeenCalled();
+		expect(deal).not.toHaveBeenCalled();
 	});
 
 	it('deals nothing when the applier declines', async () => {
-		const [killed, near] = scene([
-			{ id: 'killed', x: 0, hp: 0 },
+		const [hunter, killed, near] = scene([
+			{ id: 'hunter', x: 0, hp: 20 },
+			{ id: 'killed', x: 100, hp: 0 },
 			{ id: 'near', x: 200, hp: 12 },
 		]);
 		dialog().mockResolvedValue('decline');
@@ -103,6 +128,7 @@ describe('offerHalfDamageOnKill', () => {
 		await offerHalfDamageOnKill({
 			sourceItem: rule(),
 			killedToken: killed,
+			attackerToken: hunter,
 			rolled: 8,
 			deal,
 		});
@@ -111,9 +137,10 @@ describe('offerHalfDamageOnKill', () => {
 		expect(near.actor.applyDamage).not.toHaveBeenCalled();
 	});
 
-	it('offers nothing when nobody is in reach, the half is 0, or the item has no rule', async () => {
-		const [killed, far] = scene([
-			{ id: 'killed', x: 0, hp: 0 },
+	it('offers nothing when nobody else is in reach, the half is 0, or the item has no rule', async () => {
+		const [hunter, killed, far] = scene([
+			{ id: 'hunter', x: 0, hp: 20 },
+			{ id: 'killed', x: 100, hp: 0 },
 			{ id: 'far', x: 1000, hp: 12 },
 		]);
 		const deal = vi.fn().mockResolvedValue(undefined);
@@ -121,18 +148,21 @@ describe('offerHalfDamageOnKill', () => {
 		await offerHalfDamageOnKill({
 			sourceItem: rule(),
 			killedToken: killed,
+			attackerToken: hunter,
 			rolled: 9,
 			deal,
 		});
 		await offerHalfDamageOnKill({
 			sourceItem: rule(),
 			killedToken: killed,
+			attackerToken: hunter,
 			rolled: 1,
 			deal,
 		});
 		await offerHalfDamageOnKill({
 			sourceItem: { rules: [] },
 			killedToken: killed,
+			attackerToken: hunter,
 			rolled: 9,
 			deal,
 		});
