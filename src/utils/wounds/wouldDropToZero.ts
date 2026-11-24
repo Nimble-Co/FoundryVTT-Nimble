@@ -1,5 +1,5 @@
 import { ruleLabel } from '#utils/actor/actorRules.js';
-import localize from '../localize.js';
+import { askOwner } from './askOwner.js';
 import type { PendingMove, WoundSource } from './pendingWound.js';
 import { rulesWatching, type WoundCreature } from './rulesWatching.js';
 
@@ -39,33 +39,16 @@ interface DropRule {
 	label?: string;
 	parentDocument?: { name?: string | null } | null;
 	matchesDrop?: () => boolean;
-	planDrop?: () => WouldDropPlan;
-}
-
-function escapeName(name: string): string {
-	const escapeHtml = foundry.utils?.escapeHTML;
-	return typeof escapeHtml === 'function' ? escapeHtml(name) : name;
+	planDrop?: (mover: WoundCreature) => WouldDropPlan;
 }
 
 async function askDrop(
+	actor: WoundCreature,
 	offer: WouldDropOffer,
 	choose: WouldDropRequest['choose'],
 ): Promise<boolean> {
 	if (choose) return choose(offer);
-	try {
-		const confirm = foundry.applications?.api?.DialogV2?.confirm;
-		if (!confirm) return false;
-		const yes = await confirm({
-			window: { title: localize('NIMBLE.wounds.drop.chooseTitle') },
-			content: `<p>${localize('NIMBLE.wounds.drop.offer', { name: escapeName(offer.name) })}</p>`,
-			yes: { label: localize('NIMBLE.wounds.drop.use') },
-			no: { label: localize('NIMBLE.wounds.drop.skip') },
-			rejectClose: false,
-		});
-		return yes === true;
-	} catch {
-		return false;
-	}
+	return askOwner(actor, { kind: 'drop', name: offer.name });
 }
 
 async function finish(
@@ -102,15 +85,16 @@ export async function resolveWouldDropToZero(request: WouldDropRequest): Promise
 	const automatics = watching.filter(({ rule }) => rule.choice !== 'offer' && matches(rule));
 	const first = automatics[0];
 	if (first) {
-		const plan = first.rule.planDrop?.();
+		const plan = first.rule.planDrop?.(request.actor);
 		if (plan) return finish(request.actor, first.rule, plan);
 	}
 
-	for (const { rule } of watching) {
+	for (const { rule, holder } of watching) {
 		if (rule.choice !== 'offer' || !matches(rule)) continue;
-		const plan = rule.planDrop?.();
+		const plan = rule.planDrop?.(request.actor);
 		if (!plan) continue;
 		const accepted = await askDrop(
+			holder,
 			{ name: ruleLabel(rule), response: plan.response },
 			request.choose,
 		);

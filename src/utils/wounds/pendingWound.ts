@@ -2,7 +2,7 @@ import { getActorWoundsValueAndMax } from '#utils/actor/actorResources.js';
 import { actorRules, ruleLabel } from '#utils/actor/actorRules.js';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import { raisePoolDiceOnWounds } from '../../hooks/dicePoolTriggers/poolDieToMaxTrigger.js';
-import localize from '../localize.js';
+import { askOwner } from './askOwner.js';
 import { rulesWatching, type WoundCreature } from './rulesWatching.js';
 
 export type WoundCause = 'direct' | 'dropToZero' | 'redirect';
@@ -80,7 +80,7 @@ interface PendingRule {
 	parentDocument?: { name?: string | null } | null;
 	actor?: WoundCreature;
 	matchesPending?: (view: PendingWoundView) => boolean;
-	planPending?: (view: PendingWoundView) => PendingWoundPlan;
+	planPending?: (view: PendingWoundView, mover: WoundCreature) => PendingWoundPlan;
 }
 
 function covered(take: number, pending: number): number {
@@ -143,33 +143,13 @@ async function offerMove(actor: WoundCreature, distance: number, name: string): 
 	}
 }
 
-function escapeName(name: string): string {
-	const escapeHtml = foundry.utils?.escapeHTML;
-	return typeof escapeHtml === 'function' ? escapeHtml(name) : name;
-}
-
 async function askPending(
+	actor: WoundCreature,
 	offer: PendingWoundOffer,
 	choose: PendingWoundRequest['choose'],
 ): Promise<boolean> {
 	if (choose) return choose(offer);
-	try {
-		const confirm = foundry.applications?.api?.DialogV2?.confirm;
-		if (!confirm) return false;
-		const yes = await confirm({
-			window: { title: localize('NIMBLE.wounds.pending.chooseTitle') },
-			content: `<p>${localize('NIMBLE.wounds.pending.offer', {
-				name: escapeName(offer.name),
-				count: String(offer.amount),
-			})}</p>`,
-			yes: { label: localize('NIMBLE.wounds.pending.use') },
-			no: { label: localize('NIMBLE.wounds.pending.skip') },
-			rejectClose: false,
-		});
-		return yes === true;
-	} catch {
-		return false;
-	}
+	return askOwner(actor, { kind: 'pending', name: offer.name, count: offer.amount });
 }
 
 /**
@@ -247,7 +227,7 @@ export async function alterPendingWound(
 		if (amount <= 0) break;
 		const current = view();
 		if (!rule.matchesPending?.(current)) continue;
-		const plan = rule.planPending?.(current);
+		const plan = rule.planPending?.(current, actor);
 		if (!plan) continue;
 		await apply(rule, holder, plan);
 	}
@@ -256,10 +236,11 @@ export async function alterPendingWound(
 		if (amount <= 0) break;
 		const current = view();
 		if (!rule.matchesPending?.(current)) continue;
-		const plan = rule.planPending?.(current);
+		const plan = rule.planPending?.(current, actor);
 		if (!plan) continue;
 		const touching = plan.change === 'set' ? setTo(plan.take) : covered(plan.take, amount);
 		const accepted = await askPending(
+			holder,
 			{ name: ruleLabel(rule), amount: touching, change: plan.change },
 			request.choose,
 		);

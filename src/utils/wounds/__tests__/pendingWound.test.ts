@@ -253,6 +253,46 @@ describe('alterPendingWound', () => {
 		expect(recover).toHaveBeenCalledTimes(2);
 	});
 
+	it("asks the player who owns the ally's rule, not the player of the wounded creature", async () => {
+		const OWNER = 3;
+		vi.stubGlobal('CONST', { DOCUMENT_OWNERSHIP_LEVELS: { OWNER } });
+		const ownedBy = (id: string) => (who: { id: string }, level: number) =>
+			level === OWNER && who.id === id;
+		const heroPlayer = {
+			id: 'hero-player',
+			active: true,
+			isGM: false,
+			query: vi.fn(async () => false),
+		};
+		const allyPlayer = {
+			id: 'ally-player',
+			active: true,
+			isGM: false,
+			query: vi.fn(async () => true),
+		};
+		const gm = { id: 'gm', active: true, isGM: true };
+		const users = game as unknown as { users: object[]; user: object };
+		const before = { users: users.users, user: users.user };
+		users.users = [gm, heroPlayer, allyPlayer];
+		users.user = gm;
+		const hero = Object.assign(creature('Hero', 0), { testUserPermission: ownedBy('hero-player') });
+		const companion = Object.assign(creature('Companion', 0), {
+			testUserPermission: ownedBy('ally-player'),
+		});
+		companion.rules = [
+			pending(plan('negate', Number.POSITIVE_INFINITY), { watch: 'allies', choice: 'offer' }),
+		];
+
+		const outcome = await alterPendingWound({ actor: hero, amount: 1, watchers: [companion] });
+		users.users = before.users;
+		users.user = before.user;
+		vi.unstubAllGlobals();
+
+		expect(allyPlayer.query).toHaveBeenCalledOnce();
+		expect(heroPlayer.query).not.toHaveBeenCalled();
+		expect(outcome.land).toBe(0);
+	});
+
 	it('stops only a Wound that would fill the track when the rule says so', async () => {
 		const lastOnly = pending(plan('negate', Number.POSITIVE_INFINITY), {
 			matchesPending: (view: PendingWoundView) => view.reachesLastWound,
