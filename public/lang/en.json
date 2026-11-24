@@ -4071,7 +4071,7 @@
 				},
 				"whenAmount": {
 					"label": "Only when the number is",
-					"hint": "The pending number this matches. 0: any number. Unstoppable Force uses 2, and 3 on a crit."
+					"hint": "The pending number this matches. 0: any number. Use one rule for each number, such as 2, and 3 on a crit."
 				},
 				"choice": {
 					"label": "Who decides",
@@ -4126,11 +4126,11 @@
 				},
 				"moveDistance": {
 					"label": "Move",
-					"hint": "Spaces the creature who would take the Wound may move when this changes them. Blank: no move. Large Protect Me! uses this with Ask first."
+					"hint": "Spaces the creature who would take the Wound may move when this changes them. A formula such as @speed is that creature's speed. Blank: no move."
 				}
 			},
 			"wouldDropToZero": {
-				"description": "When the creature would drop from above 0 HP to 0, this can stop the drop or leave them at 1 HP. Stopping the drop also stops the Wound that drop would cause. Damage while they are already at 0 HP is not this. A move here is how a feature such as Ha! I'm Over Here! takes them away instead of the damage.",
+				"description": "When the creature would drop from above 0 HP to 0, this can stop the drop or leave them at 1 HP. Stopping the drop also stops the Wound that drop would cause. Damage while they are already at 0 HP is not this. A move here lets them move away instead of taking the damage.",
 				"response": {
 					"label": "Instead",
 					"hint": "Stop the drop, or leave them at 1 HP.",
@@ -5633,6 +5633,8 @@
 			"manaRestored": "Mana Restored",
 			"hitDiceRecovered": "Hit Dice Recovered",
 			"woundsHealed": "Wounds Healed",
+			"woundsRecovered": "Recovered {count} Wounds.",
+			"woundRecovered": "Recovered 1 Wound.",
 			"inspirationEnded": "Inspiration Ended",
 			"alreadyFullyRested": "Already fully rested"
 		},

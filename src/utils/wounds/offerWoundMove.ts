@@ -1,5 +1,6 @@
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { postMovementOfferCard } from '#utils/movement/postMovementOfferCard.js';
+import localize from '../localize.js';
 import type { WoundCreature } from './rulesWatching.js';
 
 /**
@@ -27,8 +28,8 @@ export async function offerWoundMove(
 		const card = await postMovementOfferCard({
 			actor: actor as Actor,
 			token,
-			name: name || 'Move',
-			reason: name || 'Move',
+			name: name || localize('NIMBLE.activationEffects.move'),
+			reason: name || localize('NIMBLE.activationEffects.move'),
 			node: {
 				kind: 'free',
 				distance: String(spaces),
