@@ -3319,6 +3319,10 @@
 					"label": "Can upcast",
 					"hint": "The use opens the spell window, so the caster can upcast the spell or close the window. An upcast spends only the mana above the spell's tier."
 				},
+				"againstQuarry": {
+					"label": "Against your quarry",
+					"hint": "For You crit with an attack: a struck creature must be your quarry. A crit against anyone else does not use the item."
+				},
 				"cardLine": "For free: {trigger} ({feature})",
 				"reasons": {
 					"onHit": "you hit with an attack",
