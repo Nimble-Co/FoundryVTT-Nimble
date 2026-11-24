@@ -3604,7 +3604,7 @@
 				},
 				"attackFormula": {
 					"label": "Attack",
-					"hint": "A formula for damage against the attacker when this option is taken, for example 1d4+@level. Empty offers no attack. The player may decline. Armor applies."
+					"hint": "Damage against the attacker when the hero uses this option, for example 1d4+@level. Leave it empty for no attack. The player is asked first and can skip the attack. The GM applies the damage, and armor applies."
 				}
 			},
 			"damageBack": {

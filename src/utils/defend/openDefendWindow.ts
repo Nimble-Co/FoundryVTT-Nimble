@@ -523,11 +523,6 @@ async function useInterposeTicks(
 			used.push(pick);
 		}
 	}
-	await offerDefendOptionAttacks({
-		rules: used.map((pick) => pick.rule),
-		actor,
-		card,
-	});
 	const { reminders, attackerEffects } = defendOptionEffect(used.map((pick) => pick.rule));
 	for (const line of reminders) ui.notifications?.info(line);
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);

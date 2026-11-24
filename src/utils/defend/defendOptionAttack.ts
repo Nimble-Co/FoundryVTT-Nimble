@@ -7,7 +7,8 @@ const TEXT = 'NIMBLE.chat.defend.attackBack';
 
 /**
  * Asks for each taken Defend Option's attack against the attacker, then rolls
- * the ones the player accepts. Declining rolls nothing. Armor applies.
+ * the ones the player accepts on a card that targets the attacker. The GM
+ * applies the damage from that card, and armor applies. Declining rolls nothing.
  */
 export async function offerDefendOptionAttacks(input: {
 	rules: readonly DefendOptionRule[];
@@ -90,7 +91,7 @@ async function dealDefendOptionAttack(input: {
 			],
 		},
 	};
-	const card = await ChatMessage.create({
+	await ChatMessage.create({
 		author: game.user?.id,
 		flavor: `${input.actor.name ?? ''}: ${input.name}`,
 		speaker: ChatMessage.getSpeaker({ actor: input.actor }),
@@ -105,9 +106,4 @@ async function dealDefendOptionAttack(input: {
 		},
 		type: 'feature',
 	} as unknown as ChatMessage.CreateData);
-	const posted = (Array.isArray(card) ? card[0] : card) as {
-		applyAllDamage?: () => Promise<void>;
-	} | null;
-	if (roll.isMiss === true || !posted?.applyAllDamage) return;
-	await posted.applyAllDamage();
 }

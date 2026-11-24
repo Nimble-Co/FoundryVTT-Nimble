@@ -146,7 +146,7 @@ describe('offerDefendOptionAttacks', () => {
 		expect(confirm()).not.toHaveBeenCalled();
 	});
 
-	it('rolls the formula against the attacker, and medium armor drops the flat bonus', async () => {
+	it('rolls the formula against the attacker and leaves the damage for the GM to apply, where medium armor drops the flat bonus', async () => {
 		confirm().mockResolvedValue(true);
 		const actor = {
 			name: 'Goblin',
@@ -195,7 +195,7 @@ describe('offerDefendOptionAttacks', () => {
 		expect(node?.formula).toBe('1d4+@level');
 		expect(node?.roll.total).toBe(5);
 		expect(node).not.toHaveProperty('ignoreArmor');
-		expect(applyAll).toHaveBeenCalledTimes(1);
+		expect(applyAll).not.toHaveBeenCalled();
 
 		const message = new NimbleChatMessage({
 			_id: 'companionattack01',

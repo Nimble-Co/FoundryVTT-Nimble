@@ -146,7 +146,7 @@ In combat, an attack card that hits a hero has a **Reactions** section: a button
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too. An attack back asks before the Defend is written. Accepting rolls its damage against the attacker, and the attacker's armor applies. Declining skips the attack and the Defend still happens. A move the feature still leaves to the table stays a line on the card.
+A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too. An attack back asks before the Defend is written. Choosing to attack rolls the damage on a card that targets the attacker. The GM applies it from that card, and the attacker's armor applies. Skipping the attack still lets the Defend happen. A move the feature still leaves to the table stays a line on the card.
 
 After a Defend, the target row shows a green shield. Before the damage is applied, the GM can click it when the damage cannot be avoided, or **Undo** to give back the reaction and actions. An effect a feature put on the attacker stays.
 
