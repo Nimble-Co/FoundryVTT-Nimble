@@ -1,14 +1,16 @@
 import { SYSTEM_ID } from '#system';
 import type { CardEventText, MovementOfferHost } from '#types/cardEvent.d.ts';
 import type { OfferCard } from '#types/movement.js';
+import { ruleLabel } from '#utils/actor/actorRules.js';
 import { activationEventsOf } from '#utils/chat/activationEvents.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
 import { alliesWithin } from '#utils/movement/alliesWithin.js';
 import { findActorToken } from '#utils/movement/findActorToken.js';
 import { speakerTokenUuid } from '#utils/movement/movementOffers.js';
 import { firesCritTriggers } from '#utils/reroll/firesCritTriggers.js';
+import { askOwner } from '#utils/wounds/askOwner.js';
 import { isMovementOffersAutomationEnabled } from '../../settings/automationSettings.js';
-import { withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
+import { hasRuleCharge, withRuleCharge } from '../../utils/chargePool/ruleChargeGate.js';
 import { type AttackActivation, deliveryOfAttack } from '../../utils/damage/attackDelivery.js';
 import { UNARMED_STRIKE } from '../../utils/damage/weaponAttack.js';
 import { findInitiativeCard } from '../../utils/movement/findInitiativeCard.js';
@@ -32,6 +34,7 @@ const TRIGGERS = [
 	'afterPoolDiceToMax',
 	'onCritThrough',
 	'onRangedWeaponAttack',
+	'onWound',
 ] as const;
 
 type FreeMoveTrigger = (typeof TRIGGERS)[number];
@@ -262,6 +265,21 @@ class FreeMoveRule extends NimbleBaseRule<FreeMoveRule.Schema> {
 		if (!identifier || identifier !== context.poolIdentifier) return;
 		const pool = context.poolLabel || identifier;
 		await this.#offer({ key: `${REASONS}.onPoolGain`, data: { pool } }, null, this.#useHost());
+	}
+
+	/**
+	 * A Wound was written on this creature. The player is asked first. Declining
+	 * spends nothing and leaves the token where it is.
+	 */
+	async offerOnWound(choose?: () => Promise<boolean>): Promise<void> {
+		if (!this.isOnActor || !this.test() || this.trigger !== 'onWound') return;
+		if (!isMovementOffersAutomationEnabled()) return;
+		if (!hasRuleCharge(this.actor, this.chargePoolIdentifier)) return;
+		const accepted = choose
+			? await choose()
+			: await askOwner(this.actor, { kind: 'move', name: ruleLabel(this) });
+		if (!accepted) return;
+		await this.#offer({ key: `${REASONS}.onWound` }, null, null);
 	}
 
 	/** A rule of this item raised pool dice, or would with some held. */

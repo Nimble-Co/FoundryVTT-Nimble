@@ -792,7 +792,11 @@ A stopped Wound does not land, and `onWound` still runs once for each Wound stop
 
 Automatic rules run first, in priority order. The first automatic drop wins. A rule set to Ask asks the player who owns the creature with that rule, on their own client (`askOwner`). When no such player is online, the client that runs the event asks. A no, a closed dialog, or no answer leaves the Wound or the drop as it was. A move distance reads `@speed` as the walk speed of the creature who moves. A Wound from a card names the actor that speaks the card as its source; a condition rule names its own actor, and turn damage the actor of its rule.
 
-`watch: allies` plus a move distance is how a companion feature such as Large Protect Me!, or a feature such as Ha! I'm Over Here!, is set. The move is offered to the creature who would take the Wound or the drop. A missing token does not undo the decision.
+A pending-Wound rule with a charge pool matches only while that pool has a charge, and spends one charge when the change sticks. Declining the ask does not spend.
+
+`watch: allies` plus a move distance offers the move to the creature who would take the Wound or the drop. A missing token does not undo the decision.
+
+A `freeMove` with trigger `onWound` offers a move after a Wound is written, once for each Wound of that update, on the client that wrote it. The player who owns the creature is asked first, on their own client. Declining spends nothing and leaves the token where it is. Large Protect Me! uses that before level 7, limited by its encounter charge pool. From level 7 the same pool gates a pending-Wound rule on the hunter (`watch: self`) that stops the Wound and then offers a move of 12. Level 15 raises the pool to 2 per encounter. The move is an offer. The token is not moved for the player.
 
 A voluntary Wound cost and a click on the Wound meter do not go through the pending event.
 

@@ -5,9 +5,10 @@
 
 **Example: Unstoppable Force.** Two Wounds become one. A crit that would inflict three becomes two. Use one rule for each number, with **Cause** set to From damage while Dying, and **Critical** set to Only a crit on the second. **Who decides** stays Apply it: the feature is not a choice.
 
-**Example: Large Protect Me!** An ally stops the Wound before it lands, and the wounded creature may move.
+**Example: Large Protect Me!** From level 7 this creature stops the Wound before it lands, and may then move 12 spaces. Before level 7 the creature may move for free after the Wound lands.
 
 - **Change** → Stop them
-- **Who** → An ally
+- **Who** → This creature
 - **Who decides** → Ask first
-- **Move** → the distance
+- **Move** → 12
+- **Charge pool** → the encounter pool

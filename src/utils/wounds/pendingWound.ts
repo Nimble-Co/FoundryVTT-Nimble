@@ -81,6 +81,7 @@ interface PendingRule {
 	actor?: WoundCreature;
 	matchesPending?: (view: PendingWoundView) => boolean;
 	planPending?: (view: PendingWoundView, mover: WoundCreature) => PendingWoundPlan;
+	commitPending?: () => Promise<void> | void;
 }
 
 function covered(take: number, pending: number): number {
@@ -217,6 +218,7 @@ export async function alterPendingWound(
 			}
 		}
 		if (amount === before && redirects.length === beforeRedirects) return;
+		await rule.commitPending?.();
 		if (!(plan.moveDistance >= 1)) return;
 		const name = ruleLabel(rule);
 		moves.push({ actorUuid: actor.uuid ?? '', distance: plan.moveDistance, name });

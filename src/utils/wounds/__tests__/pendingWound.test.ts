@@ -195,6 +195,40 @@ describe('alterPendingWound', () => {
 		expect(recover).toHaveBeenCalledTimes(2);
 	});
 
+	it('spends a charge only after an offered change is accepted', async () => {
+		const hero = creature('Hero', 1);
+		const commitPending = vi.fn(async () => undefined);
+		hero.rules = [
+			pending(plan('negate', Number.POSITIVE_INFINITY, { moveDistance: 12 }), {
+				choice: 'offer',
+				label: 'Large Protect Me!',
+				commitPending,
+			}),
+		];
+
+		const declined = await alterPendingWound({
+			actor: hero,
+			amount: 1,
+			choose: async () => false,
+		});
+
+		expect(declined.land).toBe(1);
+		expect(declined.moves).toEqual([]);
+		expect(commitPending).not.toHaveBeenCalled();
+
+		const accepted = await alterPendingWound({
+			actor: hero,
+			amount: 1,
+			choose: async () => true,
+		});
+
+		expect(accepted.land).toBe(0);
+		expect(accepted.moves).toEqual([
+			{ actorUuid: hero.uuid, distance: 12, name: 'Large Protect Me!' },
+		]);
+		expect(commitPending).toHaveBeenCalledTimes(1);
+	});
+
 	it('skips an offer when there is no dialog to ask with', async () => {
 		const hero = creature('Hero', 0);
 		hero.rules = [pending(plan('negate', Number.POSITIVE_INFINITY), { choice: 'offer' })];

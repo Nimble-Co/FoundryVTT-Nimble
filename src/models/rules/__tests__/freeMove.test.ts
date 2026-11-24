@@ -214,6 +214,7 @@ describe('FreeMoveRule', () => {
 				'afterPoolDiceToMax',
 				'onCritThrough',
 				'onRangedWeaponAttack',
+				'onWound',
 			]);
 			expect(schema.poolIdentifier?.initial).toBe('');
 			expect(schema.distance?.initial).toBe('@speed');
@@ -818,6 +819,81 @@ describe('FreeMoveRule', () => {
 			await Promise.all([roll('first'), roll('second')]);
 			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
 			expect(poolItem.update).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe('onWound', () => {
+		function poolItemOf(harness: Harness) {
+			return (harness.actor.items as { contents: { update: ReturnType<typeof vi.fn> }[] })
+				.contents[0] as { update: ReturnType<typeof vi.fn> };
+		}
+
+		it('asks before it posts, and a no spends nothing', async () => {
+			const harness = makeRule(
+				{ trigger: 'onWound', distance: '12', chargePoolIdentifier: 'thrill' },
+				{ pool: 1 },
+			);
+
+			await harness.rule.offerOnWound(async () => false);
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+			expect(poolItemOf(harness).update).not.toHaveBeenCalled();
+		});
+
+		it('posts the move and spends one charge when the player takes it', async () => {
+			const harness = makeRule(
+				{ trigger: 'onWound', distance: '12', chargePoolIdentifier: 'thrill', whisper: true },
+				{ pool: 1 },
+			);
+
+			await harness.rule.offerOnWound(async () => true);
+
+			expect(lastOffer().node).toMatchObject({ distance: '12', direction: 'any', kind: 'free' });
+			expect(lastOffer().whisper).toBe(true);
+			expect(lastOffer().recipients).toBe('self');
+			expect(poolItemOf(harness).update).toHaveBeenCalledWith(
+				{ 'flags.nimble.chargePools': { thrill: expect.objectContaining({ current: 0 }) } },
+				expect.anything(),
+			);
+		});
+
+		it('does nothing for another trigger', async () => {
+			const harness = makeRule({ trigger: 'onActivation', distance: '12' });
+
+			await harness.rule.offerOnWound(async () => true);
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('does nothing when the predicate fails', async () => {
+			const harness = makeRule({ trigger: 'onWound', distance: '12' }, { predicate: () => false });
+
+			await harness.rule.offerOnWound(async () => true);
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('spends nothing when there is no dialog', async () => {
+			const harness = makeRule(
+				{ trigger: 'onWound', distance: '12', chargePoolIdentifier: 'thrill' },
+				{ pool: 1 },
+			);
+
+			await harness.rule.offerOnWound();
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+			expect(poolItemOf(harness).update).not.toHaveBeenCalled();
+		});
+
+		it('does not fire on an empty pool', async () => {
+			const harness = makeRule(
+				{ trigger: 'onWound', distance: '12', chargePoolIdentifier: 'thrill' },
+				{ pool: 0 },
+			);
+
+			await harness.rule.offerOnWound(async () => true);
+
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
 		});
 	});
 
