@@ -94,6 +94,28 @@ describe('offerHalfDamageOnKill', () => {
 		expect(deal).not.toHaveBeenCalledWith(nearKilled.actor, expect.anything());
 	});
 
+	it('offers another unlinked token made from the same actor as the one that died', async () => {
+		const [hunter, killed, twin] = scene([
+			{ id: 'hunter', x: 0, hp: 20 },
+			{ id: 'killed', x: 100, hp: 0 },
+			{ id: 'twin', x: 200, hp: 12 },
+		]);
+		killed.actor.id = 'goblin';
+		twin.actor.id = 'goblin';
+		dialog().mockResolvedValue('token:twin');
+		const deal = vi.fn().mockResolvedValue(undefined);
+
+		await offerHalfDamageOnKill({
+			sourceItem: rule(),
+			killedToken: killed,
+			attackerToken: hunter,
+			rolled: 9,
+			deal,
+		});
+
+		expect(deal).toHaveBeenCalledWith(twin.actor, 4);
+	});
+
 	it('offers nothing when the attacker has no token on the scene of the kill', async () => {
 		const [killed] = scene([
 			{ id: 'killed', x: 0, hp: 0 },

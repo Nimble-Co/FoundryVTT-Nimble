@@ -37,10 +37,10 @@ function hitPoints(actor: SplashActor): number {
 	return Number(foundry.utils.getProperty(actor, 'system.attributes.hp.value') ?? 0);
 }
 
+/** An unlinked token's actor shares its id with the sidebar actor, so actor ids are not compared. */
 function isSameCreature(token: SplashToken, other: SplashToken): boolean {
 	if (token === other || (token.id && token.id === other.id)) return true;
-	if (!token.actor || !other.actor) return false;
-	return token.actor === other.actor || (!!token.actor.id && token.actor.id === other.actor.id);
+	return !!token.actor && token.actor === other.actor;
 }
 
 /** Living creatures within reach of the attacker, other than the attacker and the one that died. */
