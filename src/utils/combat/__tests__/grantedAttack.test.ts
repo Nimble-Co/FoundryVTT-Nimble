@@ -77,12 +77,11 @@ describe('the choices of a granted attack line', () => {
 		]);
 	});
 
-	it('shows the headings when some weapons are equipped and some are not', () => {
+	it('leaves out the weapons that are not equipped', () => {
 		const { actor } = hero([weapon('Longsword'), weapon('Shortbow', { equipped: false })]);
 
 		expect(names(grantedAttack.grantedAttackGroups(actor, line()))).toEqual([
-			['Equipped', ['Longsword', 'Unarmed Strike']],
-			['Not equipped', ['Shortbow']],
+			[null, ['Longsword', 'Unarmed Strike']],
 		]);
 	});
 
@@ -100,7 +99,7 @@ describe('the choices of a granted attack line', () => {
 		]);
 	});
 
-	it('heads the weapons that are not equipped when they are the only weapons beside cantrips', () => {
+	it('lists only the cantrips when no weapon of the kind is equipped', () => {
 		const { actor } = hero([
 			weapon('Shortbow', { equipped: false, attackType: 'range' }),
 			spell('Fire Bolt', 0),
@@ -113,10 +112,7 @@ describe('the choices of a granted attack line', () => {
 					line({ weaponKind: 'ranged', allowsCantrips: true }),
 				),
 			),
-		).toEqual([
-			['Not equipped', ['Shortbow']],
-			['Cantrips', ['Fire Bolt']],
-		]);
+		).toEqual([['Cantrips', ['Fire Bolt']]]);
 	});
 
 	it('lists only the weapons of the kind of the line', () => {

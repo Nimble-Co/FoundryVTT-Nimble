@@ -92,3 +92,4 @@ export { Migration091ChoicesWaitAndKnownSchools } from './Migration091ChoicesWai
 export { Migration092FeatureCostsContent } from './Migration092FeatureCostsContent.js';
 export { Migration093FeatureWeaponAttacksContent } from './Migration093FeatureWeaponAttacksContent.js';
 export { Migration094MonsterConditions } from './Migration094MonsterConditions.js';
+export { Migration095WeaponTwoHandedOverride } from './Migration095WeaponTwoHandedOverride.js';
