@@ -32,6 +32,7 @@ import { registerDicePoolTurnTriggerHooks } from './hooks/dicePoolTriggers/turnT
 import { registerDieResultEffectHooks } from './hooks/dieResultEffects.js';
 import { registerDiscardedCritTriggerHooks } from './hooks/discardedCritTriggers.js';
 import registerEmptyPoolsAtEndHooks from './hooks/emptyPoolsAtEnd.js';
+import { registerFirstAttackHalveHooks } from './hooks/firstAttackHalve.js';
 import { registerFreeAssessHooks } from './hooks/freeAssessOnUse.js';
 import { registerHoldOnTargetHooks } from './hooks/holdOnTargetOnUse.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
@@ -200,6 +201,7 @@ registerSaverStepsHooks();
 registerPoolEmptyEffectHooks();
 registerDieResultEffectHooks();
 registerDamageBackOnAttackHooks();
+registerFirstAttackHalveHooks();
 registerEndTimedEffectsQuery();
 registerEndWaitingQuery();
 registerCardEventsQuery();
