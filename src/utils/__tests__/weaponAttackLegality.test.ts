@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-	checkWeaponAttack,
+	canAttackWith,
 	type EquipmentActor,
 	getStrengthShortfall,
 	type WeaponItem,
@@ -40,28 +40,23 @@ function actor(strengthMod = 0): EquipmentActor {
 	return { system: { abilities: { strength: { mod: strengthMod } } } };
 }
 
-describe('checkWeaponAttack', () => {
+describe('canAttackWith', () => {
 	it('allows an equipped weapon', () => {
-		expect(checkWeaponAttack(weapon())).toEqual({ allowed: true });
+		expect(canAttackWith(weapon())).toBe(true);
 	});
 
 	it('refuses a weapon that is not equipped', () => {
-		expect(checkWeaponAttack(weapon({ equipped: false }))).toEqual({
-			allowed: false,
-			refusal: 'notEquipped',
-		});
+		expect(canAttackWith(weapon({ equipped: false }))).toBe(false);
 	});
 
 	it('leaves anything that is not a weapon alone', () => {
-		expect(checkWeaponAttack(weapon({ objectType: 'armor', equipped: false }))).toEqual({
-			allowed: true,
-		});
+		expect(canAttackWith(weapon({ objectType: 'armor', equipped: false }))).toBe(true);
 	});
 
 	it('allows an equipped weapon whose strength requirement is not met', () => {
 		const greatsword = weapon({ properties: ['twoHanded'], strength: 3 });
 
-		expect(checkWeaponAttack(greatsword)).toEqual({ allowed: true });
+		expect(canAttackWith(greatsword)).toBe(true);
 	});
 });
 

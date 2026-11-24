@@ -1,7 +1,7 @@
 /**
  * Structural shapes for the equipment an actor carries. Declared locally rather
  * than importing the document classes so the attack panels, the inventory tab
- * and the character document can all use these without an import cycle.
+ * and the item documents can all use these without an import cycle.
  */
 export interface WeaponItem {
 	id: string | null;
@@ -23,26 +23,9 @@ export interface EquipmentActor {
 	};
 }
 
-export type WeaponAttackRefusal = 'notEquipped';
-
-export interface WeaponAttackCheck {
-	allowed: boolean;
-	refusal?: WeaponAttackRefusal;
-}
-
-/**
- * Whether `weapon` can be attacked with right now.
- *
- * Being equipped is the only hard condition: a weapon you are not holding is
- * not one you can swing. A Strength requirement is surfaced as a notice
- * instead, see `getStrengthShortfall`. The hover text states the numbers and
- * that a weapon used without proficiency cannot crit.
- */
-export function checkWeaponAttack(weapon: WeaponItem): WeaponAttackCheck {
-	if (weapon.system.objectType !== 'weapon') return { allowed: true };
-	if (!weapon.system.equipped) return { allowed: false, refusal: 'notEquipped' };
-
-	return { allowed: true };
+/** Whether `weapon` can be attacked with: a weapon must be equipped, anything else always can. */
+export function canAttackWith(weapon: WeaponItem): boolean {
+	return weapon.system.objectType !== 'weapon' || weapon.system.equipped;
 }
 
 export function getStrengthModifier(actor: EquipmentActor): number {
