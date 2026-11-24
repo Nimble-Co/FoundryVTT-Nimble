@@ -12,12 +12,17 @@ export interface ChoiceFeature {
 	_stats?: { compendiumSource?: string | null };
 }
 
+/** Owned features of `group` a level-up option gives up, earliest first. */
+export interface OptionReleases {
+	group: string;
+	count: number;
+}
+
 interface ChoiceOption {
 	id: string;
 	applyAtLevels?: number[];
 	rules?: ReadonlyArray<Record<string, unknown>>;
-	/** Owned features of `group` the option gives up, earliest first. */
-	releases?: { group: string; count: number };
+	releases?: OptionReleases;
 }
 
 /** A feature a level removed: the compendium uuid to restore it from, and the level that granted it. */
@@ -124,7 +129,7 @@ function grantedUuids(sources: readonly ChoiceFeature[]): Set<string> {
 function earliestOfGroup(
 	owned: readonly ChoiceFeature[],
 	history: readonly HistoryEntry[],
-	releases: { group: string; count: number },
+	releases: OptionReleases,
 ): ReleasedPick[] {
 	const picks: ReleasedPick[] = [];
 	for (const feature of owned) {

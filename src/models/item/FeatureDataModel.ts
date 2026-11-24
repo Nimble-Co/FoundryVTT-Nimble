@@ -1,4 +1,5 @@
 import type { WeaponAttack } from '#types/weaponAttack.d.ts';
+import type { OptionReleases } from '#utils/classProgression/planSubclassOptions.ts';
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 import { activation } from './common.js';
 
@@ -119,8 +120,7 @@ class NimbleFeatureData extends NimbleBaseItemData<
 		selectionGroups: string[];
 		selectionCount: number;
 		applyAtLevels: number[];
-		/** Owned features of `group` the option gives up, earliest first. */
-		releases: { group: string; count: number };
+		releases: OptionReleases;
 	}>;
 
 	declare activation: {
