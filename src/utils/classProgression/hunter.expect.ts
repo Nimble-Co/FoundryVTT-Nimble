@@ -29,7 +29,7 @@ export const report: Report = {
 			subclass: [
 				{
 					group: 'Beastmaster',
-					options: ['Beastmaster', 'Small - Go for the Throat!', 'Small - Keen Eyes'],
+					options: ['Small - Go for the Throat!', 'Small - Keen Eyes'],
 				},
 			],
 			asi: null,
@@ -74,6 +74,7 @@ export const report: Report = {
 				{
 					group: 'Beastmaster',
 					options: [
+						'Beastmaster',
 						'Large - Alpha Protector',
 						'Large - Go for the Throat!',
 						'Large - Protect Me!',
