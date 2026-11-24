@@ -8,6 +8,7 @@ import type {
 } from '#types/cardEvent.d.ts';
 import { ruleKey, ruleSource, rulesOfType } from '#utils/actor/actorRules.js';
 import { addMomentEvents, momentCard, momentEventIds } from '#utils/chat/cardEvents.js';
+import { isOut } from '#utils/combat/isOut.js';
 import { spacesBetween } from '#utils/movement/spacesBetween.js';
 import { rollAmount } from '#utils/rolls/rollAmount.js';
 import { saveRequestEvents } from '#utils/saveRequest/saveRequests.js';
@@ -54,11 +55,6 @@ interface TurnCombatant {
 	actor?: TurnCreature | null;
 	token?: SceneToken | null;
 	isDefeated?: boolean;
-}
-
-/** A creature that deals or takes no damage: dead, or defeated in the combat. */
-function isOut(actor: TurnCreature, defeated: boolean | undefined): boolean {
-	return !!defeated || !!actor.statuses?.has('dead');
 }
 
 function rulesAt(actor: TurnCreature, type: TurnMomentType, who: 'holder' | 'nearby') {

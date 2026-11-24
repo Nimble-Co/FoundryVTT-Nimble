@@ -1483,7 +1483,9 @@
 		"mark": {
 			"additional": {
 				"title": "Mark another creature",
-				"content": "You may also mark one creature within {spaces} spaces of the new mark. This spends no action and no charges.",
+				"content": "You may also mark another creature within {spaces} spaces of {name}. This costs no action and no charges.",
+				"creature": "{name} ({spaces} spaces away)",
+				"creatureOneSpace": "{name} (1 space away)",
 				"decline": "Don't mark another",
 				"unnamed": "Creature"
 			}
@@ -3378,14 +3380,14 @@
 				}
 			},
 			"additionalMark": {
-				"description": "After a mark that ends every earlier mark of the same flag, offer one more creature within a number of spaces of the new mark. Accepting marks that creature too. It spends no action and no charges. Declining leaves only the new mark.",
+				"description": "When a Mark Target rule for the same flag, with End earlier marks on, marks a creature, you may also mark another creature within a number of spaces of it, for free. This costs no action and no charges.",
 				"flagKey": {
 					"label": "Flag key",
-					"hint": "The mark list this follows. The offer runs when a new mark ends every earlier mark of this flag."
+					"hint": "The mark list this follows. It works after each mark that a Mark Target rule with End earlier marks makes for this flag."
 				},
 				"within": {
 					"label": "Within",
-					"hint": "The other creature must be this many spaces from the new mark, or closer. A creature farther away is not offered."
+					"hint": "The other creature must be this many spaces from the new mark, or closer. You cannot mark a creature farther away, or a defeated one, this way."
 				}
 			},
 			"markTarget": {
@@ -5980,6 +5982,7 @@
 			"removeTarget": "Remove Target",
 			"marked": "Marked",
 			"endMark": "End the mark of {feature}",
+			"markedNotTarget": "This card also marked {name}.",
 			"damagePreview": "Damage this target will take (after armor and reductions)"
 		},
 		"damageModifiers": {

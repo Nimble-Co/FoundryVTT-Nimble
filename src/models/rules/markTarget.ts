@@ -1,6 +1,4 @@
 import { SYSTEM_ID } from '#system';
-import type { MeasurableTokenDocument } from '#types/movement.js';
-import { rulesOfType } from '#utils/actor/actorRules.js';
 import { payloadFromEffect } from '#utils/actor/applyEffectToActor.js';
 import { itemEffectOf } from '#utils/actor/itemEffectOf.js';
 import {
@@ -15,9 +13,9 @@ import {
 	type ToggledTargetEntry,
 } from '#utils/actor/toggledEffects.js';
 import localize from '#utils/localize.js';
-import { spacesBetween } from '#utils/movement/spacesBetween.js';
 import { NIMBLE_EFFECT_TYPE } from '../activeEffect/nimbleEffectChoices.js';
 import { withWidget } from './_widgetOption.js';
+import { AdditionalMarkRule, type AdditionalMarkToken } from './additionalMark.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -107,132 +105,6 @@ interface FlaggedActor {
 	rules?: NimbleBaseRule[];
 }
 
-/** A token the extra-mark offer can measure. The scene's tokens are the candidates. */
-interface AdditionalMarkToken {
-	uuid?: string;
-	name?: string;
-	hidden?: boolean;
-	actor?: { uuid?: string; name?: string } | null;
-	parent?: { tokens?: Iterable<AdditionalMarkToken> } | null;
-}
-
-const DECLINE_ADDITIONAL_MARK = 'decline';
-
-/** The first additional-mark offer that follows this flag, or null when none applies. */
-function additionalMarkWithin(actor: FlaggedActor, flagKey: string): number | null {
-	for (const rule of rulesOfType(actor, 'additionalMark')) {
-		if (rule.flagKey !== flagKey) continue;
-		if (!rule.isOnActor || !rule.appliesTo()) continue;
-		if (!Number.isInteger(rule.within) || rule.within < 1) continue;
-		return rule.within;
-	}
-	return null;
-}
-
-function creatureAction(token: AdditionalMarkToken): string {
-	return `mark:${token.uuid || token.actor?.uuid || ''}`;
-}
-
-/** Creatures on the new mark's scene, within `within` spaces, other than the excluded actors. */
-function creaturesWithinMark(
-	origin: AdditionalMarkToken,
-	within: number,
-	excludeActorUuids: Set<string>,
-): AdditionalMarkToken[] {
-	const tokens = origin.parent?.tokens;
-	if (!tokens) return [];
-
-	const seen = new Set<string>();
-	const eligible: AdditionalMarkToken[] = [];
-	for (const token of tokens) {
-		if (token.hidden) continue;
-		const actorUuid = token.actor?.uuid;
-		if (!actorUuid || excludeActorUuids.has(actorUuid) || seen.has(actorUuid)) continue;
-		const spaces = spacesBetween(
-			origin as MeasurableTokenDocument,
-			token as MeasurableTokenDocument,
-			undefined,
-			within,
-		);
-		if (spaces > within) continue;
-		seen.add(actorUuid);
-		eligible.push(token);
-	}
-	return eligible;
-}
-
-/** The chosen creature's button action, or null when the player declines or dismisses. */
-async function promptForAdditionalCreature(
-	candidates: AdditionalMarkToken[],
-	within: number,
-): Promise<string | null> {
-	const buttons = candidates.map((token) => ({
-		action: creatureAction(token),
-		label: token.name || token.actor?.name || localize('NIMBLE.mark.additional.unnamed'),
-	}));
-
-	const chosen = await foundry.applications.api.DialogV2.wait({
-		window: { title: localize('NIMBLE.mark.additional.title') },
-		content: `<p>${localize('NIMBLE.mark.additional.content', { spaces: String(within) })}</p>`,
-		buttons: [
-			...buttons,
-			{
-				action: DECLINE_ADDITIONAL_MARK,
-				label: localize('NIMBLE.mark.additional.decline'),
-			},
-		],
-		rejectClose: false,
-	});
-
-	if (typeof chosen !== 'string' || chosen === DECLINE_ADDITIONAL_MARK) return null;
-	return buttons.some((button) => button.action === chosen) ? chosen : null;
-}
-
-/**
- * Offers one more creature after a mark that ends every earlier mark. Writing the
- * choice here, instead of activating an item, spends no action and no charges and
- * does not ask again. `list` is the mark list just written: this flag key is not
- * read back, so a stale flag cannot restore the marks that just ended.
- */
-async function offerAdditionalMark(args: {
-	actor: FlaggedActor;
-	flagKey: string;
-	list: ToggledTargetEntry[];
-	markedActorUuid: string;
-	markedToken: AdditionalMarkToken | null;
-	applyMarker: (actor: MarkableActor) => Promise<void>;
-}): Promise<void> {
-	const within = additionalMarkWithin(args.actor, args.flagKey);
-	const origin = args.markedToken;
-	if (within === null || !origin) return;
-
-	const candidates = creaturesWithinMark(
-		origin,
-		within,
-		new Set([args.actor.uuid, args.markedActorUuid]),
-	);
-	if (candidates.length === 0) return;
-
-	const chosen = await promptForAdditionalCreature(candidates, within);
-	if (!chosen) return;
-
-	const token = candidates.find((candidate) => creatureAction(candidate) === chosen);
-	const actor = token?.actor as MarkableActor | null | undefined;
-	if (!token || !actor?.uuid) return;
-
-	const entry: ToggledTargetEntry = {
-		actorUuid: actor.uuid,
-		tokenUuid: token.uuid ?? null,
-		name: actor.name || token.name || localize('NIMBLE.mark.additional.unnamed'),
-	};
-	const flag = { ...readToggledEffects(args.actor) };
-	const list = args.list.filter((existing) => existing.actorUuid !== entry.actorUuid);
-	list.push(entry);
-	flag[args.flagKey] = list;
-	await args.actor.setFlag(SYSTEM_ID, TOGGLED_EFFECTS_FLAG_KEY, flag);
-	await args.applyMarker(actor);
-}
-
 /**
  * Records one or more target creatures on the owning actor as a tracked mark (e.g. a
  * Hunter's quarry). Marks are stored relationally on the *marking* actor under
@@ -246,7 +118,7 @@ async function offerAdditionalMark(args: {
  * feature raise the cap (e.g. the Hunter's level-20 Nemesis) without the primary rule
  * knowing about it. Marking beyond capacity evicts the oldest mark. With `endEarlier`, a new
  * mark ends every earlier mark of this flag instead, unless capacity is unlimited. An
- * `additionalMark` rule can then offer one more creature within range of that new mark,
+ * `additionalMark` rule can then mark one more creature within range of that new mark,
  * without using the item again. An `effectId` gives the marker the
  * item effect's Lasts Until, changes and rules. Any end of the marker (its Lasts Until, or
  * someone taking it off the creature) ends that mark (see `markLifecycle.ts`).
@@ -350,12 +222,13 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		if (!this.endEarlier) return;
 		const marked = targets[targets.length - 1];
 		if (!marked) return;
-		await offerAdditionalMark({
+		await AdditionalMarkRule.markAnotherAfter<MarkableActor>({
 			actor: owner,
 			flagKey: this.flagKey,
 			list,
 			markedActorUuid: marked.actor.uuid,
 			markedToken: marked.token,
+			cardId: context.card?.id ?? null,
 			applyMarker: async (actor) => {
 				await this.#applyStatusEffects([{ actor }], []);
 			},

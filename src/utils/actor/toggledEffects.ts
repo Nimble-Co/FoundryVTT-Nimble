@@ -25,6 +25,8 @@ interface ToggledTargetEntry {
 	tokenUuid: string | null;
 	/** Display name captured at mark time, for chat/UI. */
 	name: string;
+	/** The card that shows the mark when the creature is not one of its targets. */
+	cardId?: string;
 }
 
 type ToggledEffectsFlag = Record<string, ToggledTargetEntry[]>;
