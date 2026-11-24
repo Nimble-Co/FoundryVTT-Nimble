@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Mock } from 'vitest';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID, systemHookName } from '#system';
+import { resolveMoveDistance } from '../../../utils/movement/resolveMoveDistance.js';
 import type { FreeMoveRule as FreeMoveRuleType } from '../freeMove.js';
 
 // tests/setup.ts loads the rules config, so this rule and its imports are
@@ -140,6 +141,7 @@ function makeRule(
 	Object.assign(rule, {
 		trigger: 'onActivation',
 		poolIdentifier: '',
+		chargePoolGainIdentifier: '',
 		distance: '@speed',
 		recipient: 'self',
 		within: 12,
@@ -208,6 +210,7 @@ describe('FreeMoveRule', () => {
 			expect(schema.trigger?.choices).toEqual([
 				'onActivation',
 				'onPoolGain',
+				'onChargePoolGain',
 				'onInitiativeRolled',
 				'onTurnStart',
 				'onCritReceived',
@@ -217,6 +220,7 @@ describe('FreeMoveRule', () => {
 				'onWound',
 			]);
 			expect(schema.poolIdentifier?.initial).toBe('');
+			expect(schema.chargePoolGainIdentifier?.initial).toBe('');
 			expect(schema.distance?.initial).toBe('@speed');
 			expect(schema.recipient?.initial).toBe('self');
 			expect(schema.recipient?.choices).toEqual(['self', 'allies', 'selfAndAllies']);
@@ -231,6 +235,7 @@ describe('FreeMoveRule', () => {
 
 		it('uses the pool pickers and the formula widget', () => {
 			expect(schema.poolIdentifier?.options?.widget).toBe('dicePoolPicker');
+			expect(schema.chargePoolGainIdentifier?.options?.widget).toBe('chargePoolPicker');
 			expect(schema.chargePoolIdentifier?.options?.widget).toBe('chargePoolPicker');
 			expect(schema.distance?.options?.widget).toBe('formula');
 		});
@@ -238,7 +243,13 @@ describe('FreeMoveRule', () => {
 		it('shows the pool only for onPoolGain and the range only for allies', () => {
 			const poolShow = schema.poolIdentifier?.options?.showWhen as (d: object) => boolean;
 			expect(poolShow({ trigger: 'onPoolGain' })).toBe(true);
+			expect(poolShow({ trigger: 'onChargePoolGain' })).toBe(false);
 			expect(poolShow({ trigger: 'onTurnStart' })).toBe(false);
+			const chargeShow = schema.chargePoolGainIdentifier?.options?.showWhen as (
+				d: object,
+			) => boolean;
+			expect(chargeShow({ trigger: 'onChargePoolGain' })).toBe(true);
+			expect(chargeShow({ trigger: 'onPoolGain' })).toBe(false);
 			const withinShow = schema.within?.options?.showWhen as (d: object) => boolean;
 			expect(withinShow({ recipient: 'self' })).toBe(false);
 			expect(withinShow({ recipient: 'allies' })).toBe(true);
@@ -696,6 +707,103 @@ describe('FreeMoveRule', () => {
 		});
 	});
 
+	describe('onChargePoolGain', () => {
+		const chargeRule = {
+			trigger: 'onChargePoolGain',
+			chargePoolGainIdentifier: 'thrill-of-the-hunt',
+			distance: 'floor(@speed / 2)',
+			ignoresDifficultTerrain: true,
+		};
+
+		function gainCharges(harness: Harness, poolIdentifier: string, poolLabel?: string) {
+			return harness.rule.onChargePoolGain({
+				actor: harness.actor,
+				poolIdentifier,
+				poolLabel,
+			} as never);
+		}
+
+		it('offers the rule distance when the named charge pool gains charges', async () => {
+			const harness = makeRule(chargeRule);
+			await gainCharges(harness, 'thrill-of-the-hunt', 'Thrill of the Hunt');
+			expect(postMovementOfferCard).toHaveBeenCalledTimes(1);
+			expect(lastOffer().reason).toContain('Thrill of the Hunt');
+			expect(lastOffer().node).toEqual({
+				kind: 'free',
+				distance: 'floor(@speed / 2)',
+				direction: 'any',
+				ignoreDifficultTerrain: true,
+			});
+			expect(lastOffer().token).toBe(harness.heroToken);
+		});
+
+		describe('distance', () => {
+			const RollGlobal = Roll as unknown as {
+				replaceFormulaData?: (formula: string, data: Record<string, unknown>) => string;
+				safeEval?: (expression: string) => number;
+			};
+			const original = { replace: RollGlobal.replaceFormulaData, safeEval: RollGlobal.safeEval };
+
+			beforeAll(() => {
+				RollGlobal.replaceFormulaData = (formula, data) =>
+					formula.replace(/@speed/g, String(data.speed));
+				RollGlobal.safeEval = (expression) =>
+					Function('floor', `return (${expression});`)(Math.floor) as number;
+			});
+
+			afterAll(() => {
+				RollGlobal.replaceFormulaData = original.replace;
+				RollGlobal.safeEval = original.safeEval;
+			});
+
+			it.each([
+				[7, 3],
+				[6, 3],
+				[5, 2],
+			])('a creature with speed %i can move %i spaces', async (walk, spaces) => {
+				const harness = makeRule(chargeRule);
+				harness.actor.system = { attributes: { movement: { walk }, sizeCategory: 'medium' } };
+				await gainCharges(harness, 'thrill-of-the-hunt', 'Thrill of the Hunt');
+				const { node, actor } = lastOffer();
+				const offered = resolveMoveDistance(
+					node as Parameters<typeof resolveMoveDistance>[0],
+					actor as never,
+					harness.actor as never,
+				);
+				expect(offered).toBe(spaces);
+			});
+		});
+
+		it('does not fire when a dice pool gains dice', async () => {
+			const harness = makeRule(chargeRule);
+			await harness.rule.onPoolGain({
+				actor: harness.actor,
+				poolIdentifier: 'thrill-of-the-hunt',
+				poolLabel: 'Thrill of the Hunt',
+			} as never);
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('does not fire a dice-pool rule when a charge pool gains charges', async () => {
+			const harness = makeRule({ trigger: 'onPoolGain', poolIdentifier: 'fury' });
+			await gainCharges(harness, 'fury', 'Fury Dice');
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+
+		it('does not fire for another charge pool, or without a configured pool', async () => {
+			await gainCharges(makeRule(chargeRule), 'focus');
+			await gainCharges(
+				makeRule({ trigger: 'onChargePoolGain', chargePoolGainIdentifier: '' }),
+				'',
+			);
+			await gainCharges(
+				makeRule({ trigger: 'onChargePoolGain', chargePoolGainIdentifier: '  ' }),
+				'',
+			);
+			expect(postMovementOfferCard).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('recipients', () => {
 		function setUpAllies(harness: Harness) {
 			const near = harness.addToken('near');
@@ -958,11 +1066,30 @@ describe('FreeMoveRule', () => {
 					systemHookName('dicePool.changed'),
 					({ actor }) => [{ actor, poolId: 'fury', previousFaces: [], newFaces: [3] }],
 				],
+				[
+					'onChargePoolGain',
+					systemHookName('chargePool.changed'),
+					({ actor }) => [
+						{
+							actor,
+							poolId: 'actor:thrill-of-the-hunt',
+							previousValue: 0,
+							newValue: 2,
+							poolLabel: 'Thrill of the Hunt',
+						},
+					],
+				],
 			];
 
 			it.each(cases)('%s still posts its offer', async (trigger, hook, args) => {
 				stubSettings({ 'automation.applyRuleEffects': false });
-				const harness = withRules(makeRule({ trigger, poolIdentifier: 'fury' }));
+				const harness = withRules(
+					makeRule({
+						trigger,
+						poolIdentifier: 'fury',
+						chargePoolGainIdentifier: 'thrill-of-the-hunt',
+					}),
+				);
 				await handlers.get(hook)?.(...args(harness));
 				await vi.waitFor(() => expect(postMovementOfferCard).toHaveBeenCalledTimes(1));
 			});
@@ -975,6 +1102,7 @@ describe('FreeMoveRule', () => {
 						'onInitiativeRolled',
 						'onItemActivated',
 						'onPoolGain',
+						'onChargePoolGain',
 					].sort(),
 				);
 			});

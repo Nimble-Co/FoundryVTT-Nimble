@@ -2795,11 +2795,15 @@
 				"description": "Let a creature move for free, on a chat card, when an event occurs. The player chooses where to move, or chooses not to move.",
 				"trigger": {
 					"label": "Trigger",
-					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires. onCritThrough: an attack made through this item is a crit; the move goes on the card of that attack. onRangedWeaponAttack: this creature attacks with a ranged weapon, with any item; the move goes on the card of that attack. onWound: this creature gains a Wound. The player is asked first, and a no does not spend a charge."
+					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onChargePoolGain: a charge pool gains one or more charges. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires. onCritThrough: an attack made through this item is a crit; the move goes on the card of that attack. onRangedWeaponAttack: this creature attacks with a ranged weapon, with any item; the move goes on the card of that attack. onWound: this creature gains a Wound. The player is asked first, and a no does not spend a charge."
 				},
 				"poolIdentifier": {
 					"label": "Dice pool",
 					"hint": "The dice pool that must gain dice (e.g. fury)."
+				},
+				"chargePoolGainIdentifier": {
+					"label": "Gained charge pool",
+					"hint": "The charge pool that must gain one or more charges (e.g. thrill-of-the-hunt). A dice pool does not count."
 				},
 				"distance": {
 					"label": "Distance",
@@ -2832,6 +2836,7 @@
 				"reasons": {
 					"onActivation": "used {item}",
 					"onPoolGain": "gained {pool}",
+					"onChargePoolGain": "gained {pool}",
 					"onInitiativeRolled": "rolled Initiative",
 					"onTurnStart": "turn started",
 					"afterPoolDiceToMax": "{item} lets you move.",

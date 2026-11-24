@@ -184,9 +184,10 @@ interface MovementFinishedContext {
 	isMover: boolean;
 }
 
-// Context passed to onPoolGain. Fires on the client that changed the pool when one
-// of the actor's dice pools gains dice. `poolIdentifier` is the bare identifier,
-// without the `actor:` scope prefix.
+// Context passed to onPoolGain (a dice pool gains dice) and onChargePoolGain (a
+// charge pool gains charges). Each fires only for its own kind of pool, on the
+// client that changed it. `poolIdentifier` is the bare identifier, without the
+// `actor:` scope prefix.
 interface PoolGainContext {
 	actor: NimbleBaseActor;
 	poolIdentifier: string;
@@ -677,6 +678,11 @@ abstract class NimbleBaseRule<
 
 	/** Hook called when one of the actor's dice pools gains dice, on the client that changed it. */
 	async onPoolGain(_context: PoolGainContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when one of the actor's charge pools gains charges, on the client that changed it. */
+	async onChargePoolGain(_context: PoolGainContext): Promise<void> {
 		// Default implementation does nothing
 	}
 
