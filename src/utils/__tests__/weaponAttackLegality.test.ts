@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	canAttackWith,
 	type EquipmentActor,
-	getStrengthShortfall,
+	getStrengthNotice,
 	type WeaponItem,
 } from '../weaponAttackLegality.js';
 
@@ -60,17 +60,23 @@ describe('canAttackWith', () => {
 	});
 });
 
-describe('getStrengthShortfall', () => {
-	it('reports the gap when strength falls short of a flat requirement', () => {
+describe('getStrengthNotice', () => {
+	it('names the required and current Strength when strength falls short', () => {
 		const greatsword = weapon({ properties: ['twoHanded'], strength: 3 });
 
-		expect(getStrengthShortfall(actor(1), greatsword)).toEqual({ required: 3, current: 1 });
+		expect(getStrengthNotice(actor(1), greatsword)).toBe('Requires Strength 3. You have 1.');
 	});
 
 	it('reports nothing once strength meets the requirement', () => {
 		const greatsword = weapon({ properties: ['twoHanded'], strength: 3 });
 
-		expect(getStrengthShortfall(actor(3), greatsword)).toBeNull();
+		expect(getStrengthNotice(actor(3), greatsword)).toBeNull();
+	});
+
+	it('reports nothing for a weapon that is not equipped', () => {
+		const greatsword = weapon({ properties: ['twoHanded'], strength: 3, equipped: false });
+
+		expect(getStrengthNotice(actor(1), greatsword)).toBeNull();
 	});
 
 	it('reports nothing for an override requirement, which only buys one-handed use', () => {
@@ -80,17 +86,17 @@ describe('getStrengthShortfall', () => {
 			overridesTwoHanded: true,
 		});
 
-		expect(getStrengthShortfall(actor(0), longsword)).toBeNull();
+		expect(getStrengthNotice(actor(0), longsword)).toBeNull();
 	});
 
 	it('reports nothing for a weapon with no requirement', () => {
-		expect(getStrengthShortfall(actor(0), weapon())).toBeNull();
+		expect(getStrengthNotice(actor(0), weapon())).toBeNull();
 	});
 
 	it('reports nothing for an item carrying no strengthRequirement at all', () => {
 		const bare = weapon();
 		delete (bare.system.properties as { strengthRequirement?: unknown }).strengthRequirement;
 
-		expect(getStrengthShortfall(actor(0), bare)).toBeNull();
+		expect(getStrengthNotice(actor(0), bare)).toBeNull();
 	});
 });

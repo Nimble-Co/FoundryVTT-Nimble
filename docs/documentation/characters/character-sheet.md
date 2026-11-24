@@ -60,7 +60,7 @@ Some rows ask you to choose first. Then a choice step opens under the row: Asses
 
 Only equipped weapons are offered as attacks, here and in the opportunity attack list. Unarmed strikes are always available, so you are never left with nothing to attack with. Attacking with a weapon you are not holding is refused, with a message saying so.
 
-A weapon whose Strength requirement you do not meet still shows up and can still be used. Its row shows a warning icon and "Not enough Strength". Hover that warning for the Strength it asks for, the Strength you have, and the rule that a weapon used without proficiency cannot crit.
+A weapon whose Strength requirement you do not meet still shows up and can still be used. Its row shows a warning icon and "Not enough Strength". Hover that warning for the Strength it asks for and the Strength you have.
 
 You can drag an action from here to the macro hotbar for one-click access; see [Macros & the Hotbar](../gm/macros.md).
 

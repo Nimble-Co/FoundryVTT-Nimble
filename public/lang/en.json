@@ -7487,7 +7487,7 @@
 			},
 			"notices": {
 				"notEnoughStrength": "Not enough Strength",
-				"strengthShortfall": "Requires Strength {required}. You have {current}. Weapons used without proficiency cannot crit."
+				"strengthShortfall": "Requires Strength {required}. You have {current}."
 			}
 		}
 	}

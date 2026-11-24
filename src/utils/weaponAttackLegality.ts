@@ -1,3 +1,5 @@
+import localize from './localize.js';
+
 /**
  * Structural shapes for the equipment an actor carries. Declared locally rather
  * than importing the document classes so the attack panels, the inventory tab
@@ -28,33 +30,25 @@ export function canAttackWith(weapon: WeaponItem): boolean {
 	return weapon.system.objectType !== 'weapon' || weapon.system.equipped;
 }
 
-export function getStrengthModifier(actor: EquipmentActor): number {
-	return Number(actor.system.abilities?.strength?.mod ?? 0);
-}
-
 /**
- * How far short of a weapon's Strength requirement the character falls, or
- * `null` when nothing is owed.
+ * The warning for an equipped weapon whose Strength requirement the character
+ * does not meet, or `null`. The requirement is reported, never enforced.
  *
- * `strengthRequirement.value` means two different things depending on the
- * boolean beside it. With `overridesTwoHanded` it buys one-handed use of a
- * two-handed weapon (the Longsword), so missing it costs nothing: the weapon
- * is simply used in two hands. Without it the requirement is a flat condition
- * on using the weapon at all (the great weapons, the Handheld Ballista, the
- * Longbow), and that is what the notice reports.
+ * With `overridesTwoHanded` the requirement buys one-handed use of a
+ * two-handed weapon, so missing it costs nothing and there is no warning.
  */
-export function getStrengthShortfall(
-	actor: EquipmentActor,
-	weapon: WeaponItem,
-): { required: number; current: number } | null {
-	const { objectType, properties } = weapon.system;
-	if (objectType !== 'weapon') return null;
+export function getStrengthNotice(actor: EquipmentActor, weapon: WeaponItem): string | null {
+	const { objectType, equipped, properties } = weapon.system;
+	if (objectType !== 'weapon' || !equipped) return null;
 
 	const { value = null, overridesTwoHanded = false } = properties.strengthRequirement ?? {};
 	if (overridesTwoHanded || value === null) return null;
 
-	const current = getStrengthModifier(actor);
+	const current = Number(actor.system.abilities?.strength?.mod ?? 0);
 	if (current >= value) return null;
 
-	return { required: value, current };
+	return localize('NIMBLE.weapons.notices.strengthShortfall', {
+		required: String(value),
+		current: String(current),
+	});
 }
