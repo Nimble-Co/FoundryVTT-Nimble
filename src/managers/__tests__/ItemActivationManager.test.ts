@@ -2401,7 +2401,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
 		});
 
-		it('opens the window for a damage formula choice even when the item skips it', async () => {
+		it('skips the window for a damage formula choice when the item skips it', async () => {
 			Object.assign(mockActor, {
 				rules: [
 					{
@@ -2415,7 +2415,6 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				],
 			});
 			Object.assign(mockItem, { identifier: 'longbow', name: 'Longbow' });
-			dialogState.result = { rollMode: 0, rollFormula: '2d4+@dexterity' };
 			const damageNode = {
 				id: 'damage-1',
 				type: 'damage',
@@ -2431,39 +2430,12 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			await manager.getData();
 
-			expect(MockItemActivationConfigDialog).toHaveBeenCalled();
-		});
-
-		it('still skips the window for a weapon the choice is not for', async () => {
-			Object.assign(mockActor, {
-				rules: [
-					{
-						type: 'damageFormulaChoice',
-						id: 'vb-longbow',
-						label: 'Versatile Bowmaster',
-						itemIdentifier: 'longbow',
-						from: '1d8',
-						to: '2d4',
-					},
-				],
-			});
-			Object.assign(mockItem, { identifier: 'shortbow', name: 'Shortbow' });
-			const damageNode = {
-				id: 'damage-1',
-				type: 'damage',
-				damageType: 'piercing',
-				formula: '1d6+@dexterity',
-				canCrit: true,
-				canMiss: true,
-				parentContext: null,
-				parentNode: null,
-			} as EffectNode;
-			manager.activationData = { effects: [damageNode], skipRollDialog: true };
-			mockReconstructEffectsTree.mockReturnValue([damageNode]);
-
-			await manager.getData();
-
 			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8+@dexterity',
+				expect.anything(),
+				expect.anything(),
+			);
 		});
 
 		/** A pool and a fixed consumer that may allow a use with no charge. */
@@ -3552,8 +3524,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			);
 		});
 
-		it('opens the window when the default weapon has a damage formula choice', async () => {
-			dialogState.result = { rollMode: 0, weaponUuid: 'Item.Longbow' };
+		it('skips the window when the item skips it, though the default weapon has a damage formula choice', async () => {
 			Object.assign(mockActor, {
 				rules: [
 					{
@@ -3594,7 +3565,12 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			await manager.getData();
 
-			expect(MockItemActivationConfigDialog).toHaveBeenCalled();
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8+@dexterity',
+				expect.anything(),
+				expect.anything(),
+			);
 		});
 
 		it('does not ask on a fast forward, and rolls the weapon dice', async () => {

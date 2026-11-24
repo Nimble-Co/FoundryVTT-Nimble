@@ -3868,14 +3868,14 @@
 				}
 			},
 			"damageFormulaChoice": {
-				"description": "Offer a tick in the roll window to replace one dice term of an attack's damage when the attack uses a named item. The tick starts off, so declining keeps the item's damage.",
+				"description": "A tick in the roll window that lets the player replace one dice term of an attack's damage, when the attack uses a named item. The tick starts off. With the tick off, or when the roll window is skipped, the attack rolls the item's own damage.",
 				"itemIdentifier": {
 					"label": "Item identifier",
-					"hint": "The weapon this choice is for, such as longbow. The attack must use that item. Blank means this item."
+					"hint": "The weapon this tick is for, such as longbow. The attack must use that item. Blank means this item."
 				},
 				"from": {
 					"label": "Instead of",
-					"hint": "The dice in the weapon's damage that this choice replaces, such as 1d8. The choice is not offered when the damage does not contain them."
+					"hint": "The dice in the weapon's damage that the tick replaces, such as 1d8. The tick does not show when the damage does not contain them."
 				},
 				"to": {
 					"label": "Roll",
