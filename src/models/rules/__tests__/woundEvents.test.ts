@@ -112,6 +112,9 @@ describe('wound event rules', () => {
 		const schema = WouldDropToZeroRule.defineSchema();
 		expect(fieldInitial(schema, 'response')).toBe('prevent');
 		expect(fieldInitial(schema, 'choice')).toBe('automatic');
+		expect(fieldInitial(schema, 'onlyAttack')).toBe(false);
+		expect(fieldInitial(schema, 'chargePoolIdentifier')).toBe('');
+		expect(fieldInitial(schema, 'moveDirection')).toBe('any');
 
 		const rule = withActor(
 			new WouldDropToZeroRule({ type: 'wouldDropToZero' } as never, { strict: false } as never),
@@ -122,13 +125,28 @@ describe('wound event rules', () => {
 			moveDistance: '',
 			disabled: false,
 		});
-		expect(rule.planDrop()).toEqual({ response: 'prevent', woundInstead: 0, moveDistance: 0 });
+		expect(rule.planDrop()).toEqual({
+			response: 'prevent',
+			woundInstead: 0,
+			moveDistance: 0,
+			moveDirection: 'any',
+		});
 
 		rule.response = 'floor';
 		rule.woundInstead = '1';
 		rule.moveDistance = '6';
-		expect(rule.planDrop()).toEqual({ response: 'floor', woundInstead: 1, moveDistance: 6 });
+		rule.moveDirection = 'away';
+		expect(rule.planDrop()).toEqual({
+			response: 'floor',
+			woundInstead: 1,
+			moveDistance: 6,
+			moveDirection: 'away',
+		});
 		expect(rule.matchesDrop()).toBe(true);
+		rule.onlyAttack = true;
+		expect(rule.matchesDrop()).toBe(false);
+		expect(rule.matchesDrop({ attack: true })).toBe(true);
+		rule.onlyAttack = false;
 	});
 
 	it('reads @speed in a move distance as the walk speed of the creature who moves', () => {

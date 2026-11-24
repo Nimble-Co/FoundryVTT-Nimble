@@ -18,6 +18,7 @@ import { giveWounds } from '../../utils/actor/giveWounds.js';
 import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { currentDamageCard, damageCardOption } from '../../utils/damage/damageCard.js';
+import { damageCardIsAttack } from '../../utils/damage/damageCardIsAttack.js';
 import { damageCardIsCritical } from '../../utils/damage/damageCardIsCritical.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
@@ -797,7 +798,11 @@ class NimbleBaseActor<
 		cardId: string | null;
 	}): Promise<void> {
 		const source = woundSourceOfCard(input.cardId);
-		const drop = await resolveWouldDropToZero({ actor: this, source });
+		const drop = await resolveWouldDropToZero({
+			actor: this,
+			source,
+			attack: damageCardIsAttack(input.cardId),
+		});
 		if (drop.response === 'prevent') {
 			if (drop.woundInstead > 0)
 				await giveWounds(this, drop.woundInstead, { cause: 'direct', source });
