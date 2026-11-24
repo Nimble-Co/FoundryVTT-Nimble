@@ -131,6 +131,27 @@ describe('wound event rules', () => {
 		expect(rule.matchesDrop()).toBe(true);
 	});
 
+	it('reads @speed in a move distance as the walk speed of the creature who moves', () => {
+		const mover = { system: { attributes: { movement: { walk: 7 } } } };
+		const holder = {
+			getRollData: () => ({ speed: 99 }),
+			getDomain: () => [],
+			system: { attributes: { movement: { walk: 3 } } },
+		};
+		const drop = withActor(
+			new WouldDropToZeroRule({ type: 'wouldDropToZero' } as never, { strict: false } as never),
+			holder,
+		);
+		Object.assign(drop, { response: 'prevent', woundInstead: '', moveDistance: '@speed' });
+		expect(drop.planDrop(mover).moveDistance).toBe(7);
+
+		const pending = withActor(
+			new PendingWoundRule({ type: 'pendingWound' } as never, { strict: false } as never),
+		);
+		Object.assign(pending, { change: 'negate', amount: '', moveDistance: '@speed + 1' });
+		expect(pending.planPending(view(), mover).moveDistance).toBe(8);
+	});
+
 	it('changes the 1 Wound a safe rest heals, and leaves that 1 alone when the amount is 0', () => {
 		const schema = SafeRestWoundsRule.defineSchema();
 		expect(fieldInitial(schema, 'mode')).toBe('add');

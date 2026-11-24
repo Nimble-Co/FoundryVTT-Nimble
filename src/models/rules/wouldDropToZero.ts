@@ -128,11 +128,11 @@ class WouldDropToZeroRule extends NimbleBaseRule<WouldDropToZeroRule.Schema> {
 		return this.appliesTo();
 	}
 
-	planDrop(): WouldDropPlan {
+	planDrop(mover?: unknown): WouldDropPlan {
 		return {
 			response: this.response,
 			woundInstead: this.#count(this.woundInstead),
-			moveDistance: this.#count(this.moveDistance),
+			moveDistance: this.resolveMoveSpaces(this.moveDistance, mover),
 		};
 	}
 

@@ -196,12 +196,12 @@ class PendingWoundRule extends NimbleBaseRule<PendingWoundRule.Schema> {
 		return true;
 	}
 
-	planPending(_view: PendingWoundView): PendingWoundPlan {
+	planPending(_view: PendingWoundView, mover?: unknown): PendingWoundPlan {
 		return {
 			change: this.change,
 			take: this.#take(),
 			redirectTo: this.redirectTo,
-			moveDistance: this.#count(this.moveDistance),
+			moveDistance: this.resolveMoveSpaces(this.moveDistance, mover),
 		};
 	}
 
