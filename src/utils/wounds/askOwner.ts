@@ -12,6 +12,7 @@ export interface OwnerQuestion {
 }
 
 interface OwnedCreature {
+	uuid?: string | null;
 	testUserPermission?(user: unknown, level: number): boolean;
 }
 

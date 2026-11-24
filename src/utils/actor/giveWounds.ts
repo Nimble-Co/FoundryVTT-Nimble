@@ -36,7 +36,7 @@ export interface GiveWoundsOptions {
 interface GiveWoundsQuery {
 	actorUuid: string;
 	amount: number;
-	source?: { uuid?: string | null; name?: string | null } | null;
+	source?: Pick<WoundSource, 'uuid' | 'name'> | null;
 	cause?: WoundCause;
 	critical?: boolean;
 	seen?: string[];

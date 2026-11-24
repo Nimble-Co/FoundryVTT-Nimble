@@ -36,6 +36,7 @@ import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokens/tokenAdjacency.js';
 import { resolveWouldDropToZero } from '../../utils/wounds/wouldDropToZero.js';
+import { woundSourceOfCard } from '../../utils/wounds/woundSource.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { conditionRollOptions } from './conditionRollOptions.js';
@@ -782,7 +783,7 @@ class NimbleBaseActor<
 		damageAmount: number | null;
 		cardId: string | null;
 	}): Promise<void> {
-		const source = this.#woundSource(input.cardId);
+		const source = woundSourceOfCard(input.cardId);
 		const drop = await resolveWouldDropToZero({ actor: this, source });
 		if (drop.response === 'prevent') {
 			if (drop.woundInstead > 0)
@@ -800,32 +801,6 @@ class NimbleBaseActor<
 		if (drop.response === 'land') await giveWounds(this, 1, { cause: 'dropToZero', source });
 		else if (drop.woundInstead > 0)
 			await giveWounds(this, drop.woundInstead, { cause: 'direct', source });
-	}
-
-	#woundSource(cardId: string | null): { uuid: string | null; name: string | null } | null {
-		if (!cardId) return null;
-		try {
-			const messages = (game as { messages?: { get?: (id: string) => unknown } }).messages;
-			const message = messages?.get?.(cardId) as
-				| {
-						speaker?: { alias?: string | null };
-						speakerActor?: { uuid?: string; name?: string | null } | null;
-				  }
-				| null
-				| undefined;
-			if (!message) return null;
-			const speakerActor = message.speakerActor;
-			if (speakerActor && (speakerActor.uuid || speakerActor.name)) {
-				return {
-					uuid: speakerActor.uuid ?? null,
-					name: speakerActor.name ?? message.speaker?.alias ?? null,
-				};
-			}
-			const alias = message.speaker?.alias;
-			return alias ? { uuid: null, name: alias } : null;
-		} catch {
-			return null;
-		}
 	}
 
 	async setMaxHP(value: number): Promise<void> {

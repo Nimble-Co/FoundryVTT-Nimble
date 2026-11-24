@@ -517,8 +517,10 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 
 	async #giveWoundsTo(target: WoundTarget, card: WoundCard | null): Promise<WoundRecord | null> {
 		if (!(this.wounds > 0)) return null;
-		if (!card) return giveWounds(target, this.wounds);
-		await giveWoundsOnCard(card, this.#woundNodeId(), [target], this.wounds);
+		const user = this.actor as unknown as { uuid?: string | null; name?: string | null } | null;
+		const source = user ? { uuid: user.uuid ?? null, name: user.name ?? null } : null;
+		if (!card) return giveWounds(target, this.wounds, { source });
+		await giveWoundsOnCard(card, this.#woundNodeId(), [target], this.wounds, source);
 		return null;
 	}
 
