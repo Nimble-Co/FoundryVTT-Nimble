@@ -20,6 +20,7 @@
 	const EFFECT_ROW_TYPES = ['applyEffect', 'wound', 'endConditions'];
 	const isEffectRows = (group) => EFFECT_ROW_TYPES.includes(group[0]?.type);
 	const firstDamageGroup = nodes.find((group) => group.length && isDamageGroup(group));
+	const mayApplyDamage = $derived(messageDocument?.reactive?.mayApplyCardDamage() === true);
 </script>
 
 {#each nodes as nodeGroup}
@@ -53,12 +54,12 @@
 					<DefendReactions />
 				{/if}
 
-				{#if game.user?.isGM || messageDocument?.mayApplyCardDamage?.()}
+				{#if game.user?.isGM || mayApplyDamage}
 					<section class="nimble-effect">
 						{#if game.user?.isGM}
 							<LatchedMissButton />
 						{/if}
-						{#if messageDocument?.mayApplyCardDamage?.()}
+						{#if mayApplyDamage}
 							<ApplyDamageButton nodes={nodeGroup} />
 						{/if}
 					</section>

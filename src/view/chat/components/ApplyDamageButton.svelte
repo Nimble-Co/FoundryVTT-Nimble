@@ -48,20 +48,16 @@
 	}
 
 	function undoDamage() {
-		void messageDocument?.undoAppliedDamage?.();
+		void messageDocument?.undoAppliedDamage();
 	}
 
 	// A reroll whose result a player still chooses holds the damage.
 	const waitsForKeep = $derived(!!pendingKeepOf(messageDocument?.reactive?.system));
-	const applyDamageLabel = $derived(
-		localize(
-			waitsForKeep
-				? 'NIMBLE.chat.incomingReactions.keepFirst'
-				: damageApplied
-					? 'NIMBLE.chat.damageApplied'
-					: 'NIMBLE.chat.applyDamage',
-		),
-	);
+	const applyDamageLabel = $derived.by(() => {
+		if (waitsForKeep) return localize('NIMBLE.chat.incomingReactions.keepFirst');
+		if (damageApplied) return localize('NIMBLE.chat.damageApplied');
+		return localize('NIMBLE.chat.applyDamage');
+	});
 	const applyDamageTooltip = $derived(
 		damageApplied || canApplyDamage || waitsForKeep
 			? applyDamageLabel
@@ -76,7 +72,7 @@
 	);
 </script>
 
-{#if packet}
+{#snippet applyButton(disabled: boolean)}
 	<button
 		class="nimble-button nimble-button--apply-damage"
 		class:nimble-button--recommended={dispositionState === 'recommended'}
@@ -84,25 +80,18 @@
 		aria-label={applyDamageTooltip}
 		data-tooltip={applyDamageTooltip}
 		data-tooltip-direction="UP"
-		disabled={!canApplyDamage}
+		{disabled}
 		onclick={applyDamage}
 	>
 		{applyDamageLabel}
 	</button>
+{/snippet}
+
+{#if packet}
+	{@render applyButton(!canApplyDamage)}
 {:else}
 	<div class="nimble-apply-damage">
-		<button
-			class="nimble-button nimble-button--apply-damage"
-			class:nimble-button--recommended={dispositionState === 'recommended'}
-			class:nimble-button--discouraged={dispositionState === 'discouraged'}
-			aria-label={applyDamageTooltip}
-			data-tooltip={applyDamageTooltip}
-			data-tooltip-direction="UP"
-			disabled={!canApplyDamage || damageApplied}
-			onclick={applyDamage}
-		>
-			{applyDamageLabel}
-		</button>
+		{@render applyButton(!canApplyDamage || damageApplied)}
 		{#if canUndoDamage}
 			<button
 				class="nimble-button nimble-apply-damage__undo"
