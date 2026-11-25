@@ -69,8 +69,9 @@ A feature that divides the dice, such as Grim Harrow, shows a row for each targe
 - **Header:** the item and the result. The result names the weapon a feature attacked with, "Hit with Longsword", or the feature you attacked through, "Hit (Coordinated Strike!)". An opportunity attack says so: "Hit (opportunity attack)". A free cast with no roll says "Free (Coordinated Strike!)".
 - **Cost:** what the use spent or sacrificed, such as **Cost: 2 mana (Stretch Time)**. A spent charge is one line at the bottom: "Combat Dice: spent 1, 2 of 3 left".
 - **Roll boxes:** the total of each roll. Click the arrow, or hover the total, to see the dice.
-- **Apply Damage** *(GM only)*: applies the damage to the card's targets. When the card stored none, it uses the tokens you have targeted now and lists them under **Targets**. **Reduced Damage** tells why a target took less.
-- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens. **Apply Healing** *(GM or the one who rolled)* heals these targets, and with none stored it uses the tokens targeted now.
+- **Apply Damage** *(GM only)*: applies the damage to the card's targets. **Reduced Damage** tells why a target took less.
+- **Apply Healing** *(GM or the one who rolled)*: heals the card's targets.
+- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens. With none stored, **Apply Damage** and **Apply Healing** use the tokens you have targeted now. See [Targeting and roll visibility](#targeting-and-roll-visibility).
 - **Save:** rolls for the selected tokens.
 - **Effects:** **Apply to Targets** puts an effect on the targets. An effect for the user goes on by itself (**Apply to You** with Feature Effects off). See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 
