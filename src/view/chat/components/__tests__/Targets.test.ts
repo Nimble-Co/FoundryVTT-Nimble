@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { SYSTEM_ID } from '#system';
+import { appliedDamageTip } from '../Targets.svelte.ts';
 import TargetsTestHarness from './Targets.testHarness.svelte';
 
 const baseGame = game;
@@ -191,6 +192,8 @@ describe('Targets', () => {
 							amount: 0,
 							previousHp: 12,
 							newHp: 12,
+							previousTempHp: 0,
+							newTempHp: 0,
 						}
 					: null,
 			getDamageBreakdownForTarget: () => ({ total: 9, components: [] }),
@@ -213,5 +216,19 @@ describe('Targets', () => {
 			row.textContent?.includes('Goblin Archer'),
 		);
 		expect(archer?.querySelector('[data-damage-state="applied"]')).toBeNull();
+	});
+
+	it('names the temp HP in the tooltip when the hit took some', () => {
+		const tip = appliedDamageTip({
+			uuid: GOBLIN_TOKEN,
+			tokenName: 'Goblin Cutthroat',
+			amount: 5,
+			previousHp: 10,
+			newHp: 8,
+			previousTempHp: 3,
+			newTempHp: 0,
+		});
+
+		expect(tip).toBe('Applied 5: HP 10 → 8, temp HP 3 → 0');
 	});
 });

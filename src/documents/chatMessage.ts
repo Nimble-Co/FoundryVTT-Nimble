@@ -70,7 +70,8 @@ import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { spendsPoolAgain } from '../utils/chargePool/attackPoolSpends.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
-import { defineCardOperation, mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
+import { requestApplyCardDamage } from '../utils/chat/applyCardDamageRequest.js';
+import { type CardRequester, mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
@@ -129,6 +130,8 @@ export interface AppliedDamageTarget {
 	amount: number;
 	previousHp: number;
 	newHp: number;
+	previousTempHp: number;
+	newTempHp: number;
 }
 
 /** The damage an activation card removed, in target order. */
@@ -888,6 +891,19 @@ function hpOf(actor: Actor.Implementation): number {
 	return Number.isFinite(value) ? value : 0;
 }
 
+function tempHpOf(actor: Actor.Implementation): number {
+	const value = Number(foundry.utils.getProperty(actor, 'system.attributes.hp.temp') ?? 0);
+	return Number.isFinite(value) ? value : 0;
+}
+
+function appliedDamageUpdate(records: AppliedDamageTarget[]): Record<string, unknown> {
+	return { 'system.appliedDamage': { targets: records, appliedAt: Date.now() } };
+}
+
+function actorOfToken(uuid: string): HpMutableActor | null {
+	return ((fromUuidSync(uuid) as TokenDocument | null)?.actor as HpMutableActor | null) ?? null;
+}
+
 function tokenLabel(tokenDocument: TokenDocument | null, actor: { name?: string | null }): string {
 	return tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown');
 }
@@ -896,12 +912,15 @@ function tokenLabel(tokenDocument: TokenDocument | null, actor: { name?: string 
 function unchangedDamageRecords(considered: ConsideredDamageTarget[]): AppliedDamageTarget[] {
 	return considered.map((entry) => {
 		const hp = hpOf(entry.actor);
+		const tempHp = tempHpOf(entry.actor);
 		return {
 			uuid: entry.uuid,
 			tokenName: entry.tokenName,
 			amount: 0,
 			previousHp: hp,
 			newHp: hp,
+			previousTempHp: tempHp,
+			newTempHp: tempHp,
 		};
 	});
 }
@@ -1046,9 +1065,6 @@ function actorOfHealingTarget(document: TokenDocument | null): HpMutableActor | 
 	const holder = document as unknown as { actor?: unknown } | null;
 	return ((holder?.actor ?? holder) as HpMutableActor | null) ?? null;
 }
-
-/** Assigned after the class: the class method calls it, and the operation looks the class up. */
-let requestApplyCardDamage = async (_payload: { messageId: string }): Promise<boolean> => false;
 
 class NimbleChatMessage extends ChatMessage {
 	declare type: SystemChatMessageTypes;
@@ -1660,10 +1676,7 @@ class NimbleChatMessage extends ChatMessage {
 	 * Runs on the GM's client. A player who owns a target asks for this over the
 	 * socket; calling it anywhere else does nothing.
 	 */
-	async applyAllDamageRequested(requester: {
-		userId: string;
-		viaSocket: boolean;
-	}): Promise<boolean> {
+	async applyAllDamageRequested(requester: CardRequester): Promise<boolean> {
 		if (game.user?.isGM !== true) return false;
 		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return false;
 		if (!this.mayApplyDamageFor(requester)) {
@@ -1674,12 +1687,13 @@ class NimbleChatMessage extends ChatMessage {
 			});
 			return false;
 		}
-		if (this.isDamageApplied()) {
-			rejectCardRequest({
-				messageId: this.id ?? '',
-				userId: requester.userId,
-				reasonKey: 'NIMBLE.chat.damageAlreadyApplied',
-			});
+		const refusal = this.isDamageApplied()
+			? 'NIMBLE.chat.damageAlreadyApplied'
+			: this.#applicableDamagePackets().length < 1
+				? 'NIMBLE.chat.noDamageToApply'
+				: null;
+		if (refusal) {
+			rejectCardRequest({ messageId: this.id ?? '', userId: requester.userId, reasonKey: refusal });
 			return false;
 		}
 		await this.#applyAllDamageNow();
@@ -1708,7 +1722,7 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/** The same rule for a requester. A GM's request may not come over the socket. */
-	mayApplyDamageFor(requester: { userId: string; viaSocket: boolean }): boolean {
+	mayApplyDamageFor(requester: CardRequester): boolean {
 		const user = game.users?.get(requester.userId) ?? null;
 		return this.#mayApplyDamage(user, requester.viaSocket);
 	}
@@ -1719,13 +1733,10 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = (this.system as ActivationCardSystemData).targets || [];
 		const owner = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
 		return targets.some((uuid) => {
-			const actor = (fromUuidSync(uuid) as TokenDocument | null)?.actor as {
-				isOwner?: boolean;
-				testUserPermission?: (user: unknown, level: number) => boolean;
-			} | null;
+			const actor = actorOfToken(uuid);
 			if (!actor) return false;
 			if (user.id && user.id === game.user?.id) return actor.isOwner === true;
-			return actor.testUserPermission?.(user, owner) === true;
+			return actor.testUserPermission?.(user as User, owner) === true;
 		});
 	}
 
@@ -1796,11 +1807,7 @@ class NimbleChatMessage extends ChatMessage {
 				damageApplicationPlan.bankedReductionActors.length > 0 || critSavers.length > 0;
 			if (recordApplied && reached) {
 				const records = unchangedDamageRecords(damageApplicationPlan.considered);
-				if (records.length > 0) {
-					await this.update({
-						'system.appliedDamage': { targets: records, appliedAt: Date.now() },
-					} as Record<string, unknown>);
-				}
+				if (records.length > 0) await this.update(appliedDamageUpdate(records));
 			}
 			if (critSavers.length < 1) ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
 			return null;
@@ -1815,6 +1822,7 @@ class NimbleChatMessage extends ChatMessage {
 		for (const entry of damageApplicationPlan.considered) {
 			const target = entry.application;
 			const previousHp = hpOf(entry.actor);
+			const previousTempHp = tempHpOf(entry.actor);
 			if (target) {
 				hurt.push({
 					actor: target.actor as unknown as (typeof hurt)[number]['actor'],
@@ -1872,6 +1880,8 @@ class NimbleChatMessage extends ChatMessage {
 					amount: target?.adjustedDamage ?? 0,
 					previousHp,
 					newHp: hpOf(entry.actor),
+					previousTempHp,
+					newTempHp: tempHpOf(entry.actor),
 				});
 			}
 		}
@@ -1951,9 +1961,7 @@ class NimbleChatMessage extends ChatMessage {
 			resultChangesOf(system).some((change) => change.change === 'noDamage') ||
 			this.#incomingReactionEntries().some((entry) => entry.use === 'result');
 		if (system.damageApplied !== true && hasNoDamage) update['system.damageApplied'] = true;
-		if (records && records.length > 0) {
-			update['system.appliedDamage'] = { targets: records, appliedAt: Date.now() };
-		}
+		if (records && records.length > 0) Object.assign(update, appliedDamageUpdate(records));
 		if (Object.keys(update).length > 0) await this.update(update);
 	}
 
@@ -2338,7 +2346,7 @@ class NimbleChatMessage extends ChatMessage {
 	/**
 	 * Puts each target's HP back to the snapshot from before this card's damage.
 	 * Two tokens of one actor restore once, to the HP from before either hit.
-	 * Later HP changes are overwritten. Temp HP spent by the hit stays spent.
+	 * Later HP changes are overwritten.
 	 */
 	async undoAppliedDamage(): Promise<void> {
 		if (!this.isActivationCard() || game.user?.isGM !== true) return;
@@ -2350,12 +2358,22 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		const restored = new Set<HpMutableActor>();
+		const missing: string[] = [];
 		for (const entry of record.targets) {
-			const actor = (fromUuidSync(entry.uuid) as TokenDocument | null)
-				?.actor as HpMutableActor | null;
-			if (!actor || restored.has(actor)) continue;
+			const actor = actorOfToken(entry.uuid);
+			if (!actor) {
+				missing.push(entry.tokenName);
+				continue;
+			}
+			if (restored.has(actor)) continue;
 			restored.add(actor);
 			await actor.setCurrentHP(entry.previousHp);
+			await actor.setTempHP(entry.previousTempHp);
+		}
+		if (missing.length > 0) {
+			ui.notifications?.warn(
+				localize('NIMBLE.chat.damageUndoMissingTargets', { names: missing.join(', ') }),
+			);
 		}
 
 		await this.update({
@@ -2840,20 +2858,5 @@ class NimbleChatMessage extends ChatMessage {
 		await spendLineCharges(interposeOffers);
 	}
 }
-
-requestApplyCardDamage = defineCardOperation<{ messageId: string }>({
-	type: 'applyCardDamage',
-	noGmKey: 'NIMBLE.chat.noGmToApplyDamage',
-	parse(raw) {
-		const messageId = raw.messageId;
-		if (typeof messageId !== 'string' || !messageId) return null;
-		return { messageId };
-	},
-	async run(payload, requester) {
-		const card = game.messages?.get(payload.messageId) as NimbleChatMessage | undefined;
-		if (!card?.applyAllDamageRequested) return false;
-		return card.applyAllDamageRequested(requester);
-	},
-});
 
 export { NimbleChatMessage };

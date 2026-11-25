@@ -3,11 +3,6 @@ import { SYSTEM_ID } from '#system';
 import localize from '#utils/localize.ts';
 import { NimbleChatMessage } from '../chatMessage.js';
 
-/**
- * The amount Apply Damage actually removed, kept on the card. The live preview
- * keeps changing with armor; this record does not.
- */
-
 const TOKEN = 'Scene.scene.Token.goblin';
 const OTHER = 'Scene.scene.Token.orc';
 
@@ -28,24 +23,30 @@ function globals() {
 }
 
 function createTarget(
-	config: { hp?: number; immunities?: string[]; bank?: number; name?: string } = {},
+	config: { hp?: number; temp?: number; immunities?: string[]; bank?: number; name?: string } = {},
 ) {
 	const hp = config.hp ?? 30;
 	const actor = {
 		name: config.name ?? 'Goblin',
 		isOwner: false,
 		applyDamage: vi.fn(async (amount: number) => {
-			actor.system.attributes.hp.value = Math.max(0, actor.system.attributes.hp.value - amount);
+			const pool = actor.system.attributes.hp;
+			const fromTemp = Math.min(pool.temp, amount);
+			pool.temp -= fromTemp;
+			pool.value = Math.max(0, pool.value - (amount - fromTemp));
 		}),
 		setCurrentHP: vi.fn(async (value: number) => {
 			actor.system.attributes.hp.value = value;
+		}),
+		setTempHP: vi.fn(async (value: number) => {
+			actor.system.attributes.hp.temp = value;
 		}),
 		testUserPermission: vi.fn((_user: { id?: string }) => false),
 		deleteEmbeddedDocuments: vi.fn().mockResolvedValue(undefined),
 		system: {
 			attributes: {
 				armor: 'none',
-				hp: { value: hp, temp: 0, max: hp },
+				hp: { value: hp, temp: config.temp ?? 0, max: hp },
 				damageResistances: [],
 				damageImmunities: config.immunities ?? [],
 				damageVulnerabilities: [],
@@ -147,6 +148,8 @@ describe('applied damage on an activation card', () => {
 			amount: 8,
 			previousHp: 30,
 			newHp: 22,
+			previousTempHp: 0,
+			newTempHp: 0,
 		});
 		expect(card.isDamageApplied()).toBe(true);
 		expect(card.canApplyAllDamage()).toBe(false);
@@ -257,12 +260,66 @@ describe('applied damage on an activation card', () => {
 		);
 	});
 
+	it('records the temp HP the hit took, and undo gives it back', async () => {
+		const actor = createTarget({ hp: 10, temp: 3 });
+		globals().fromUuidSync.mockReturnValue({ name: 'Goblin', actor });
+		const card = rememberUpdates(createCard([TOKEN], 5));
+
+		await card.applyAllDamage();
+
+		expect(card.appliedDamageFor(TOKEN)).toMatchObject({
+			amount: 5,
+			previousHp: 10,
+			newHp: 8,
+			previousTempHp: 3,
+			newTempHp: 0,
+		});
+
+		await card.undoAppliedDamage();
+
+		expect(actor.system.attributes.hp).toMatchObject({ value: 10, temp: 3 });
+	});
+
+	it('undo restores the targets it can find, and names the ones whose token is gone', async () => {
+		const actor = createTarget({ hp: 30 });
+		const gone = createTarget({ hp: 30 });
+		globals().fromUuidSync.mockImplementation((uuid: string) => {
+			if (uuid === TOKEN) return { name: 'Goblin', actor };
+			if (uuid === OTHER) return { name: 'Orc', actor: gone };
+			return null;
+		});
+		const card = rememberUpdates(createCard([TOKEN, OTHER], 10));
+		await card.applyAllDamage();
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === TOKEN ? { name: 'Goblin', actor } : null,
+		);
+
+		await card.undoAppliedDamage();
+
+		expect(actor.system.attributes.hp.value).toBe(30);
+		expect(gone.setCurrentHP).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.damageUndoMissingTargets', { names: 'Orc' }),
+		);
+		expect(card.isDamageApplied()).toBe(false);
+	});
+
 	it('undo does nothing for a player, and warns when there is no record', async () => {
 		const actor = createTarget();
 		globals().fromUuidSync.mockReturnValue({ actor });
 		const card = rememberUpdates(createCard());
 		(card.system as { appliedDamage?: unknown }).appliedDamage = {
-			targets: [{ uuid: TOKEN, tokenName: 'Goblin', amount: 8, previousHp: 30, newHp: 22 }],
+			targets: [
+				{
+					uuid: TOKEN,
+					tokenName: 'Goblin',
+					amount: 8,
+					previousHp: 30,
+					newHp: 22,
+					previousTempHp: 0,
+					newTempHp: 0,
+				},
+			],
 			appliedAt: 1,
 		};
 		globals().game.user = { isGM: false, id: 'player-1' };
@@ -358,6 +415,47 @@ describe('applied damage on an activation card', () => {
 		expect(await card.applyAllDamageRequested({ userId: 'player-1', viaSocket: true })).toBe(true);
 		expect(actor.applyDamage).toHaveBeenCalledWith(8);
 		expect(card.appliedDamageFor(TOKEN)?.amount).toBe(8);
+	});
+
+	it('tells the player who asked when the card has no damage to apply', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue({ name: 'Goblin', actor });
+		const emit = vi.fn();
+		globals().game.socket = { emit };
+		globals().game.users = { get: (id: string) => ({ isGM: false, id }) };
+		actor.testUserPermission.mockReturnValue(true);
+		const card = rememberUpdates(createCard([TOKEN], 0));
+
+		expect(await card.applyAllDamageRequested({ userId: 'player-1', viaSocket: true })).toBe(false);
+
+		expect(actor.applyDamage).not.toHaveBeenCalled();
+		expect(emit).toHaveBeenCalledWith(
+			`system.${SYSTEM_ID}`,
+			expect.objectContaining({ userId: 'player-1', reasonKey: 'NIMBLE.chat.noDamageToApply' }),
+		);
+	});
+
+	it("a card with no stored targets is the GM's alone: a player cannot apply it at their own target", async () => {
+		const own = createTarget();
+		own.isOwner = true;
+		own.testUserPermission.mockReturnValue(true);
+		globals().fromUuidSync.mockReturnValue({ name: 'Goblin', actor: own });
+		const emit = vi.fn();
+		globals().game.socket = { emit };
+		globals().game.users = { get: (id: string) => ({ isGM: false, id }) };
+		(globals().game.user as { targets?: unknown }).targets = new Set([
+			{ document: { uuid: TOKEN }, actor: own },
+		]);
+		const card = rememberUpdates(createCard([]));
+
+		expect(await card.applyAllDamageRequested({ userId: 'player-1', viaSocket: true })).toBe(false);
+
+		expect(own.applyDamage).not.toHaveBeenCalled();
+		expect(card.update).not.toHaveBeenCalled();
+		expect((card.system as unknown as { targets: string[] }).targets).toEqual([]);
+
+		globals().game.user = { isGM: false, id: 'player-1' };
+		expect(card.mayApplyCardDamage()).toBe(false);
 	});
 
 	it('does not record a single packet, so a save-gated apply stays repeatable', async () => {

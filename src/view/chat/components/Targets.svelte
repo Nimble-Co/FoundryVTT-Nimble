@@ -11,6 +11,7 @@
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
 	import {
+		appliedDamageTip,
 		createTargetDefendsState,
 		createTargetMarksState,
 		defendTip,
@@ -199,11 +200,7 @@
 							<span
 								class="nimble-target-damage nimble-target-damage--applied"
 								data-damage-state="applied"
-								data-tooltip={localize('NIMBLE.chatTargets.damageApplied', {
-									amount: String(applied.amount),
-									before: String(applied.previousHp),
-									after: String(applied.newHp),
-								})}
+								data-tooltip={appliedDamageTip(applied)}
 							>
 								<i class="fa-solid fa-check" aria-hidden="true"></i>
 								{applied.amount}
