@@ -1566,7 +1566,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return;
 		const stored = (this.system as ActivationCardSystemData).targets ?? [];
 		if (stored.length > 0) return;
-		if (Array.from(game.user?.targets ?? []).length < 1) return;
+		if ((game.user?.targets?.size ?? 0) < 1) return;
 		await this.addTargetedTokensAsTargets();
 	}
 
@@ -2027,7 +2027,26 @@ class NimbleChatMessage extends ChatMessage {
 		return item?.name || change.label;
 	}
 
+	/** Healing effects being applied on this client; the record lands only after the heal. */
+	#healingInFlight = new Set<string>();
+
 	async applyHealing(
+		value: number,
+		healingType?: string,
+		effectId?: string,
+		recipient?: 'self',
+	): Promise<void> {
+		if (!effectId) return this.#applyHealingNow(value, healingType, effectId, recipient);
+		if (this.#healingInFlight.has(effectId)) return;
+		this.#healingInFlight.add(effectId);
+		try {
+			await this.#applyHealingNow(value, healingType, effectId, recipient);
+		} finally {
+			this.#healingInFlight.delete(effectId);
+		}
+	}
+
+	async #applyHealingNow(
 		value: number,
 		healingType?: string,
 		effectId?: string,

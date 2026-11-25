@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NimbleChatMessage } from '../chatMessage.js';
 
-/**
- * A card that stored no targets takes the user's current targets when damage
- * or healing is applied, then runs the existing path. A card that already
- * stored targets does not.
- */
-
 const GOBLIN = 'Scene.scene.Token.goblin';
 const OGRE = 'Scene.scene.Token.ogre';
 
@@ -24,6 +18,13 @@ type TestGlobals = {
 
 function globals() {
 	return globalThis as unknown as TestGlobals;
+}
+
+function resolveTokens(actors: Record<string, ReturnType<typeof actor>>) {
+	globals().fromUuidSync.mockImplementation((uuid: string) => {
+		const found = actors[uuid];
+		return found ? { actor: found, name: found.name } : null;
+	});
 }
 
 function token(uuid: string) {
@@ -133,9 +134,7 @@ afterEach(() => {
 describe('applying damage adopts current targets only when the card stored none', () => {
 	it('writes the current target onto the card and applies through its resistance', async () => {
 		const goblin = actor('Goblin', ['radiant']);
-		globals().fromUuidSync.mockImplementation((uuid: string) =>
-			uuid === GOBLIN ? { actor: goblin, name: 'Goblin' } : null,
-		);
+		resolveTokens({ [GOBLIN]: goblin });
 		globals().game.user.targets = new Set([token(GOBLIN)]);
 		const message = createCard([]);
 		const adopt = vi.spyOn(message, 'addTargetedTokensAsTargets');
@@ -164,11 +163,7 @@ describe('applying damage adopts current targets only when the card stored none'
 	it('ignores current targets when the card already stored one', async () => {
 		const goblin = actor('Goblin', ['radiant']);
 		const ogre = actor('Ogre');
-		globals().fromUuidSync.mockImplementation((uuid: string) => {
-			if (uuid === GOBLIN) return { actor: goblin, name: 'Goblin' };
-			if (uuid === OGRE) return { actor: ogre, name: 'Ogre' };
-			return null;
-		});
+		resolveTokens({ [GOBLIN]: goblin, [OGRE]: ogre });
 		globals().game.user.targets = new Set([token(OGRE)]);
 		const message = createCard([GOBLIN]);
 		const adopt = vi.spyOn(message, 'addTargetedTokensAsTargets');
@@ -214,11 +209,7 @@ describe('applying damage adopts current targets only when the card stored none'
 	it('does not adopt a second set when damage is applied again', async () => {
 		const goblin = actor('Goblin');
 		const ogre = actor('Ogre');
-		globals().fromUuidSync.mockImplementation((uuid: string) => {
-			if (uuid === GOBLIN) return { actor: goblin, name: 'Goblin' };
-			if (uuid === OGRE) return { actor: ogre, name: 'Ogre' };
-			return null;
-		});
+		resolveTokens({ [GOBLIN]: goblin, [OGRE]: ogre });
 		globals().game.user.targets = new Set([token(GOBLIN)]);
 		const message = createCard([]);
 
@@ -250,11 +241,7 @@ describe('applying healing adopts current targets only when the card stored none
 	it('ignores current targets when the card already stored one', async () => {
 		const goblin = actor('Goblin');
 		const ogre = actor('Ogre');
-		globals().fromUuidSync.mockImplementation((uuid: string) => {
-			if (uuid === GOBLIN) return { actor: goblin, name: 'Goblin' };
-			if (uuid === OGRE) return { actor: ogre, name: 'Ogre' };
-			return null;
-		});
+		resolveTokens({ [GOBLIN]: goblin, [OGRE]: ogre });
 		globals().game.user.targets = new Set([token(OGRE)]);
 		const message = createCard([GOBLIN], []);
 		const adopt = vi.spyOn(message, 'addTargetedTokensAsTargets');
@@ -306,11 +293,7 @@ describe('applying healing adopts current targets only when the card stored none
 	it('does not adopt a second set or heal again when applied twice', async () => {
 		const goblin = actor('Goblin');
 		const ogre = actor('Ogre');
-		globals().fromUuidSync.mockImplementation((uuid: string) => {
-			if (uuid === GOBLIN) return { actor: goblin, name: 'Goblin' };
-			if (uuid === OGRE) return { actor: ogre, name: 'Ogre' };
-			return null;
-		});
+		resolveTokens({ [GOBLIN]: goblin, [OGRE]: ogre });
 		globals().game.user.targets = new Set([token(GOBLIN)]);
 		const message = createCard([], []);
 
@@ -324,5 +307,18 @@ describe('applying healing adopts current targets only when the card stored none
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
 			'Healing has already been applied',
 		);
+	});
+
+	it('heals once when Apply Healing is clicked twice before the first heal lands', async () => {
+		const goblin = actor('Goblin');
+		resolveTokens({ [GOBLIN]: goblin });
+		const message = createCard([GOBLIN], []);
+
+		await Promise.all([
+			message.applyHealing(6, 'healing', 'heal-1'),
+			message.applyHealing(6, 'healing', 'heal-1'),
+		]);
+
+		expect(goblin.applyHealing).toHaveBeenCalledOnce();
 	});
 });
