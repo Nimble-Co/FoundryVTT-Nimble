@@ -57,7 +57,6 @@ interface DefendRowToken {
 	actor?: { type?: string } | null;
 }
 
-/** The armor a Defend takes off, and the options it was made with. */
 /** What the card removed from one target. Temp HP shows only when the hit took some. */
 export function appliedDamageTip(applied: AppliedDamageTarget): string {
 	const hp = {
@@ -75,6 +74,7 @@ export function appliedDamageTip(applied: AppliedDamageTarget): string {
 	});
 }
 
+/** The armor a Defend takes off, and the options it was made with. */
 export function defendTip(defend: DefendRecord, key: string): string {
 	const tip = localize(key, { armor: String(defend.armor + defend.armorBonus) });
 	const labels = [...new Set([defend.label, ...defend.options.map((use) => use.label)])].filter(

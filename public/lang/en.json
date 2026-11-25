@@ -644,7 +644,7 @@
 			"noDamageRecord": "No damage record found to undo",
 			"cannotApplyDamage": "You cannot apply this damage",
 			"noGmToApplyDamage": "A GM must be connected to apply this damage",
-			"damageUndoMissingTargets": "Could not restore HP for {names}: the token is gone",
+			"damageUndoMissingTargets": "Could not restore HP for {names}: token not found",
 			"actionDeltaSummary": {
 				"gainActionNow": "{name} gains {count} action now",
 				"gainActionsNow": "{name} gains {count} actions now",

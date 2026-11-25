@@ -1678,26 +1678,22 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	async applyAllDamageRequested(requester: CardRequester): Promise<boolean> {
 		if (game.user?.isGM !== true) return false;
-		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return false;
-		if (!this.mayApplyDamageFor(requester)) {
-			rejectCardRequest({
-				messageId: this.id ?? '',
-				userId: requester.userId,
-				reasonKey: 'NIMBLE.chat.cannotApplyDamage',
-			});
-			return false;
-		}
-		const refusal = this.isDamageApplied()
-			? 'NIMBLE.chat.damageAlreadyApplied'
-			: this.#applicableDamagePackets().length < 1
-				? 'NIMBLE.chat.noDamageToApply'
-				: null;
+		if (!this.isActivationCard()) return false;
+		const refusal = this.#damageRequestRefusal(requester);
 		if (refusal) {
 			rejectCardRequest({ messageId: this.id ?? '', userId: requester.userId, reasonKey: refusal });
 			return false;
 		}
 		await this.#applyAllDamageNow();
 		return true;
+	}
+
+	#damageRequestRefusal(requester: CardRequester): string | null {
+		if (!this.mayApplyDamageFor(requester)) return 'NIMBLE.chat.cannotApplyDamage';
+		if (this.cardRerolls.pendingKeep()) return 'NIMBLE.chat.incomingReactions.keepFirst';
+		if (this.isDamageApplied()) return 'NIMBLE.chat.damageAlreadyApplied';
+		if (this.#applicableDamagePackets().length < 1) return 'NIMBLE.chat.noDamageToApply';
+		return null;
 	}
 
 	async #applyAllDamageNow(): Promise<void> {
