@@ -42,6 +42,7 @@ import {
 	tickCost,
 } from './defendOptions.js';
 import { defendReactors } from './defendReactors.js';
+import { namedReminder } from './defendRecords.js';
 import { applyAttackerEffects, requestDefend } from './defendRequests.js';
 import { extraDefendUsed, wholeRoundDefendOf } from './defendRound.js';
 import { newestDefendCard } from './newestDefendCard.js';
@@ -523,7 +524,7 @@ async function useInterposeTicks(
 		}
 	}
 	const { reminders, attackerEffects } = defendOptionEffect(used.map((pick) => pick.rule));
-	for (const line of reminders) ui.notifications?.info(line);
+	for (const line of reminders) ui.notifications?.info(namedReminder(line, actor.name ?? ''));
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	if (attacker && attackerEffects.length) {
 		await applyAttackerEffects(attacker, attackerEffects, actor.uuid ?? '', applyEffectToActor);
@@ -669,6 +670,8 @@ export async function openDefendWindow(
 				...(row.pick ? [row.pick.rule] : []),
 				...usedTicks.map((pick) => pick.rule),
 			]);
+	const defenderName =
+		(fromUuidSync(defendedToken) as TokenDocument | null)?.name || actor.name || '';
 	await requestDefend({
 		messageId: card.id ?? '',
 		tokenUuid: defendedToken,
@@ -681,7 +684,7 @@ export async function openDefendWindow(
 		outcome: effect.outcome,
 		armorBonus: effect.armorBonus + upcastArmor,
 		options: uses,
-		reminders: effect.reminders,
+		reminders: effect.reminders.map((line) => namedReminder(line, defenderName)),
 		attackerEffects: effect.attackerEffects,
 		way: row.way,
 		wholeRound: effect.wholeRound,

@@ -1,6 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleChatMessage } from '#documents/chatMessage.ts';
-import type { AllyDefendOffer, DefendRecord } from '#types/defend.d.ts';
+import type { AllyDefendOffer } from '#types/defend.d.ts';
 import { registerCombatStateHooks } from '#utils/combat/combatState.js';
 import { allyDefendOffers, useAllyDefendOffer } from '#utils/defend/allyDefendOffers.js';
 import {
@@ -10,12 +10,6 @@ import {
 } from '#utils/defend/defendReactors.js';
 import { defendLinesOf, defendsOf } from '#utils/defend/defendRecords.js';
 import { openDefendWindow } from '#utils/defend/openDefendWindow.js';
-
-function targetName(record: DefendRecord): string {
-	const token = fromUuidSync(record.tokenUuid) as TokenDocument.Implementation | null;
-	const actor = token?.actor ?? (fromUuidSync(record.actorUuid) as Actor.Implementation | null);
-	return actor?.name || token?.name || '';
-}
 
 /** The Reactions section of an attack card: hero buttons, ally buttons and reminder lines. */
 export function createDefendReactionsState(getMessage: () => NimbleChatMessage) {
@@ -43,9 +37,7 @@ export function createDefendReactionsState(getMessage: () => NimbleChatMessage) 
 		blocked ? [] : defendReactors(card).filter((reactor) => canReactFor(reactor.actor)),
 	);
 	const open = $derived(inCombat ? reactors.filter((reactor) => !reactor.defend) : []);
-	const reminders = $derived(
-		defendsOf(card.system).flatMap((record) => defendLinesOf(record, targetName(record))),
-	);
+	const reminders = $derived(defendsOf(card.system).flatMap(defendLinesOf));
 	const allyOffers = $derived(inCombat && !blocked ? allyDefendOffers(card) : []);
 	const solo = $derived(
 		!isGM && open.length === 1 && reminders.length === 0 && allyOffers.length === 0,

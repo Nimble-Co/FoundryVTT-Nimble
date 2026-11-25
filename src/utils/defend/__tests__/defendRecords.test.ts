@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defendLinesOf, defendsOf } from '../defendRecords.js';
+import { defendLinesOf, defendsOf, namedReminder } from '../defendRecords.js';
 
 const SAND = { itemUuid: 'Item.sand', effectId: 'e-sand', name: 'Pocket Sand' };
 
@@ -43,13 +43,14 @@ describe('defendLinesOf', () => {
 
 		expect(defendLinesOf(record)).toEqual([]);
 	});
+});
 
-	it('names the target on reminders, but not on effects applied to the attacker', () => {
-		const record = recordWith({ reminders: ['Decoy: move.'], attackerEffects: [SAND] });
+describe('namedReminder', () => {
+	it('puts the name of the character who acts in front of the reminder', () => {
+		expect(namedReminder('Decoy: move.', 'Pip')).toBe('For Pip: Decoy: move.');
+	});
 
-		const lines = defendLinesOf(record, 'Pip');
-
-		expect(lines[0]).toBe('For Pip: Decoy: move.');
-		expect(lines[1]).not.toContain('Pip');
+	it('leaves the reminder as it is when there is no name', () => {
+		expect(namedReminder('Decoy: move.', '  ')).toBe('Decoy: move.');
 	});
 });

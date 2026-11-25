@@ -84,6 +84,8 @@ export interface AllyDefendOffer {
 	key: string;
 	defendId: string;
 	actor: Actor.Implementation;
+	/** The ally's name as the table sees it. */
+	name: string;
 	pick: DefendOptionPick;
 	defenderName: string;
 }
