@@ -15,10 +15,6 @@ describe('chat card concentration field', () => {
 	});
 });
 
-/**
- * `NimbleBaseItem` writes `system.costs` onto every activation card, and Foundry drops it
- * from a card type whose schema has no such field.
- */
 describe('chat card applied damage field', () => {
 	it('is declared by the feature, spell and object cards', () => {
 		const withAppliedDamage = Object.entries(chatDataModels)
@@ -29,6 +25,10 @@ describe('chat card applied damage field', () => {
 	});
 });
 
+/**
+ * `NimbleBaseItem` writes `system.costs` onto every activation card, and Foundry drops it
+ * from a card type whose schema has no such field.
+ */
 describe('chat card costs field', () => {
 	it('is declared by the feature, spell and object cards', () => {
 		const withCosts = Object.entries(chatDataModels)
