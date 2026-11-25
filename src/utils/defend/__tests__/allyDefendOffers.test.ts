@@ -87,7 +87,7 @@ describe('allyDefendOffers', () => {
 	it('offers the option of an owned ally within range of the hero who Defended', () => {
 		const offers = allyDefendOffers(card());
 		expect(offers.map((offer) => offer.actor.uuid)).toEqual(['Actor.bram']);
-		expect(offers[0]).toMatchObject({ defendId: 'd1', name: 'bram', defenderName: 'pip' });
+		expect(offers[0]).toMatchObject({ defendId: 'd1', allyName: 'bram', defenderName: 'pip' });
 	});
 
 	it('offers nothing once the ally used it on this Defend', () => {

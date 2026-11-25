@@ -80,6 +80,12 @@ function nameOfToken(uuid: string | null | undefined): string {
 	return token?.actor?.name || token?.name || '';
 }
 
+/** The name the table sees on the token, else the actor's name. */
+function shownNameOf(tokenUuid: string | null, actor: Actor.Implementation): string {
+	const token = tokenUuid ? (fromUuidSync(tokenUuid) as TokenDocument | null) : null;
+	return token?.name || actor.name || '';
+}
+
 function armorOf(actor: Actor.Implementation): number {
 	const value = Number(foundry.utils.getProperty(actor, 'system.attributes.armor.value'));
 	return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
@@ -524,7 +530,7 @@ async function useInterposeTicks(
 		}
 	}
 	const { reminders, attackerEffects } = defendOptionEffect(used.map((pick) => pick.rule));
-	for (const line of reminders) ui.notifications?.info(namedReminder(line, actor.name ?? ''));
+	for (const line of reminders) ui.notifications?.info(namedReminder(line, shownNameOf(token, actor)));
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	if (attacker && attackerEffects.length) {
 		await applyAttackerEffects(attacker, attackerEffects, actor.uuid ?? '', applyEffectToActor);
@@ -670,8 +676,7 @@ export async function openDefendWindow(
 				...(row.pick ? [row.pick.rule] : []),
 				...usedTicks.map((pick) => pick.rule),
 			]);
-	const defenderName =
-		(fromUuidSync(defendedToken) as TokenDocument | null)?.name || actor.name || '';
+	const defenderName = shownNameOf(defendedToken, actor);
 	await requestDefend({
 		messageId: card.id ?? '',
 		tokenUuid: defendedToken,

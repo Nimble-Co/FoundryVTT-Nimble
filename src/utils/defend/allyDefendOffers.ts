@@ -33,7 +33,7 @@ export function allyDefendOffers(card: DefendCardLike): AllyDefendOffer[] {
 					key: `${record.id}:${actor.uuid}:${pick.key}`,
 					defendId: record.id,
 					actor,
-					name: token.document.name || actor.name || '',
+					allyName: token.document.name || actor.name || '',
 					pick,
 					defenderName: defender.document.name || defender.actor?.name || '',
 				});
@@ -59,6 +59,6 @@ export async function useAllyDefendOffer(
 		messageId,
 		defendId: offer.defendId,
 		use,
-		reminder: text ? namedReminder(`${offer.pick.label}: ${text}`, offer.name) : '',
+		reminder: text ? namedReminder(`${offer.pick.label}: ${text}`, offer.allyName) : '',
 	});
 }
