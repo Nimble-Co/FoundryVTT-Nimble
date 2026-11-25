@@ -231,7 +231,7 @@ describe('GrantedActionOffers', () => {
 		expect(screen.queryByRole('button')).toBeNull();
 	});
 
-	it('groups the weapons only when some are equipped and some are not, first equipped chosen', () => {
+	it('lists only the equipped weapons, with no heading, first one chosen', () => {
 		const g = globalThis as Record<string, any>;
 		g.fromUuidSync = vi.fn(() =>
 			createRecipient({
@@ -247,8 +247,8 @@ describe('GrantedActionOffers', () => {
 			props: { messageDocument: createMessage([createOffer()]) },
 		});
 
-		expect(groupNames()).toEqual(['Equipped', 'Not equipped']);
-		expect(optionNames()).toEqual(['Longsword', 'Shortbow']);
+		expect(groupNames()).toEqual([]);
+		expect(optionNames()).toEqual(['Longsword']);
 		expect(dropdown().value).toBe('Actor.ally.Item.sword');
 	});
 

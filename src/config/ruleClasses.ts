@@ -1,6 +1,7 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
 import { ActionCostRule } from '../models/rules/actionCost.js';
 import { ActionDeltaRule } from '../models/rules/actionDelta.js';
+import { AdditionalMarkRule } from '../models/rules/additionalMark.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { AttackOutcomeRule } from '../models/rules/attackOutcome.js';
@@ -21,6 +22,7 @@ import { CritDiceRule } from '../models/rules/critDice.js';
 import { CritDiceSaveRule } from '../models/rules/critDiceSave.js';
 import { DamageBackRule } from '../models/rules/damageBack.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DamageFormulaChoiceRule } from '../models/rules/damageFormulaChoice.js';
 import { DamageMultiplierRule } from '../models/rules/damageMultiplier.js';
 import { DamageRecoilRule } from '../models/rules/damageRecoil.js';
 import { DamageReductionRule } from '../models/rules/damageReduction.js';
@@ -42,6 +44,8 @@ import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.js';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { GrantTargetBonusRule } from '../models/rules/grantTargetBonus.js';
+import { HalfDamageOnKillRule } from '../models/rules/halfDamageOnKill.js';
+import { HalveFirstAttackRule } from '../models/rules/halveFirstAttack.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HeldRollRule } from '../models/rules/heldRoll.js';
 import { HitConditionRule } from '../models/rules/hitCondition.js';
@@ -71,6 +75,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { OfferAttackBonusRule } from '../models/rules/offerAttackBonus.js';
 import { OptionSwapRule } from '../models/rules/optionSwap.js';
 import { OptionWindowRule } from '../models/rules/optionWindow.js';
+import { PendingWoundRule } from '../models/rules/pendingWound.js';
 import { PoolDieToMaxRule } from '../models/rules/poolDieToMax.js';
 import { PoolEmptyEffectRule } from '../models/rules/poolEmptyEffect.js';
 import { PoolGainMessageRule } from '../models/rules/poolGainMessage.js';
@@ -79,6 +84,7 @@ import { PrimaryDieBonusRule } from '../models/rules/primaryDieBonus.js';
 import { RerollRule } from '../models/rules/reroll.js';
 import { ResourceCostRule } from '../models/rules/resourceCost.js';
 import { RicochetRule } from '../models/rules/ricochet.js';
+import { SafeRestWoundsRule } from '../models/rules/safeRestWounds.js';
 import { SaveOnEventRule } from '../models/rules/saveOnEvent.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -95,6 +101,8 @@ import { TurnDamageRule } from '../models/rules/turnDamage.js';
 import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 import { UseItemFreeRule } from '../models/rules/useItemFree.js';
 import { UseOptionRule } from '../models/rules/useOption.js';
+import { WouldDropToZeroRule } from '../models/rules/wouldDropToZero.js';
+import { WoundImmunityRule } from '../models/rules/woundImmunity.js';
 import { ZeroHpAtEndRule } from '../models/rules/zeroHpAtEnd.js';
 
 /** Every rule type and its class. A rule type's label key is `NIMBLE.ruleTypes.<type>`. */
@@ -102,6 +110,7 @@ export const RULE_CLASSES = {
 	abilityBonus: AbilityBonusRule,
 	actionCost: ActionCostRule,
 	actionDelta: ActionDeltaRule,
+	additionalMark: AdditionalMarkRule,
 	applyCondition: ApplyConditionRule,
 	armorClass: ArmorClassRule,
 	auraReach: AuraReachRule,
@@ -118,10 +127,13 @@ export const RULE_CLASSES = {
 	conditionalBonus: ConditionalBonusRule,
 	conditionImmunity: ConditionImmunityRule,
 	damageBonus: DamageBonusRule,
+	damageFormulaChoice: DamageFormulaChoiceRule,
 	damageBack: DamageBackRule,
 	damageRecoil: DamageRecoilRule,
 	defendOption: DefendOptionRule,
 	damageReduction: DamageReductionRule,
+	halfDamageOnKill: HalfDamageOnKillRule,
+	halveFirstAttack: HalveFirstAttackRule,
 	dyingActionLimit: DyingActionLimitRule,
 	emptyPoolsAtEnd: EmptyPoolsAtEndRule,
 	freeMove: FreeMoveRule,
@@ -196,5 +208,9 @@ export const RULE_CLASSES = {
 	useItemFree: UseItemFreeRule,
 	useOption: UseOptionRule,
 	unarmedDamage: UnarmedDamageRule,
+	pendingWound: PendingWoundRule,
+	safeRestWounds: SafeRestWoundsRule,
+	wouldDropToZero: WouldDropToZeroRule,
+	woundImmunity: WoundImmunityRule,
 	zeroHpAtEnd: ZeroHpAtEndRule,
 } as const;

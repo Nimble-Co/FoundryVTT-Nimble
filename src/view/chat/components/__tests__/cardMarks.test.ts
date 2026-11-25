@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SYSTEM_ID } from '#system';
-import { cardMarkingItem, markOnToken } from '../cardMarks.ts';
+import { cardMarkingItem, markOnToken, marksAddedOnCard } from '../cardMarks.ts';
 
 const goblin = { actorUuid: 'Actor.goblin', tokenUuid: 'Scene.s.Token.goblin', name: 'Goblin' };
 const ogre = { actorUuid: 'Actor.ogre', tokenUuid: null, name: 'Ogre' };
@@ -30,5 +30,25 @@ describe('markOnToken', () => {
 			ogre,
 		);
 		expect(markOnToken(marks, { uuid: 'Scene.s.Token.x', actor: { uuid: 'Actor.x' } })).toBeNull();
+	});
+});
+
+describe('marksAddedOnCard', () => {
+	const boar = {
+		actorUuid: 'Actor.boar',
+		tokenUuid: 'Scene.s.Token.boar',
+		name: 'Boar',
+		cardId: 'card-1',
+	};
+	const elsewhere = { ...ogre, cardId: 'card-2' };
+	const targeted = { ...goblin, cardId: 'card-1' };
+
+	it('gives the marks this card made on creatures that are not its targets', () => {
+		const marks = [goblin, ogre, boar, elsewhere, targeted];
+		expect(marksAddedOnCard(marks, 'card-1', ['Scene.s.Token.goblin'])).toEqual([boar]);
+	});
+
+	it('gives nothing for a card with no id', () => {
+		expect(marksAddedOnCard([boar], null, [])).toEqual([]);
 	});
 });

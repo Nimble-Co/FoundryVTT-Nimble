@@ -52,7 +52,7 @@ const isCantrip = (item: RecipientItem) =>
 	item.type === 'spell' && (item.system as { tier?: number } | undefined)?.tier === 0;
 
 /**
- * The dropdown of a line: the fitting weapons as the weapon pick groups them, then the cantrips.
+ * The dropdown of a line: the fitting equipped weapons, then the cantrips.
  * With cantrips, every group has its heading.
  */
 export function grantedAttackGroups(
@@ -64,9 +64,10 @@ export function grantedAttackGroups(
 				.filter(isCantrip)
 				.map((spell) => ({ value: spell.uuid ?? '', name: spell.name ?? '' }))
 		: [];
-	const weapons = groupWeapons(weaponOptionsFor(actor as never, line.weaponKind), {
-		headed: cantrips.length > 0,
-	}).map((group) => ({
+	const equipped = weaponOptionsFor(actor as never, line.weaponKind).filter(
+		(weapon) => weapon.equipped,
+	);
+	const weapons = groupWeapons(equipped, { headed: cantrips.length > 0 }).map((group) => ({
 		label: group.label,
 		choices: group.weapons.map((weapon) => ({ value: weapon.uuid, name: weapon.name })),
 	}));

@@ -5,8 +5,90 @@
 	"img": "icons/creatures/eyes/humanoid-single-red-brown.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "small-keen-eyes",
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "keenEyesPool",
+				"identifier": "small-keen-eyes",
+				"label": "Keen Eyes (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "keenEyesLevel7",
+				"identifier": "",
+				"label": "Keen Eyes (2/encounter)",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "small-keen-eyes",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "keenEyesLevel11",
+				"identifier": "",
+				"label": "Keen Eyes (3/encounter)",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				},
+				"priority": 3,
+				"poolType": "charge",
+				"poolIdentifier": "small-keen-eyes",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "keenEyesConsume",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 4,
+				"poolIdentifier": "small-keen-eyes",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "markTarget",
+				"disabled": false,
+				"id": "keenEyesMark",
+				"identifier": "",
+				"label": "Mark Quarry",
+				"predicate": {},
+				"priority": 5,
+				"flagKey": "quarry",
+				"statusCondition": "marked",
+				"maxTargets": 1,
+				"effectId": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

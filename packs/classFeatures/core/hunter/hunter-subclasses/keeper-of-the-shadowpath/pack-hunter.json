@@ -6,7 +6,19 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "additionalMark",
+				"disabled": false,
+				"id": "pack-hunter-mark",
+				"identifier": "",
+				"label": "Pack Hunter",
+				"predicate": {},
+				"priority": 1,
+				"flagKey": "quarry",
+				"within": 6
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

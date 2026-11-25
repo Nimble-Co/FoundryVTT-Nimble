@@ -28,7 +28,12 @@ import {
 	hpGained,
 } from '../utils/actor/actorHpChangePaths.js';
 import { originOfCard, originOwnerRules } from '../utils/damage/attackOrigin.js';
-import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
+import {
+	type ChargePoolChangedPayload,
+	gainedChargePoolIdentifier,
+	gainedPoolIdentifier,
+	type PoolChangedPayload,
+} from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { keyedQueue } from '../utils/keyedQueue.js';
 
@@ -81,13 +86,9 @@ interface NimbleInitiativePayload {
 	rollId?: string;
 }
 
-interface NimblePoolChangedPayload {
+interface NimblePoolGainPayload {
 	actor?: ActorWithRules | null;
-	poolId?: string;
 	poolLabel?: string;
-	previousFaces?: number[];
-	newFaces?: number[];
-	reason?: string;
 }
 
 interface NimbleConditionAppliedPayload {
@@ -231,18 +232,32 @@ async function handleActiveGmTurnStart(
 	await dispatch(actor, 'onActiveGmTurnStart', context);
 }
 
-// The pool-changed hook fires only on the client that changed the pool.
-async function handlePoolChanged(payload: NimblePoolChangedPayload): Promise<void> {
-	const poolIdentifier = gainedPoolIdentifier(payload);
-	const actor = payload?.actor ?? null;
-	if (poolIdentifier === null || !actor) return;
-	const context: PoolGainContext = {
-		actor: actor as unknown as PoolGainContext['actor'],
-		poolIdentifier,
-		poolLabel: payload.poolLabel,
+// The pool-changed hooks fire only on the client that changed the pool.
+function poolGainHandler<TPayload extends NimblePoolGainPayload>(
+	methodName: 'onPoolGain' | 'onChargePoolGain',
+	gainedIdentifier: (payload: TPayload) => string | null,
+): (payload: TPayload) => Promise<void> {
+	return async (payload) => {
+		const poolIdentifier = gainedIdentifier(payload);
+		const actor = payload?.actor ?? null;
+		if (poolIdentifier === null || !actor) return;
+		const context: PoolGainContext = {
+			actor: actor as unknown as PoolGainContext['actor'],
+			poolIdentifier,
+			poolLabel: payload.poolLabel,
+		};
+		await dispatch(actor, methodName, context);
 	};
-	await dispatch(actor, 'onPoolGain', context);
 }
+
+const handlePoolChanged = poolGainHandler<NimblePoolGainPayload & PoolChangedPayload>(
+	'onPoolGain',
+	gainedPoolIdentifier,
+);
+const handleChargePoolChanged = poolGainHandler<NimblePoolGainPayload & ChargePoolChangedPayload>(
+	'onChargePoolGain',
+	gainedChargePoolIdentifier,
+);
 
 function handleActorUpdate(
 	actor: Actor.Implementation,
@@ -490,6 +505,7 @@ export default function registerRuleEventDispatch(): void {
 	onHook(systemHookName('conditionApplied'), handleConditionApplied as HookFn);
 	onHook(systemHookName('movementFinished'), handleMovementFinished as HookFn);
 	onHook(systemHookName('dicePool.changed'), handlePoolChanged as HookFn);
+	onHook(systemHookName('chargePool.changed'), handleChargePoolChanged as HookFn);
 	onHook('nimbleCombatTurnStart', handleActiveGmTurnStart as HookFn);
 }
 

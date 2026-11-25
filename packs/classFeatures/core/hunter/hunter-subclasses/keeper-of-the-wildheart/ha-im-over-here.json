@@ -6,7 +6,48 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "k7HiOverHerePool",
+				"identifier": "ha-im-over-here",
+				"label": "Ha! I'm Over Here! (1/Safe Rest)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "safeRest",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "wouldDropToZero",
+				"disabled": false,
+				"id": "k7HiOverHereDrop",
+				"identifier": "",
+				"label": "Ha! I'm Over Here!",
+				"predicate": {},
+				"priority": 2,
+				"response": "prevent",
+				"choice": "automatic",
+				"woundInstead": "",
+				"moveDistance": "@speed",
+				"moveDirection": "away",
+				"onlyAttack": true,
+				"chargePoolIdentifier": "ha-im-over-here",
+				"watch": "self",
+				"reach": 0
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

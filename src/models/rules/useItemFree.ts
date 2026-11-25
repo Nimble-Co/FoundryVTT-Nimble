@@ -1,6 +1,7 @@
 import type { FreeUseHost, TurnMomentType } from '#types/cardEvent.d.ts';
 import { ruleKey, ruleLabel } from '#utils/actor/actorRules.js';
 import { isEnemyAttacker } from '#utils/actor/isEnemyAttacker.js';
+import { getToggledTargetTags } from '#utils/actor/toggledEffects.js';
 import { useItemForFree } from '#utils/actor/useItemForFree.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
 import { turnMoment } from '#utils/lastsUntil/turnMoment.js';
@@ -120,6 +121,17 @@ function schema() {
 					Array.isArray(data.freeOf) && data.freeOf.includes('mana'),
 			}),
 		),
+		againstQuarry: new fields.BooleanField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: false,
+				label: `${WORDS}.againstQuarry.label`,
+				hint: `${WORDS}.againstQuarry.hint`,
+				showWhen: (data: Record<string, unknown>) =>
+					Array.isArray(data.triggers) && data.triggers.includes('onCrit'),
+			}),
+		),
 	};
 }
 
@@ -151,6 +163,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 	declare manaAtLeast: number;
 	declare freeOf: ItemActivationManager.FreeOf[];
 	declare upcast: boolean;
+	declare againstQuarry: boolean;
 
 	static override defineSchema(): UseItemFreeRule.Schema {
 		return {
@@ -171,6 +184,7 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 				['manaAtLeast', 'number'],
 				['freeOf', join(FREE_OF_CHOICES)],
 				['upcast', 'boolean'],
+				['againstQuarry', 'boolean'],
 			]),
 		);
 	}
@@ -186,8 +200,15 @@ class UseItemFreeRule extends NimbleBaseRule<UseItemFreeRule.Schema> {
 		if (!outcome) return;
 		for (const trigger of this.triggers) {
 			if (!isAttackOutcomeTrigger(trigger) || !attackOutcomeMatches(trigger, outcome)) continue;
+			if (trigger === 'onCrit' && this.againstQuarry && !this.#strikesQuarry(context)) continue;
 			await this.#useOnce(trigger, context.card);
 		}
+	}
+
+	/** A crit counts when a struck creature is this actor's quarry. */
+	#strikesQuarry(context: ItemActivatedContext): boolean {
+		const targets = context.targetActors ?? [];
+		return targets.some((target) => getToggledTargetTags(this.actor, target).has('target:quarry'));
 	}
 
 	override async onAttackReceived(context: ItemUsedContext): Promise<void> {

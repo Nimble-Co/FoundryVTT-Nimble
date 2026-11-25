@@ -33,6 +33,7 @@ import { requestIncomingAttackReaction } from '../incomingReactions/incomingAtta
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
+import { offerDefendOptionAttacks } from './defendOptionAttack.js';
 import {
 	cardRerollFor,
 	defendOptionEffect,
@@ -663,12 +664,9 @@ export async function openDefendWindow(
 		usedTicks.push(pick);
 	}
 
-	const effect = row.whole
-		? effectOf(row, [])
-		: defendOptionEffect([
-				...(row.pick ? [row.pick.rule] : []),
-				...usedTicks.map((pick) => pick.rule),
-			]);
+	const taken = [...(row.pick ? [row.pick.rule] : []), ...usedTicks.map((pick) => pick.rule)];
+	await offerDefendOptionAttacks({ rules: taken, actor, card });
+	const effect = row.whole ? effectOf(row, []) : defendOptionEffect(taken);
 	await requestDefend({
 		messageId: card.id ?? '',
 		tokenUuid: defendedToken,

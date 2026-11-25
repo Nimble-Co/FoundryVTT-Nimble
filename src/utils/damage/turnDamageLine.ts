@@ -7,6 +7,7 @@ import { replaceCardEvent } from '#utils/chat/cardEvents.js';
 import { mayActHere } from '#utils/chat/cardOperations.js';
 import { fireEvent } from '#utils/lastsUntil/lastsUntilEvents.js';
 import { requestSaves } from '#utils/saveRequest/saveRequests.js';
+import { woundSourceOfUuid } from '../wounds/woundSource.js';
 
 const WORDS = 'NIMBLE.chat.turnDamage';
 const HP_PATH = 'system.attributes.hp';
@@ -38,6 +39,10 @@ function hpOf(holder: TurnDamageHolder): { value: number; temp: number; max: num
 	const read = (field: string) =>
 		Number(foundry.utils.getProperty(holder, `${HP_PATH}.${field}`)) || 0;
 	return { value: read('value'), temp: read('temp'), max: read('max') };
+}
+
+function woundValue(holder: TurnDamageHolder): number {
+	return getActorWoundsValueAndMax(holder as never)?.value ?? 0;
 }
 
 /** Whether the creature has a Wound track for the rule's Wounds. */
@@ -102,13 +107,16 @@ export async function dealTurnDamageTo(
 	host: EventHost,
 ): Promise<TurnDamageLosses> {
 	const before = hpOf(holder);
+	const woundsBefore = woundValue(holder);
 	if (action.amount > 0) await holder.applyDamage(action.amount);
 	const after = hpOf(holder);
-	const wounds = action.wounds > 0 ? await giveWounds(holder, action.wounds) : null;
+	const fromDamage = Math.max(0, woundValue(holder) - woundsBefore);
+	const source = woundSourceOfUuid(action.sourceUuid);
+	const wounds = action.wounds > 0 ? await giveWounds(holder, action.wounds, { source }) : null;
 	const losses = {
 		hpLost: Math.max(0, before.value - after.value),
 		tempLost: Math.max(0, before.temp - after.temp),
-		woundsGained: woundsGiven(wounds),
+		woundsGained: fromDamage + woundsGiven(wounds),
 	};
 	if (losses.hpLost + losses.tempLost > 0) {
 		const damageTypes = action.damageType ? [action.damageType] : [];

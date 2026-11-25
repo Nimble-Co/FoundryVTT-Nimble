@@ -1,4 +1,5 @@
 import type { WeaponAttack } from '#types/weaponAttack.d.ts';
+import type { OptionReleases } from '#utils/classProgression/planSubclassOptions.ts';
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 import { activation } from './common.js';
 
@@ -65,6 +66,19 @@ const schema = () => ({
 				new fields.NumberField({ required: true, nullable: false, integer: true }),
 				{ required: false, nullable: false, initial: () => [] },
 			),
+			releases: new fields.SchemaField(
+				{
+					group: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					count: new fields.NumberField({
+						required: true,
+						nullable: false,
+						initial: 0,
+						integer: true,
+						min: 0,
+					}),
+				},
+				{ required: false, nullable: false },
+			),
 		}),
 		{ required: false, nullable: false, initial: () => [] },
 	),
@@ -106,6 +120,7 @@ class NimbleFeatureData extends NimbleBaseItemData<
 		selectionGroups: string[];
 		selectionCount: number;
 		applyAtLevels: number[];
+		releases: OptionReleases;
 	}>;
 
 	declare activation: {

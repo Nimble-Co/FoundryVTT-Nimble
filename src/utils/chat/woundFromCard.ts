@@ -1,6 +1,8 @@
 import { SYSTEM_ID } from '#system';
 import type { WoundNode } from '#types/effectTree.js';
 import { giveWounds, type WoundRecord } from '#utils/actor/giveWounds.js';
+import type { WoundSource } from '#utils/wounds/pendingWound.js';
+import { woundSourceOfMessage } from '#utils/wounds/woundSource.js';
 import { type EffectCard, stepRecipients } from './applyEffectFromCard.js';
 
 export const APPLIED_WOUNDS_FLAG = 'appliedWounds';
@@ -8,8 +10,8 @@ export const APPLIED_WOUNDS_FLAG = 'appliedWounds';
 type WoundTarget = Parameters<typeof giveWounds>[0];
 
 /** A creature's key in the card record: its uuid, with no dots, so two tokens of one actor differ. */
-function recordKey(actor: { uuid: string }): string {
-	return actor.uuid.replaceAll('.', '_');
+function recordKey(actor: { uuid: string | null }): string {
+	return (actor.uuid ?? '').replaceAll('.', '_');
 }
 
 /** What the Wound step of the card did, by creature. */
@@ -29,8 +31,11 @@ export async function giveWoundsOnCard(
 	nodeId: string,
 	recipients: readonly WoundTarget[],
 	amount: number,
+	source: WoundSource | null = woundSourceOfMessage(card),
 ): Promise<void> {
-	const results = await Promise.allSettled(recipients.map((actor) => giveWounds(actor, amount)));
+	const results = await Promise.allSettled(
+		recipients.map((actor) => giveWounds(actor, amount, { source })),
+	);
 	const changes: Record<string, WoundRecord> = {};
 	results.forEach((result, index) => {
 		if (result.status === 'rejected') console.error(result.reason);

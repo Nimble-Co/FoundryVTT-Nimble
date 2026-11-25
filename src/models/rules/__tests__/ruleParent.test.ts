@@ -222,6 +222,7 @@ describe('rule types that need an item', () => {
 		expect(itemOnly).toEqual(
 			[
 				'actionDelta',
+				'additionalMark',
 				'changeEffect',
 				'chargeConsumer',
 				'chargePool',

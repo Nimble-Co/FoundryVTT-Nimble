@@ -5,8 +5,73 @@
 	"img": "icons/creatures/mammals/wolf-shadow-black.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "medium-ferocious",
+		"rules": [
+			{
+				"type": "useItemFree",
+				"disabled": false,
+				"id": "ferociousCrit",
+				"identifier": "",
+				"label": "Ferocious",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "medium-ferocious",
+				"triggers": ["onCrit"],
+				"freeOf": ["uses", "mana"],
+				"againstQuarry": true
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "ferociousMove2",
+				"identifier": "",
+				"label": "Ferocious (2 spaces)",
+				"predicate": { "level": { "max": 6 } },
+				"priority": 2,
+				"trigger": "onActivation",
+				"poolIdentifier": "",
+				"distance": "2",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": ""
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "ferociousMove4",
+				"identifier": "",
+				"label": "Ferocious (4 spaces)",
+				"predicate": { "level": { "min": 7, "max": 14 } },
+				"priority": 3,
+				"trigger": "onActivation",
+				"poolIdentifier": "",
+				"distance": "4",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": ""
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "ferociousMove6",
+				"identifier": "",
+				"label": "Ferocious (6 spaces)",
+				"predicate": { "level": { "min": 15 } },
+				"priority": 4,
+				"trigger": "onActivation",
+				"poolIdentifier": "",
+				"distance": "6",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": false,
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +85,30 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "ferociousDmg",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "@level",
+					"ignoreArmor": true,
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "ferociousDmgFull",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "ferociousDmg"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

@@ -100,12 +100,15 @@
 			{/if}
 
 			{#each state.sortItems(state.weapons) as item (item._id)}
+				{@const strengthNotice = state.getStrengthNotice(item)}
 				<WeaponCard
 					name={item.reactive.name}
 					{actor}
 					image={item.reactive.img}
 					damage={state.getWeaponDamage(item)}
 					properties={state.getWeaponProperties(item)}
+					notice={strengthNotice}
+					noticeLabel={strengthNotice ? localize('NIMBLE.weapons.notices.notEnoughStrength') : null}
 					description={state.getItemDescription(item)}
 					isExpanded={state.expandedDescriptions.has(item._id)}
 					showImage={showEmbeddedDocumentImages}

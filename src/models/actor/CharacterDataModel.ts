@@ -3,6 +3,7 @@ import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 
 import { DYING_MAX_ACTIONS } from '#utils/actor/actorHealthState.js';
+import type { ReleasedFeature } from '#utils/classProgression/planSubclassOptions.ts';
 import { RecordField } from '../fields/RecordField.js';
 import { abilities, currency, savingThrows } from './common.js';
 import { flattenLegacyCurrency } from './flattenLegacyCurrency.js';
@@ -380,6 +381,18 @@ const characterSchema = () => ({
 				new fields.StringField({ required: true, nullable: false, initial: '' }),
 				{ required: true, nullable: false, initial: () => [] },
 			),
+			releasedFeatures: new fields.ArrayField(
+				new fields.SchemaField({
+					uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					level: new fields.NumberField({
+						required: true,
+						initial: 0,
+						integer: true,
+						nullable: false,
+					}),
+				}),
+				{ required: false, nullable: false, initial: () => [] },
+			),
 		}),
 		{ required: true, nullable: false, initial: () => [] },
 	),
@@ -473,6 +486,8 @@ interface LevelUpHistoryEntry {
 	/** Item ids of class features granted during this level-up (auto + selected). */
 	grantedFeatureIds: string[];
 	grantedSpellIds: string[];
+	/** Features this level removed, restored onto `level` when the level is reverted. */
+	releasedFeatures: ReleasedFeature[];
 }
 
 declare namespace NimbleCharacterData {

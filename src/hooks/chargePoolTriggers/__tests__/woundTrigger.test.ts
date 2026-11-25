@@ -76,6 +76,22 @@ describe('registerWoundTriggerHooks', () => {
 		expect(applyRecovery).not.toHaveBeenCalled();
 	});
 
+	it('offers an onWound free move once for each Wound gained', async () => {
+		const hook = await registeredHook();
+		const offerOnWound = vi.fn(async () => undefined);
+		const wounded = {
+			...actor('character', 3),
+			rules: [
+				{ type: 'freeMove', trigger: 'onWound', offerOnWound },
+				{ type: 'freeMove', trigger: 'onTurnStart', offerOnWound },
+			],
+		};
+
+		hook(wounded, {}, recordedWounds(1), 'user-1');
+
+		await vi.waitFor(() => expect(offerOnWound).toHaveBeenCalledTimes(2));
+	});
+
 	it('ignores actors that are not characters', async () => {
 		const hook = await registeredHook();
 
