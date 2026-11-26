@@ -89,7 +89,7 @@ Hold **Alt** when you click the item to skip the window and roll with the defaul
 **The chat card.** After the roll, the system posts a card with:
 
 - the item's image and name, and its description if that is on,
-- a **targets** row with the targets you marked when you used the item, and buttons that let anyone add the selected or targeted tokens as targets later. With no targets stored, **Apply Damage** and **Apply Healing** use the tokens targeted now,
+- a **targets** row with the targets you marked when you used the item, and buttons that let the GM or the card's author add the selected or targeted tokens as targets later. With no targets stored, **Apply Damage** and **Apply Healing** use the tokens targeted now,
 - each **damage roll** as a line with the total, a breakdown you can expand, and an **Apply Damage** button for the card's targets. On a miss, the card still shows the roll, but the button is disabled. A half-damage outcome halves the total,
 - each **healing roll** with an **Apply Healing** button for the GM or the one who rolled, and an undo button after use,
 - each **saving throw** section with a d20 button that rolls that save for every selected token, and its "Failed Save" and "Successful Save" contents,
