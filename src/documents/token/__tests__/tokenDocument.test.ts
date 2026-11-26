@@ -318,3 +318,103 @@ describe('NimbleTokenDocument.prepareData', () => {
 		expect(document.light.dim).toBe(12);
 	});
 });
+
+describe('NimbleTokenDocument._preCreate token texture', () => {
+	const MYSTERY_MAN = 'icons/svg/mystery-man.svg';
+	const STORED = 'https://nimble-nexus.example/paperforge/0006/400.png';
+	const base = Object.getPrototypeOf(NimbleTokenDocument.prototype) as {
+		_preCreate?: (...args: unknown[]) => Promise<boolean | undefined>;
+	};
+	const constWithDefault = CONST as { DEFAULT_TOKEN?: string };
+	const previousDefault = constWithDefault.DEFAULT_TOKEN;
+	const baseGame = game;
+	const corePreCreate = vi.fn(async () => true as boolean | undefined);
+	let actorsGet: (id: string) => unknown = () => undefined;
+
+	function actorWithTexture(src: string | null, randomImg = false) {
+		return {
+			prototypeToken: {
+				randomImg,
+				texture: { src },
+			},
+		};
+	}
+
+	async function place(texture?: { src?: string | null }): Promise<ReturnType<typeof vi.fn>> {
+		const updateSource = vi.fn();
+		const data: Record<string, unknown> = { actorId: 'actor-1', updateSource };
+		if (texture) data.texture = texture;
+		const token = new NimbleTokenDocument(data as never) as unknown as {
+			_preCreate(
+				createData: unknown,
+				options: unknown,
+				user: unknown,
+			): Promise<boolean | undefined>;
+		};
+		await token._preCreate({}, {}, {});
+		return updateSource;
+	}
+
+	beforeEach(() => {
+		constWithDefault.DEFAULT_TOKEN = MYSTERY_MAN;
+		actorsGet = () => undefined;
+		corePreCreate.mockReset();
+		corePreCreate.mockResolvedValue(true);
+		base._preCreate = corePreCreate;
+		vi.stubGlobal('game', {
+			...baseGame,
+			actors: { get: (id: string) => actorsGet(id) },
+		});
+	});
+
+	afterEach(() => {
+		constWithDefault.DEFAULT_TOKEN = previousDefault;
+		delete base._preCreate;
+		vi.unstubAllGlobals();
+	});
+
+	it.each([MYSTERY_MAN, '', null])(
+		'copies the actor texture onto a placed token whose texture is %s',
+		async (tokenSrc) => {
+			actorsGet = () => actorWithTexture(STORED);
+			const updateSource = await place({ src: tokenSrc });
+			expect(updateSource).toHaveBeenCalledWith({ texture: { src: STORED } });
+		},
+	);
+
+	it('copies the actor texture onto a placed token that has no texture', async () => {
+		actorsGet = () => actorWithTexture(STORED);
+		const updateSource = await place();
+		expect(updateSource).toHaveBeenCalledWith({ texture: { src: STORED } });
+	});
+
+	it('leaves a texture the placed token already has', async () => {
+		actorsGet = () => actorWithTexture(STORED);
+		const updateSource = await place({ src: 'worlds/test/tokens/boss.webp' });
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+
+	it.each([MYSTERY_MAN, '', null])('does not copy an actor texture of %s', async (actorSrc) => {
+		actorsGet = () => actorWithTexture(actorSrc);
+		const updateSource = await place({ src: MYSTERY_MAN });
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+
+	it('does not copy when the actor is missing', async () => {
+		const updateSource = await place({ src: MYSTERY_MAN });
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+
+	it('does not copy a wildcard token texture', async () => {
+		actorsGet = () => actorWithTexture(STORED, true);
+		const updateSource = await place({ src: MYSTERY_MAN });
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+
+	it('does not copy when creation is rejected', async () => {
+		actorsGet = () => actorWithTexture(STORED);
+		corePreCreate.mockResolvedValue(false);
+		const updateSource = await place({ src: MYSTERY_MAN });
+		expect(updateSource).not.toHaveBeenCalled();
+	});
+});

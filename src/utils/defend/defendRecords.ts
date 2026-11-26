@@ -52,6 +52,12 @@ export function defendLinesOf(record: DefendRecord): string[] {
 	return [...record.reminders, ...effects];
 }
 
+/** A reminder line with the name of the character who acts on it, so a card with several Defends stays clear. */
+export function namedReminder(line: string, name: string): string {
+	const shown = name.trim();
+	return shown ? localize('NIMBLE.chat.defend.reminderFor', { name: shown, reminder: line }) : line;
+}
+
 /**
  * Per Defended token: the armor that comes off, or no damage, or half. "Armor
  * applies" off stops the armor and the halving; a miss stays.

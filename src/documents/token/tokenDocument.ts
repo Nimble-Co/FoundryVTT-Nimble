@@ -12,6 +12,23 @@ interface CombatantCreateData {
 	hidden: boolean;
 }
 
+interface StoredTokenActor {
+	prototypeToken?: {
+		randomImg?: boolean;
+		texture?: { src?: string | null };
+	};
+}
+
+function isStoredTokenTexture(src: string | null | undefined): src is string {
+	return !!src && src !== CONST.DEFAULT_TOKEN;
+}
+
+function storedActorTokenTexture(actor: StoredTokenActor | null | undefined): string | null {
+	if (!actor?.prototypeToken || actor.prototypeToken.randomImg) return null;
+	const src = actor.prototypeToken.texture?.src;
+	return isStoredTokenTexture(src) ? src : null;
+}
+
 export class NimbleTokenDocument extends TokenDocument {
 	/**
 	 * Core applies only its own phases to a token. The actor keeps the `token.` changes of the
@@ -24,6 +41,29 @@ export class NimbleTokenDocument extends TokenDocument {
 		(this as unknown as { applyActiveEffects(phase: string): void }).applyActiveEffects(
 			AFTER_RULES_PHASE,
 		);
+	}
+
+	/**
+	 * A drop can still arrive as the default image when the actor already stores token art.
+	 * Copy that stored path only. Do not fetch the file.
+	 */
+	protected override async _preCreate(
+		data: TokenDocument.CreateData,
+		options: TokenDocument.Database.PreCreateOptions,
+		user: User.Stored,
+		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
+	): Promise<boolean | void> {
+		const allowed = await super._preCreate(data, options, user);
+		if (allowed === false) return false;
+
+		const actorId = this.actorId;
+		if (!actorId || isStoredTokenTexture(this.texture?.src)) return allowed;
+
+		const stored = storedActorTokenTexture(game.actors.get(actorId));
+		if (!stored) return allowed;
+
+		this.updateSource({ texture: { src: stored } });
+		return allowed;
 	}
 
 	static getCombatantType(token: TokenDocument): string {
