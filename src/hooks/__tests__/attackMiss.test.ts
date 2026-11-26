@@ -52,7 +52,8 @@ interface TestCard {
 	speaker: { actor: string | null };
 	flags: Record<string, Record<string, unknown>>;
 	setFlag: Mock;
-	cardDamageBack: { afterMiss: Mock };
+	unsetFlag: Mock;
+	cardDamageBack: { afterMiss: Mock; dropMissed: Mock };
 }
 
 function createCard(
@@ -80,24 +81,37 @@ function createCard(
 		speaker: { actor: 'attacker' },
 		flags: overrides.flags ?? { [SYSTEM_ID]: { itemId: 'stab' } },
 		setFlag: vi.fn(async (scope: string, key: string, value: unknown) => {
-			const scopeFlags = card.flags[scope];
-			if (scopeFlags?.[key] !== true) {
-				throw new Error('attackMissed flag was not written before setFlag');
-			}
-			scopeFlags[key] = value;
-			for (const handler of handlers.get('updateChatMessage') ?? []) handler(card);
+			card.flags[scope] = { ...card.flags[scope], [key]: value };
+			emit('updateChatMessage', card, { flags: { [scope]: { [key]: value } } });
+		}),
+		unsetFlag: vi.fn(async (scope: string, key: string) => {
+			delete card.flags[scope]?.[key];
+			emit('updateChatMessage', card, { flags: { [scope]: { [`-=${key}`]: null } } });
 		}),
 		cardDamageBack: {
 			afterMiss: vi.fn(async () => {
-				for (const handler of handlers.get('updateChatMessage') ?? []) handler(card);
+				emit('updateChatMessage', card, { system: { damageBack: [] } });
+			}),
+			dropMissed: vi.fn(async () => {
+				emit('updateChatMessage', card, { system: { damageBack: [] } });
 			}),
 		},
 	};
 	return card;
 }
 
-function emit(event: string, card: TestCard): void {
-	for (const handler of handlers.get(event) ?? []) handler(card);
+function emit(event: string, card: TestCard, changes: Record<string, unknown> = {}): void {
+	for (const handler of handlers.get(event) ?? []) handler(card, changes);
+}
+
+/** A reroll writes the new outcome on the card. */
+function reroll(card: TestCard, outcome: { isMiss: boolean; isCritical?: boolean }): void {
+	Object.assign(card.system, outcome);
+	emit('updateChatMessage', card, { system: outcome });
+}
+
+function applyDamage(payload: Record<string, unknown>): void {
+	for (const handler of handlers.get(systemHookName('damageApplied')) ?? []) handler(payload);
 }
 
 function ruleDouble(): RuleDouble {
@@ -162,9 +176,7 @@ describe('an attack that misses', () => {
 			systemHookName('damageApplied'),
 			expect.anything(),
 		);
-		expect(sourceRule.onItemUsed).toHaveBeenCalledWith(
-			expect.objectContaining({ isMiss: true, isCritical: false, targetActor }),
-		);
+		expect(sourceRule.onItemUsed).not.toHaveBeenCalled();
 		expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
 		expect(targetRule.onAttackReceived).toHaveBeenCalledWith(
 			expect.objectContaining({ isMiss: true, discardedCritTriggers: false }),
@@ -185,14 +197,61 @@ describe('an attack that misses', () => {
 		await flushAsync();
 		expect(targetRule.onAttackReceived).not.toHaveBeenCalled();
 
-		card.system.isMiss = true;
-		emit('updateChatMessage', card);
+		reroll(card, { isMiss: true });
 		await flushAsync();
 		expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
 
 		emit('updateChatMessage', card);
 		await flushAsync();
 		expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not report a miss card from before this event when something else updates it', async () => {
+		const { targetRule } = placeActors();
+		const card = createCard();
+
+		emit('updateChatMessage', card, { flags: { [SYSTEM_ID]: { other: true } } });
+		await flushAsync();
+
+		expect(card.cardDamageBack.afterMiss).not.toHaveBeenCalled();
+		expect(targetRule.onAttackReceived).not.toHaveBeenCalled();
+	});
+
+	it('takes the miss back when a reroll turns it into a hit', async () => {
+		const { targetActor, targetRule, sourceActor } = placeActors();
+		const card = createCard();
+		emit('createChatMessage', card);
+		await flushAsync();
+
+		reroll(card, { isMiss: false });
+		await flushAsync();
+
+		expect(card.cardDamageBack.dropMissed).toHaveBeenCalledTimes(1);
+		expect(card.flags[SYSTEM_ID]?.attackMissed).toBeUndefined();
+
+		applyDamage({ sourceActor, targetActor, card, isCritical: false, isMiss: false });
+		await flushAsync();
+		expect(targetRule.onAttackReceived).toHaveBeenLastCalledWith(
+			expect.objectContaining({ isMiss: false }),
+		);
+
+		reroll(card, { isMiss: true });
+		await flushAsync();
+		expect(card.cardDamageBack.afterMiss).toHaveBeenCalledTimes(2);
+	});
+
+	it('Apply Damage on a miss card that still deals damage does not report the miss again', async () => {
+		const { targetActor, targetRule, sourceActor, sourceRule } = placeActors();
+		const card = createCard();
+		emit('createChatMessage', card);
+		await flushAsync();
+
+		applyDamage({ sourceActor, targetActor, card, isCritical: false, isMiss: true });
+		await flushAsync();
+
+		expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
+		expect(sourceRule.onItemUsed).toHaveBeenCalledTimes(1);
+		expect(sourceRule.onItemUsed).toHaveBeenCalledWith(expect.objectContaining({ isMiss: true }));
 	});
 
 	it('reports one event for two damage packets', async () => {
@@ -241,16 +300,14 @@ describe('an attack that misses', () => {
 		expect(card.cardDamageBack.afterMiss).not.toHaveBeenCalled();
 		expect(Hooks.callAll).not.toHaveBeenCalled();
 
-		for (const handler of handlers.get(systemHookName('damageApplied')) ?? []) {
-			handler({
-				sourceItem: { id: 'stab' },
-				sourceActor,
-				targetActor,
-				card,
-				isCritical: false,
-				isMiss: false,
-			});
-		}
+		applyDamage({
+			sourceItem: { id: 'stab' },
+			sourceActor,
+			targetActor,
+			card,
+			isCritical: false,
+			isMiss: false,
+		});
 		await flushAsync();
 
 		expect(targetRule.onAttackReceived).toHaveBeenCalledWith(
@@ -269,16 +326,14 @@ describe('an attack that misses', () => {
 		await flushAsync();
 		expect(Hooks.callAll).not.toHaveBeenCalled();
 
-		for (const handler of handlers.get(systemHookName('damageApplied')) ?? []) {
-			handler({
-				sourceItem: { id: 'stab' },
-				sourceActor: { rules: [] },
-				targetActor,
-				card,
-				isCritical: true,
-				isMiss: false,
-			});
-		}
+		applyDamage({
+			sourceItem: { id: 'stab' },
+			sourceActor: { rules: [] },
+			targetActor,
+			card,
+			isCritical: true,
+			isMiss: false,
+		});
 		await flushAsync();
 
 		expect(targetRule.onAttackReceived).toHaveBeenCalledWith(
