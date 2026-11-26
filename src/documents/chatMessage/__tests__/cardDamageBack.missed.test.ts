@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const applyAttackerEffects = vi.fn(async (..._args: unknown[]) => undefined);
+const endOrWaitEffects = vi.fn(async (..._args: unknown[]) => undefined);
 vi.resetModules();
+vi.doMock('#utils/lastsUntil/endEffectsAt.js', () => ({ endOrWaitEffects }));
 vi.doMock('#utils/defend/defendRequests.js', () => ({ applyAttackerEffects }));
 vi.doMock('#utils/cost/costLedger.js', () => ({ payCost: vi.fn(async () => true) }));
 vi.doMock('#utils/chat/cardOperations.js', () => ({
@@ -62,11 +64,21 @@ function setup(delivery: string | null = 'melee', attackerToken = token(-1)) {
 
 let automatic = true;
 let settings: unknown;
+let user: unknown;
+let lookup: unknown;
+
+/** The GM clicks the line; `documents` are what the uuids on the record find. */
+function asGm(documents: { [uuid: string]: unknown }) {
+	globals.game.user = { id: 'gm', isGM: true };
+	globals.fromUuidSync = vi.fn((uuid: string) => documents[uuid] ?? null);
+}
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	automatic = true;
 	settings = globals.game.settings;
+	user = globals.game.user;
+	lookup = globals.fromUuidSync;
 	globals.game.settings = { get: () => automatic };
 	globals.Roll = class {
 		formula: string;
@@ -86,6 +98,8 @@ beforeEach(() => {
 
 afterEach(() => {
 	globals.game.settings = settings;
+	globals.game.user = user;
+	globals.fromUuidSync = lookup;
 });
 
 const holder = (rules: unknown[], disposition = 1) => ({
@@ -107,10 +121,62 @@ describe('Attacker Takes, when an attack misses the owner', () => {
 				amount: 1,
 				damageType: 'psychic',
 				ignoreArmor: true,
-				dealt: true,
+				dealt: false,
+				missed: true,
 			}),
 		]);
+		expect(attacker.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('waits for a click, because a reroll can still turn the miss into a hit', async () => {
+		const { back, attacker, written } = setup();
+
+		await back.afterMiss([holder([rule()])]);
+		asGm({ 'Actor.goblin': goblin, 'Actor.hero': attacker });
+		await back.resolve(written()[0]!.id, 'deal', 'gm');
+
 		expect(attacker.applyDamage).toHaveBeenCalledWith(1);
+		expect(written()[0]).toMatchObject({ dealt: true });
+	});
+
+	it('ends the effect that holds the rule only when the line is dealt', async () => {
+		const { back, attacker, written } = setup();
+		const effect = {
+			id: 'taunt',
+			uuid: 'Actor.goblin.ActiveEffect.taunt',
+			documentName: 'ActiveEffect',
+			parent: { documentName: 'Actor', name: 'Goblin' },
+		};
+
+		await back.afterMiss([holder([rule({ endsEffect: true, parentDocument: effect })])]);
+		expect(endOrWaitEffects).not.toHaveBeenCalled();
+
+		asGm({ 'Actor.goblin': goblin, 'Actor.hero': attacker, [effect.uuid]: effect });
+		await back.resolve(written()[0]!.id, 'deal', 'gm');
+		expect(endOrWaitEffects).toHaveBeenCalledWith([effect], expect.anything());
+	});
+
+	it('a reroll into a hit removes the line that was not dealt', async () => {
+		const { back, written } = setup();
+
+		await back.afterMiss([holder([rule()])]);
+		await back.dropMissed();
+
+		expect(written()).toEqual([]);
+	});
+
+	it('a reroll into a hit keeps a line the GM already dealt, and the other lines', async () => {
+		const { back, attacker, written } = setup();
+
+		await back.afterAttack([holder([rule({ id: 'spines', answersAttack: () => true })])]);
+		await back.afterMiss([holder([rule()])]);
+		asGm({ 'Actor.goblin': goblin, 'Actor.hero': attacker });
+		await back.resolve(written()[1]!.id, 'deal', 'gm');
+		await back.afterMiss([holder([rule({ id: 'later' })])]);
+		await back.dropMissed();
+
+		expect(written().map((record) => record.dealt)).toEqual([true, true]);
+		expect(written()[1]).toMatchObject({ missed: true });
 	});
 
 	it('does not record that rule when the card is only an attack', async () => {

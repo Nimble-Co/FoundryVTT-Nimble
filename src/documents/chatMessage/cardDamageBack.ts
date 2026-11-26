@@ -32,6 +32,10 @@ export interface DamageBackRecord {
 	damageType?: string;
 	/** Rule, holder, attacker and card: a second read of the card makes no second record. */
 	key?: string;
+	/** From a miss: it waits for a click, and a reroll into a hit removes it. */
+	missed?: boolean;
+	/** A miss record ends this effect when it is dealt. */
+	endsEffectUuid?: string;
 }
 
 export type DamageBackAction = 'deal' | 'double';
@@ -303,9 +307,13 @@ export class CardDamageBack {
 		for (const { record, attacker, rule } of records) {
 			if (record.key && known.has(record.key)) continue;
 			if (record.key) known.add(record.key);
+			const effect = endingEffectOf(rule);
+			if (record.missed) {
+				added.push({ ...record, dealt: false, endsEffectUuid: effect?.uuid ?? '' });
+				continue;
+			}
 			if (automatic) await this.#deliver(record, attacker);
 			added.push({ ...record, dealt: automatic });
-			const effect = endingEffectOf(rule);
 			if (effect?.uuid) ending.set(effect.uuid, effect);
 		}
 		if (added.length > 0) {
@@ -356,7 +364,12 @@ export class CardDamageBack {
 							taken: 0,
 							critDiceTotal: 0,
 						});
-						if (record) records.push({ record, attacker: attacker.actor, rule });
+						if (!record) continue;
+						records.push({
+							record: trigger === 'missed' ? { ...record, missed: true } : record,
+							attacker: attacker.actor,
+							rule,
+						});
 					}
 				}
 			}
@@ -501,9 +514,20 @@ export class CardDamageBack {
 		viaSocket = false,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
-		await queueReactionWrite(this.#host.id() ?? '', () =>
+		const ending = await queueReactionWrite(this.#host.id() ?? '', () =>
 			this.#apply(recordId, action, requestingUserId, viaSocket),
 		);
+		await this.#endAnswered(ending);
+	}
+
+	/** A reroll turned the miss into a hit: remove the miss records not dealt yet. */
+	async dropMissed(): Promise<void> {
+		await queueReactionWrite(this.#host.id() ?? '', async () => {
+			const records = this.#host.records();
+			const kept = records.filter((record) => !record.missed || record.dealt);
+			if (kept.length === records.length) return;
+			await this.#host.update({ 'system.damageBack': kept });
+		});
 	}
 
 	async #apply(
@@ -511,14 +535,16 @@ export class CardDamageBack {
 		action: DamageBackAction,
 		requestingUserId: string,
 		viaSocket: boolean,
-	): Promise<void> {
-		const reject = (reasonKey: string) =>
+	): Promise<ActiveEffect[]> {
+		const reject = (reasonKey: string) => {
 			rejectCardRequest({
 				messageId: this.#host.id() ?? '',
 				entryId: recordId,
 				userId: requestingUserId,
 				reasonKey,
 			});
+			return [];
+		};
 		const records = this.#host.records();
 		const record = records.find((candidate) => candidate.id === recordId);
 		const actor = record
@@ -546,5 +572,10 @@ export class CardDamageBack {
 					: candidate,
 			),
 		});
+		const ending =
+			action === 'deal' && record.endsEffectUuid
+				? (fromUuidSync(record.endsEffectUuid as never) as { documentName?: string } | null)
+				: null;
+		return ending?.documentName === 'ActiveEffect' ? [ending as ActiveEffect] : [];
 	}
 }
