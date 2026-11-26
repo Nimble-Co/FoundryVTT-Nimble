@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gainedPoolIdentifier } from '../poolGain.js';
+import { gainedChargePoolIdentifier, gainedPoolIdentifier } from '../poolGain.js';
 
 describe('gainedPoolIdentifier', () => {
 	it('names the pool that holds more dice than before', () => {
@@ -29,5 +29,39 @@ describe('gainedPoolIdentifier', () => {
 
 	it('is no gain for no payload', () => {
 		expect(gainedPoolIdentifier(null)).toBeNull();
+	});
+});
+
+describe('gainedChargePoolIdentifier', () => {
+	it('names the bare identifier of the pool whose count rose', () => {
+		expect(
+			gainedChargePoolIdentifier({ poolId: 'actor:thrill', previousValue: 1, newValue: 3 }),
+		).toBe('thrill');
+		expect(gainedChargePoolIdentifier({ poolId: 'focus', previousValue: 0, newValue: 1 })).toBe(
+			'focus',
+		);
+	});
+
+	it('is no gain when the count stays or drops, or a value is missing', () => {
+		expect(
+			gainedChargePoolIdentifier({ poolId: 'focus', previousValue: 2, newValue: 2 }),
+		).toBeNull();
+		expect(
+			gainedChargePoolIdentifier({ poolId: 'focus', previousValue: 2, newValue: 0 }),
+		).toBeNull();
+		expect(gainedChargePoolIdentifier({ poolId: 'focus', newValue: 1 })).toBeNull();
+		expect(gainedChargePoolIdentifier(null)).toBeNull();
+	});
+
+	it('is no gain for a dice-pool payload', () => {
+		expect(
+			gainedChargePoolIdentifier({ poolId: 'fury', previousFaces: [], newFaces: [4] } as never),
+		).toBeNull();
+	});
+
+	it('is no gain when no identifier is left', () => {
+		expect(
+			gainedChargePoolIdentifier({ poolId: 'actor:', previousValue: 0, newValue: 1 }),
+		).toBeNull();
 	});
 });

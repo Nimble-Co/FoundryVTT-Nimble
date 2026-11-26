@@ -18,6 +18,7 @@
 				"flagKey": "quarry",
 				"statusCondition": "marked",
 				"maxTargets": 1,
+				"endEarlier": true,
 				"effectId": "AQRuhHnF7yeFPR47"
 			},
 			{

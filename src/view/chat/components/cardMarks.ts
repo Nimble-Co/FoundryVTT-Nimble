@@ -5,6 +5,7 @@ import type { ToggledTargetEntry } from '#utils/actor/toggledEffects.ts';
 type MarkingItem = Parameters<typeof marksOfItem>[0];
 
 interface MarkCard {
+	id?: string | null;
 	flags?: Record<string, { itemId?: unknown } | undefined>;
 	speakerActor?: { isOwner?: boolean; items?: { get(id: string): unknown } } | null;
 }
@@ -35,5 +36,17 @@ export function markOnToken(
 	return (
 		marks.find((mark) => mark.tokenUuid === token.uuid || mark.actorUuid === token.actor?.uuid) ??
 		null
+	);
+}
+
+/** The marks this card made on creatures that are not among its targets. */
+export function marksAddedOnCard(
+	marks: readonly ToggledTargetEntry[],
+	cardId: string | null | undefined,
+	targetUuids: readonly string[],
+): ToggledTargetEntry[] {
+	if (!cardId) return [];
+	return marks.filter(
+		(mark) => mark.cardId === cardId && !(mark.tokenUuid && targetUuids.includes(mark.tokenUuid)),
 	);
 }

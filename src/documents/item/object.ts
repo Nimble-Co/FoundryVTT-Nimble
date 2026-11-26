@@ -7,9 +7,18 @@ import toMessageMode from '#utils/rolls/toMessageMode.js';
 import { getSpellScrollData } from '#utils/spell/createScrollFromSpell.js';
 import knowsSpellSchool from '#utils/spell/knowsSpellSchool.js';
 import { getSpellSchoolLabel } from '#utils/spell/spellLabels.js';
+import { canAttackWith, type WeaponItem } from '#utils/weaponAttackLegality.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
 import { isResourceSpendingAutomationEnabled } from '../../settings/automationSettings.js';
 import { NimbleBaseItem } from './base.svelte.js';
+
+/** A character attacks only with an equipped weapon; refuses with a warning otherwise. */
+function refusesUnequippedAttack(item: NimbleObjectItem): boolean {
+	if (item.actor?.type !== 'character') return false;
+	if (canAttackWith(item as unknown as WeaponItem)) return false;
+	ui.notifications?.warn(localize('NIMBLE.weapons.refusals.notEquipped', { name: item.name }));
+	return true;
+}
 
 /** The check a scroll's wielder must pass when they know no spell of its school. */
 const SPELL_SCROLL_ARCANA_DC = 10;
@@ -312,6 +321,8 @@ export class NimbleObjectItem extends NimbleBaseItem<'object'> {
 	override async activate(
 		options: ItemActivationManager.ActivationOptions = {},
 	): Promise<ChatMessage | null> {
+		if (refusesUnequippedAttack(this)) return null;
+
 		const scroll = getSpellScrollData(this);
 		if (!scroll || options?.executeMacro) return super.activate(options);
 

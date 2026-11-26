@@ -35,6 +35,7 @@ function freeRule(
 		predicate?: Record<string, unknown>;
 		manaAtLeast?: number;
 		upcast?: boolean;
+		againstQuarry?: boolean;
 	},
 ): UseItemFreeRuleClass {
 	ruleCount += 1;
@@ -55,6 +56,7 @@ function freeRule(
 		freeOf: source.freeOf ?? ['uses', 'mana'],
 		manaAtLeast: source.manaAtLeast ?? 0,
 		upcast: source.upcast ?? false,
+		againstQuarry: source.againstQuarry ?? false,
 		disabled: source.disabled ?? false,
 		predicate: new Predicate((source.predicate ?? {}) as never),
 	});
@@ -116,6 +118,7 @@ describe('UseItemFreeRule', () => {
 		expect(UseItemFreeRule.group).toBe('triggers');
 		expect(UseItemFreeRule.description).toBe('NIMBLE.rules.useItemFree.description');
 		expect(schema.freeOf.initial).toEqual(['uses', 'mana']);
+		expect(schema.againstQuarry.initial).toBe(false);
 		expect(Object.keys(schema.freeOf.element?.choices ?? {})).toEqual(['uses', 'mana']);
 		expect(UseItemFreeRule.alwaysDispatchedEvents).toEqual([]);
 	});
@@ -492,6 +495,73 @@ describe('UseItemFreeRule', () => {
 
 			expect(useItemForFree).toHaveBeenCalledTimes(2);
 			expect((useItemForFree.mock.calls[1]?.[2] as { host?: unknown }).host).toBeUndefined();
+		});
+	});
+
+	describe('a crit against your quarry', () => {
+		function quarryActor(quarryUuid: string) {
+			const actor = makeActor();
+			(actor as { getFlag: (scope: string, key: string) => unknown }).getFlag = (_scope, key) =>
+				key === 'toggledEffects'
+					? { quarry: [{ actorUuid: quarryUuid, tokenUuid: null, name: 'Stag' }] }
+					: undefined;
+			return actor;
+		}
+
+		function crit(
+			actor: object,
+			targetUuid: string,
+			cardId: string,
+			sourceItem: object = { identifier: 'longsword' },
+		): ActivatedContext {
+			return {
+				...activated(actor, { isCritical: true }, cardId, sourceItem),
+				targetActors: [{ uuid: targetUuid }],
+			} as ActivatedContext;
+		}
+
+		it('uses the item when the owner crits their quarry, from a weapon or a companion attack', async () => {
+			const actor = quarryActor('Actor.quarry');
+			const rule = freeRule(actor, {
+				triggers: ['onCrit'],
+				itemIdentifier: 'medium-ferocious',
+				againstQuarry: true,
+			});
+
+			await rule.onItemActivated(crit(actor, 'Actor.quarry', 'weapon-card'));
+			await rule.onItemActivated(
+				crit(actor, 'Actor.quarry', 'companion-card', { identifier: 'small-go-for-the-throat' }),
+			);
+
+			expect(useItemForFree.mock.calls.map((call) => call[1])).toEqual([
+				'medium-ferocious',
+				'medium-ferocious',
+			]);
+		});
+
+		it('does nothing for a crit against anyone else, or a crit with no struck creature', async () => {
+			const actor = quarryActor('Actor.quarry');
+			const rule = freeRule(actor, { triggers: ['onCrit'], againstQuarry: true });
+
+			await rule.onItemActivated(crit(actor, 'Actor.other', 'other-card'));
+			await rule.onItemActivated({
+				...activated(actor, { isCritical: true }, 'empty-card'),
+				targetActors: [],
+			} as ActivatedContext);
+
+			expect(useItemForFree).not.toHaveBeenCalled();
+		});
+
+		it('still uses the item on a hit when Against your quarry is on', async () => {
+			const actor = quarryActor('Actor.quarry');
+			const rule = freeRule(actor, { triggers: ['onHit'], againstQuarry: true });
+
+			await rule.onItemActivated({
+				...activated(actor, {}, 'hit-card'),
+				targetActors: [{ uuid: 'Actor.other' }],
+			} as ActivatedContext);
+
+			expect(useItemForFree).toHaveBeenCalledTimes(1);
 		});
 	});
 });

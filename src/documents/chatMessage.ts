@@ -8,9 +8,11 @@ import type { DamageOutcomeNode, EffectNode, HealingNode } from '#types/effectTr
 import type { AreaMaximizeFor, HeldChange } from '#types/heldChange.d.ts';
 import type { MovementOffer, OfferCard } from '#types/movement.js';
 import { runningRule } from '#utils/actor/actorRules.js';
+import { sideTokenOf } from '#utils/actor/isEnemyAttacker.js';
 import { tempHpChoiceEvent } from '#utils/actor/tempHpChoice.js';
 import { givenByAnEffect } from '#utils/chat/applyEffectFromCard.js';
 import { addCardEvents } from '#utils/chat/cardEvents.js';
+import { cardTargetTokens } from '#utils/chat/cardTargetTokens.js';
 import { inFlightSpendOffers, queueReactionWrite } from '#utils/chat/reactionWriteQueue.js';
 import { collectInterposeOffers, spendLineCharges } from '#utils/combat/grantedActionOffers.js';
 import { appendTypedBonusDamage } from '#utils/damage/appendTypedBonusDamage.js';
@@ -31,10 +33,18 @@ import {
 } from '#utils/damage/buildDeferredDamagePatch.js';
 import { cardAttackers } from '#utils/damage/cardAttackers.js';
 import {
+	currentFirstAttackCombatId,
+	decideFirstAttackHalve,
+	HALVE_FIRST_ATTACK_PATH,
+	readFirstAttackHalveStamp,
+	rememberFirstAttackHalve,
+} from '#utils/damage/firstAttackHalve.js';
+import {
 	findPrimaryDamageNode,
 	foldBonusIntoPrimaryDamage,
 } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
 import getDamageTypeLabel from '#utils/damage/getDamageTypeLabel.ts';
+import { offerHalfDamageOnKill } from '#utils/damage/halfDamageOnKill.js';
 import { damageAppliedTo, defendEffectsOf } from '#utils/defend/defendRecords.js';
 import { type DicePoolConsumer, getDicePoolConsumers } from '#utils/dicePool/dicePoolConsumers.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
@@ -159,6 +169,10 @@ interface DamageApplicationTarget {
 	usedMaximize: HeldChange | null;
 	/** The damage types that dealt more than 0 to this target. */
 	damageTypes: string[];
+	/** The token this damage was applied through. */
+	tokenUuid: string;
+	/** The outcome-scaled roll, before armor and other defenses. */
+	rolledDamage: number;
 }
 
 /**
@@ -739,8 +753,11 @@ function spendFlatReductions(
 function resolveDamageForActor(
 	actor: Actor.Implementation,
 	packets: DamagePacket[],
-	availableBank = getBankedDamageReduction(actor),
-	defend: DefendDamage = 0,
+	{
+		availableBank = getBankedDamageReduction(actor),
+		defend = 0,
+		firstAttackHalve = false,
+	}: { availableBank?: number; defend?: DefendDamage; firstAttackHalve?: boolean } = {},
 ): ResolvedDamageForActor {
 	const { armor: defendArmor = 0, halve = false } =
 		typeof defend === 'number' ? { armor: defend } : defend;
@@ -769,6 +786,7 @@ function resolveDamageForActor(
 		const defended = calculateDefenseAdjustedDamage({ actor, damage: value, options });
 		let beforeReduction = Number.isFinite(defended) ? Math.max(0, defended) : 0;
 		if (halve) beforeReduction = Math.ceil(beforeReduction * 0.5);
+		if (firstAttackHalve) beforeReduction = Math.ceil(beforeReduction * 0.5);
 		const heldVulnerability = heldVulnerabilityTo(actor, options.damageType);
 		if (heldVulnerability && beforeReduction > 0) {
 			usedVulnerabilities.set(heldVulnerability.effectId, heldVulnerability);
@@ -797,6 +815,11 @@ function resolveDamageForActor(
 		modifiers.push(...reduced.spent);
 		if (halve)
 			modifiers.push({ kind: 'reduction', label: localize('NIMBLE.chat.defend.halfModifier') });
+		if (firstAttackHalve)
+			modifiers.push({
+				kind: 'reduction',
+				label: localize('NIMBLE.chat.firstAttack.halfModifier'),
+			});
 		if (consumesBank) modifiers.push(...bankedEntries.map(describeBankedReduction));
 
 		components.push({
@@ -840,6 +863,8 @@ function buildDamageApplicationPlan(params: {
 	defendEffects?: ReadonlyMap<string, DefendEffect>;
 	/** An area card: the change on a target that maximizes the roll against it. */
 	areaMaximizeFor?: AreaMaximizeFor;
+	/** The first attack against this creature this round. Read-only: applying the damage records it. */
+	firstAttackHalveFor?: (actor: HpMutableActor) => boolean;
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
@@ -869,7 +894,11 @@ function buildDamageApplicationPlan(params: {
 		const usedMaximize = params.areaMaximizeFor?.(actor) ?? null;
 		const ownPackets = packetsFor(params.packets, uuid);
 		const packets = usedMaximize ? maximizedPackets(ownPackets) : ownPackets;
-		const resolved = resolveDamageForActor(actor, packets, availableBank, defend);
+		const resolved = resolveDamageForActor(actor, packets, {
+			availableBank,
+			defend,
+			firstAttackHalve: params.firstAttackHalveFor?.(actor) === true,
+		});
 		if (resolved.consumedBank) bankedReductionActors.add(actor);
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
@@ -882,6 +911,8 @@ function buildDamageApplicationPlan(params: {
 
 		applicableTargets.push({
 			actor,
+			tokenUuid: uuid,
+			rolledDamage: resolved.components.reduce((sum, part) => sum + part.damageBeforeDefenses, 0),
 			adjustedDamage: resolved.total,
 			usedVulnerabilities: resolved.usedVulnerabilities,
 			usedMaximize,
@@ -989,7 +1020,7 @@ class NimbleChatMessage extends ChatMessage {
 			resolveDamageForActor(
 				actor as unknown as Actor.Implementation,
 				[{ value: amount, options: { damageType, ...(roll ? { roll: roll as never } : {}) } }],
-				0,
+				{ availableBank: 0 },
 			).total,
 	});
 
@@ -1497,6 +1528,36 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/**
+	 * This card is the first attack against the creature since its owner's turn
+	 * started. Reading the stamp does not spend it.
+	 */
+	#halvesFirstAttack(actor: Actor.Implementation): boolean {
+		const systemData = this.system as unknown as ActivationCardSystemData;
+		if (!hasAttackRoll(systemData.activation)) return false;
+		if (foundry.utils.getProperty(actor.system, HALVE_FIRST_ATTACK_PATH) !== true) return false;
+		return decideFirstAttackHalve({
+			stamp: readFirstAttackHalveStamp(actor),
+			combatId: currentFirstAttackCombatId(),
+			messageId: this.id,
+		});
+	}
+
+	/** The token the card speaks for, else the attacker's own token. */
+	#attackerToken(sourceActor: Actor.Implementation | null): unknown {
+		const { scene, token } = this.speaker ?? {};
+		const spoken = scene && token ? game.scenes?.get(scene)?.tokens.get(token) : null;
+		return spoken ?? (sourceActor ? sideTokenOf(sourceActor as never) : null);
+	}
+
+	/** The attack uses each target's first-attack halve, hit or miss. */
+	async claimFirstAttackHalves(): Promise<void> {
+		for (const token of cardTargetTokens<{ actor?: Actor.Implementation | null }>(this)) {
+			const { actor } = token;
+			if (actor && this.#halvesFirstAttack(actor)) await rememberFirstAttackHalve(actor, this.id);
+		}
+	}
+
+	/**
 	 * Apply one packet's worth of damage. Kept for the callers that own a single
 	 * node's damage (the minion group attack card), and routed through the same
 	 * path as `applyAllDamage` so a card's damage resolves by one set of rules
@@ -1563,6 +1624,7 @@ class NimbleChatMessage extends ChatMessage {
 				systemData,
 				(this.constructor as typeof ChatMessage).getSpeakerActor(this.speaker) as Actor | null,
 			),
+			firstAttackHalveFor: (actor) => this.#halvesFirstAttack(actor),
 		});
 		if (!damageApplicationPlan.hasTargets) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
@@ -1584,8 +1646,7 @@ class NimbleChatMessage extends ChatMessage {
 			return null;
 		}
 
-		const sourceItemId = (this.flags as Record<string, { itemId?: string } | undefined>)?.nimble
-			?.itemId;
+		const sourceItemId = (this.flags?.[SYSTEM_ID] as { itemId?: string } | undefined)?.itemId;
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
 		const recoil = this.cardDamageBack.recoilRules();
@@ -1604,7 +1665,9 @@ class NimbleChatMessage extends ChatMessage {
 				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
 			);
 
+			const halved = this.#halvesFirstAttack(target.actor);
 			await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
+			if (halved && target.actor.isOwner) await rememberFirstAttackHalve(target.actor, this.id);
 			await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
 			if (target.usedMaximize) await spendHeldChanges([target.usedMaximize], this.#endedLines());
 
@@ -1633,6 +1696,13 @@ class NimbleChatMessage extends ChatMessage {
 					// @ts-expect-error Custom hook
 					Hooks.call('nimbleKillApplied', attacker, target.actor);
 				}
+				await offerHalfDamageOnKill({
+					sourceItem,
+					killedToken: fromUuidSync(target.tokenUuid),
+					attackerToken: this.#attackerToken(sourceActor),
+					rolled: target.rolledDamage,
+					deal: (actor, amount) => withDamageCard(this.id, () => actor.applyDamage(amount)),
+				});
 			}
 		}
 
@@ -1741,6 +1811,7 @@ class NimbleChatMessage extends ChatMessage {
 			packets,
 			noDamageTargets: noDamageTargetsOf(systemData),
 			defendEffects: defendEffectsOf(systemData),
+			firstAttackHalveFor: (actor) => this.#halvesFirstAttack(actor),
 		});
 		if (!damageApplicationPlan.hasTargets) return true;
 		// A pending banked reduction is spent by clicking Apply even when it
@@ -1853,7 +1924,10 @@ class NimbleChatMessage extends ChatMessage {
 		) as Actor | null;
 		const maximize = areaMaximizeOf(this.system as never, attacker)?.(actor);
 		const packets = maximize ? maximizedPackets(damageRolls) : damageRolls;
-		const { components, total } = resolveDamageForActor(actor, packets, undefined, defend);
+		const { components, total } = resolveDamageForActor(actor, packets, {
+			defend,
+			firstAttackHalve: this.#halvesFirstAttack(actor),
+		});
 		if (noDamageTargetsOf(this.system).has(targetUuid) || defend?.zero) {
 			return {
 				total: 0,
@@ -1883,7 +1957,10 @@ class NimbleChatMessage extends ChatMessage {
 		if (!actor) return null;
 		if (noDamageTargetsOf(this.system).has(tokenUuid)) return 0;
 		if (typeof defend !== 'number' && defend.zero) return 0;
-		return resolveDamageForActor(actor, packets, undefined, defend).total;
+		return resolveDamageForActor(actor, packets, {
+			defend,
+			firstAttackHalve: this.#halvesFirstAttack(actor),
+		}).total;
 	}
 
 	/** A missed attack as a hit on this creature: its defenses read the same damage. */

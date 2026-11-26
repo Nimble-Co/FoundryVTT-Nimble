@@ -539,6 +539,9 @@ describe('RuleCard without a form layout', () => {
 		'saveOnEvent',
 		'damageBack',
 		'escapeDamage',
+		'pendingWound',
+		'safeRestWounds',
+		'wouldDropToZero',
 	];
 
 	it('covers every rule but the ones with a layout', () => {

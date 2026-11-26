@@ -92,3 +92,8 @@ export { Migration091ChoicesWaitAndKnownSchools } from './Migration091ChoicesWai
 export { Migration092FeatureCostsContent } from './Migration092FeatureCostsContent.js';
 export { Migration093FeatureWeaponAttacksContent } from './Migration093FeatureWeaponAttacksContent.js';
 export { Migration094MonsterConditions } from './Migration094MonsterConditions.js';
+export { Migration095WeaponTwoHandedOverride } from './Migration095WeaponTwoHandedOverride.js';
+export { Migration096DefendOptionAttack } from './Migration096DefendOptionAttack.js';
+export { Migration097EndEarlierMarks } from './Migration097EndEarlierMarks.js';
+export { Migration098VersatileBowmaster } from './Migration098VersatileBowmaster.js';
+export { Migration099HighGroundFreeMove } from './Migration099HighGroundFreeMove.js';

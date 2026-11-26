@@ -25,6 +25,8 @@ interface ToggledTargetEntry {
 	tokenUuid: string | null;
 	/** Display name captured at mark time, for chat/UI. */
 	name: string;
+	/** The card that shows the mark when the creature is not one of its targets. */
+	cardId?: string;
 }
 
 type ToggledEffectsFlag = Record<string, ToggledTargetEntry[]>;
@@ -43,7 +45,10 @@ function readToggledEffects(actor: FlaggedActor): ToggledEffectsFlag {
 /**
  * Computes the next entry list after marking `newEntry`. Removes any existing entry for
  * the same target (re-marking refreshes it), then enforces `maxTargets` by evicting the
- * oldest. A `maxTargets <= 0` means unlimited.
+ * oldest. A `maxTargets <= 0` means unlimited, and then nothing is evicted.
+ *
+ * With `endEarlier`, a bounded mark ends every earlier entry of this list, not only the
+ * oldest past the cap. Unlimited capacity still keeps them.
  *
  * Returns the new list plus the entries that were evicted (so callers can clear each
  * evicted target's visible status condition).
@@ -52,20 +57,19 @@ function computeNextToggledList(
 	current: ToggledTargetEntry[],
 	newEntry: ToggledTargetEntry,
 	maxTargets: number,
+	endEarlier = false,
 ): { list: ToggledTargetEntry[]; evicted: ToggledTargetEntry[] } {
+	const others = current.filter((entry) => entry.actorUuid !== newEntry.actorUuid);
+
+	if (maxTargets <= 0) return { list: [...others, newEntry], evicted: [] };
+
+	if (endEarlier) return { list: [newEntry], evicted: others };
+
+	const retained = [...others, newEntry];
 	const evicted: ToggledTargetEntry[] = [];
-
-	// Drop any prior mark on the same target (re-marking refreshes it).
-	const retained = current.filter((entry) => entry.actorUuid !== newEntry.actorUuid);
-
-	retained.push(newEntry);
-
-	// Enforce capacity (oldest first) when bounded.
-	if (maxTargets > 0) {
-		while (retained.length > maxTargets) {
-			const removed = retained.shift();
-			if (removed) evicted.push(removed);
-		}
+	while (retained.length > maxTargets) {
+		const removed = retained.shift();
+		if (removed) evicted.push(removed);
 	}
 
 	return { list: retained, evicted };

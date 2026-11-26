@@ -69,6 +69,7 @@ function createOpportunityActor(sheetState: Record<string, unknown>) {
 		},
 		system: {
 			objectType: 'weapon',
+			equipped: true,
 			activation: {
 				effects: [
 					{

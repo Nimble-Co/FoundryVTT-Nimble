@@ -33,6 +33,7 @@ import { requestIncomingAttackReaction } from '../incomingReactions/incomingAtta
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
+import { offerDefendOptionAttacks } from './defendOptionAttack.js';
 import {
 	cardRerollFor,
 	defendOptionEffect,
@@ -530,7 +531,8 @@ async function useInterposeTicks(
 		}
 	}
 	const { reminders, attackerEffects } = defendOptionEffect(used.map((pick) => pick.rule));
-	for (const line of reminders) ui.notifications?.info(namedReminder(line, shownNameOf(token, actor)));
+	for (const line of reminders)
+		ui.notifications?.info(namedReminder(line, shownNameOf(token, actor)));
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	if (attacker && attackerEffects.length) {
 		await applyAttackerEffects(attacker, attackerEffects, actor.uuid ?? '', applyEffectToActor);
@@ -670,12 +672,9 @@ export async function openDefendWindow(
 		usedTicks.push(pick);
 	}
 
-	const effect = row.whole
-		? effectOf(row, [])
-		: defendOptionEffect([
-				...(row.pick ? [row.pick.rule] : []),
-				...usedTicks.map((pick) => pick.rule),
-			]);
+	const taken = [...(row.pick ? [row.pick.rule] : []), ...usedTicks.map((pick) => pick.rule)];
+	await offerDefendOptionAttacks({ rules: taken, actor, card });
+	const effect = row.whole ? effectOf(row, []) : defendOptionEffect(taken);
 	const defenderName = shownNameOf(defendedToken, actor);
 	await requestDefend({
 		messageId: card.id ?? '',

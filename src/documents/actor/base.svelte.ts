@@ -14,9 +14,12 @@ import { actorAccumulatorPaths } from '../../models/rules/accumulatorRegistry.js
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import { isMovementTrackingAutomationEnabled } from '../../settings/automationSettings.js';
 import { type ConcentratingActor, heldConcentrations } from '../../utils/actor/concentration.js';
+import { giveWounds } from '../../utils/actor/giveWounds.js';
 import { markerEffectIds } from '../../utils/actor/markLifecycle.js';
 import { populateChargePoolTags } from '../../utils/chargePool/chargePoolTags.js';
 import { currentDamageCard, damageCardOption } from '../../utils/damage/damageCard.js';
+import { damageCardIsAttack } from '../../utils/damage/damageCardIsAttack.js';
+import { damageCardIsCritical } from '../../utils/damage/damageCardIsCritical.js';
 import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import localize from '../../utils/localize.js';
 import { getSpacesMovedThisTurn } from '../../utils/movement/getSpacesMovedThisTurn.js';
@@ -34,6 +37,8 @@ import getRollFormula from '../../utils/rolls/getRollFormula.js';
 import { initiativeCardData } from '../../utils/rolls/initiativeCard.js';
 import toMessageMode from '../../utils/rolls/toMessageMode.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokens/tokenAdjacency.js';
+import { resolveWouldDropToZero } from '../../utils/wounds/wouldDropToZero.js';
+import { woundSourceOfCard } from '../../utils/wounds/woundSource.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { conditionRollOptions } from './conditionRollOptions.js';
@@ -723,20 +728,35 @@ class NimbleBaseActor<
 		const damageAmount = Math.floor(Math.abs(Number(damage)));
 		if (!Number.isFinite(damageAmount) || damageAmount <= 0) return;
 
-		const { value, temp } = this.#getCurrentHpSnapshot();
+		const { value, max, temp } = this.#getCurrentHpSnapshot();
 		const absorbedByTemp = Math.min(temp, damageAmount);
 		const nextTemp = temp - absorbedByTemp;
 		const remainingDamage = damageAmount - absorbedByTemp;
 		const nextHp = Math.max(value - remainingDamage, 0);
 
+		if (nextHp === 0 && value > 0 && remainingDamage > 0) {
+			await this.#crossToZeroHp({ value, max, temp, nextTemp, damageAmount, cardId });
+			return;
+		}
+
 		const updates: Record<string, unknown> = {};
 		if (nextTemp !== temp) updates['system.attributes.hp.temp'] = nextTemp;
 		if (nextHp !== value) updates['system.attributes.hp.value'] = nextHp;
+		if (Object.keys(updates).length > 0) {
+			updates[`flags.${SYSTEM_ID}.damageTaken`] = damageAmount;
+			await this.#writeHp(updates, cardId);
+		}
+		if (value === 0 && this.type === 'character') await this.#woundWhileDying(cardId);
+	}
 
-		if (Object.keys(updates).length < 1) return;
-		updates[`flags.${SYSTEM_ID}.damageTaken`] = damageAmount;
-		if (cardId) await this.update(updates as Actor.UpdateData, damageCardOption(cardId) as never);
-		else await this.update(updates as Actor.UpdateData);
+	/** Damage taken while Dying causes 2 Wounds, or 3 on a crit. */
+	async #woundWhileDying(cardId: string | null): Promise<void> {
+		const critical = damageCardIsCritical(cardId);
+		await giveWounds(this, critical ? 3 : 2, {
+			cause: 'dyingDamage',
+			critical,
+			source: woundSourceOfCard(cardId),
+		});
 	}
 
 	async setCurrentHP(value: number): Promise<void> {
@@ -747,7 +767,58 @@ class NimbleBaseActor<
 		const nextValue = Math.clamp(requestedValue, 0, hpData.max);
 		if (nextValue === hpData.value) return;
 
+		if (nextValue === 0 && hpData.value > 0) {
+			await this.#crossToZeroHp({
+				value: hpData.value,
+				max: hpData.max,
+				temp: hpData.temp,
+				nextTemp: hpData.temp,
+				damageAmount: null,
+				cardId: null,
+			});
+			return;
+		}
+
 		await this.update({ 'system.attributes.hp.value': nextValue } as Actor.UpdateData);
+	}
+
+	async #writeHp(updates: Record<string, unknown>, cardId: string | null): Promise<void> {
+		if (Object.keys(updates).length < 1) return;
+		if (cardId) await this.update(updates as Actor.UpdateData, damageCardOption(cardId) as never);
+		else await this.update(updates as Actor.UpdateData);
+	}
+
+	/** HP would fall from above 0 to 0. A prevented drop writes nothing and grants no Wound. */
+	async #crossToZeroHp(input: {
+		value: number;
+		max: number;
+		temp: number;
+		nextTemp: number;
+		damageAmount: number | null;
+		cardId: string | null;
+	}): Promise<void> {
+		const source = woundSourceOfCard(input.cardId);
+		const drop = await resolveWouldDropToZero({
+			actor: this,
+			source,
+			attack: damageCardIsAttack(input.cardId),
+		});
+		if (drop.response === 'prevent') {
+			if (drop.woundInstead > 0)
+				await giveWounds(this, drop.woundInstead, { cause: 'direct', source });
+			return;
+		}
+
+		const hp = drop.response === 'floor' ? (input.max >= 1 ? 1 : 0) : 0;
+		const updates: Record<string, unknown> = {};
+		if (input.nextTemp !== input.temp) updates['system.attributes.hp.temp'] = input.nextTemp;
+		if (hp !== input.value) updates['system.attributes.hp.value'] = hp;
+		if (input.damageAmount !== null) updates[`flags.${SYSTEM_ID}.damageTaken`] = input.damageAmount;
+		await this.#writeHp(updates, input.cardId);
+
+		if (drop.response === 'land') await giveWounds(this, 1, { cause: 'dropToZero', source });
+		else if (drop.woundInstead > 0)
+			await giveWounds(this, drop.woundInstead, { cause: 'direct', source });
 	}
 
 	async setMaxHP(value: number): Promise<void> {

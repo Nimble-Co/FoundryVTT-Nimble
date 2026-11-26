@@ -45,6 +45,8 @@ A line tells what the roll spends: "When you roll, it spends 1 action and 1 from
 
 Some features add a tick, such as **Max damage** or **Dual wield**. A tick that spends a charge adds it to the spend line. A tick with a limit, such as **(1/round)**, hides until the use comes back. One attack spends from a charge pool one time only: when a tick, the use or an **Add Damage** button spent a Combat Die, nothing else spends one.
 
+Some features put a tick in the roll window that rolls different damage dice with one weapon, such as Versatile Bowmaster with a longbow. The tick starts off. Other weapons do not show the tick, and an attack that skips the roll window rolls the weapon's usual damage.
+
 A feature such as Assess can hold a change for your next attack. The creature shows an icon, and the next attack window shows a line for it and ends it. With **Feature Effects** off, the line is a tick box that starts unticked. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
 
 ::: details More about ticks and spell options
@@ -87,6 +89,8 @@ Small lines under a damage box tell where it came from:
 A feature that spends dice or a charge to add damage after a hit or a crit is a button over **Apply Damage**, such as **Add Damage with Heavy Strike**. Click it before the damage is applied. Its damage becomes a line in the box, "Heavy Strike: +5", and anything else, such as a push, goes in **Events**.
 
 After a hit, a weapon that can ricochet gets a line under **Apply Damage**. The card cannot tell a throw from a stab, so it says "if you threw the Dagger". Target another creature for a button such as **Apply 3 Damage to G2**: half the damage, rounded down, through its armor. Then the line says "G2 took 3 damage."
+
+When an attack with **Half Damage on a Kill** drops a creature to 0 HP, **Apply Damage** asks whoever is applying it to pick another creature within reach of the attacker, or to decline. That creature takes half the damage that was rolled, rounded down. Armor does not reduce it. Declining, or a creature who survives, deals nothing further. Large - Go for the Throat! does this at Reach 4.
 
 ### Attacks from a feature
 
@@ -144,7 +148,7 @@ In combat, an attack card that hits a hero has a **Reactions** section: a button
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too: a move back is a line for the table, and an attack back is an [attack line](#attacks-from-a-feature).
+A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too. An attack back asks before the Defend is written. Choosing to attack rolls the damage on a card that targets the attacker. The GM applies it from that card, and the attacker's armor applies. Skipping the attack still lets the Defend happen. A move the feature still leaves to the table stays a line on the card.
 
 After a Defend, the target row shows a green shield. Before the damage is applied, the GM can click it when the damage cannot be avoided, or **Undo** to give back the reaction and actions. An effect a feature put on the attacker stays.
 
@@ -153,6 +157,7 @@ The **Defend** and **Interpose** rows on the sheet's Actions tab and the hotbar 
 ::: details More about Defend features
 - A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
 - A free Defend that is a spell, such as Flame Barrier, has its own row. Cast from that row, its effect that hurts attackers also counts the attack you answer.
+- Medium Protect Me! asks whether the companion attacks the attacker for 1d4 plus your level. The attacker's armor applies.
 :::
 
 ## The Initiative card

@@ -954,6 +954,12 @@
 				"optionsUsed": "With: {labels}",
 				"reminderFor": "For {name}: {reminder}",
 				"attackerEffect": "The attacker gets {name}.",
+				"attackBack": {
+					"title": "Attack the attacker?",
+					"message": "{name} may attack {attacker} for {formula} damage.",
+					"yes": "Attack",
+					"no": "Skip"
+				},
 				"refused": {
 					"noCard": "This card cannot take a Defend.",
 					"notTarget": "That hero is not a target of this attack.",
@@ -961,6 +967,15 @@
 					"already": "That hero already Defended this attack.",
 					"noGm": "A GM must be online to Defend."
 				}
+			},
+			"firstAttack": {
+				"halfModifier": "First attack this round"
+			},
+			"halfDamageOnKill": {
+				"title": "Half the damage",
+				"prompt": "That creature died. Choose another creature within reach of the attacker, or decline.",
+				"decline": "Decline",
+				"creature": "Creature"
 			},
 			"incomingReactions": {
 				"interpose": "Interpose",
@@ -1464,6 +1479,16 @@
 				"title": "End Concentration",
 				"content": "This caster is concentrating on more than one thing. Which should end?",
 				"all": "End All"
+			}
+		},
+		"mark": {
+			"additional": {
+				"title": "Mark another creature",
+				"content": "You may also mark another creature within {spaces} spaces of {name}. This costs no action and no charges.",
+				"creature": "{name} ({spaces} spaces away)",
+				"creatureOneSpace": "{name} (1 space away)",
+				"decline": "Don't mark another",
+				"unnamed": "Creature"
 			}
 		},
 		"conditionRollMode": {
@@ -2038,6 +2063,8 @@
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
 			"damageReduction": "Damage Reduction",
+			"halfDamageOnKill": "Half Damage on a Kill",
+			"halveFirstAttack": "Halve the First Attack",
 			"dyingActionLimit": "Dying Action Limit",
 			"grantActivation": "Grant Activation",
 			"freeMove": "Move for Free",
@@ -2055,6 +2082,7 @@
 			"initiativeBonus": "Initiative Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
+			"additionalMark": "Additional Mark",
 			"markTarget": "Mark Target",
 			"makeCrit": "Make It a Crit",
 			"maxDamage": "Max Damage",
@@ -2064,6 +2092,7 @@
 			"maxActionBonus": "Max Actions Bonus",
 			"damageRecoil": "Damage Recoil",
 			"damageMultiplier": "Damage Multiplier Tick",
+			"damageFormulaChoice": "Damage Formula Choice",
 			"heldRoll": "Held Roll Change",
 			"countAsMarked": "Count All As Marked",
 			"poolEmptyEffect": "Effect When Pool Empty",
@@ -2112,6 +2141,10 @@
 			"grantTargetBonus": "Grant Activation Targets",
 			"ricochet": "Ricochet",
 			"divideDice": "Divide Dice",
+			"pendingWound": "Pending Wound",
+			"safeRestWounds": "Safe Rest Wounds",
+			"wouldDropToZero": "Would Drop to 0 HP",
+			"woundImmunity": "Wound Immunity",
 			"zeroHpAtEnd": "0 HP at end",
 			"useItemFree": "Use an item for free",
 			"unarmedDamage": "Unarmed Damage",
@@ -2602,6 +2635,16 @@
 					"hint": "Reduce the damage only when the attack is a crit. All the damage of the crit is reduced."
 				}
 			},
+			"halveFirstAttack": {
+				"description": "Halve the damage of the first attack against this creature each round. A second attack in that round is not halved. There is no button."
+			},
+			"halfDamageOnKill": {
+				"description": "When this attack drops a creature to 0 HP, you may deal half the damage that was rolled, rounded down, to another creature within Reach. Declining deals nothing further. The splash ignores armor.",
+				"reach": {
+					"label": "Reach",
+					"hint": "How many spaces the other creature can be from the attacker."
+				}
+			},
 			"dyingActionLimit": {
 				"description": "Set the maximum number of actions the actor may take while Dying. The highest applicable limit wins, so it never lowers the baseline of 1.",
 				"value": {
@@ -2753,11 +2796,15 @@
 				"description": "Let a creature move for free, on a chat card, when an event occurs. The player chooses where to move, or chooses not to move.",
 				"trigger": {
 					"label": "Trigger",
-					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires. onCritThrough: an attack made through this item is a crit; the move goes on the card of that attack. onRangedWeaponAttack: this creature attacks with a ranged weapon, with any item; the move goes on the card of that attack."
+					"hint": "The event that lets the creature move for free. onActivation: this item is used. onPoolGain: a dice pool gains dice. onChargePoolGain: a charge pool gains one or more charges. onInitiativeRolled: this creature rolls Initiative. onTurnStart: the turn of this creature starts. onCritReceived: this creature takes a critical hit. afterPoolDiceToMax: a Pool Die to Max rule of this item fires. onCritThrough: an attack made through this item is a crit; the move goes on the card of that attack. onRangedWeaponAttack: this creature attacks with a ranged weapon, with any item; the move goes on the card of that attack. onWound: this creature gains a Wound. The player is asked first, and a no does not spend a charge."
 				},
 				"poolIdentifier": {
 					"label": "Dice pool",
 					"hint": "The dice pool that must gain dice (e.g. fury)."
+				},
+				"chargePoolGainIdentifier": {
+					"label": "Gained charge pool",
+					"hint": "The charge pool that must gain one or more charges (e.g. thrill-of-the-hunt). A dice pool does not count."
 				},
 				"distance": {
 					"label": "Distance",
@@ -2790,12 +2837,14 @@
 				"reasons": {
 					"onActivation": "used {item}",
 					"onPoolGain": "gained {pool}",
+					"onChargePoolGain": "gained {pool}",
 					"onInitiativeRolled": "rolled Initiative",
 					"onTurnStart": "turn started",
 					"afterPoolDiceToMax": "{item} lets you move.",
 					"onCritReceived": "took a critical hit",
 					"onCritThrough": "crit with {item}",
-					"onRangedWeaponAttack": "attacked with a ranged weapon"
+					"onRangedWeaponAttack": "attacked with a ranged weapon",
+					"onWound": "gained a Wound"
 				}
 			},
 			"movementTrigger": {
@@ -3315,6 +3364,10 @@
 					"label": "Can upcast",
 					"hint": "The use opens the spell window, so the caster can upcast the spell or close the window. An upcast spends only the mana above the spell's tier."
 				},
+				"againstQuarry": {
+					"label": "Against your quarry",
+					"hint": "For You crit with an attack: a struck creature must be your quarry. A crit against anyone else does not use the item."
+				},
 				"cardLine": "For free: {trigger} ({feature})",
 				"reasons": {
 					"onHit": "you hit with an attack",
@@ -3333,8 +3386,19 @@
 					"onSpellCastMana": "you spent {mana} or more mana on a spell"
 				}
 			},
+			"additionalMark": {
+				"description": "When a Mark Target rule for the same flag, with End earlier marks on, marks a creature, you may also mark another creature within a number of spaces of it, for free. This costs no action and no charges.",
+				"flagKey": {
+					"label": "Flag key",
+					"hint": "The mark list this follows. It works after each mark that a Mark Target rule with End earlier marks makes for this flag."
+				},
+				"within": {
+					"label": "Within",
+					"hint": "The other creature must be this many spaces from the new mark, or closer. You cannot mark a creature farther away, or a defeated one, this way."
+				}
+			},
 			"markTarget": {
-				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. A mark also ends when its marker effect ends on the creature.",
+				"description": "On activation, mark the targeted creature(s) as a tracked mark on this actor (e.g. a Hunter's quarry). Stored relationally so the matching target:<key> predicate resolves only for this actor, with an optional visible status condition on each target. Marking beyond capacity evicts the oldest. End earlier marks ends every earlier mark of this flag instead, unless the cap is unlimited. A mark also ends when its marker effect ends on the creature.",
 				"flagKey": {
 					"label": "Flag key",
 					"hint": "Identifier for this mark list. Attacks against a marked target expose the predicate tag target:<key> (e.g. \"quarry\" gives target:quarry)."
@@ -3346,6 +3410,10 @@
 				"maxTargets": {
 					"label": "Max targets",
 					"hint": "How many creatures can be marked at once. Marking beyond this evicts the oldest. 0 means unlimited."
+				},
+				"endEarlier": {
+					"label": "End earlier marks",
+					"hint": "A new mark ends every earlier mark of this flag. Leave off to end only the oldest mark past Max targets. An unlimited cap (Max targets 0 on any rule for this flag) keeps every mark."
 				},
 				"effectId": {
 					"label": "Effect",
@@ -3513,7 +3581,7 @@
 				},
 				"reminder": {
 					"label": "Reminder",
-					"hint": "A line on the attack card for what the table does, for example a move or an attack back."
+					"hint": "A line on the attack card for what the table still does by hand."
 				},
 				"useItem": {
 					"label": "Use this item",
@@ -3566,6 +3634,10 @@
 				"woundCost": {
 					"label": "Wounds",
 					"hint": "The Wounds one use gives the hero."
+				},
+				"attackFormula": {
+					"label": "Attack",
+					"hint": "Damage against the attacker when the hero uses this option, for example 1d4+@level. Leave it empty for no attack. The player is asked first and can skip the attack. The GM applies the damage, and armor applies."
 				}
 			},
 			"damageBack": {
@@ -3799,6 +3871,21 @@
 				"chargePoolIdentifier": {
 					"label": "Charge pool",
 					"hint": "The pool it spends a charge from."
+				}
+			},
+			"damageFormulaChoice": {
+				"description": "A tick in the roll window that lets the player replace one dice term of an attack's damage, when the attack uses a named item. The tick starts off. With the tick off, or when the roll window is skipped, the attack rolls the item's own damage.",
+				"itemIdentifier": {
+					"label": "Item identifier",
+					"hint": "The weapon this tick is for, such as longbow. The attack must use that item. Blank means this item."
+				},
+				"from": {
+					"label": "Instead of",
+					"hint": "The dice in the weapon's damage that the tick replaces, such as 1d8. The tick does not show when the damage does not contain them."
+				},
+				"to": {
+					"label": "Roll",
+					"hint": "The dice to roll instead, such as 2d4. The rest of the damage formula stays."
 				}
 			},
 			"damageMultiplier": {
@@ -4049,6 +4136,162 @@
 			},
 			"zeroHpAtEnd": {
 				"description": "When this effect ends, by any path, the creature that has it drops to 0 HP. A new copy of the effect that replaces it, or an Undo of the step that applied it, is not an end; a Concentration that a new one replaces is. A line on the card tells it, with Undo; with Feature Effects off, the line has a button that drops the HP. This rule works only on an effect."
+			},
+			"pendingWound": {
+				"description": "Changes a Wound before it is written. It can stop the Wound, lower it, set the number, or give it to someone else. A stopped Wound still counts for features that watch Wounds. A Wound that is only lowered or set does not. The source, whether it is a crit, and how many Wounds are left before the last one are known here. A voluntary Wound cost, and a click on the Wound meter, do not come through here.",
+				"change": {
+					"label": "Change",
+					"hint": "What happens to the pending Wounds.",
+					"choices": {
+						"negate": "Stop them",
+						"lower": "Lower the number",
+						"set": "Set the number",
+						"redirect": "Give them to someone else"
+					}
+				},
+				"amount": {
+					"label": "Wounds",
+					"hint": "How many this change covers. Blank with Stop or Give them: all of them. Blank with Lower: none. Blank with Set: 0, and that is not a stopped Wound."
+				},
+				"whenAmount": {
+					"label": "Only when the number is",
+					"hint": "The pending number this matches. 0: any number. Use one rule for each number, such as 2, and 3 on a crit."
+				},
+				"choice": {
+					"label": "Who decides",
+					"hint": "Apply it, or ask. A no leaves the Wounds as they were.",
+					"choices": {
+						"automatic": "Apply it",
+						"offer": "Ask first"
+					}
+				},
+				"cause": {
+					"label": "Cause",
+					"hint": "Which Wounds this matches.",
+					"choices": {
+						"any": "Any",
+						"direct": "Given directly",
+						"dropToZero": "From dropping to 0 HP",
+						"dyingDamage": "From damage while Dying",
+						"redirect": "Redirected from someone else"
+					}
+				},
+				"critical": {
+					"label": "Critical",
+					"hint": "Whether the Wound comes from a crit.",
+					"choices": {
+						"any": "Any",
+						"only": "Only a crit",
+						"never": "Not a crit"
+					}
+				},
+				"onlyLastWound": {
+					"label": "Only the last Wound",
+					"hint": "Matches only when these Wounds would fill the track."
+				},
+				"watch": {
+					"label": "Who",
+					"hint": "The creature with the rule, or an ally.",
+					"choices": {
+						"self": "This creature",
+						"allies": "An ally"
+					}
+				},
+				"reach": {
+					"label": "Within spaces",
+					"hint": "How close the ally must be. 0: any distance."
+				},
+				"redirectTo": {
+					"label": "Give the Wounds to",
+					"hint": "The source of the Wound, or the creature whose rule this is.",
+					"choices": {
+						"source": "The source",
+						"watcher": "The creature with this rule"
+					}
+				},
+				"moveDistance": {
+					"label": "Move",
+					"hint": "Spaces the creature who would take the Wound may move when this changes them. A formula such as @speed is that creature's speed. Blank: no move."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the rule changes a pending Wound only while this charge pool has a charge, and a change that sticks spends 1 charge. A no does not spend. Leave empty for no limit."
+				}
+			},
+			"wouldDropToZero": {
+				"description": "When the creature would drop from above 0 HP to 0, this can stop the drop or leave them at 1 HP. Stopping the drop also stops the Wound that drop would cause. Damage while they are already at 0 HP is not this. A move here lets them move away instead of taking the damage.",
+				"response": {
+					"label": "Instead",
+					"hint": "Stop the drop, or leave them at 1 HP.",
+					"choices": {
+						"prevent": "Take no damage",
+						"floor": "Stay at 1 HP"
+					}
+				},
+				"choice": {
+					"label": "Who decides",
+					"hint": "Apply it, or ask. A no lets the drop happen.",
+					"choices": {
+						"automatic": "Apply it",
+						"offer": "Ask first"
+					}
+				},
+				"woundInstead": {
+					"label": "Wounds instead",
+					"hint": "Wounds gained when the drop is stopped or floored. They are a separate gain, not the Wound the drop would cause. Blank: none."
+				},
+				"moveDistance": {
+					"label": "Move",
+					"hint": "Spaces they may move when this changes the drop. A formula such as @speed is that creature's speed. Blank: no move."
+				},
+				"moveDirection": {
+					"label": "Direction",
+					"hint": "Any direction, or away from the attacker. Away uses the attacker's token as the source of the move. With no attacker token, the move is in any direction.",
+					"choices": {
+						"any": "Any direction",
+						"away": "Away from the attacker"
+					}
+				},
+				"onlyAttack": {
+					"label": "Attacks only",
+					"hint": "When on, this matches an attack that would drop the creature to 0 HP. Setting HP to 0, and damage that is not an attack, do not match. Off: any drop to 0 HP."
+				},
+				"chargePoolIdentifier": {
+					"label": "Charge pool",
+					"hint": "Optional. When set, the rule changes a drop to 0 HP only while this charge pool has a charge, and a change that sticks spends 1 charge. The move can still be declined. Leave empty for no limit."
+				},
+				"watch": {
+					"label": "Who",
+					"hint": "The creature with the rule, or an ally.",
+					"choices": {
+						"self": "This creature",
+						"allies": "An ally"
+					}
+				},
+				"reach": {
+					"label": "Within spaces",
+					"hint": "How close the ally must be. 0: any distance."
+				}
+			},
+			"woundImmunity": {
+				"description": "While this rule applies, Wounds that would land on this creature do not. Those Wounds still count for features that watch Wounds. Put it on an effect that ends at the end of the turn for immunity that lasts that long."
+			},
+			"safeRestWounds": {
+				"description": "Changes the 1 Wound a safe rest heals. Rules run from the lowest priority, and each one sees the number so far. All heals every current Wound. With no rule, a safe rest still heals 1.",
+				"mode": {
+					"label": "Change",
+					"hint": "Add to 1, multiply it, replace it, or heal every current Wound.",
+					"choices": {
+						"add": "Add",
+						"multiply": "Multiply",
+						"replace": "Replace",
+						"all": "Heal every Wound"
+					}
+				},
+				"value": {
+					"label": "Amount",
+					"hint": "Added, multiplied, or used as the new number. 0 with Add leaves the 1 in place."
+				}
 			},
 			"saveOnEvent": {
 				"description": "When the event happens to the creature, its owner rolls this save from a line on the card that caused it. A failure ends the effect this rule is on.",
@@ -5442,7 +5685,25 @@
 		},
 		"wounds": {
 			"heading": "Wounds",
-			"toggle": "Toggle wound {level}"
+			"toggle": "Toggle wound {level}",
+			"pending": {
+				"chooseTitle": "A Wound is about to land",
+				"use": "Use it",
+				"skip": "Let it land",
+				"offer": "{name} can change {count} pending Wounds. Use it?"
+			},
+			"drop": {
+				"chooseTitle": "About to drop to 0 HP",
+				"use": "Use it",
+				"skip": "Let it happen",
+				"offer": "{name} can change this drop to 0 HP. Use it?"
+			},
+			"move": {
+				"chooseTitle": "Move for free?",
+				"use": "Move",
+				"skip": "Stay",
+				"offer": "{name} can move you. Take the move?"
+			}
 		},
 		"manaConfig": {
 			"configureMana": "Configure Mana",
@@ -5483,6 +5744,8 @@
 			"manaRestored": "Mana Restored",
 			"hitDiceRecovered": "Hit Dice Recovered",
 			"woundsHealed": "Wounds Healed",
+			"woundsRecovered": "Recovered {count} Wounds.",
+			"woundRecovered": "Recovered 1 Wound.",
 			"inspirationEnded": "Inspiration Ended",
 			"alreadyFullyRested": "Already fully rested"
 		},
@@ -5741,6 +6004,7 @@
 			"removeTarget": "Remove Target",
 			"marked": "Marked",
 			"endMark": "End the mark of {feature}",
+			"markedNotTarget": "This card also marked {name}.",
 			"damagePreview": "Damage this target will take (after armor and reductions)"
 		},
 		"damageModifiers": {
@@ -6015,6 +6279,7 @@
 			},
 			"usedThisRound": "You used this in this round.",
 			"freeUse": "Use without a charge",
+			"damageFormulaChoice": "{label}: roll {to} instead of {from}",
 			"maxDamage": {
 				"damage": "Max damage ({feature})",
 				"healing": "Max healing ({feature})",
@@ -7270,6 +7535,19 @@
 				"free": "Move for free: {spaces} of {limit}",
 				"forced": "Forced Movement: {spaces} of {limit}",
 				"switchTo": "{key}: switch to {movement}"
+			}
+		},
+		"weapons": {
+			"tags": {
+				"twoHandedOneHandedOption": "2-Handed (1-handed: Requires Strength {value})",
+				"strengthRequirement": "Requires Strength {value}"
+			},
+			"refusals": {
+				"notEquipped": "{name} is currently not equipped."
+			},
+			"notices": {
+				"notEnoughStrength": "Not enough Strength",
+				"strengthShortfall": "Requires Strength {required}. You have {current}."
 			}
 		}
 	}

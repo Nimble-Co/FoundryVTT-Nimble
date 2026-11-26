@@ -1,7 +1,7 @@
+import localize from '#utils/localize.js';
+import type { NimbleObjectItem } from '../../../documents/item/object.js';
 import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags.js';
 import prepareRangeTooltipTag from './prepareRangeTooltipTag.js';
-
-import type { NimbleObjectItem } from '../../../documents/item/object.js';
 import prepareReachTooltipTag from './prepareReachTooltipTag.js';
 
 export default function prepareWeaponTooltipTags(weapon: NimbleObjectItem): string | null {
@@ -20,13 +20,21 @@ export default function prepareWeaponTooltipTags(weapon: NimbleObjectItem): stri
 		else if (curr === 'thrown') {
 			acc.push({ label: thrownRange ? `${propertyLabel}: ${thrownRange} spaces` : propertyLabel });
 		} else if (curr === 'twoHanded') {
-			if (strengthRequirement.overridesTwoHanded) {
+			// Mirrors the book: the override reads as "2-handed (1-handed: Req. N
+			// STR)", a bare requirement as two separate constraints that both apply.
+			if (strengthRequirement.overridesTwoHanded && strengthRequirement.value) {
 				acc.push({
-					label: `Requires Strength ${strengthRequirement.value ?? 0} or ${propertyLabel}`,
+					label: localize('NIMBLE.weapons.tags.twoHandedOneHandedOption', {
+						value: String(strengthRequirement.value),
+					}),
 				});
 			} else if (strengthRequirement.value) {
-				acc.push({ label: `Requires Strength ${strengthRequirement.value}` });
 				acc.push({ label: propertyLabel });
+				acc.push({
+					label: localize('NIMBLE.weapons.tags.strengthRequirement', {
+						value: String(strengthRequirement.value),
+					}),
+				});
 			} else {
 				acc.push({ label: propertyLabel });
 			}

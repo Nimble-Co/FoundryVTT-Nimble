@@ -83,6 +83,26 @@ describe('giveWoundsFromCard', () => {
 		expect(used.update).toHaveBeenCalledTimes(1);
 	});
 
+	it('names the one who speaks the card as the source of the Wounds', async () => {
+		const seen: unknown[] = [];
+		const watcher = {
+			type: 'pendingWound',
+			matchesPending: (view: { source: unknown }) => {
+				seen.push(view.source);
+				return false;
+			},
+		};
+		Object.assign(tessa, { rules: [watcher] });
+		const used = Object.assign(card(['Scene.s.Token.tessa']), {
+			speakerActor: { uuid: 'Actor.ogre', name: 'Ogre' },
+		});
+
+		await giveWoundsFromCard(used, woundStep('targets'));
+		Object.assign(tessa, { rules: undefined });
+
+		expect(seen).toEqual([{ uuid: 'Actor.ogre', name: 'Ogre' }]);
+	});
+
 	it('writes nothing on the card when no creature took the Wounds', async () => {
 		const used = card([]);
 
