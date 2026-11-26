@@ -73,9 +73,14 @@ export const optionNotes = () => ({
 	}),
 });
 
-/** Schema for tracking applied healing/damage on activation cards */
+/** Schema for tracking applied healing on activation cards */
 export const appliedHealing = () => ({
 	appliedHealing: new fields.ObjectField({ required: false, nullable: false, initial: {} }),
+});
+
+/** The damage an activation card actually removed, one entry per target. */
+export const appliedDamage = () => ({
+	appliedDamage: new fields.ObjectField({ required: false, nullable: false, initial: {} }),
 });
 
 /**

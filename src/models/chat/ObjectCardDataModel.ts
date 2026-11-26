@@ -1,5 +1,6 @@
 import { activation } from '../item/common.js';
 import {
+	appliedDamage,
 	appliedHealing,
 	attackResultChanges,
 	concentration,
@@ -41,6 +42,7 @@ const objectCardSchema = () => ({
 declare namespace NimbleObjectCardData {
 	type Schema = DataSchema &
 		ReturnType<typeof activation> &
+		ReturnType<typeof appliedDamage> &
 		ReturnType<typeof appliedHealing> &
 		ReturnType<typeof concentration> &
 		ReturnType<typeof grantedActionOffers> &
@@ -69,6 +71,7 @@ class NimbleObjectCardData extends foundry.abstract.TypeDataModel<
 	static override defineSchema(): NimbleObjectCardData.Schema {
 		return {
 			...activation(),
+			...appliedDamage(),
 			...appliedHealing(),
 			...concentration(),
 			...grantedActionOffers(),

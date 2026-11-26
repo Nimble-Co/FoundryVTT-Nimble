@@ -589,6 +589,8 @@
 				"noTrack": "{name} has no Wounds"
 			},
 			"applyDamage": "Apply Damage",
+			"damageApplied": "Damage Applied",
+			"undoDamage": "Undo Damage",
 			"applyHealing": "Apply Healing",
 			"checkResult": {
 				"failed": "Failed",
@@ -637,6 +639,12 @@
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo",
+			"damageAlreadyApplied": "Damage has already been applied",
+			"damageUndone": "Damage has been undone",
+			"noDamageRecord": "No damage record found to undo",
+			"cannotApplyDamage": "You cannot apply this damage",
+			"noGmToApplyDamage": "A GM must be connected to apply this damage",
+			"damageUndoMissingTargets": "Could not restore HP for {names}: token not found",
 			"actionDeltaSummary": {
 				"gainActionNow": "{name} gains {count} action now",
 				"gainActionsNow": "{name} gains {count} actions now",
@@ -6005,7 +6013,9 @@
 			"marked": "Marked",
 			"endMark": "End the mark of {feature}",
 			"markedNotTarget": "This card also marked {name}.",
-			"damagePreview": "Damage this target will take (after armor and reductions)"
+			"damagePreview": "Damage this target will take (after armor and reductions)",
+			"damageApplied": "Applied {amount}: HP {before} → {after}",
+			"damageAppliedWithTemp": "Applied {amount}: HP {before} → {after}, temp HP {tempBefore} → {tempAfter}"
 		},
 		"damageModifiers": {
 			"badgeImmune": "IMM",

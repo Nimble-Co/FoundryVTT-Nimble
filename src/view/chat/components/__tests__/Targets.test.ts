@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { SYSTEM_ID } from '#system';
+import { appliedDamageTip } from '../Targets.svelte.ts';
 import TargetsTestHarness from './Targets.testHarness.svelte';
 
 const baseGame = game;
@@ -154,5 +155,80 @@ describe('Targets', () => {
 		expect(boarRow?.querySelector('[aria-label="Remove Target"]')).toBeNull();
 		expect(boarRow?.querySelector('img')?.getAttribute('src')).toBe('boar.webp');
 		expect(rows.some((row) => row.textContent?.includes('Ogre'))).toBe(false);
+	});
+
+	it('shows the GM the live preview until damage is applied', async () => {
+		vi.stubGlobal('game', {
+			...baseGame,
+			user: { ...baseGame.user, isGM: true },
+			settings: { get: vi.fn(() => true) },
+		});
+		const message = createMessage();
+		Object.assign(message.reactive, {
+			getDamageBreakdownForTarget: () => ({ total: 9, components: [] }),
+		});
+		const { container } = render(TargetsTestHarness, { props: { messageDocument: message } });
+		await vi.waitFor(() => {
+			expect(container.querySelectorAll('.nimble-card').length).toBe(2);
+		});
+
+		expect(container.querySelector('[data-damage-state="applied"]')).toBeNull();
+		expect(container.textContent).toContain('(9)');
+	});
+
+	it('shows a recorded amount, including 0, to a player and hides the live preview', async () => {
+		vi.stubGlobal('game', {
+			...baseGame,
+			user: { ...baseGame.user, isGM: false },
+			settings: { get: vi.fn(() => true) },
+		});
+		const message = createMessage();
+		Object.assign(message.reactive, {
+			appliedDamageFor: (uuid: string) =>
+				uuid === GOBLIN_TOKEN
+					? {
+							uuid,
+							tokenName: 'Goblin Cutthroat',
+							amount: 0,
+							previousHp: 12,
+							newHp: 12,
+							previousTempHp: 0,
+							newTempHp: 0,
+						}
+					: null,
+			getDamageBreakdownForTarget: () => ({ total: 9, components: [] }),
+			noDamageSourceFor: () => 'Epic Resistance',
+		});
+		const { container } = render(TargetsTestHarness, { props: { messageDocument: message } });
+		await vi.waitFor(() => {
+			expect(container.querySelectorAll('.nimble-card').length).toBe(2);
+		});
+
+		const applied = container.querySelector('[data-damage-state="applied"]');
+		expect(applied?.textContent).toContain('0');
+		expect(applied?.classList.contains('nimble-target-damage--applied')).toBe(true);
+		expect(applied?.getAttribute('data-tooltip')).toBe('Applied 0: HP 12 → 12');
+		const goblin = applied?.closest('.nimble-card');
+		expect(goblin?.textContent).toContain('Goblin Cutthroat');
+		expect(goblin?.querySelector('[data-badge-kind="noDamage"]')).toBeNull();
+		expect(container.textContent).not.toContain('(9)');
+		const archer = [...container.querySelectorAll('.nimble-card')].find((row) =>
+			row.textContent?.includes('Goblin Archer'),
+		);
+		expect(archer?.querySelector('[data-damage-state="applied"]')).toBeNull();
+	});
+
+	it('names the temp HP in the tooltip when the hit took some', () => {
+		const tip = appliedDamageTip({
+			uuid: GOBLIN_TOKEN,
+			tokenName: 'Goblin Cutthroat',
+			amount: 5,
+			previousHp: 10,
+			newHp: 8,
+			previousTempHp: 3,
+			newTempHp: 0,
+		});
+
+		expect(tip).toBe('Applied 5: HP 10 → 8, temp HP 3 → 0');
 	});
 });

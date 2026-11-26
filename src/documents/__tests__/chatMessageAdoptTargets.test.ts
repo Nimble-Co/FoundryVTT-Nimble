@@ -219,7 +219,7 @@ describe('applying damage adopts current targets only when the card stored none'
 
 		expect(storedTargets(message)).toEqual([GOBLIN]);
 		expect(writtenTargets(message).every((targets) => !targets.includes(OGRE))).toBe(true);
-		expect(goblin.applyDamage).toHaveBeenCalledTimes(2);
+		expect(goblin.applyDamage).toHaveBeenCalledOnce();
 		expect(ogre.applyDamage).not.toHaveBeenCalled();
 	});
 });

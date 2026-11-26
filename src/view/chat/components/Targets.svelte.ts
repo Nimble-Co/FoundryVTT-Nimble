@@ -1,3 +1,4 @@
+import type { AppliedDamageTarget } from '#documents/chatMessage.ts';
 import type { DefendRecord } from '#types/defend.d.ts';
 import { endMark } from '#utils/actor/markLifecycle.ts';
 import { damageAppliedTo, defendFor } from '#utils/defend/defendRecords.js';
@@ -54,6 +55,23 @@ export function tokenOfMark(mark: Mark): MarkRowToken | null {
 interface DefendRowToken {
 	uuid?: string | null;
 	actor?: { type?: string } | null;
+}
+
+/** What the card removed from one target. Temp HP shows only when the hit took some. */
+export function appliedDamageTip(applied: AppliedDamageTarget): string {
+	const hp = {
+		amount: String(applied.amount),
+		before: String(applied.previousHp),
+		after: String(applied.newHp),
+	};
+	if (applied.previousTempHp === applied.newTempHp) {
+		return localize('NIMBLE.chatTargets.damageApplied', hp);
+	}
+	return localize('NIMBLE.chatTargets.damageAppliedWithTemp', {
+		...hp,
+		tempBefore: String(applied.previousTempHp),
+		tempAfter: String(applied.newTempHp),
+	});
 }
 
 /** The armor a Defend takes off, and the options it was made with. */

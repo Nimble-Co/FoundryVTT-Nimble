@@ -18,7 +18,7 @@ type TestGlobals = {
 	fromUuidSync: ReturnType<typeof vi.fn>;
 	game: { user: { isGM: boolean } };
 	Hooks: { call: ReturnType<typeof vi.fn>; callAll: ReturnType<typeof vi.fn> };
-	ui: { notifications: { info: ReturnType<typeof vi.fn> } };
+	ui: { notifications: { info: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn> } };
 };
 
 const globals = () => globalThis as unknown as TestGlobals;
@@ -44,7 +44,7 @@ function createTarget(immune: string[] = []) {
 }
 
 function createCard(isCritical: boolean, isMiss = false) {
-	return new NimbleChatMessage({
+	const card = new NimbleChatMessage({
 		type: 'spell',
 		system: {
 			targets: ['Scene.scene.Token.token'],
@@ -85,6 +85,8 @@ function createCard(isCritical: boolean, isMiss = false) {
 			},
 		},
 	} as unknown as ChatMessage.CreateData);
+	Object.assign(card, { update: vi.fn().mockResolvedValue(card) });
+	return card;
 }
 
 describe('a crit that deals 0 damage', () => {
@@ -141,5 +143,30 @@ describe('a crit that deals 0 damage', () => {
 		globals().fromUuidSync.mockReturnValue({ actor: createTarget(['fire']) });
 		await createCard(true, true).applyAllDamage();
 		expect(requestSaves).not.toHaveBeenCalled();
+	});
+
+	it('records the 0, then a second click does not ask again', async () => {
+		const actor = createTarget(['fire']);
+		globals().fromUuidSync.mockReturnValue({ name: 'Tessa', actor });
+		const card = createCard(true);
+		card.update = vi.fn(async (changes: Record<string, unknown>) => {
+			if (changes['system.appliedDamage']) {
+				(card.system as { appliedDamage?: unknown }).appliedDamage =
+					changes['system.appliedDamage'];
+			}
+			return card;
+		}) as never;
+
+		await card.applyAllDamage();
+
+		expect(requestSaves).toHaveBeenCalledTimes(1);
+		expect(card.isDamageApplied()).toBe(true);
+		expect(card.appliedDamageFor('Scene.scene.Token.token')).toMatchObject({ amount: 0 });
+		expect(card.canApplyAllDamage()).toBe(false);
+
+		await card.applyAllDamage();
+
+		expect(requestSaves).toHaveBeenCalledTimes(1);
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith('Damage has already been applied');
 	});
 });

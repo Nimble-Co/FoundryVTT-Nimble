@@ -11,6 +11,7 @@
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokens/tokenHoverHighlight.js';
 	import {
+		appliedDamageTip,
 		createTargetDefendsState,
 		createTargetMarksState,
 		defendTip,
@@ -161,8 +162,11 @@
 	{#await prepareTargets(targets) then tokens}
 		<ul class="nimble-target-list">
 			{#each tokens as token}
+				{@const applied = token
+					? (messageDocument?.reactive?.appliedDamageFor?.(token.uuid) ?? null)
+					: null}
 				{@const breakdown =
-					token && game.user?.isGM
+					token && !applied && game.user?.isGM
 						? messageDocument?.reactive?.getDamageBreakdownForTarget(token.uuid)
 						: null}
 				{@const damageBadges = getDamageBadges(breakdown)}
@@ -192,14 +196,23 @@
 						<span class="nimble-target-name" data-tooltip={token?.actor?.name || token.name}>
 							{token?.actor?.name || token.name}
 						</span>
-						{#if breakdown}
+						{#if applied}
+							<span
+								class="nimble-target-damage nimble-target-damage--applied"
+								data-damage-state="applied"
+								data-tooltip={appliedDamageTip(applied)}
+							>
+								<i class="fa-solid fa-check" aria-hidden="true"></i>
+								{applied.amount}
+							</span>
+						{:else if breakdown}
 							<span class="nimble-target-damage" data-tooltip={getDamageTooltip(breakdown)}>
 								({breakdown.total})
 							</span>
 						{/if}
 					</span>
 
-					{#if damageBadges.length > 0 || noDamageSource}
+					{#if !applied && (damageBadges.length > 0 || noDamageSource)}
 						<span class="nimble-target-badges">
 							{#if noDamageSource}
 								<span
@@ -385,6 +398,13 @@
 		margin-left: 0.25rem;
 		font-weight: 700;
 		color: var(--color-level-error, #7a1e1e);
+
+		&--applied {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			color: var(--nimble-medium-text-color);
+		}
 	}
 
 	// The armor icon arrives through {@html}, so it needs a global selector to be

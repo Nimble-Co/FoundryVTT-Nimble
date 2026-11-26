@@ -70,7 +70,8 @@ import { isRuleAutomationEnabled } from '../settings/automationSettings.js';
 import { spendsPoolAgain } from '../utils/chargePool/attackPoolSpends.js';
 import { rerollRecoveryChange } from '../utils/chargePool/chargePoolReroll.js';
 import { giveMarkedDeathRecovery } from '../utils/chargePool/itemUseRecovery.js';
-import { mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
+import { requestApplyCardDamage } from '../utils/chat/applyCardDamageRequest.js';
+import { type CardRequester, mayActFor, rejectCardRequest } from '../utils/chat/cardOperations.js';
 import {
 	clearBankedDamageReduction,
 	getBankedDamageReduction,
@@ -122,6 +123,25 @@ export interface AppliedHealingRecord {
 	appliedAt: number;
 }
 
+/** One target's damage, as it was removed. A token uuid has dots, so this is a list, not a map. */
+export interface AppliedDamageTarget {
+	uuid: string;
+	tokenName: string;
+	amount: number;
+	previousHp: number;
+	newHp: number;
+	previousTempHp: number;
+	newTempHp: number;
+}
+
+/** The damage an activation card removed, in target order, and the markers it set, so undo can clear them. */
+export interface AppliedDamageRecord {
+	targets: AppliedDamageTarget[];
+	appliedAt: number;
+	markedAppliedTo?: string[];
+	markedDamageApplied?: boolean;
+}
+
 /** System data for activation cards */
 interface ActivationCardSystemData {
 	targets: string[];
@@ -135,6 +155,7 @@ interface ActivationCardSystemData {
 		[key: string]: unknown;
 	};
 	appliedHealing?: Record<string, AppliedHealingRecord>;
+	appliedDamage?: AppliedDamageRecord;
 	[key: string]: unknown;
 }
 
@@ -212,9 +233,20 @@ export const LATCHED_DAMAGE_FLAG = 'latchedDamageApplied';
 /** A Defend's effect on one token's damage: its armor, or the full effect. */
 type DefendDamage = number | Partial<DefendEffect>;
 
+/** A targeted token, in the card's target order, whether or not it takes damage. */
+interface ConsideredDamageTarget {
+	uuid: string;
+	tokenName: string;
+	actor: HpMutableActor;
+	/** Null when this target takes none of the attack. */
+	application: DamageApplicationTarget | null;
+}
+
 interface DamageApplicationPlan {
 	hasTargets: boolean;
 	applicableTargets: DamageApplicationTarget[];
+	/** Every resolved target, in the order the card lists them. */
+	considered: ConsideredDamageTarget[];
 	zeroDamageTargetNames: string[];
 	/** The creatures the card hits for 0 damage. A crit still hits them. */
 	zeroDamageActors: HpMutableActor[];
@@ -856,6 +888,55 @@ function areaMaximizeOf(
 	return (actor) => heldMaximizeOnAreaTarget(actor as never, attacker as never, delivery);
 }
 
+function hpOf(actor: Actor.Implementation): number {
+	const value = Number(foundry.utils.getProperty(actor, 'system.attributes.hp.value') ?? 0);
+	return Number.isFinite(value) ? value : 0;
+}
+
+function tempHpOf(actor: Actor.Implementation): number {
+	const value = Number(foundry.utils.getProperty(actor, 'system.attributes.hp.temp') ?? 0);
+	return Number.isFinite(value) ? value : 0;
+}
+
+function appliedDamageUpdate(
+	records: AppliedDamageTarget[],
+	marked: { appliedTo: string[]; damageApplied: boolean } = { appliedTo: [], damageApplied: false },
+): Record<string, unknown> {
+	return {
+		'system.appliedDamage': {
+			targets: records,
+			appliedAt: Date.now(),
+			markedAppliedTo: marked.appliedTo,
+			markedDamageApplied: marked.damageApplied,
+		},
+	};
+}
+
+function actorOfToken(uuid: string): HpMutableActor | null {
+	return ((fromUuidSync(uuid) as TokenDocument | null)?.actor as HpMutableActor | null) ?? null;
+}
+
+function tokenLabel(tokenDocument: TokenDocument | null, actor: { name?: string | null }): string {
+	return tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown');
+}
+
+/** Amount 0, with HP unchanged: the attack reached the target and removed nothing. */
+function unchangedDamageRecords(considered: ConsideredDamageTarget[]): AppliedDamageTarget[] {
+	return considered.map((entry) => {
+		const hp = hpOf(entry.actor);
+		const tempHp = tempHpOf(entry.actor);
+		return {
+			uuid: entry.uuid,
+			tokenName: entry.tokenName,
+			amount: 0,
+			previousHp: hp,
+			newHp: hp,
+			previousTempHp: tempHp,
+			newTempHp: tempHp,
+		};
+	});
+}
+
 function buildDamageApplicationPlan(params: {
 	targets: string[];
 	packets: DamagePacket[];
@@ -867,6 +948,7 @@ function buildDamageApplicationPlan(params: {
 	firstAttackHalveFor?: (actor: HpMutableActor) => boolean;
 }): DamageApplicationPlan {
 	const applicableTargets: DamageApplicationTarget[] = [];
+	const considered: ConsideredDamageTarget[] = [];
 	const zeroDamageTargetNames = new Set<string>();
 	const zeroDamageActors = new Set<HpMutableActor>();
 	const bankedReductionActors = new Set<HpMutableActor>();
@@ -875,14 +957,14 @@ function buildDamageApplicationPlan(params: {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
 		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
+		const tokenName = tokenLabel(tokenDocument, actor);
 
 		// Before any reduction: this target's bank stays for an attack that hurts it.
 		const defend = params.defendEffects?.get(uuid);
 		if (params.noDamageTargets?.has(uuid) || defend?.zero) {
 			zeroDamageActors.add(actor);
-			zeroDamageTargetNames.add(
-				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
-			);
+			zeroDamageTargetNames.add(tokenName);
+			considered.push({ uuid, tokenName, actor, application: null });
 			continue;
 		}
 
@@ -903,13 +985,12 @@ function buildDamageApplicationPlan(params: {
 
 		if (!Number.isFinite(resolved.total) || resolved.total <= 0) {
 			zeroDamageActors.add(actor);
-			zeroDamageTargetNames.add(
-				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
-			);
+			zeroDamageTargetNames.add(tokenName);
+			considered.push({ uuid, tokenName, actor, application: null });
 			continue;
 		}
 
-		applicableTargets.push({
+		const application: DamageApplicationTarget = {
 			actor,
 			tokenUuid: uuid,
 			rolledDamage: resolved.components.reduce((sum, part) => sum + part.damageBeforeDefenses, 0),
@@ -923,12 +1004,15 @@ function buildDamageApplicationPlan(params: {
 					),
 				),
 			],
-		});
+		};
+		applicableTargets.push(application);
+		considered.push({ uuid, tokenName, actor, application });
 	}
 
 	return {
 		hasTargets: params.targets.length > 0,
 		applicableTargets,
+		considered,
 		zeroDamageTargetNames: [...zeroDamageTargetNames],
 		zeroDamageActors: [...zeroDamageActors],
 		bankedReductionActors: [...bankedReductionActors],
@@ -1601,16 +1685,100 @@ class NimbleChatMessage extends ChatMessage {
 	 * target rather than once per target per packet.
 	 */
 	async applyAllDamage(): Promise<void> {
-		if (!this.isActivationCard()) return;
-		if (!game.user?.isGM || this.cardRerolls.pendingKeep()) return;
-
-		const packets = this.#applicableDamagePackets();
-		if (packets.length < 1) {
-			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
+		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return;
+		if (!this.mayApplyCardDamage()) {
+			ui.notifications?.warn(localize('NIMBLE.chat.cannotApplyDamage'));
 			return;
 		}
+		if (game.user?.isGM !== true) {
+			if (this.id) await requestApplyCardDamage({ messageId: this.id });
+			return;
+		}
+		await this.#applyAllDamageNow();
+	}
 
-		await this.#applyDamagePackets(packets);
+	/**
+	 * Runs on the GM's client. A player who owns a target asks for this over the
+	 * socket; calling it anywhere else does nothing.
+	 */
+	async applyAllDamageRequested(requester: CardRequester): Promise<boolean> {
+		if (game.user?.isGM !== true) return false;
+		if (!this.isActivationCard()) return false;
+		const refusal = this.#damageRequestRefusal(requester);
+		if (refusal) {
+			rejectCardRequest({ messageId: this.id ?? '', userId: requester.userId, reasonKey: refusal });
+			return false;
+		}
+		const queuedRefusal = await this.#applyAllDamageNow({ notify: false });
+		if (queuedRefusal) {
+			rejectCardRequest({
+				messageId: this.id ?? '',
+				userId: requester.userId,
+				reasonKey: queuedRefusal,
+			});
+			return false;
+		}
+		return true;
+	}
+
+	#damageRequestRefusal(requester: CardRequester): string | null {
+		if (!this.mayApplyDamageFor(requester)) return 'NIMBLE.chat.cannotApplyDamage';
+		if (this.cardRerolls.pendingKeep()) return 'NIMBLE.chat.incomingReactions.keepFirst';
+		if (this.isDamageApplied()) return 'NIMBLE.chat.damageAlreadyApplied';
+		if (this.#applicableDamagePackets().length < 1) return 'NIMBLE.chat.noDamageToApply';
+		return null;
+	}
+
+	/** The refusal key when the card could not apply, or null. */
+	async #applyAllDamageNow({ notify = true } = {}): Promise<string | null> {
+		if (!this.isActivationCard()) return 'NIMBLE.chat.cannotApplyDamage';
+		const refusal = await this.#applyDamagePackets(() => this.#applicableDamagePackets(), true);
+		if (refusal && notify) {
+			if (refusal === 'NIMBLE.chat.noDamageToApply') ui.notifications?.info(localize(refusal));
+			else ui.notifications?.warn(localize(refusal));
+		}
+		return refusal;
+	}
+
+	/** The GM, or a player who owns one of the card's targets. */
+	mayApplyCardDamage(): boolean {
+		return this.#mayApplyDamage(game.user ?? null, false);
+	}
+
+	/** The same rule for a requester. A GM's request may not come over the socket. */
+	mayApplyDamageFor(requester: CardRequester): boolean {
+		const user = game.users?.get(requester.userId) ?? null;
+		return this.#mayApplyDamage(user, requester.viaSocket);
+	}
+
+	#mayApplyDamage(user: { id?: string; isGM?: boolean } | null, viaSocket: boolean): boolean {
+		if (!this.isActivationCard() || !user) return false;
+		if (user.isGM === true) return viaSocket !== true;
+		const targets = (this.system as ActivationCardSystemData).targets || [];
+		const owner = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+		return targets.some((uuid) => {
+			const actor = actorOfToken(uuid);
+			if (!actor) return false;
+			if (user.id && user.id === game.user?.id) return actor.isOwner === true;
+			return actor.testUserPermission?.(user as User, owner) === true;
+		});
+	}
+
+	/** Whether this card already recorded the damage it removed. */
+	isDamageApplied(): boolean {
+		return this.#appliedDamageRecord() !== null;
+	}
+
+	/** The recorded damage for one target, or null when this card never applied it. */
+	appliedDamageFor(uuid: string): AppliedDamageTarget | null {
+		return this.#appliedDamageRecord()?.targets.find((entry) => entry.uuid === uuid) ?? null;
+	}
+
+	#appliedDamageRecord(): AppliedDamageRecord | null {
+		if (!this.isActivationCard()) return null;
+		const record = (this.system as ActivationCardSystemData).appliedDamage;
+		if (!record || !Array.isArray(record.targets) || record.targets.length < 1) return null;
+		return record;
 	}
 
 	/** The card's damage packets that would actually remove HP. */
@@ -1621,7 +1789,7 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	/** Apply the damage to each target and mark them applied. Null when nothing was applied. */
-	async #applyDamageToTargets(packets: DamagePacket[]) {
+	async #applyDamageToTargets(packets: DamagePacket[], recordApplied = false) {
 		// The public entry points already gated on `isActivationCard()`; that
 		// narrowing does not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -1655,6 +1823,12 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		if (damageApplicationPlan.applicableTargets.length < 1) {
+			const reached =
+				damageApplicationPlan.bankedReductionActors.length > 0 || critSavers.length > 0;
+			if (recordApplied && reached) {
+				const records = unchangedDamageRecords(damageApplicationPlan.considered);
+				if (records.length > 0) await this.update(appliedDamageUpdate(records));
+			}
 			if (critSavers.length < 1) ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
 			return null;
 		}
@@ -1664,74 +1838,102 @@ class NimbleChatMessage extends ChatMessage {
 
 		const recoil = this.cardDamageBack.recoilRules();
 		const hurt: Array<Parameters<CardDamageBack['afterDamage']>[0][number]> = [];
-		for (const target of damageApplicationPlan.applicableTargets) {
-			hurt.push({
-				actor: target.actor as unknown as (typeof hurt)[number]['actor'],
-				taken: target.adjustedDamage,
-				// Read before the damage: the hit can take the temp HP, and with them the link.
-				tempHp: this.cardDamageBack.beforeDamage(
-					target.actor as unknown as (typeof hurt)[number]['actor'],
-					{ isCritical: systemData.isCritical === true },
-				),
-			});
-			const hpBefore = Number(
-				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
-			);
+		const records: AppliedDamageTarget[] = [];
+		for (const entry of damageApplicationPlan.considered) {
+			const target = entry.application;
+			const previousHp = hpOf(entry.actor);
+			const previousTempHp = tempHpOf(entry.actor);
+			if (target) {
+				hurt.push({
+					actor: target.actor as unknown as (typeof hurt)[number]['actor'],
+					taken: target.adjustedDamage,
+					// Read before the damage: the hit can take the temp HP, and with them the link.
+					tempHp: this.cardDamageBack.beforeDamage(
+						target.actor as unknown as (typeof hurt)[number]['actor'],
+						{ isCritical: systemData.isCritical === true },
+					),
+				});
 
-			const halved = this.#halvesFirstAttack(target.actor);
-			await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
-			if (halved && target.actor.isOwner) await rememberFirstAttackHalve(target.actor, this.id);
-			await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
-			if (target.usedMaximize) await spendHeldChanges([target.usedMaximize], this.#endedLines());
+				const halved = this.#halvesFirstAttack(target.actor);
+				await withDamageCard(this.id, () => target.actor.applyDamage(target.adjustedDamage));
+				if (halved && target.actor.isOwner) await rememberFirstAttackHalve(target.actor, this.id);
+				await spendHeldChanges(target.usedVulnerabilities, this.#endedLines());
+				if (target.usedMaximize) await spendHeldChanges([target.usedMaximize], this.#endedLines());
 
-			const hpAfter = Number(
-				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
-			);
-			const wasKilled = hpBefore > 0 && hpAfter === 0;
+				const hpAfter = hpOf(target.actor);
+				const wasKilled = previousHp > 0 && hpAfter === 0;
 
-			// @ts-expect-error - nimble.damageApplied is a custom Nimble hook consumed by ruleEventDispatch
-			Hooks.callAll(systemHookName('damageApplied'), {
-				sourceItem,
-				sourceActor,
-				targetActor: target.actor,
-				card: this,
-				damageTypes: target.damageTypes,
-				isCritical: systemData.isCritical,
-				isMiss: systemData.isMiss,
-				discardedCritTriggers: systemData.discardedCritTriggers === true,
-				discardedCritTriggersFired: systemData.discardedCritTriggersFired === true,
-			});
-
-			if (wasKilled) {
-				await giveMarkedDeathRecovery(target.actor, sourceItem);
-				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
-				if (attacker) {
-					// @ts-expect-error Custom hook
-					Hooks.call('nimbleKillApplied', attacker, target.actor);
-				}
-				await offerHalfDamageOnKill({
+				// @ts-expect-error - nimble.damageApplied is a custom Nimble hook consumed by ruleEventDispatch
+				Hooks.callAll(systemHookName('damageApplied'), {
 					sourceItem,
-					killedToken: fromUuidSync(target.tokenUuid),
-					attackerToken: this.#attackerToken(sourceActor),
-					rolled: target.rolledDamage,
-					deal: (actor, amount) => withDamageCard(this.id, () => actor.applyDamage(amount)),
+					sourceActor,
+					targetActor: target.actor,
+					card: this,
+					damageTypes: target.damageTypes,
+					isCritical: systemData.isCritical,
+					isMiss: systemData.isMiss,
+					discardedCritTriggers: systemData.discardedCritTriggers === true,
+					discardedCritTriggersFired: systemData.discardedCritTriggersFired === true,
+				});
+
+				if (wasKilled) {
+					await giveMarkedDeathRecovery(target.actor, sourceItem);
+					const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
+					if (attacker) {
+						// @ts-expect-error Custom hook
+						Hooks.call('nimbleKillApplied', attacker, target.actor);
+					}
+					await offerHalfDamageOnKill({
+						sourceItem,
+						killedToken: fromUuidSync(target.tokenUuid),
+						attackerToken: this.#attackerToken(sourceActor),
+						rolled: target.rolledDamage,
+						deal: (actor, amount) => withDamageCard(this.id, () => actor.applyDamage(amount)),
+					});
+				}
+			}
+
+			if (recordApplied) {
+				records.push({
+					uuid: entry.uuid,
+					tokenName: entry.tokenName,
+					amount: target?.adjustedDamage ?? 0,
+					previousHp,
+					newHp: hpOf(entry.actor),
+					previousTempHp,
+					newTempHp: tempHpOf(entry.actor),
 				});
 			}
 		}
 
-		await this.#markDamageApplied(targets);
+		await this.#markDamageApplied(targets, recordApplied ? records : undefined);
 		return { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem };
 	}
 
-	async #applyDamagePackets(packets: DamagePacket[]): Promise<void> {
+	/**
+	 * A whole-card apply passes a getter, so the packets and its guards are read
+	 * in the queue, after the targets are adopted. Returns the refusal key, or null.
+	 */
+	async #applyDamagePackets(
+		packets: DamagePacket[] | (() => DamagePacket[]),
+		recordApplied = false,
+	): Promise<string | null> {
 		// Before the plan is built, and before the reaction queue: adopting from
 		// inside that queue would wait on itself.
 		await this.#adoptCurrentTargetsWhenEmpty();
+		let refusal: string | null = null;
 		// The plan reads the Defends, so a Defend request waits until the targets are marked applied.
-		const applied = await queueReactionWrite(this.id ?? '', () =>
-			this.#applyDamageToTargets(packets),
-		);
-		if (!applied) return;
+		const applied = await queueReactionWrite(this.id ?? '', () => {
+			if (recordApplied) {
+				if (this.cardRerolls.pendingKeep()) refusal = 'NIMBLE.chat.incomingReactions.keepFirst';
+				else if (this.isDamageApplied()) refusal = 'NIMBLE.chat.damageAlreadyApplied';
+			}
+			const current = typeof packets === 'function' ? packets() : packets;
+			if (!refusal && current.length < 1) refusal = 'NIMBLE.chat.noDamageToApply';
+			if (refusal) return Promise.resolve(null);
+			return this.#applyDamageToTargets(current, recordApplied);
+		});
+		if (!applied) return refusal;
 		const { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem } = applied;
 		const systemData = this.system as unknown as ActivationCardSystemData;
 
@@ -1775,27 +1977,37 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			);
 		}
+		return null;
 	}
 
 	/**
-	 * One write: a Defend closes for each target, and a card with a no-damage
-	 * row or a Remove keeps the record that its damage is applied.
+	 * One write: a Defend closes for each target, a card with a no-damage row or
+	 * a Remove keeps the record that its damage is applied, and a whole-card
+	 * apply stores what each target lost.
 	 */
-	async #markDamageApplied(targets: string[]): Promise<void> {
+	async #markDamageApplied(targets: string[], records?: AppliedDamageTarget[]): Promise<void> {
 		const system = this.system as unknown as {
 			damageApplied?: boolean;
 			damageAppliedTo?: unknown;
 		};
 		const update: Record<string, unknown> = {};
+		let added: string[] = [];
 		if (Array.isArray(system.damageAppliedTo)) {
 			const applied = damageAppliedTo(system);
-			const added = targets.filter((uuid) => !applied.has(uuid));
+			added = [...new Set(targets.filter((uuid) => !applied.has(uuid)))];
 			if (added.length > 0) update['system.damageAppliedTo'] = [...applied, ...added];
 		}
 		const hasNoDamage =
 			resultChangesOf(system).some((change) => change.change === 'noDamage') ||
 			this.#incomingReactionEntries().some((entry) => entry.use === 'result');
-		if (system.damageApplied !== true && hasNoDamage) update['system.damageApplied'] = true;
+		const setsDamageApplied = system.damageApplied !== true && hasNoDamage;
+		if (setsDamageApplied) update['system.damageApplied'] = true;
+		if (records && records.length > 0) {
+			Object.assign(
+				update,
+				appliedDamageUpdate(records, { appliedTo: added, damageApplied: setsDamageApplied }),
+			);
+		}
 		if (Object.keys(update).length > 0) await this.update(update);
 	}
 
@@ -1812,6 +2024,7 @@ class NimbleChatMessage extends ChatMessage {
 	/** Whether the card's single Apply Damage control should be live. */
 	canApplyAllDamage(): boolean {
 		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return false;
+		if (!this.mayApplyCardDamage() || this.isDamageApplied()) return false;
 
 		const packets = this.#applicableDamagePackets();
 		if (packets.length < 1) return false;
@@ -2196,6 +2409,58 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return false;
 		const systemData = this.system as ActivationCardSystemData;
 		return !!systemData.appliedHealing?.[effectId];
+	}
+
+	/**
+	 * Puts each target's HP back to the snapshot from before this card's damage.
+	 * Two tokens of one actor restore once, to the HP from before either hit.
+	 * Later HP changes are overwritten.
+	 */
+	async undoAppliedDamage(): Promise<void> {
+		if (!this.isActivationCard() || game.user?.isGM !== true) return;
+		await queueReactionWrite(this.id ?? '', () => this.#undoAppliedDamageNow());
+	}
+
+	async #undoAppliedDamageNow(): Promise<void> {
+		const record = this.#appliedDamageRecord();
+		if (!record) {
+			ui.notifications?.warn(localize('NIMBLE.chat.noDamageRecord'));
+			return;
+		}
+
+		const restored = new Set<HpMutableActor>();
+		const missing: string[] = [];
+		for (const entry of record.targets) {
+			const actor = actorOfToken(entry.uuid);
+			if (!actor) {
+				missing.push(entry.tokenName);
+				continue;
+			}
+			if (restored.has(actor)) continue;
+			restored.add(actor);
+			await actor.setCurrentHP(entry.previousHp);
+			await actor.setTempHP(entry.previousTempHp);
+		}
+		if (missing.length > 0) {
+			ui.notifications?.warn(
+				localize('NIMBLE.chat.damageUndoMissingTargets', { names: missing.join(', ') }),
+			);
+		}
+
+		const update: Record<string, unknown> = {
+			'system.appliedDamage': new foundry.data.operators.ForcedDeletion(),
+		};
+		const system = this.system as unknown as { damageAppliedTo?: unknown };
+		const marked = new Set(record.markedAppliedTo ?? []);
+		if (marked.size > 0 && Array.isArray(system.damageAppliedTo)) {
+			update['system.damageAppliedTo'] = [...damageAppliedTo(system)].filter(
+				(uuid) => !marked.has(uuid),
+			);
+		}
+		if (record.markedDamageApplied === true) update['system.damageApplied'] = false;
+		await this.update(update);
+
+		ui.notifications?.info(localize('NIMBLE.chat.damageUndone'));
 	}
 
 	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {
