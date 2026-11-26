@@ -31,7 +31,7 @@ import { originOfCard, originOwnerRules } from '../utils/damage/attackOrigin.js'
 import { gainedPoolIdentifier } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { keyedQueue } from '../utils/keyedQueue.js';
-import { type AttackMissedPayload, missReported } from './attackMiss.js';
+import { type AttackMissedPayload, missReportedFor } from './attackMiss.js';
 
 const DYING_STATUS_ID = 'dying';
 
@@ -154,7 +154,7 @@ function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
 		'onItemUsed',
 		context,
 	);
-	if (payload.isMiss && missReported(payload.card)) return;
+	if (payload.isMiss && missReportedFor(payload.card, payload.targetActor)) return;
 	void dispatch(payload.targetActor, 'onAttackReceived', {
 		...context,
 		discardedCritTriggers:

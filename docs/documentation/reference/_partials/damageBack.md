@@ -9,9 +9,9 @@ The Attacker Takes rule (type `damageBack`) puts damage, an effect, or both on t
 
 **Attacks** limits the rule to melee or ranged attacks. A monster attack with no attack type is melee. **Not on allies** leaves out an attacker on the owner's side, by token disposition. The owner never counts as its own attacker. When the system reads a card again, it does not add a second line.
 
-**A formula** rolls once for each attacker, with a **Damage type**. **Ignore armor** is on by default. Turn it off and the attacker's armor, resistances, immunities and reductions apply. **Effect on the attacker** is an effect of the item, with Apply to the actor off, that goes on each attacker. **A Wound doubles it** puts a button on the card. With it, the owner or the GM can suffer 1 Wound to deal the amount one more time. On an effect, **Ends after it answers** ends that effect when the rule answers an attack. Other rules that answer the same attack keep their effects.
+**A formula** rolls once for each attacker, with a **Damage type**. **Ignore armor** is on by default. Turn it off and the attacker's armor, resistances, immunities and reductions apply. **Effect on the attacker** is an effect of the item, with Apply to the actor off, that goes on each attacker. **A Wound doubles it** puts a button on the card. With it, the owner or the GM can suffer 1 Wound to deal the amount one more time. On an effect, **Ends after it answers** ends that effect when the rule answers an attack. For a miss, it ends when the line is dealt. Other rules that answer the same attack keep their effects.
 
-With **Feature Effects** off, the system puts nothing on the attacker. The line has a **Deal** or **Apply** button instead, and an effect that ends after it answers waits for **End**.
+With **Feature Effects** off, the system puts nothing on the attacker. The line has a **Deal** or **Apply** button instead, and an effect that ends after it answers waits for **End**. A miss line has that button with Feature Effects on too, and its **Deal** also ends the effect.
 
 ::: details The attack a reaction answers
 A reaction spell cast from its row in the Defend window answers that attack. When its effect has a rule with **Also the attack it answers** on, that rule also acts on the attack it answers. Cast from the sheet, the effect acts only on later attacks.

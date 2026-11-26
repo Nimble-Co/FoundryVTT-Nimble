@@ -123,7 +123,7 @@ function ruleDouble(): RuleDouble {
 
 function placeActors() {
 	const targetRule = ruleDouble();
-	const targetActor = { type: 'character', rules: [targetRule] };
+	const targetActor = { uuid: 'Actor.target', type: 'character', rules: [targetRule] };
 	tokens.set('Scene.s.Token.target', { actor: targetActor });
 
 	const sourceRule = ruleDouble();
@@ -181,7 +181,7 @@ describe('an attack that misses', () => {
 		expect(targetRule.onAttackReceived).toHaveBeenCalledWith(
 			expect.objectContaining({ isMiss: true, discardedCritTriggers: false }),
 		);
-		expect(card.flags[SYSTEM_ID]?.attackMissed).toBe(true);
+		expect(card.flags[SYSTEM_ID]?.attackMissed).toBe('Actor.target');
 
 		emit('updateChatMessage', card);
 		await flushAsync();
@@ -252,6 +252,44 @@ describe('an attack that misses', () => {
 		expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
 		expect(sourceRule.onItemUsed).toHaveBeenCalledTimes(1);
 		expect(sourceRule.onItemUsed).toHaveBeenCalledWith(expect.objectContaining({ isMiss: true }));
+	});
+
+	it('Apply Damage on that miss card still reaches a target the miss did not report', async () => {
+		const { targetActor, sourceActor } = placeActors();
+		const otherRule = ruleDouble();
+		const otherActor = { uuid: 'Actor.other', rules: [otherRule] };
+		tokens.set('Scene.s.Token.other', { actor: otherActor });
+		const card = createCard({
+			system: { targets: ['Scene.s.Token.target', 'Scene.s.Token.other'] },
+		});
+		emit('createChatMessage', card);
+		await flushAsync();
+
+		applyDamage({ sourceActor, targetActor: otherActor, card, isCritical: false, isMiss: true });
+		await flushAsync();
+
+		expect(card.flags[SYSTEM_ID]?.attackMissed).toBe(targetActor.uuid);
+		expect(otherRule.onAttackReceived).toHaveBeenCalledTimes(1);
+	});
+
+	it('a reroll into a hit while the miss is still being reported waits, then takes it back', async () => {
+		placeActors();
+		const card = createCard();
+		let finishMiss = () => {};
+		card.cardDamageBack.afterMiss.mockImplementationOnce(
+			() => new Promise<void>((resolve) => (finishMiss = resolve)),
+		);
+		emit('createChatMessage', card);
+		await flushAsync();
+
+		reroll(card, { isMiss: false });
+		await flushAsync();
+		expect(card.cardDamageBack.dropMissed).not.toHaveBeenCalled();
+
+		finishMiss();
+		await flushAsync();
+		expect(card.cardDamageBack.dropMissed).toHaveBeenCalledTimes(1);
+		expect(card.flags[SYSTEM_ID]?.attackMissed).toBeUndefined();
 	});
 
 	it('reports one event for two damage packets', async () => {

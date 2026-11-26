@@ -4,11 +4,12 @@ import type { EffectNode } from '#types/effectTree.js';
 import { cardTargetTokens } from '#utils/chat/cardTargetTokens.js';
 import { findPrimaryDamageNode } from '#utils/damage/foldBonusIntoPrimaryDamage.js';
 import { isActiveGM } from '#utils/isActiveGM.js';
+import { keyedQueue } from '#utils/keyedQueue.js';
 import { flattenEffectsTree } from '#utils/treeManipulation/flattenEffectsTree.js';
 
 const ITEM_CARD_TYPES = new Set(['feature', 'spell', 'object', 'reaction']);
 
-/** The card reported its miss. A reroll into a hit clears it. */
+/** The uuid of the creature the card reported its miss for. A reroll into a hit clears it. */
 const ATTACK_MISSED_FLAG = 'attackMissed';
 
 /** What `attackMissed` sends: the first target of an item attack that missed. */
@@ -47,12 +48,19 @@ interface TargetToken {
 	actor?: Actor | null;
 }
 
-const firing = new Set<string>();
+/** Reports and take-backs of one card run one after the other. */
+const cardQueue = keyedQueue();
 
-/** Whether `attackMissed` already reported the miss of this card. */
-export function missReported(card: unknown): boolean {
+function reportedFor(card: unknown): string | null {
 	const flags = (card as Pick<MissCard, 'flags'> | null)?.flags;
-	return flags?.[SYSTEM_ID]?.[ATTACK_MISSED_FLAG] === true;
+	const uuid = flags?.[SYSTEM_ID]?.[ATTACK_MISSED_FLAG];
+	return typeof uuid === 'string' && uuid ? uuid : null;
+}
+
+/** Whether `attackMissed` already reported the miss of this card for this creature. */
+export function missReportedFor(card: unknown, actor: unknown): boolean {
+	const uuid = (actor as { uuid?: string | null } | null)?.uuid;
+	return !!uuid && reportedFor(card) === uuid;
 }
 
 /**
@@ -64,7 +72,7 @@ export function missReported(card: unknown): boolean {
 function coveredMiss(card: MissCard): boolean {
 	if (!ITEM_CARD_TYPES.has(card.type ?? '')) return false;
 	if (card.system?.isMiss !== true || card.system.isCritical === true) return false;
-	if (missReported(card)) return false;
+	if (reportedFor(card)) return false;
 	if (card.flags?.[SYSTEM_ID]?.opportunityAttack === true) return false;
 	const activation = card.system.activation;
 	const shape = activation?.template?.shape ?? '';
@@ -77,28 +85,26 @@ function coveredMiss(card: MissCard): boolean {
 	return true;
 }
 
-/** Runs `work` once at a time for each card. */
-async function onceFor(card: MissCard, work: () => Promise<void>): Promise<void> {
+/** Queues `task` behind the other reports and take-backs of the card. */
+async function queued(card: MissCard, task: () => Promise<void>): Promise<void> {
 	const cardId = card.id ?? null;
-	if (!cardId || firing.has(cardId)) return;
-	firing.add(cardId);
+	if (!cardId) return;
 	try {
-		await work();
+		await cardQueue.run(cardId, task);
 	} catch (error) {
 		console.error('Nimble | The miss of an attack could not be read.', error);
-	} finally {
-		firing.delete(cardId);
 	}
 }
 
 async function reportAttackMiss(card: MissCard): Promise<void> {
-	if (!isActiveGM() || !coveredMiss(card)) return;
-	const [first] = cardTargetTokens<TargetToken>(card);
-	const targetActor = first?.actor;
-	if (!first || !targetActor) return;
+	if (!isActiveGM()) return;
+	await queued(card, async () => {
+		if (!coveredMiss(card)) return;
+		const [first] = cardTargetTokens<TargetToken>(card);
+		const targetActor = first?.actor;
+		if (!first || !targetActor?.uuid) return;
 
-	await onceFor(card, async () => {
-		await card.setFlag(SYSTEM_ID, ATTACK_MISSED_FLAG, true);
+		await card.setFlag(SYSTEM_ID, ATTACK_MISSED_FLAG, targetActor.uuid);
 		await card.cardDamageBack?.afterMiss([
 			{ actor: targetActor as unknown as AttackedCreature['actor'], token: first as never },
 		]);
@@ -123,8 +129,9 @@ async function reportAttackMiss(card: MissCard): Promise<void> {
 
 /** A reroll turned a reported miss into a hit: its miss lines not dealt yet go. */
 async function takeBackMiss(card: MissCard): Promise<void> {
-	if (!isActiveGM() || !missReported(card)) return;
-	await onceFor(card, async () => {
+	if (!isActiveGM()) return;
+	await queued(card, async () => {
+		if (!reportedFor(card) || card.system?.isMiss === true) return;
 		await card.cardDamageBack?.dropMissed();
 		await card.unsetFlag(SYSTEM_ID, ATTACK_MISSED_FLAG);
 	});
