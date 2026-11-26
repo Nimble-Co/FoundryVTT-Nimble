@@ -134,10 +134,12 @@ export interface AppliedDamageTarget {
 	newTempHp: number;
 }
 
-/** The damage an activation card removed, in target order. */
+/** The damage an activation card removed, in target order, and the markers it set, so undo can clear them. */
 export interface AppliedDamageRecord {
 	targets: AppliedDamageTarget[];
 	appliedAt: number;
+	markedAppliedTo?: string[];
+	markedDamageApplied?: boolean;
 }
 
 /** System data for activation cards */
@@ -896,8 +898,18 @@ function tempHpOf(actor: Actor.Implementation): number {
 	return Number.isFinite(value) ? value : 0;
 }
 
-function appliedDamageUpdate(records: AppliedDamageTarget[]): Record<string, unknown> {
-	return { 'system.appliedDamage': { targets: records, appliedAt: Date.now() } };
+function appliedDamageUpdate(
+	records: AppliedDamageTarget[],
+	marked: { appliedTo: string[]; damageApplied: boolean } = { appliedTo: [], damageApplied: false },
+): Record<string, unknown> {
+	return {
+		'system.appliedDamage': {
+			targets: records,
+			appliedAt: Date.now(),
+			markedAppliedTo: marked.appliedTo,
+			markedDamageApplied: marked.damageApplied,
+		},
+	};
 }
 
 function actorOfToken(uuid: string): HpMutableActor | null {
@@ -1948,16 +1960,23 @@ class NimbleChatMessage extends ChatMessage {
 			damageAppliedTo?: unknown;
 		};
 		const update: Record<string, unknown> = {};
+		let added: string[] = [];
 		if (Array.isArray(system.damageAppliedTo)) {
 			const applied = damageAppliedTo(system);
-			const added = targets.filter((uuid) => !applied.has(uuid));
+			added = [...new Set(targets.filter((uuid) => !applied.has(uuid)))];
 			if (added.length > 0) update['system.damageAppliedTo'] = [...applied, ...added];
 		}
 		const hasNoDamage =
 			resultChangesOf(system).some((change) => change.change === 'noDamage') ||
 			this.#incomingReactionEntries().some((entry) => entry.use === 'result');
-		if (system.damageApplied !== true && hasNoDamage) update['system.damageApplied'] = true;
-		if (records && records.length > 0) Object.assign(update, appliedDamageUpdate(records));
+		const setsDamageApplied = system.damageApplied !== true && hasNoDamage;
+		if (setsDamageApplied) update['system.damageApplied'] = true;
+		if (records && records.length > 0) {
+			Object.assign(
+				update,
+				appliedDamageUpdate(records, { appliedTo: added, damageApplied: setsDamageApplied }),
+			);
+		}
 		if (Object.keys(update).length > 0) await this.update(update);
 	}
 
@@ -2346,7 +2365,10 @@ class NimbleChatMessage extends ChatMessage {
 	 */
 	async undoAppliedDamage(): Promise<void> {
 		if (!this.isActivationCard() || game.user?.isGM !== true) return;
+		await queueReactionWrite(this.id ?? '', () => this.#undoAppliedDamageNow());
+	}
 
+	async #undoAppliedDamageNow(): Promise<void> {
 		const record = this.#appliedDamageRecord();
 		if (!record) {
 			ui.notifications?.warn(localize('NIMBLE.chat.noDamageRecord'));
@@ -2372,9 +2394,18 @@ class NimbleChatMessage extends ChatMessage {
 			);
 		}
 
-		await this.update({
+		const update: Record<string, unknown> = {
 			'system.appliedDamage': new foundry.data.operators.ForcedDeletion(),
-		} as Record<string, unknown>);
+		};
+		const system = this.system as unknown as { damageAppliedTo?: unknown };
+		const marked = new Set(record.markedAppliedTo ?? []);
+		if (marked.size > 0 && Array.isArray(system.damageAppliedTo)) {
+			update['system.damageAppliedTo'] = [...damageAppliedTo(system)].filter(
+				(uuid) => !marked.has(uuid),
+			);
+		}
+		if (record.markedDamageApplied === true) update['system.damageApplied'] = false;
+		await this.update(update);
 
 		ui.notifications?.info(localize('NIMBLE.chat.damageUndone'));
 	}

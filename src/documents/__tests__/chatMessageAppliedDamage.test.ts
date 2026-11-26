@@ -120,6 +120,10 @@ function rememberUpdates(card: NimbleChatMessage) {
 		} else if (value) {
 			(card.system as { appliedDamage?: unknown }).appliedDamage = value;
 		}
+		const system = card.system as Record<string, unknown>;
+		for (const key of ['damageAppliedTo', 'damageApplied']) {
+			if (`system.${key}` in changes) system[key] = changes[`system.${key}`];
+		}
 		return card;
 	}) as never;
 	return card;
@@ -257,6 +261,61 @@ describe('applied damage on an activation card', () => {
 		expect(card.canApplyAllDamage()).toBe(true);
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith(
 			localize('NIMBLE.chat.damageUndone'),
+		);
+	});
+
+	it('undo reopens the Defends and the no-damage change that the apply closed, and keeps earlier ones', async () => {
+		const actor = createTarget({ hp: 30 });
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === TOKEN ? { name: 'Goblin', actor } : null,
+		);
+		const card = rememberUpdates(createCard([TOKEN], 5));
+		const system = card.system as Record<string, unknown>;
+		const EARLIER = 'Scene.scene.Token.earlier';
+		system.damageAppliedTo = [EARLIER];
+		system.damageApplied = false;
+		system.resultChanges = [{ change: 'noDamage', targetTokenUuid: EARLIER }];
+
+		await card.applyAllDamage();
+		expect(system.damageAppliedTo).toEqual([EARLIER, TOKEN]);
+		expect(system.damageApplied).toBe(true);
+
+		await card.undoAppliedDamage();
+
+		expect(system.damageAppliedTo).toEqual([EARLIER]);
+		expect(system.damageApplied).toBe(false);
+	});
+
+	it('undo keeps a no-damage marker that was set before the apply', async () => {
+		const actor = createTarget({ hp: 30 });
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === TOKEN ? { name: 'Goblin', actor } : null,
+		);
+		const card = rememberUpdates(createCard([TOKEN], 5));
+		const system = card.system as Record<string, unknown>;
+		system.damageAppliedTo = [];
+		system.damageApplied = true;
+
+		await card.applyAllDamage();
+		await card.undoAppliedDamage();
+
+		expect(system.damageApplied).toBe(true);
+	});
+
+	it('two undo clicks at once restore HP once and do not touch a later apply', async () => {
+		const actor = createTarget({ hp: 30 });
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === TOKEN ? { name: 'Goblin', actor } : null,
+		);
+		const card = rememberUpdates(createCard([TOKEN], 5));
+		await card.applyAllDamage();
+
+		await Promise.all([card.undoAppliedDamage(), card.undoAppliedDamage()]);
+
+		expect(actor.setCurrentHP).toHaveBeenCalledTimes(1);
+		expect(actor.system.attributes.hp.value).toBe(30);
+		expect(globals().ui.notifications.warn).toHaveBeenCalledWith(
+			localize('NIMBLE.chat.noDamageRecord'),
 		);
 	});
 
