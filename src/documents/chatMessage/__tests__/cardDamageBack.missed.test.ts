@@ -150,10 +150,31 @@ describe('Attacker Takes, when an attack misses the owner', () => {
 
 		await back.afterMiss([holder([rule({ endsEffect: true, parentDocument: effect })])]);
 		expect(endOrWaitEffects).not.toHaveBeenCalled();
+		expect(written()[0]).toMatchObject({ dealt: false, endsEffectUuid: effect.uuid });
 
 		asGm({ 'Actor.goblin': goblin, 'Actor.hero': attacker, [effect.uuid]: effect });
 		await back.resolve(written()[0]!.id, 'deal', 'gm');
-		expect(endOrWaitEffects).toHaveBeenCalledWith([effect], expect.anything());
+		expect(endOrWaitEffects).toHaveBeenCalledWith(
+			[effect],
+			expect.objectContaining({ reason: { key: 'NIMBLE.chat.damageBack.ended' } }),
+		);
+		expect(written()[0]).toMatchObject({ dealt: true });
+	});
+
+	it('a reroll into a hit does not end the effect of a line it removes', async () => {
+		const { back, written } = setup();
+		const effect = {
+			uuid: 'Actor.goblin.ActiveEffect.taunt',
+			documentName: 'ActiveEffect',
+			parent: { documentName: 'Actor', name: 'Goblin' },
+		};
+
+		await back.afterMiss([holder([rule({ endsEffect: true, parentDocument: effect })])]);
+		expect(written()[0]).toMatchObject({ endsEffectUuid: effect.uuid });
+		await back.dropMissed();
+
+		expect(written()).toEqual([]);
+		expect(endOrWaitEffects).not.toHaveBeenCalled();
 	});
 
 	it('a reroll into a hit removes the line that was not dealt', async () => {

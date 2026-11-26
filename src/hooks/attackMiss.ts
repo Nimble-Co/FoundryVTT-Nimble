@@ -105,9 +105,14 @@ async function reportAttackMiss(card: MissCard): Promise<void> {
 		if (!first || !targetActor?.uuid) return;
 
 		await card.setFlag(SYSTEM_ID, ATTACK_MISSED_FLAG, targetActor.uuid);
-		await card.cardDamageBack?.afterMiss([
-			{ actor: targetActor as unknown as AttackedCreature['actor'], token: first as never },
-		]);
+		try {
+			await card.cardDamageBack?.afterMiss([
+				{ actor: targetActor as unknown as AttackedCreature['actor'], token: first as never },
+			]);
+		} catch (error) {
+			await card.unsetFlag(SYSTEM_ID, ATTACK_MISSED_FLAG);
+			throw error;
+		}
 
 		const sourceActorId = card.speaker?.actor;
 		const sourceActor = sourceActorId ? (game.actors?.get(sourceActorId) ?? null) : null;

@@ -272,6 +272,23 @@ describe('an attack that misses', () => {
 		expect(otherRule.onAttackReceived).toHaveBeenCalledTimes(1);
 	});
 
+	it('clears the flag when the miss lines cannot be written, so Apply Damage still reaches the target', async () => {
+		const { targetActor, targetRule, sourceActor } = placeActors();
+		const card = createCard();
+		card.cardDamageBack.afterMiss.mockRejectedValueOnce(new Error('update failed'));
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		emit('createChatMessage', card);
+		await flushAsync();
+		error.mockRestore();
+
+		expect(card.flags[SYSTEM_ID]?.attackMissed).toBeUndefined();
+		expect(targetRule.onAttackReceived).not.toHaveBeenCalled();
+
+		applyDamage({ sourceActor, targetActor, card, isCritical: false, isMiss: true });
+		await flushAsync();
+		expect(targetRule.onAttackReceived).toHaveBeenCalledTimes(1);
+	});
+
 	it('a reroll into a hit while the miss is still being reported waits, then takes it back', async () => {
 		placeActors();
 		const card = createCard();
