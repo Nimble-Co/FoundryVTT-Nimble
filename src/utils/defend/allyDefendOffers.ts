@@ -4,7 +4,7 @@ import localize from '../localize.js';
 import { areAllies, areWithinSpaces } from '../tokens/tokenAdjacency.js';
 import { offerDefendOptionAttacks } from './defendOptionAttack.js';
 import { defendOptionsOf, payDefendOption } from './defendOptions.js';
-import { damageAppliedTo, defendsOf } from './defendRecords.js';
+import { damageAppliedTo, defendsOf, namedReminder } from './defendRecords.js';
 import { requestDefendAllyUse } from './defendRequests.js';
 
 function canvasTokenOf(uuid: string): Token.Implementation | null {
@@ -34,6 +34,7 @@ export function allyDefendOffers(card: DefendCardLike): AllyDefendOffer[] {
 					key: `${record.id}:${actor.uuid}:${pick.key}`,
 					defendId: record.id,
 					actor,
+					allyName: token.document.name || actor.name || '',
 					pick,
 					defenderName: defender.document.name || defender.actor?.name || '',
 				});
@@ -65,6 +66,6 @@ export async function useAllyDefendOffer(
 		messageId,
 		defendId: offer.defendId,
 		use,
-		reminder: text ? `${offer.pick.label}: ${text}` : '',
+		reminder: text ? namedReminder(`${offer.pick.label}: ${text}`, offer.allyName) : '',
 	});
 }

@@ -952,6 +952,7 @@
 				"interposeNotOnCard": "The Interpose is not on the card yet. Do the rest of the reaction by hand.",
 				"allyUse": "{label}: {name} Defended",
 				"optionsUsed": "With: {labels}",
+				"reminderFor": "For {name}: {reminder}",
 				"attackerEffect": "The attacker gets {name}.",
 				"attackBack": {
 					"title": "Attack the attacker?",

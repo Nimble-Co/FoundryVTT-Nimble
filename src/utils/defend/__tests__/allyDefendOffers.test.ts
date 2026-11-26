@@ -74,7 +74,11 @@ beforeEach(() => {
 	globals.game = {
 		user: { id: 'u1', isGM: false },
 		users: { activeGM: { id: 'gm', isGM: true, active: true }, contents: [] },
-		i18n: { localize: (key: string) => key, format: (key: string) => key },
+		i18n: {
+			localize: (key: string) => key,
+			format: (key: string, data?: Record<string, string>) =>
+				key === 'NIMBLE.chat.defend.reminderFor' ? `For ${data?.name}: ${data?.reminder}` : key,
+		},
 	};
 });
 
@@ -89,7 +93,7 @@ describe('allyDefendOffers', () => {
 	it('offers the option of an owned ally within range of the hero who Defended', () => {
 		const offers = allyDefendOffers(card());
 		expect(offers.map((offer) => offer.actor.uuid)).toEqual(['Actor.bram']);
-		expect(offers[0]).toMatchObject({ defendId: 'd1', defenderName: 'pip' });
+		expect(offers[0]).toMatchObject({ defendId: 'd1', allyName: 'bram', defenderName: 'pip' });
 	});
 
 	it('offers nothing once the ally used it on this Defend', () => {
@@ -112,7 +116,7 @@ describe('allyDefendOffers', () => {
 });
 
 describe('useAllyDefendOffer', () => {
-	it('pays, then puts the use and its reminder line on the Defend', async () => {
+	it('pays, then puts the use and its reminder line, named for the ally, on the Defend', async () => {
 		const use = { actorUuid: 'Actor.bram', ruleId: 'ex', label: 'Exploit' };
 		pay.mockResolvedValue(use);
 		const [offer] = allyDefendOffers(card());
@@ -123,7 +127,7 @@ describe('useAllyDefendOffer', () => {
 			messageId: 'm1',
 			defendId: 'd1',
 			use,
-			reminder: 'Exploit: Force an enemy to Interpose.',
+			reminder: 'For bram: Exploit: Force an enemy to Interpose.',
 		});
 	});
 
