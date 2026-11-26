@@ -70,7 +70,8 @@ A feature that divides the dice, such as Grim Harrow, shows a row for each targe
 - **Cost:** what the use spent or sacrificed, such as **Cost: 2 mana (Stretch Time)**. A spent charge is one line at the bottom: "Combat Dice: spent 1, 2 of 3 left".
 - **Roll boxes:** the total of each roll. Click the arrow, or hover the total, to see the dice.
 - **Apply Damage**: the GM, or a player who owns one of the card's targets, applies the damage. **Reduced Damage** tells why a target will take less, and only the GM sees that preview. After it is applied, every user sees the amount that was removed, and that number stays. A target that took nothing shows 0. The button says **Damage Applied** and will not apply again. The GM can undo it, which puts the hit points and temp HP back and shows the preview again. After undo, a target can Defend again and a result can change to no damage. Undo does not give back what the hit spent, such as a banked reduction or a Defend that was used.
-- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens.
+- **Apply Healing** *(GM or the one who rolled)*: heals the card's targets.
+- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens. With none stored, **Apply Damage** and **Apply Healing** use the tokens you have targeted now. See [Targeting and roll visibility](#targeting-and-roll-visibility).
 - **Save:** rolls for the selected tokens.
 - **Effects:** **Apply to Targets** puts an effect on the targets. An effect for the user goes on by itself (**Apply to You** with Feature Effects off). See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 
@@ -181,7 +182,7 @@ A GM-only line goes on a card only the GM sees. A line that asks a player to act
 
 ## Targeting and roll visibility
 
-Target tokens (key T) before you roll. **Apply Damage** uses the card's targets, not the selected ones.
+Target tokens (key T) before you roll. **Apply Damage** and **Apply Healing** use the targets stored on the card, not the tokens you have selected. When the card stored none, they take the tokens you have targeted now, show them in **Targets**, and then apply. A card that already lists targets keeps those. The crosshairs button still adds the tokens you have targeted.
 
 **Auto-Expand Rolls** shows the dice under each total. **Hide Rolls by Default** makes your rolls blind, and only a GM can untick **Hide roll**. See the [Settings Reference](../reference/settings.md).
 
