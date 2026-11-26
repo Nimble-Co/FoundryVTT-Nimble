@@ -1709,7 +1709,15 @@ class NimbleChatMessage extends ChatMessage {
 			rejectCardRequest({ messageId: this.id ?? '', userId: requester.userId, reasonKey: refusal });
 			return false;
 		}
-		await this.#applyAllDamageNow();
+		const queuedRefusal = await this.#applyAllDamageNow({ notify: false });
+		if (queuedRefusal) {
+			rejectCardRequest({
+				messageId: this.id ?? '',
+				userId: requester.userId,
+				reasonKey: queuedRefusal,
+			});
+			return false;
+		}
 		return true;
 	}
 
@@ -1721,20 +1729,15 @@ class NimbleChatMessage extends ChatMessage {
 		return null;
 	}
 
-	async #applyAllDamageNow(): Promise<void> {
-		if (!this.isActivationCard() || this.cardRerolls.pendingKeep()) return;
-		if (this.isDamageApplied()) {
-			ui.notifications?.warn(localize('NIMBLE.chat.damageAlreadyApplied'));
-			return;
+	/** The refusal key when the card could not apply, or null. */
+	async #applyAllDamageNow({ notify = true } = {}): Promise<string | null> {
+		if (!this.isActivationCard()) return 'NIMBLE.chat.cannotApplyDamage';
+		const refusal = await this.#applyDamagePackets(() => this.#applicableDamagePackets(), true);
+		if (refusal && notify) {
+			if (refusal === 'NIMBLE.chat.noDamageToApply') ui.notifications?.info(localize(refusal));
+			else ui.notifications?.warn(localize(refusal));
 		}
-
-		const packets = this.#applicableDamagePackets();
-		if (packets.length < 1) {
-			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
-			return;
-		}
-
-		await this.#applyDamagePackets(packets, true);
+		return refusal;
 	}
 
 	/** The GM, or a player who owns one of the card's targets. */
@@ -1787,10 +1790,6 @@ class NimbleChatMessage extends ChatMessage {
 
 	/** Apply the damage to each target and mark them applied. Null when nothing was applied. */
 	async #applyDamageToTargets(packets: DamagePacket[], recordApplied = false) {
-		if (recordApplied && this.isDamageApplied()) {
-			ui.notifications?.warn(localize('NIMBLE.chat.damageAlreadyApplied'));
-			return null;
-		}
 		// The public entry points already gated on `isActivationCard()`; that
 		// narrowing does not survive the hop into this method.
 		const systemData = this.system as unknown as ActivationCardSystemData;
@@ -1911,15 +1910,30 @@ class NimbleChatMessage extends ChatMessage {
 		return { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem };
 	}
 
-	async #applyDamagePackets(packets: DamagePacket[], recordApplied = false): Promise<void> {
+	/**
+	 * A whole-card apply passes a getter, so the packets and its guards are read
+	 * in the queue, after the targets are adopted. Returns the refusal key, or null.
+	 */
+	async #applyDamagePackets(
+		packets: DamagePacket[] | (() => DamagePacket[]),
+		recordApplied = false,
+	): Promise<string | null> {
 		// Before the plan is built, and before the reaction queue: adopting from
 		// inside that queue would wait on itself.
 		await this.#adoptCurrentTargetsWhenEmpty();
+		let refusal: string | null = null;
 		// The plan reads the Defends, so a Defend request waits until the targets are marked applied.
-		const applied = await queueReactionWrite(this.id ?? '', () =>
-			this.#applyDamageToTargets(packets, recordApplied),
-		);
-		if (!applied) return;
+		const applied = await queueReactionWrite(this.id ?? '', () => {
+			if (recordApplied) {
+				if (this.cardRerolls.pendingKeep()) refusal = 'NIMBLE.chat.incomingReactions.keepFirst';
+				else if (this.isDamageApplied()) refusal = 'NIMBLE.chat.damageAlreadyApplied';
+			}
+			const current = typeof packets === 'function' ? packets() : packets;
+			if (!refusal && current.length < 1) refusal = 'NIMBLE.chat.noDamageToApply';
+			if (refusal) return Promise.resolve(null);
+			return this.#applyDamageToTargets(current, recordApplied);
+		});
+		if (!applied) return refusal;
 		const { damageApplicationPlan, hurt, recoil, sourceActor, sourceItem } = applied;
 		const systemData = this.system as unknown as ActivationCardSystemData;
 
@@ -1963,6 +1977,7 @@ class NimbleChatMessage extends ChatMessage {
 				}),
 			);
 		}
+		return null;
 	}
 
 	/**

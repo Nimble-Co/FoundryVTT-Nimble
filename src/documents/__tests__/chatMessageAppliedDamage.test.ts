@@ -494,6 +494,51 @@ describe('applied damage on an activation card', () => {
 		);
 	});
 
+	it('tells the second player who asked when two requests arrive together', async () => {
+		const actor = createTarget();
+		globals().fromUuidSync.mockReturnValue({ name: 'Goblin', actor });
+		const emit = vi.fn();
+		globals().game.socket = { emit };
+		globals().game.users = { get: (id: string) => ({ isGM: false, id }) };
+		actor.testUserPermission.mockReturnValue(true);
+		const card = rememberUpdates(createCard([TOKEN], 5));
+
+		const results = await Promise.all([
+			card.applyAllDamageRequested({ userId: 'player-1', viaSocket: true }),
+			card.applyAllDamageRequested({ userId: 'player-2', viaSocket: true }),
+		]);
+
+		expect(results).toEqual([true, false]);
+		expect(actor.applyDamage).toHaveBeenCalledOnce();
+		expect(emit).toHaveBeenCalledWith(
+			`system.${SYSTEM_ID}`,
+			expect.objectContaining({
+				userId: 'player-2',
+				reasonKey: 'NIMBLE.chat.damageAlreadyApplied',
+			}),
+		);
+	});
+
+	it('applies the damage the card shows once its targets are adopted, not the damage from before', async () => {
+		const actor = createTarget({ hp: 30 });
+		globals().fromUuidSync.mockReturnValue({ name: 'Goblin', actor });
+		globals().game.user = { isGM: true, id: 'gm-user', targets: new Set([{}]) } as never;
+		const card = rememberUpdates(createCard([], 5));
+		vi.spyOn(card, 'addTargetedTokensAsTargets').mockImplementation(async () => {
+			const system = card.system as unknown as {
+				targets: string[];
+				activation: { effects: Array<{ roll: { total: number } }> };
+			};
+			system.targets = [TOKEN];
+			system.activation.effects[0].roll.total = 9;
+			return card as never;
+		});
+
+		await card.applyAllDamage();
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(9);
+	});
+
 	it("a card with no stored targets is the GM's alone: a player cannot apply it at their own target", async () => {
 		const own = createTarget();
 		own.isOwner = true;
