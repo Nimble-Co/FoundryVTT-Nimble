@@ -97,3 +97,4 @@ export { Migration096DefendOptionAttack } from './Migration096DefendOptionAttack
 export { Migration097EndEarlierMarks } from './Migration097EndEarlierMarks.js';
 export { Migration098VersatileBowmaster } from './Migration098VersatileBowmaster.js';
 export { Migration099HighGroundFreeMove } from './Migration099HighGroundFreeMove.js';
+export { Migration100HahaMissedMe } from './Migration100HahaMissedMe.js';
