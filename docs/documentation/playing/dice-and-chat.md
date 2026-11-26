@@ -45,6 +45,8 @@ A line tells what the roll spends: "When you roll, it spends 1 action and 1 from
 
 Some features add a tick, such as **Max damage** or **Dual wield**. A tick that spends a charge adds it to the spend line. A tick with a limit, such as **(1/round)**, hides until the use comes back. One attack spends from a charge pool one time only: when a tick, the use or an **Add Damage** button spent a Combat Die, nothing else spends one.
 
+Some features put a tick in the roll window that rolls different damage dice with one weapon, such as Versatile Bowmaster with a longbow. The tick starts off. Other weapons do not show the tick, and an attack that skips the roll window rolls the weapon's usual damage.
+
 A feature such as Assess can hold a change for your next attack. The creature shows an icon, and the next attack window shows a line for it and ends it. With **Feature Effects** off, the line is a tick box that starts unticked. See [Hold a change for the next attack](../homebrew/held-changes.md#hold-a-change-for-the-next-attack).
 
 ::: details More about ticks and spell options
@@ -67,8 +69,9 @@ A feature that divides the dice, such as Grim Harrow, shows a row for each targe
 - **Header:** the item and the result. The result names the weapon a feature attacked with, "Hit with Longsword", or the feature you attacked through, "Hit (Coordinated Strike!)". An opportunity attack says so: "Hit (opportunity attack)". A free cast with no roll says "Free (Coordinated Strike!)".
 - **Cost:** what the use spent or sacrificed, such as **Cost: 2 mana (Stretch Time)**. A spent charge is one line at the bottom: "Combat Dice: spent 1, 2 of 3 left".
 - **Roll boxes:** the total of each roll. Click the arrow, or hover the total, to see the dice.
-- **Apply Damage** *(GM only)*: applies the damage to the card's targets. **Reduced Damage** tells why a target took less.
-- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens.
+- **Apply Damage**: the GM, or a player who owns one of the card's targets, applies the damage. **Reduced Damage** tells why a target will take less, and only the GM sees that preview. After it is applied, every user sees the amount that was removed, and that number stays. A target that took nothing shows 0. The button says **Damage Applied** and will not apply again. The GM can undo it, which puts the hit points and temp HP back and shows the preview again. After undo, a target can Defend again and a result can change to no damage. Undo does not give back what the hit spent, such as a banked reduction or a Defend that was used.
+- **Apply Healing** *(GM or the one who rolled)*: heals the card's targets.
+- **Targets:** the tokens you targeted when you rolled. You can add or remove tokens. With none stored, **Apply Healing** uses the tokens you have targeted now, and so does **Apply Damage** when the GM clicks it. A player can apply damage only when the card stores a target they own. See [Targeting and roll visibility](#targeting-and-roll-visibility).
 - **Save:** rolls for the selected tokens.
 - **Effects:** **Apply to Targets** puts an effect on the targets. An effect for the user goes on by itself (**Apply to You** with Feature Effects off). See [Conditions](conditions.md#three-ways-to-apply-and-remove-them).
 
@@ -87,6 +90,8 @@ Small lines under a damage box tell where it came from:
 A feature that spends dice or a charge to add damage after a hit or a crit is a button over **Apply Damage**, such as **Add Damage with Heavy Strike**. Click it before the damage is applied. Its damage becomes a line in the box, "Heavy Strike: +5", and anything else, such as a push, goes in **Events**.
 
 After a hit, a weapon that can ricochet gets a line under **Apply Damage**. The card cannot tell a throw from a stab, so it says "if you threw the Dagger". Target another creature for a button such as **Apply 3 Damage to G2**: half the damage, rounded down, through its armor. Then the line says "G2 took 3 damage."
+
+When an attack with **Half Damage on a Kill** drops a creature to 0 HP, **Apply Damage** asks whoever is applying it to pick another creature within reach of the attacker, or to decline. That creature takes half the damage that was rolled, rounded down. Armor does not reduce it. Declining, or a creature who survives, deals nothing further. Large - Go for the Throat! does this at Reach 4.
 
 ### Attacks from a feature
 
@@ -144,7 +149,7 @@ In combat, an attack card that hits a hero has a **Reactions** section: a button
 - **Interpose:** an ally within 2 spaces (or the range of an Interpose feature) becomes the target and takes the full damage. Move the tokens yourself.
 - **Interpose and Defend:** you become the target, and your Armor comes off.
 
-A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too: a move back is a line for the table, and an attack back is an [attack line](#attacks-from-a-feature).
+A window asks first when your reaction is spent, when you have no actions, or on your turn. Features that act when you Defend show there too. An attack back asks before the Defend is written. Choosing to attack rolls the damage on a card that targets the attacker. The GM applies it from that card, and the attacker's armor applies. Skipping the attack still lets the Defend happen. A move the feature still leaves to the table stays a line on the card.
 
 After a Defend, the target row shows a green shield. Before the damage is applied, the GM can click it when the damage cannot be avoided, or **Undo** to give back the reaction and actions. An effect a feature put on the attacker stays.
 
@@ -153,6 +158,7 @@ The **Defend** and **Interpose** rows on the sheet's Actions tab and the hotbar 
 ::: details More about Defend features
 - A Defend that covers every attack this round is an effect on the hero until the start of their next turn.
 - A free Defend that is a spell, such as Flame Barrier, has its own row. Cast from that row, its effect that hurts attackers also counts the attack you answer.
+- Medium Protect Me! asks whether the companion attacks the attacker for 1d4 plus your level. The attacker's armor applies.
 :::
 
 ## The Initiative card
@@ -176,7 +182,7 @@ A GM-only line goes on a card only the GM sees. A line that asks a player to act
 
 ## Targeting and roll visibility
 
-Target tokens (key T) before you roll. **Apply Damage** uses the card's targets, not the selected ones.
+Target tokens (key T) before you roll. **Apply Damage** and **Apply Healing** use the targets stored on the card, not the tokens you have selected. When the card stored none, **Apply Healing**, and **Apply Damage** when the GM clicks it, take the tokens you have targeted now, show them in **Targets**, and then apply. A card that already lists targets keeps those. The crosshairs button still adds the tokens you have targeted.
 
 **Auto-Expand Rolls** shows the dice under each total. **Hide Rolls by Default** makes your rolls blind, and only a GM can untick **Hide roll**. See the [Settings Reference](../reference/settings.md).
 

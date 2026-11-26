@@ -5,8 +5,18 @@
 	"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "large-alpha-protector",
+		"rules": [
+			{
+				"type": "halveFirstAttack",
+				"disabled": false,
+				"id": "alphaHalve",
+				"identifier": "",
+				"label": "Alpha Protector",
+				"predicate": {},
+				"priority": 1
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

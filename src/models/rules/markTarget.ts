@@ -15,6 +15,7 @@ import {
 import localize from '#utils/localize.js';
 import { NIMBLE_EFFECT_TYPE } from '../activeEffect/nimbleEffectChoices.js';
 import { withWidget } from './_widgetOption.js';
+import { AdditionalMarkRule, type AdditionalMarkToken } from './additionalMark.js';
 import { type ItemActivatedContext, NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -46,6 +47,13 @@ function schema() {
 			initial: 1,
 			label: 'NIMBLE.rules.markTarget.maxTargets.label',
 			hint: 'NIMBLE.rules.markTarget.maxTargets.hint',
+		}),
+		endEarlier: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.markTarget.endEarlier.label',
+			hint: 'NIMBLE.rules.markTarget.endEarlier.hint',
 		}),
 		effectId: new fields.StringField(
 			withWidget({
@@ -108,8 +116,10 @@ interface FlaggedActor {
  * independent. Capacity is the largest `maxTargets` among the actor's enabled markTarget rules
  * sharing this `flagKey` (a value of 0 means unlimited) — this lets a separate upgrade
  * feature raise the cap (e.g. the Hunter's level-20 Nemesis) without the primary rule
- * knowing about it. Marking beyond capacity evicts the oldest mark: "until you mark another
- * creature" is exactly the capacity-eviction behaviour. An `effectId` gives the marker the
+ * knowing about it. Marking beyond capacity evicts the oldest mark. With `endEarlier`, a new
+ * mark ends every earlier mark of this flag instead, unless capacity is unlimited. An
+ * `additionalMark` rule can then mark one more creature within range of that new mark,
+ * without using the item again. An `effectId` gives the marker the
  * item effect's Lasts Until, changes and rules. Any end of the marker (its Lasts Until, or
  * someone taking it off the creature) ends that mark (see `markLifecycle.ts`).
  */
@@ -123,6 +133,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 	// `statusCondition` is inferred from the schema's `choices` (condition keys plus the
 	// blank sentinel). Re-declaring as the wider `string` clashes with the inferred type.
 	declare maxTargets: number;
+	declare endEarlier: boolean;
 	declare effectId: string;
 
 	static override defineSchema(): MarkTargetRule.Schema {
@@ -138,6 +149,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 				['flagKey', 'string'],
 				['statusCondition', 'string'],
 				['maxTargets', 'number'],
+				['endEarlier', 'boolean'],
 				['effectId', 'string'],
 			]),
 		);
@@ -168,11 +180,19 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		if (!this.test()) return;
 
 		// Pair each target token with its actor; tokenless targets keep a null token uuid.
-		const targets: Array<{ actor: MarkableActor; tokenUuid: string | null }> = [];
+		const targets: Array<{
+			actor: MarkableActor;
+			tokenUuid: string | null;
+			token: AdditionalMarkToken | null;
+		}> = [];
 		for (const tokenDoc of context.targetTokens ?? []) {
 			const actor = (tokenDoc as { actor?: unknown }).actor as MarkableActor | null | undefined;
 			if (!actor?.uuid) continue;
-			targets.push({ actor, tokenUuid: (tokenDoc as { uuid?: string }).uuid ?? null });
+			targets.push({
+				actor,
+				tokenUuid: (tokenDoc as { uuid?: string }).uuid ?? null,
+				token: tokenDoc as AdditionalMarkToken,
+			});
 		}
 		if (targets.length === 0) return;
 
@@ -189,7 +209,7 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 				tokenUuid,
 				name: actor.name ?? '',
 			};
-			const next = computeNextToggledList(list, entry, capacity);
+			const next = computeNextToggledList(list, entry, capacity, this.endEarlier);
 			list = next.list;
 			evicted.push(...next.evicted);
 		}
@@ -198,6 +218,21 @@ class MarkTargetRule extends NimbleBaseRule<MarkTargetRule.Schema> {
 		await owner.setFlag(SYSTEM_ID, TOGGLED_EFFECTS_FLAG_KEY, flag);
 
 		await this.#applyStatusEffects(targets, evicted);
+
+		if (!this.endEarlier) return;
+		const marked = targets[targets.length - 1];
+		if (!marked) return;
+		await AdditionalMarkRule.markAnotherAfter<MarkableActor>({
+			actor: owner,
+			flagKey: this.flagKey,
+			list,
+			markedActorUuid: marked.actor.uuid,
+			markedToken: marked.token,
+			cardId: context.card?.id ?? null,
+			applyMarker: async (actor) => {
+				await this.#applyStatusEffects([{ actor }], []);
+			},
+		});
 	}
 
 	/**

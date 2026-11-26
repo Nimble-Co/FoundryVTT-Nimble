@@ -6,7 +6,44 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "high-ground-initiative-free-move",
+				"identifier": "",
+				"label": "I Have the High Ground",
+				"predicate": {},
+				"priority": 1,
+				"trigger": "onInitiativeRolled",
+				"poolIdentifier": "",
+				"chargePoolGainIdentifier": "",
+				"distance": "floor(@speed / 2)",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": true,
+				"chargePoolIdentifier": ""
+			},
+			{
+				"type": "freeMove",
+				"disabled": false,
+				"id": "high-ground-charge-free-move",
+				"identifier": "",
+				"label": "I Have the High Ground",
+				"predicate": {},
+				"priority": 2,
+				"trigger": "onChargePoolGain",
+				"poolIdentifier": "",
+				"chargePoolGainIdentifier": "thrill-of-the-hunt",
+				"distance": "floor(@speed / 2)",
+				"recipient": "self",
+				"within": 12,
+				"direction": "any",
+				"ignoresDifficultTerrain": true,
+				"chargePoolIdentifier": ""
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +70,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you roll Initiative or gain one or more Thrill of the Hunt charges, move up to half your speed for free, ignoring difficult terrain.</p>",
+		"description": "<p>When you roll Initiative or gain one or more Thrill of the Hunt charges, move up to half your speed for free, ignoring difficult terrain.</p><p><em>A chat card lets you choose where to stop.</em></p>",
 		"featureType": "class",
 		"class": "hunter",
 		"group": "keeper-of-the-wildheart",

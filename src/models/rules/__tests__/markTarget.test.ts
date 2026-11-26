@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
 import { NIMBLE_EFFECT_TYPE } from '../../activeEffect/nimbleEffectChoices.js';
+import { AdditionalMarkRule } from '../additionalMark.js';
 import { MarkTargetRule } from '../markTarget.js';
 
 interface MockMarkEffect {
@@ -59,14 +60,17 @@ interface MarkOwner {
 	uuid?: string;
 	getFlag: ReturnType<typeof vi.fn>;
 	setFlag: ReturnType<typeof vi.fn>;
-	rules: MarkTargetRule[];
+	activateItem: ReturnType<typeof vi.fn>;
+	rules: Array<MarkTargetRule | AdditionalMarkRule>;
 	getRollData: ReturnType<typeof vi.fn>;
 }
 
 function createOwner(): MarkOwner {
 	return {
+		uuid: 'Actor.hunter',
 		getFlag: vi.fn(() => ({})),
 		setFlag: vi.fn(async () => undefined),
+		activateItem: vi.fn(async () => undefined),
 		rules: [],
 		getRollData: vi.fn(() => ({})),
 	};
@@ -82,6 +86,7 @@ function createRule(
 		flagKey?: string;
 		statusCondition?: string;
 		maxTargets?: number;
+		endEarlier?: boolean;
 		effectId?: string;
 		effects?: Record<string, MockItemEffect>;
 	},
@@ -101,6 +106,7 @@ function createRule(
 		flagKey: config.flagKey ?? 'quarry',
 		statusCondition: config.statusCondition ?? 'marked',
 		maxTargets: config.maxTargets ?? 1,
+		endEarlier: config.endEarlier ?? false,
 		disabled: false,
 		label: 'Mark Quarry',
 		id: 'rule-id',
@@ -119,6 +125,7 @@ function createRule(
 	(rule as unknown as { statusCondition: string }).statusCondition =
 		config.statusCondition ?? 'marked';
 	rule.maxTargets = config.maxTargets ?? 1;
+	rule.endEarlier = config.endEarlier ?? false;
 	rule.effectId = config.effectId ?? '';
 
 	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
@@ -135,6 +142,111 @@ function activation(sourceItem: { uuid: string }, tokens: ReturnType<typeof crea
 		targetTokens: tokens,
 		card: null,
 	} as never;
+}
+
+function createAdditionalMark(owner: MarkOwner, within = 6): AdditionalMarkRule {
+	const item = {
+		isEmbedded: true,
+		actor: owner,
+		name: 'Pack Hunter',
+		uuid: 'pack-hunter',
+		getDomain: () => new Set<string>(),
+	};
+	const rule = new AdditionalMarkRule(
+		{
+			type: 'additionalMark',
+			flagKey: 'quarry',
+			within,
+			disabled: false,
+			label: 'Pack Hunter',
+			id: 'pack-hunter-mark',
+			identifier: '',
+			priority: 1,
+			predicate: {},
+		} as never,
+		{ parent: item as never, strict: false },
+	);
+	rule.type = 'additionalMark';
+	rule.flagKey = 'quarry';
+	rule.within = within;
+	Object.defineProperty(rule, 'parent', { get: () => item, configurable: true });
+	Object.defineProperty(rule, 'predicate', { get: () => ({ size: 0 }), configurable: true });
+	return rule;
+}
+
+const GRID_SIZE = 100;
+
+interface MarkScene {
+	tokens: Array<ReturnType<typeof createTargetToken> & { hidden: boolean; uuid: string }>;
+	grid: {
+		isSquare: boolean;
+		isGridless: boolean;
+		size: number;
+		distance: number;
+		measurePath(points: { i: number; j: number }[]): { distance: number };
+	};
+}
+
+function makeScene(): MarkScene {
+	return {
+		tokens: [],
+		grid: {
+			isSquare: true,
+			isGridless: false,
+			size: GRID_SIZE,
+			distance: 5,
+			measurePath([from, to]: { i: number; j: number }[]) {
+				const spaces = Math.max(Math.abs(from.i - to.i), Math.abs(from.j - to.j));
+				return { distance: spaces * 5 };
+			},
+		},
+	};
+}
+
+function placeToken<T extends ReturnType<typeof createTargetToken>>(
+	token: T,
+	scene: MarkScene,
+	spaces: number,
+) {
+	const placed = Object.assign(token, {
+		x: spaces * GRID_SIZE,
+		y: 0,
+		width: 1,
+		height: 1,
+		hidden: false,
+		parent: scene,
+		getOccupiedGridSpaceOffsets(data?: {
+			x?: number;
+			y?: number;
+			width?: number;
+			height?: number;
+		}) {
+			const x = data?.x ?? placed.x;
+			const y = data?.y ?? placed.y;
+			const width = data?.width ?? placed.width;
+			const height = data?.height ?? placed.height;
+			const left = Math.floor(x / GRID_SIZE);
+			const top = Math.floor(y / GRID_SIZE);
+			const offsets: { i: number; j: number }[] = [];
+			for (let row = 0; row < height; row++) {
+				for (let column = 0; column < width; column++) {
+					offsets.push({ i: top + row, j: left + column });
+				}
+			}
+			return offsets;
+		},
+	});
+	scene.tokens.push(placed);
+	return placed;
+}
+
+function dialogWait(): ReturnType<typeof vi.fn> {
+	return (foundry.applications.api.DialogV2 as unknown as { wait: ReturnType<typeof vi.fn> }).wait;
+}
+
+function quarryActors(owner: MarkOwner): string[] {
+	const value = owner.setFlag.mock.calls.at(-1)?.[2] as { quarry: { actorUuid: string }[] };
+	return value.quarry.map((entry) => entry.actorUuid);
 }
 
 function effectStartStub() {
@@ -442,7 +554,187 @@ describe('MarkTargetRule', () => {
 			{ initial?: unknown; options?: { widget?: string } }
 		>;
 		expect(fields.effectId?.initial).toBe('');
+		expect(fields.endEarlier?.initial).toBe(false);
 		expect(fields).not.toHaveProperty('endsAtEncounterEnd');
+	});
+
+	describe('ending every earlier mark', () => {
+		beforeEach(() => {
+			(foundry.applications.api.DialogV2 as { wait?: unknown }).wait = vi.fn();
+		});
+
+		afterEach(() => {
+			delete (foundry.applications.api.DialogV2 as { wait?: unknown }).wait;
+		});
+
+		it('ends every earlier mark, not only the oldest', async () => {
+			const owner = createOwner();
+			const oldA = createTargetToken('old-a', 'Old A');
+			const oldB = createTargetToken('old-b', 'Old B');
+			for (const quarry of [oldA, oldB]) {
+				quarry.actor.effects.push({
+					id: `Effect.${quarry.actor.uuid}`,
+					getFlag: (_scope, key) => (key === 'markTargetItemUuid' ? 'item-uuid' : undefined),
+				});
+			}
+			owner.getFlag = vi.fn(() => ({
+				quarry: [
+					{ actorUuid: oldA.actor.uuid, tokenUuid: oldA.uuid, name: 'Old A' },
+					{ actorUuid: oldB.actor.uuid, tokenUuid: oldB.uuid, name: 'Old B' },
+				],
+			}));
+			(globalThis as { fromUuid?: unknown }).fromUuid = vi.fn(async (uuid: string) => {
+				if (uuid === oldA.uuid) return oldA;
+				if (uuid === oldB.uuid) return oldB;
+				return null;
+			});
+			const { rule, item } = createRule({ maxTargets: 2, endEarlier: true }, owner);
+			owner.rules = [rule];
+			const token = createTargetToken('new', 'New');
+
+			await rule.onItemActivated(activation(item, [token]));
+
+			expect(quarryActors(owner)).toEqual(['Actor.new']);
+			expect(oldA.actor.deleteEmbeddedDocuments).toHaveBeenCalled();
+			expect(oldB.actor.deleteEmbeddedDocuments).toHaveBeenCalled();
+			expect(dialogWait()).not.toHaveBeenCalled();
+		});
+
+		it('keeps earlier marks when a sibling rule makes the cap unlimited', async () => {
+			const owner = createOwner();
+			owner.getFlag = vi.fn(() => ({
+				quarry: [{ actorUuid: 'Actor.old', tokenUuid: null, name: 'Old' }],
+			}));
+			const huntersMark = createRule({ maxTargets: 1, endEarlier: true }, owner, 'hunters-mark');
+			const nemesis = createRule({ maxTargets: 0 }, owner, 'nemesis');
+			owner.rules = [huntersMark.rule, nemesis.rule];
+
+			await huntersMark.rule.onItemActivated(
+				activation(huntersMark.item, [createTargetToken('new', 'New')]),
+			);
+
+			expect(quarryActors(owner).sort()).toEqual(['Actor.new', 'Actor.old']);
+			expect(dialogWait()).not.toHaveBeenCalled();
+		});
+
+		it('marks a creature exactly 6 spaces away and then ends both quarries', async () => {
+			const owner = createOwner();
+			const charges = { 'thrill-of-the-hunt': { value: 2 } };
+			const bags: Record<string, unknown> = {
+				toggledEffects: { chargePools: charges },
+				chargePools: charges,
+			};
+			owner.getFlag = vi.fn((_scope: string, key: string) => bags[key]);
+			owner.setFlag = vi.fn(async (_scope: string, key: string, value: unknown) => {
+				bags[key] = value;
+			});
+			const scene = makeScene();
+			const marked = placeToken(createTargetToken('wolf', 'Wolf'), scene, 0);
+			const second = placeToken(createTargetToken('boar', 'Boar'), scene, 6);
+			const far = placeToken(createTargetToken('stag', 'Stag'), scene, 7);
+			const hunter = placeToken(createTargetToken('hunter', 'Hunter'), scene, 1);
+			hunter.actor.uuid = owner.uuid ?? 'Actor.hunter';
+			const { rule, item } = createRule({ maxTargets: 2, endEarlier: true }, owner);
+			owner.rules = [rule, createAdditionalMark(owner)];
+			dialogWait().mockResolvedValue(`mark:${second.uuid}`);
+
+			await rule.onItemActivated(activation(item, [marked]));
+
+			const written = bags.toggledEffects as {
+				quarry: { actorUuid: string }[];
+				chargePools: unknown;
+			};
+			expect(written.quarry.map((entry) => entry.actorUuid)).toEqual(['Actor.wolf', 'Actor.boar']);
+			expect(written.chargePools).toBe(charges);
+			expect(bags.chargePools).toBe(charges);
+			expect(owner.setFlag.mock.calls.every((call) => call[1] === 'toggledEffects')).toBe(true);
+			expect(owner.activateItem).not.toHaveBeenCalled();
+			expect(second.actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+			const actions = (
+				dialogWait().mock.calls[0]?.[0] as { buttons: { action: string }[] }
+			).buttons.map((button) => button.action);
+			expect(actions).toContain(`mark:${second.uuid}`);
+			expect(actions).not.toContain(`mark:${far.uuid}`);
+			expect(actions).not.toContain(`mark:${hunter.uuid}`);
+
+			const later = makeScene();
+			const next = placeToken(createTargetToken('next', 'Next'), later, 0);
+			dialogWait().mockClear();
+
+			await rule.onItemActivated(activation(item, [next]));
+
+			const after = bags.toggledEffects as { quarry: { actorUuid: string }[] };
+			expect(after.quarry.map((entry) => entry.actorUuid)).toEqual(['Actor.next']);
+			expect(dialogWait()).not.toHaveBeenCalled();
+		});
+
+		it('does not restore evicted marks from a stale flag when the second creature is accepted', async () => {
+			const owner = createOwner();
+			const charges = { 'thrill-of-the-hunt': { value: 1 } };
+			owner.getFlag = vi.fn(() => ({
+				quarry: [
+					{ actorUuid: 'Actor.old-a', tokenUuid: null, name: 'Old A' },
+					{ actorUuid: 'Actor.old-b', tokenUuid: null, name: 'Old B' },
+				],
+				chargePools: charges,
+			}));
+			const scene = makeScene();
+			const marked = placeToken(createTargetToken('wolf', 'Wolf'), scene, 0);
+			const second = placeToken(createTargetToken('boar', 'Boar'), scene, 6);
+			const { rule, item } = createRule({ maxTargets: 2, endEarlier: true }, owner);
+			owner.rules = [rule, createAdditionalMark(owner)];
+			dialogWait().mockResolvedValue(`mark:${second.uuid}`);
+
+			await rule.onItemActivated(activation(item, [marked]));
+
+			const last = owner.setFlag.mock.calls.at(-1)?.[2] as {
+				quarry: { actorUuid: string }[];
+				chargePools: unknown;
+			};
+			expect(last.quarry.map((entry) => entry.actorUuid)).toEqual(['Actor.wolf', 'Actor.boar']);
+			expect(last.chargePools).toBe(charges);
+			expect(owner.setFlag.mock.calls.every((call) => call[1] === 'toggledEffects')).toBe(true);
+			expect(owner.activateItem).not.toHaveBeenCalled();
+			expect(second.actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		});
+
+		it.each([null, 'decline'] as const)(
+			'declining (%s) leaves only the new mark',
+			async (choice) => {
+				const owner = createOwner();
+				const scene = makeScene();
+				const marked = placeToken(createTargetToken('wolf', 'Wolf'), scene, 0);
+				const second = placeToken(createTargetToken('boar', 'Boar'), scene, 1);
+				const { rule, item } = createRule({ maxTargets: 1, endEarlier: true }, owner);
+				owner.rules = [rule, createAdditionalMark(owner)];
+				dialogWait().mockResolvedValue(choice);
+
+				await rule.onItemActivated(activation(item, [marked]));
+
+				expect(owner.setFlag).toHaveBeenCalledTimes(1);
+				expect(quarryActors(owner)).toEqual(['Actor.wolf']);
+				expect(second.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+				expect(owner.activateItem).not.toHaveBeenCalled();
+			},
+		);
+
+		it('does not offer a creature farther than 6 spaces', async () => {
+			const owner = createOwner();
+			const scene = makeScene();
+			const marked = placeToken(createTargetToken('wolf', 'Wolf'), scene, 0);
+			const far = placeToken(createTargetToken('stag', 'Stag'), scene, 7);
+			const hidden = placeToken(createTargetToken('shade', 'Shade'), scene, 1);
+			hidden.hidden = true;
+			placeToken(createTargetToken('hunter', 'Hunter'), scene, 1);
+			const { rule, item } = createRule({ endEarlier: true }, owner);
+			owner.rules = [rule, createAdditionalMark(owner)];
+
+			await rule.onItemActivated(activation(item, [marked]));
+
+			expect(dialogWait()).not.toHaveBeenCalled();
+			expect(quarryActors(owner)).toEqual(['Actor.wolf']);
+			expect(far.actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+		});
 	});
 
 	it('exposes the picker group and description key', () => {

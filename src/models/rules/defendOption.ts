@@ -105,6 +105,16 @@ function schema() {
 			label: key('reminder', 'label'),
 			hint: key('reminder', 'hint'),
 		}),
+		attackFormula: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: key('attackFormula', 'label'),
+				hint: key('attackFormula', 'hint'),
+				widget: 'formula',
+			}),
+		),
 		useItem: new fields.BooleanField(
 			withWidget({
 				required: true,
@@ -252,6 +262,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 	declare alsoInterpose: boolean;
 	declare attackerEffectId: string;
 	declare reminder: string;
+	declare attackFormula: string;
 	declare useItem: boolean;
 	declare upcastArmor: number;
 	declare withInterpose: boolean;
@@ -299,6 +310,12 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 		return this.resolveSpaces(this.range, 1);
 	}
 
+	/** The damage formula offered against the attacker, or null when it has none. */
+	attackOffer(): string | null {
+		const formula = (this.attackFormula ?? '').trim();
+		return formula || null;
+	}
+
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
@@ -306,6 +323,7 @@ class DefendOptionRule extends NimbleBaseRule<DefendOptionRule.Schema> {
 				['outcome', 'string'],
 				['armorBonus', 'string'],
 				['reminder', 'string'],
+				['attackFormula', 'string'],
 			]),
 		);
 	}

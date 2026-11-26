@@ -16,7 +16,7 @@ The rulebook says a character can concentrate on only one activity at a time. It
 
 The system ends Concentration when the caster drops to 0 HP or gains Incapacitated, or a condition that counts as Incapacitated, such as Stunned. It also ends it when the spell's Duration passes, if that Duration is in minutes or hours.
 
-When a crit hits the caster, the attack card gets a line that asks for a DC 10 STR save, with a **Roll** button for the owner of the caster. The line appears when the GM clicks **Apply Damage**. On a crit that deals 0 damage, **Apply Damage** stays active so the GM can still click it to get the line. A failure ends Concentration. With **Feature Effects** off, a failure puts a line with **End** on that card instead. On a success, the line says the caster keeps it, such as "Tessa keeps Concentration". The roll posts a save card, so save rules (advantage on STR saves, for example) and rerolls apply to it.
+When a crit hits the caster, the attack card gets a line that asks for a DC 10 STR save, with a **Roll** button for the owner of the caster. The line appears when **Apply Damage** is clicked. On a crit that deals 0 damage, **Apply Damage** stays active until that click, so the save can still be requested. A failure ends Concentration. With **Feature Effects** off, a failure puts a line with **End** on that card instead. On a success, the line says the caster keeps it, such as "Tessa keeps Concentration". The roll posts a save card, so save rules (advantage on STR saves, for example) and rerolls apply to it.
 
 To end concentration on purpose is a free action. A hero gets one free action per turn, and the system does not spend it for you.
 

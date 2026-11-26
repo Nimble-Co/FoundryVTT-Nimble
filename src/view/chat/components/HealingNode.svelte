@@ -31,7 +31,6 @@
 	let appliedHealingData = $derived(systemData.appliedHealing);
 	let isApplied = $derived(!!appliedHealingData?.[effectId]);
 	let healingRecord = $derived(appliedHealingData?.[effectId]);
-	let hasTargets = $derived(node.recipient === 'self' || (systemData.targets?.length ?? 0) > 0);
 
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
@@ -128,14 +127,12 @@
 		{:else}
 			<button
 				class="nimble-button nimble-button--apply-healing"
-				class:nimble-button--disabled={!hasTargets}
 				class:nimble-button--recommended={dispositionState === 'recommended'}
 				class:nimble-button--discouraged={dispositionState === 'discouraged'}
-				aria-label={hasTargets ? chatText('applyHealing') : chatText('noTargetsSelected')}
-				data-tooltip={hasTargets ? chatText('applyHealing') : chatText('noTargetsSelected')}
+				aria-label={chatText('applyHealing')}
+				data-tooltip={chatText('applyHealing')}
 				data-tooltip-direction="UP"
 				onclick={handleApplyHealing}
-				disabled={!hasTargets}
 			>
 				<i class="fa-solid fa-heart" aria-hidden="true"></i>
 				{chatText('applyHealing')}
@@ -350,11 +347,6 @@
 			&:hover:not(:disabled) {
 				opacity: 0.65;
 			}
-		}
-
-		&--disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
 		}
 	}
 </style>

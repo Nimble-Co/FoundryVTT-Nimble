@@ -48,6 +48,45 @@ describe('toggledEffects', () => {
 			expect(list).toHaveLength(3);
 			expect(evicted).toHaveLength(0);
 		});
+
+		it('ends every earlier mark when asked, even under a higher cap', () => {
+			const current = [entry({ actorUuid: 'Actor.a' }), entry({ actorUuid: 'Actor.b' })];
+			const { list, evicted } = computeNextToggledList(
+				current,
+				entry({ actorUuid: 'Actor.c' }),
+				2,
+				true,
+			);
+			expect(list.map((marked) => marked.actorUuid)).toEqual(['Actor.c']);
+			expect(evicted.map((marked) => marked.actorUuid)).toEqual(['Actor.a', 'Actor.b']);
+		});
+
+		it('refreshes the same creature and ends the others', () => {
+			const current = [
+				entry({ actorUuid: 'Actor.a', name: 'Old' }),
+				entry({ actorUuid: 'Actor.b' }),
+			];
+			const { list, evicted } = computeNextToggledList(
+				current,
+				entry({ actorUuid: 'Actor.a', name: 'New' }),
+				2,
+				true,
+			);
+			expect(list).toEqual([expect.objectContaining({ actorUuid: 'Actor.a', name: 'New' })]);
+			expect(evicted.map((marked) => marked.actorUuid)).toEqual(['Actor.b']);
+		});
+
+		it('keeps earlier marks when capacity is unlimited, even if asked to end them', () => {
+			const current = [entry({ actorUuid: 'Actor.a' }), entry({ actorUuid: 'Actor.b' })];
+			const { list, evicted } = computeNextToggledList(
+				current,
+				entry({ actorUuid: 'Actor.c' }),
+				0,
+				true,
+			);
+			expect(list.map((marked) => marked.actorUuid)).toEqual(['Actor.a', 'Actor.b', 'Actor.c']);
+			expect(evicted).toEqual([]);
+		});
 	});
 
 	describe('getToggledTargetTags', () => {

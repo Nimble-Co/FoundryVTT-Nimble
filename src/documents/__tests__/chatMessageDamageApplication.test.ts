@@ -99,7 +99,7 @@ function createCard(
 	packets: Array<{ damageType: string; total: number; damageMultiplier?: number }>,
 	isCritical = false,
 ) {
-	return new NimbleChatMessage({
+	const card = new NimbleChatMessage({
 		type: 'spell',
 		system: {
 			targets: ['Scene.scene.Token.token'],
@@ -113,11 +113,13 @@ function createCard(
 			},
 		},
 	} as unknown as ChatMessage.CreateData);
+	Object.assign(card, { update: vi.fn().mockResolvedValue(card) });
+	return card;
 }
 
 /** A card whose damage posts unrolled, waiting on a later trigger. */
 function deferredDamageCard() {
-	return new NimbleChatMessage({
+	const card = new NimbleChatMessage({
 		type: 'spell',
 		system: {
 			targets: ['Scene.scene.Token.token'],
@@ -140,6 +142,8 @@ function deferredDamageCard() {
 			},
 		},
 	} as unknown as ChatMessage.CreateData);
+	Object.assign(card, { update: vi.fn().mockResolvedValue(card) });
+	return card;
 }
 
 function deferredNodeOf(card: NimbleChatMessage) {
@@ -321,7 +325,16 @@ describe('NimbleChatMessage.applyAllDamage', () => {
 			([hook]) => hook === systemHookName('damageApplied'),
 		)?.[1];
 		expect(payload).toMatchObject({ discardedCritTriggersFired: true });
-		expect(update).not.toHaveBeenCalled();
+		expect(update).not.toHaveBeenCalledWith(
+			expect.objectContaining({ 'system.discardedCritTriggersFired': true }),
+		);
+		expect(update.mock.calls[0]?.[0]).toEqual(
+			expect.objectContaining({
+				'system.appliedDamage': expect.objectContaining({
+					targets: [expect.objectContaining({ uuid: 'Scene.scene.Token.token', amount: 7 })],
+				}),
+			}),
+		);
 	});
 
 	it('reports a kill once when neither packet would drop the target alone', async () => {
@@ -470,7 +483,9 @@ describe('a target with No Damage', () => {
 
 		await card.applyAllDamage();
 
-		expect(card.update).toHaveBeenCalledWith({ 'system.damageApplied': true });
+		expect(card.update).toHaveBeenCalledWith(
+			expect.objectContaining({ 'system.damageApplied': true }),
+		);
 	});
 
 	it('previews zero for that target only, and names the feature', () => {

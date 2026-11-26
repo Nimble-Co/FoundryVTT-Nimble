@@ -11,7 +11,9 @@ Nimble characters track two layers of harm, and the sheet gives you two kinds of
 - **Hit Points** are the fast-moving number: the **HP** and **Temp HP** plates in the rail track current, temporary, and maximum HP, and drop with every hit. Click a number to type a new one.
 - **Wounds** are the slow-moving one: the **Wounds** meter in the rail has one segment per wound, with room for six by default (features can raise this). Click a segment to mark or unmark a wound. The count shows at the right of the meter.
 
-HP comes back easily. Wounds don't: a safe rest heals exactly one.
+The system adds Wounds for you when a hero takes damage. Dropping to 0 HP gives 1 Wound. Damage taken while Dying (at 0 HP) gives 2 Wounds, or 3 on a crit. Damage that temp HP take still counts.
+
+HP comes back easily. Wounds don't: a safe rest heals one, unless a feature changes that.
 
 ## Field Rest
 
@@ -33,7 +35,7 @@ Click **Safe Rest** in the rail. The safe rest window is a preview, not a form. 
 - **Hit Points** restored to maximum, and any **temporary HP** removed.
 - **All hit dice** restored.
 - **Mana** restored to maximum, if your class recovers mana on a safe rest.
-- **One wound** healed.
+- **One wound** healed, unless a feature changes how many.
 - **Charges** on features and items that recharge on a safe rest.
 - **Inspiration** ends, if you have it. The GM grants it again later.
 

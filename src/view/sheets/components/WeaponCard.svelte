@@ -12,6 +12,8 @@
 		icon = 'fa-solid fa-sword',
 		damage = null,
 		properties = [],
+		notice = null,
+		noticeLabel = null,
 		description = null,
 		isExpanded = false,
 		disabled = false,
@@ -71,6 +73,17 @@
 						<span class="weapon-card__tag">{prop}</span>
 					{/each}
 				</div>
+			{/if}
+			{#if notice}
+				<span
+					class="weapon-card__notice"
+					data-tooltip={notice}
+					data-tooltip-direction="UP"
+					aria-label={notice}
+				>
+					<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+					<span>{noticeLabel || notice}</span>
+				</span>
 			{/if}
 		</div>
 
@@ -177,6 +190,20 @@
 			align-items: center;
 			flex-wrap: wrap;
 			gap: 0.375rem;
+		}
+
+		&__notice {
+			display: flex;
+			align-items: flex-start;
+			gap: 0.25rem;
+			min-width: 0;
+			font-size: var(--nimble-xs-text);
+			line-height: 1.3;
+			color: var(--nimble-warning-text-color);
+
+			span {
+				min-width: 0;
+			}
 		}
 
 		&__name {

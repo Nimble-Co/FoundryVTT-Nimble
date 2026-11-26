@@ -67,6 +67,7 @@ interface RuleLike {
 	onRoundChanged: Mock;
 	onMovementFinished: Mock;
 	onPoolGain: Mock;
+	onChargePoolGain: Mock;
 	onActiveGmTurnStart: Mock;
 }
 
@@ -88,6 +89,7 @@ function createMockRule(): RuleLike {
 		onRoundChanged: vi.fn().mockResolvedValue(undefined),
 		onMovementFinished: vi.fn().mockResolvedValue(undefined),
 		onPoolGain: vi.fn().mockResolvedValue(undefined),
+		onChargePoolGain: vi.fn().mockResolvedValue(undefined),
 		onActiveGmTurnStart: vi.fn().mockResolvedValue(undefined),
 	};
 }
@@ -123,6 +125,7 @@ describe('ruleEventDispatch', () => {
 		expect(handlers.has('nimble.conditionApplied')).toBe(true);
 		expect(handlers.has('nimble.movementFinished')).toBe(true);
 		expect(handlers.has('nimble.dicePool.changed')).toBe(true);
+		expect(handlers.has(systemHookName('chargePool.changed'))).toBe(true);
 		expect(handlers.has('nimbleCombatTurnStart')).toBe(true);
 	});
 
@@ -1100,6 +1103,103 @@ describe('ruleEventDispatch', () => {
 			await fire({ actor: { rules: [rule] }, poolId: 'fury', previousFaces: [], newFaces: [3] });
 
 			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('does not dispatch a charge-pool gain', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'actor:thrill-of-the-hunt',
+				previousValue: 0,
+				newValue: 1,
+			});
+
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+			expect(rule.onChargePoolGain).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('nimble.chargePool.changed → onChargePoolGain', () => {
+		async function fire(payload: unknown): Promise<void> {
+			await handlers.get(systemHookName('chargePool.changed'))?.(payload);
+		}
+
+		it('dispatches the bare pool identifier when the pool gains charges', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+
+			await fire({
+				actor,
+				poolId: 'actor:thrill-of-the-hunt',
+				poolLabel: 'Thrill of the Hunt',
+				previousValue: 1,
+				newValue: 3,
+			});
+
+			expect(rule.onChargePoolGain).toHaveBeenCalledTimes(1);
+			expect(rule.onChargePoolGain).toHaveBeenCalledWith({
+				actor,
+				poolIdentifier: 'thrill-of-the-hunt',
+				poolLabel: 'Thrill of the Hunt',
+			});
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('keeps an identifier that has no actor prefix', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'focus',
+				previousValue: 0,
+				newValue: 1,
+			});
+
+			expect(rule.onChargePoolGain).toHaveBeenCalledWith(
+				expect.objectContaining({ poolIdentifier: 'focus' }),
+			);
+		});
+
+		it('does not dispatch when the count does not rise', async () => {
+			const rule = createMockRule();
+			const actor = { rules: [rule] };
+
+			await fire({ actor, poolId: 'focus', previousValue: 2, newValue: 2 });
+			await fire({ actor, poolId: 'focus', previousValue: 2, newValue: 0 });
+			await fire({ actor, poolId: 'actor:', previousValue: 0, newValue: 1 });
+
+			expect(rule.onChargePoolGain).not.toHaveBeenCalled();
+		});
+
+		it('does not dispatch a dice-pool gain', async () => {
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'actor:fury',
+				previousFaces: [],
+				newFaces: [4],
+			});
+
+			expect(rule.onChargePoolGain).not.toHaveBeenCalled();
+			expect(rule.onPoolGain).not.toHaveBeenCalled();
+		});
+
+		it('skips dispatch when the auto-apply setting is disabled', async () => {
+			settingsGet.mockImplementation(
+				(_scope: string, key: string) => key !== 'automation.applyRuleEffects',
+			);
+			const rule = createMockRule();
+
+			await fire({
+				actor: { rules: [rule] },
+				poolId: 'focus',
+				previousValue: 0,
+				newValue: 1,
+			});
+
+			expect(rule.onChargePoolGain).not.toHaveBeenCalled();
 		});
 	});
 

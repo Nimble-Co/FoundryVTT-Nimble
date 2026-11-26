@@ -87,4 +87,18 @@ describe('DefendOptionRule', () => {
 		expect(whirl.turnUseKey).toBe(slipstream.turnUseKey);
 		expect(makeRule().optionCost.turnUseKey).toBeUndefined();
 	});
+
+	it('offers no attack when the formula is empty', () => {
+		expect(makeRule().attackOffer()).toBeNull();
+		expect(makeRule({ attackFormula: '   ' }).attackOffer()).toBeNull();
+	});
+
+	it('offers the attack formula', () => {
+		expect(makeRule({ attackFormula: '1d4+@level' }).attackOffer()).toBe('1d4+@level');
+		const schema = DefendOptionRule.defineSchema() as unknown as Record<
+			string,
+			{ initial?: unknown }
+		>;
+		expect(schema.attackFormula?.initial).toBe('');
+	});
 });

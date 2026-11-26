@@ -158,6 +158,7 @@ function registerCardSocketListener(): void {
 	});
 }
 
+export type { CardRequester };
 export {
 	CARD_REQUEST_REJECTED_HOOK,
 	defineCardOperation,

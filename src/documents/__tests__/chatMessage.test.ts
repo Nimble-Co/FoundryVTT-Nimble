@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SYSTEM_ID } from '#system';
+import {
+	FIRST_ATTACK_HALVE_FLAG,
+	HALVE_FIRST_ATTACK_PATH,
+} from '#utils/damage/firstAttackHalve.js';
 import { ApplyConditionRule } from '../../models/rules/applyCondition.js';
 import { NimbleChatMessage } from '../chatMessage.js';
 
@@ -2431,6 +2435,322 @@ describe('NimbleChatMessage.applyDamage — resistance, immunity, and vulnerabil
 
 			expect(getModifiers(createModifierMessage('fire'))).toEqual([]);
 		});
+	});
+});
+
+describe('NimbleChatMessage.applyDamage — first attack each round', () => {
+	type Combat = { id: string; round: number; started: boolean };
+
+	function combatGame() {
+		return globals().game as TestGlobals['game'] & { combat?: Combat | null };
+	}
+
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+		combatGame().combat = { id: 'combat-1', round: 1, started: true };
+	});
+
+	afterEach(() => {
+		combatGame().combat = null;
+	});
+
+	function halvingActor(isOwner = true) {
+		const stored: Record<string, unknown> = {};
+		return {
+			isOwner,
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				[HALVE_FIRST_ATTACK_PATH]: true,
+				attributes: {
+					armor: 'none',
+					hp: { value: 10, temp: 0, max: 10 },
+					damageResistances: [] as string[],
+					damageImmunities: [] as string[],
+					damageVulnerabilities: [] as string[],
+				},
+				damageReductions: [] as object[],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+			getFlag: (scope: string, key: string) => (scope === SYSTEM_ID ? stored[key] : undefined),
+			clearStamp: () => {
+				delete stored[FIRST_ATTACK_HALVE_FLAG];
+			},
+			setFlag: vi.fn(async (scope: string, key: string, value: unknown) => {
+				if (scope === SYSTEM_ID) stored[key] = value;
+			}),
+		};
+	}
+
+	function attackMessage(id: string, attack = true) {
+		return new NimbleChatMessage({
+			id,
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: attack ? [{ type: 'damage', canCrit: true, canMiss: false }] : [],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('halves the first hit and records the card', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+		expect(actor.setFlag).toHaveBeenCalledWith(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG, {
+			combatId: 'combat-1',
+			messageId: 'msg-1',
+		});
+	});
+
+	it('does not halve a second hit in the same round', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 5);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
+	});
+
+	it('halves again only after the stamp is cleared, not when the round number changes', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+		combatGame().combat = { id: 'combat-1', round: 2, started: true };
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+		actor.clearStamp();
+		await attackMessage('msg-3').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(3, 5);
+	});
+
+	it('uses the halve when the first attack card targets the creature, also on a miss', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-miss').claimFirstAttackHalves();
+		await attackMessage('msg-2').claimFirstAttackHalves();
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.setFlag).toHaveBeenCalledTimes(1);
+		expect(actor.setFlag).toHaveBeenCalledWith(SYSTEM_ID, FIRST_ATTACK_HALVE_FLAG, {
+			combatId: 'combat-1',
+			messageId: 'msg-miss',
+		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(9);
+	});
+
+	it('does not write the stamp at apply time on a client that does not own the creature', async () => {
+		const actor = halvingActor(false);
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+		expect(actor.setFlag).not.toHaveBeenCalled();
+	});
+
+	it('a card that claimed the halve still halves its own damage', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = attackMessage('msg-1');
+		await message.claimFirstAttackHalves();
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
+	});
+
+	it('still halves the same card after it is applied', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = attackMessage('msg-1');
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+		await message.applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 5);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 5);
+	});
+
+	it('does not halve damage that is not an attack, or an attack outside a started combat', async () => {
+		const actor = halvingActor();
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		await attackMessage('msg-1', false).applyDamage(9, { outcome: 'fullDamage' });
+		combatGame().combat = { id: 'combat-1', round: 1, started: false };
+		await attackMessage('msg-2').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(1, 9);
+		expect(actor.applyDamage).toHaveBeenNthCalledWith(2, 9);
+		expect(actor.setFlag).not.toHaveBeenCalled();
+	});
+});
+
+describe('NimbleChatMessage.applyDamage — half damage on a kill', () => {
+	interface Creature {
+		name: string;
+		system: {
+			attributes: {
+				armor: 'none';
+				hp: { value: number; temp: number; max: number };
+				damageResistances: string[];
+				damageImmunities: string[];
+				damageVulnerabilities: string[];
+			};
+			damageReductions: object[];
+		};
+		applyDamage: ReturnType<typeof vi.fn>;
+		update: ReturnType<typeof vi.fn>;
+		getFlag: () => undefined;
+	}
+
+	function creature(name: string, hp: number): Creature {
+		const actor: Creature = {
+			name,
+			system: {
+				attributes: {
+					armor: 'none',
+					hp: { value: hp, temp: 0, max: Math.max(hp, 10) },
+					damageResistances: [],
+					damageImmunities: [],
+					damageVulnerabilities: [],
+				},
+				damageReductions: [],
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+			getFlag: () => undefined,
+			applyDamage: vi.fn(async (amount: number) => {
+				actor.system.attributes.hp.value = Math.max(0, actor.system.attributes.hp.value - amount);
+			}),
+		};
+		return actor;
+	}
+
+	function dialogApi() {
+		return (
+			globalThis as unknown as {
+				foundry: { applications: { api: { DialogV2: { wait?: ReturnType<typeof vi.fn> } } } };
+			}
+		).foundry.applications.api.DialogV2;
+	}
+
+	let quarry: Creature;
+	let nearby: Creature;
+
+	beforeEach(() => {
+		globals().fromUuidSync = vi.fn();
+		globals().game.user.isGM = true;
+		dialogApi().wait = vi.fn();
+		quarry = creature('Quarry', 9);
+		nearby = creature('Nearby', 20);
+		const grid = { isGridless: true, size: 100 };
+		const parent = { grid, tokens: [] as object[] };
+		const killed = {
+			id: 'dead',
+			name: 'Quarry',
+			x: 0,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: quarry,
+			parent,
+		};
+		const near = {
+			id: 'near',
+			name: 'Nearby',
+			x: 200,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: nearby,
+			parent,
+		};
+		const hunterToken = {
+			id: 'hunter',
+			name: 'Hunter',
+			x: -100,
+			y: 0,
+			width: 1,
+			height: 1,
+			actor: creature('Hunter', 20),
+			parent,
+		};
+		parent.tokens = [hunterToken, killed, near];
+		globals().fromUuidSync.mockImplementation((uuid: string) =>
+			uuid === 'Scene.s.Token.dead' ? killed : null,
+		);
+		const item = { rules: [{ type: 'halfDamageOnKill', disabled: false, halfOnKill: () => 4 }] };
+		const hunter = {
+			items: { get: (id: string) => (id === 'throat' ? item : null) },
+			getActiveTokens: () => [hunterToken],
+		};
+		const actors = Object.assign([], {
+			get: (id: string) => (id === 'hunter' ? hunter : null),
+		});
+		(globalThis as unknown as { game: { actors: unknown } }).game.actors = actors;
+	});
+
+	afterEach(() => {
+		delete dialogApi().wait;
+		delete (globalThis as unknown as { game: { actors?: unknown } }).game.actors;
+	});
+
+	function attack(id: string) {
+		return new NimbleChatMessage({
+			id,
+			type: 'spell',
+			speaker: { actor: 'hunter' },
+			flags: { [SYSTEM_ID]: { itemId: 'throat' } },
+			system: {
+				targets: ['Scene.s.Token.dead'],
+				isCritical: false,
+				isMiss: false,
+				activation: {
+					effects: [{ type: 'damage', canCrit: true, canMiss: false }],
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+	}
+
+	it('deals half the rolled damage, rounded down, when the attack kills', async () => {
+		dialogApi().wait?.mockResolvedValue('token:near');
+
+		await attack('msg-kill').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(quarry.applyDamage).toHaveBeenCalledWith(9);
+		expect(nearby.applyDamage).toHaveBeenCalledWith(4);
+	});
+
+	it('deals nothing further when the splash is declined', async () => {
+		dialogApi().wait?.mockResolvedValue('decline');
+
+		await attack('msg-decline').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(quarry.applyDamage).toHaveBeenCalledWith(9);
+		expect(nearby.applyDamage).not.toHaveBeenCalled();
+	});
+
+	it('offers no splash when the creature survives', async () => {
+		quarry.system.attributes.hp.value = 30;
+
+		await attack('msg-live').applyDamage(9, { outcome: 'fullDamage' });
+
+		expect(quarry.applyDamage).toHaveBeenCalledWith(9);
+		expect(quarry.system.attributes.hp.value).toBe(21);
+		expect(dialogApi().wait).not.toHaveBeenCalled();
+		expect(nearby.applyDamage).not.toHaveBeenCalled();
 	});
 });
 

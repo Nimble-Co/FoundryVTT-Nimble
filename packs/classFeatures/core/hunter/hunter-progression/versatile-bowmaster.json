@@ -6,7 +6,32 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "damageFormulaChoice",
+				"disabled": false,
+				"id": "versatile-bowmaster-longbow",
+				"identifier": "",
+				"label": "Versatile Bowmaster",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "longbow",
+				"from": "1d8",
+				"to": "2d4"
+			},
+			{
+				"type": "damageFormulaChoice",
+				"disabled": false,
+				"id": "versatile-bowmaster-crossbow",
+				"identifier": "",
+				"label": "Versatile Bowmaster",
+				"predicate": {},
+				"priority": 1,
+				"itemIdentifier": "crossbow",
+				"from": "4d4",
+				"to": "2d8"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

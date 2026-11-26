@@ -5,14 +5,88 @@
 	"img": "icons/creatures/abilities/lion-roar-yellow.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "large-go-for-the-throat",
+		"rules": [
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "lgThroatPool",
+				"identifier": "large-go-for-the-throat",
+				"label": "Go for the Throat! (1/encounter)",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"max": "1",
+				"dieSize": null,
+				"initial": "max",
+				"hidden": false,
+				"showAsResource": false,
+				"recoveries": [
+					{
+						"trigger": "encounterEnd",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "lgThroatLevel11",
+				"identifier": "",
+				"label": "Go for the Throat! (2/encounter)",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				},
+				"priority": 2,
+				"poolType": "charge",
+				"poolIdentifier": "large-go-for-the-throat",
+				"dieSize": null,
+				"maxDelta": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "lgThroatUse",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 3,
+				"poolIdentifier": "large-go-for-the-throat",
+				"poolScope": "item",
+				"cost": "1"
+			},
+			{
+				"type": "chargeConsumer",
+				"disabled": false,
+				"id": "lgThroatTotH",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 4,
+				"poolIdentifier": "thrill-of-the-hunt",
+				"poolScope": "actor",
+				"cost": "2"
+			},
+			{
+				"type": "halfDamageOnKill",
+				"disabled": false,
+				"id": "lgThroatSplash",
+				"identifier": "",
+				"label": "Half on a kill",
+				"predicate": {},
+				"priority": 5,
+				"reach": 4
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 2,
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,7 +94,30 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "lgThroatDmg",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d12+(4*@level)",
+					"ignoreArmor": true,
+					"canCrit": true,
+					"canMiss": false,
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "lgThroatDmgFull",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "lgThroatDmg"
+							}
+						]
+					}
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

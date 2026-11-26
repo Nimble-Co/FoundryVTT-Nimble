@@ -1,6 +1,13 @@
 import { woundsGained } from '#utils/actor/actorHpChangePaths.js';
+import { actorRules } from '#utils/actor/actorRules.js';
 import { applyRecoveryToActorIfEligible } from '#utils/chargePool/chargePoolRecover.js';
 import type { CharacterActorLike } from '#utils/chargePool/types.js';
+
+interface WoundMove {
+	type?: string;
+	trigger?: string;
+	offerOnWound?: () => Promise<void>;
+}
 
 let registered = false;
 
@@ -20,6 +27,10 @@ export function registerWoundTriggerHooks(): void {
 			void (async () => {
 				for (let wound = 0; wound < gained; wound++) {
 					await applyRecoveryToActorIfEligible(actor as CharacterActorLike, 'onWound');
+					for (const rule of actorRules<WoundMove>(actor as unknown as { rules?: unknown })) {
+						if (rule?.type !== 'freeMove' || rule.trigger !== 'onWound') continue;
+						await rule.offerOnWound?.();
+					}
 				}
 			})();
 		},

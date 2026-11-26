@@ -119,6 +119,39 @@ describe('NimbleObjectItem.activate', () => {
 		});
 	});
 
+	describe('a weapon', () => {
+		function createWeapon(equipped: boolean, actorType = 'character') {
+			const weapon = new NimbleObjectItem({
+				name: 'Longsword',
+				type: 'object',
+				system: { objectType: 'weapon', equipped, activation: {} },
+			} as never);
+			Object.assign(weapon, { actor: { type: actorType, items: [] }, isEmbedded: true });
+			return weapon;
+		}
+
+		it('attacks when equipped', async () => {
+			await createWeapon(true).activate();
+
+			expect(baseActivate).toHaveBeenCalled();
+		});
+
+		it('refuses with a warning and rolls nothing when not equipped', async () => {
+			const warn = vi.spyOn(ui.notifications as never as { warn: () => void }, 'warn');
+
+			expect(await createWeapon(false).activate()).toBeNull();
+
+			expect(baseActivate).not.toHaveBeenCalled();
+			expect(warn).toHaveBeenCalledWith('Longsword is currently not equipped.');
+		});
+
+		it('leaves a weapon an NPC carries alone', async () => {
+			await createWeapon(false, 'npc').activate();
+
+			expect(baseActivate).toHaveBeenCalled();
+		});
+	});
+
 	// The rulebook's one exemption from the check.
 	describe('a wielder who knows the school', () => {
 		it('asks before spending the scroll', async () => {

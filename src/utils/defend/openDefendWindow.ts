@@ -33,6 +33,7 @@ import { requestIncomingAttackReaction } from '../incomingReactions/incomingAtta
 import resolveHeroicReactionActionCost from '../incomingReactions/resolveHeroicReactionActionCost.js';
 import showReactionConfirmation from '../incomingReactions/showReactionConfirmation.js';
 import localize from '../localize.js';
+import { offerDefendOptionAttacks } from './defendOptionAttack.js';
 import {
 	cardRerollFor,
 	defendOptionEffect,
@@ -42,6 +43,7 @@ import {
 	tickCost,
 } from './defendOptions.js';
 import { defendReactors } from './defendReactors.js';
+import { namedReminder } from './defendRecords.js';
 import { applyAttackerEffects, requestDefend } from './defendRequests.js';
 import { extraDefendUsed, wholeRoundDefendOf } from './defendRound.js';
 import { newestDefendCard } from './newestDefendCard.js';
@@ -77,6 +79,12 @@ function actionsText(count: number): string {
 function nameOfToken(uuid: string | null | undefined): string {
 	const token = uuid ? (fromUuidSync(uuid) as TokenDocument | null) : null;
 	return token?.actor?.name || token?.name || '';
+}
+
+/** The name the table sees on the token, else the actor's name. */
+function shownNameOf(tokenUuid: string | null, actor: Actor.Implementation): string {
+	const token = tokenUuid ? (fromUuidSync(tokenUuid) as TokenDocument | null) : null;
+	return token?.name || actor.name || '';
 }
 
 function armorOf(actor: Actor.Implementation): number {
@@ -523,7 +531,8 @@ async function useInterposeTicks(
 		}
 	}
 	const { reminders, attackerEffects } = defendOptionEffect(used.map((pick) => pick.rule));
-	for (const line of reminders) ui.notifications?.info(line);
+	for (const line of reminders)
+		ui.notifications?.info(namedReminder(line, shownNameOf(token, actor)));
 	const attacker = (card.constructor as typeof ChatMessage).getSpeakerActor(card.speaker);
 	if (attacker && attackerEffects.length) {
 		await applyAttackerEffects(attacker, attackerEffects, actor.uuid ?? '', applyEffectToActor);
@@ -663,12 +672,10 @@ export async function openDefendWindow(
 		usedTicks.push(pick);
 	}
 
-	const effect = row.whole
-		? effectOf(row, [])
-		: defendOptionEffect([
-				...(row.pick ? [row.pick.rule] : []),
-				...usedTicks.map((pick) => pick.rule),
-			]);
+	const taken = [...(row.pick ? [row.pick.rule] : []), ...usedTicks.map((pick) => pick.rule)];
+	await offerDefendOptionAttacks({ rules: taken, actor, card });
+	const effect = row.whole ? effectOf(row, []) : defendOptionEffect(taken);
+	const defenderName = shownNameOf(defendedToken, actor);
 	await requestDefend({
 		messageId: card.id ?? '',
 		tokenUuid: defendedToken,
@@ -681,7 +688,7 @@ export async function openDefendWindow(
 		outcome: effect.outcome,
 		armorBonus: effect.armorBonus + upcastArmor,
 		options: uses,
-		reminders: effect.reminders,
+		reminders: effect.reminders.map((line) => namedReminder(line, defenderName)),
 		attackerEffects: effect.attackerEffects,
 		way: row.way,
 		wholeRound: effect.wholeRound,

@@ -22,7 +22,13 @@ vi.doMock('../defendOptions.js', () => ({
 const { allyDefendOffers, useAllyDefendOffer } = await import('../allyDefendOffers.js');
 
 const PIP = 'Scene.s.Token.pip';
-const exploit = { id: 'ex', resolveRange: () => 4, reminder: 'Force an enemy to Interpose.' };
+const exploit = {
+	id: 'ex',
+	resolveRange: () => 4,
+	reminder: 'Force an enemy to Interpose.',
+	label: 'Exploit',
+	attackOffer: () => null as string | null,
+};
 
 function token(id: string, actorUuid: string, owner = true, rules: unknown[] = []) {
 	return {
@@ -68,7 +74,11 @@ beforeEach(() => {
 	globals.game = {
 		user: { id: 'u1', isGM: false },
 		users: { activeGM: { id: 'gm', isGM: true, active: true }, contents: [] },
-		i18n: { localize: (key: string) => key, format: (key: string) => key },
+		i18n: {
+			localize: (key: string) => key,
+			format: (key: string, data?: Record<string, string>) =>
+				key === 'NIMBLE.chat.defend.reminderFor' ? `For ${data?.name}: ${data?.reminder}` : key,
+		},
 	};
 });
 
@@ -83,7 +93,7 @@ describe('allyDefendOffers', () => {
 	it('offers the option of an owned ally within range of the hero who Defended', () => {
 		const offers = allyDefendOffers(card());
 		expect(offers.map((offer) => offer.actor.uuid)).toEqual(['Actor.bram']);
-		expect(offers[0]).toMatchObject({ defendId: 'd1', defenderName: 'pip' });
+		expect(offers[0]).toMatchObject({ defendId: 'd1', allyName: 'bram', defenderName: 'pip' });
 	});
 
 	it('offers nothing once the ally used it on this Defend', () => {
@@ -106,7 +116,7 @@ describe('allyDefendOffers', () => {
 });
 
 describe('useAllyDefendOffer', () => {
-	it('pays, then puts the use and its reminder line on the Defend', async () => {
+	it('pays, then puts the use and its reminder line, named for the ally, on the Defend', async () => {
 		const use = { actorUuid: 'Actor.bram', ruleId: 'ex', label: 'Exploit' };
 		pay.mockResolvedValue(use);
 		const [offer] = allyDefendOffers(card());
@@ -117,8 +127,38 @@ describe('useAllyDefendOffer', () => {
 			messageId: 'm1',
 			defendId: 'd1',
 			use,
-			reminder: 'Exploit: Force an enemy to Interpose.',
+			reminder: 'For bram: Exploit: Force an enemy to Interpose.',
 		});
+	});
+
+	it('asks, and a declined attack still writes the Defend', async () => {
+		exploit.attackOffer = () => '1d4+@level';
+		const confirm = foundry.applications.api.DialogV2.confirm as unknown as ReturnType<
+			typeof vi.fn
+		>;
+		confirm.mockResolvedValueOnce(false);
+		const created = vi.fn();
+		(ChatMessage as unknown as { create: ReturnType<typeof vi.fn> }).create = created;
+		const goblin = { uuid: 'Scene.s.Token.goblin', actor: { name: 'Goblin' } };
+		const globals = globalThis as unknown as Globals & {
+			game: { scenes?: unknown; messages?: unknown };
+		};
+		globals.game.scenes = { get: () => ({ tokens: { get: () => goblin } }) };
+		globals.game.messages = {
+			get: () => ({
+				speaker: { scene: 's', token: 'goblin' },
+				constructor: { getSpeakerActor: () => null },
+			}),
+		};
+		pay.mockResolvedValue({ actorUuid: 'Actor.bram', ruleId: 'ex', label: 'Exploit' });
+		const [offer] = allyDefendOffers(card());
+
+		expect(await useAllyDefendOffer('m1', offer as never)).toBe(true);
+
+		expect(confirm).toHaveBeenCalledTimes(1);
+		expect(created).not.toHaveBeenCalled();
+		expect(requestAllyUse).toHaveBeenCalled();
+		exploit.attackOffer = () => null;
 	});
 
 	it('pays nothing when no GM is online to write it', async () => {

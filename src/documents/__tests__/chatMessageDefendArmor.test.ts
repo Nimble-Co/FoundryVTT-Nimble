@@ -233,7 +233,15 @@ describe('Defend armor on an attack card', () => {
 
 		expect(order).toEqual(['defend write', 'applied mark']);
 		expect(message.update).toHaveBeenCalledTimes(1);
-		expect(message.update).toHaveBeenCalledWith({ 'system.damageAppliedTo': [TOKEN] });
+		expect(message.update).toHaveBeenCalledWith(
+			expect.objectContaining({ 'system.damageAppliedTo': [TOKEN] }),
+		);
+		const changes = vi.mocked(message.update).mock.calls[0][0] as Record<string, unknown>;
+		expect(changes['system.appliedDamage']).toEqual(
+			expect.objectContaining({
+				targets: [expect.objectContaining({ uuid: TOKEN, amount: 6, previousHp: 40, newHp: 40 })],
+			}),
+		);
 	});
 
 	it('runs a Defend write that arrives during the apply after the target is marked applied', async () => {

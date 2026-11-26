@@ -17,6 +17,8 @@ The rule posts nothing while the **Pushes, Pulls and Moves for Free** toggle is 
 
 **Charge pool** limits how often the rule posts its card. With a 1/round pool, the rule posts once a round and spends the charge when its card posts. Leave it empty for no limit.
 
+**Trigger** `onChargePoolGain` lets the creature move when **Gained charge pool** gains one or more charges. It does not fire when a dice pool gains dice, and **Trigger** `onPoolGain` does not fire when a charge pool gains charges. I Have the High Ground uses it for Thrill of the Hunt, and a second Move for Free rule with `onInitiativeRolled`. Both use **Distance** `floor(@speed / 2)` and **Ignores difficult terrain**. The player still chooses where to stop, or chooses not to move.
+
 **Trigger** `onCritThrough` puts the move on the card of an attack made through this item, when that attack is a crit. How'd YOU get here?! uses it: its card gives the Cheat an attack line, and a crit with that attack lets them "teleport" up to 4 spaces again.
 
 **Trigger** `onRangedWeaponAttack` puts the move on the card of each ranged attack this creature makes with a weapon: a weapon attack, or an ability that attacks with a ranged weapon. Melee attacks and spells do not count. Unparalleled Survivalist uses it with **Distance** `floor(@speed / 2)`, so the Hunter can move up to half their speed before they apply the damage.

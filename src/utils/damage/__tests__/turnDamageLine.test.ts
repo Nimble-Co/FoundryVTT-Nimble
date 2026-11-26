@@ -112,6 +112,18 @@ describe('takeTurnDamage', () => {
 		});
 	});
 
+	it('counts the Wounds the damage itself gives, such as damage while Dying', async () => {
+		tessa.system.attributes.hp = { value: 0, temp: 0, max: 20 };
+		tessa.applyDamage.mockImplementationOnce(async () => {
+			tessa.system.attributes.wounds.value += 2;
+		});
+
+		await line.takeTurnDamage(card, damageLine('waiting'));
+
+		expect(tessa.system.attributes.wounds.value).toBe(4);
+		expect(replaced().action).toMatchObject({ state: 'dealt', woundsGained: 3 });
+	});
+
 	it('marks the line dealt before it deals, so a second click finds no Take', async () => {
 		await line.takeTurnDamage(card, damageLine('waiting'));
 

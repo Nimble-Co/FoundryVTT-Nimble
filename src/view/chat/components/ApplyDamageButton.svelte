@@ -37,18 +37,31 @@
 		return canApplyAllDamage.call(messageDocument);
 	});
 
+	const damageApplied = $derived(
+		!packet && messageDocument?.reactive?.isDamageApplied?.() === true,
+	);
+	const canUndoDamage = $derived(damageApplied && game.user?.isGM === true);
+
 	function applyDamage() {
 		if (packet) messageDocument?.applyDamage(packet.total, packet.options);
 		else messageDocument?.applyAllDamage();
 	}
 
+	function undoDamage() {
+		void messageDocument?.undoAppliedDamage();
+	}
+
 	// A reroll whose result a player still chooses holds the damage.
 	const waitsForKeep = $derived(!!pendingKeepOf(messageDocument?.reactive?.system));
-	const applyDamageLabel = $derived(
-		localize(waitsForKeep ? 'NIMBLE.chat.incomingReactions.keepFirst' : 'NIMBLE.chat.applyDamage'),
-	);
+	const applyDamageLabel = $derived.by(() => {
+		if (waitsForKeep) return localize('NIMBLE.chat.incomingReactions.keepFirst');
+		if (damageApplied) return localize('NIMBLE.chat.damageApplied');
+		return localize('NIMBLE.chat.applyDamage');
+	});
 	const applyDamageTooltip = $derived(
-		canApplyDamage || waitsForKeep ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
+		damageApplied || canApplyDamage || waitsForKeep
+			? applyDamageLabel
+			: localize('NIMBLE.chat.noDamageToApply'),
 	);
 
 	const { dispositionState } = useDispositionState(
@@ -59,20 +72,61 @@
 	);
 </script>
 
-<button
-	class="nimble-button nimble-button--apply-damage"
-	class:nimble-button--recommended={dispositionState === 'recommended'}
-	class:nimble-button--discouraged={dispositionState === 'discouraged'}
-	aria-label={applyDamageTooltip}
-	data-tooltip={applyDamageTooltip}
-	data-tooltip-direction="UP"
-	disabled={!canApplyDamage}
-	onclick={applyDamage}
->
-	{applyDamageLabel}
-</button>
+{#snippet applyButton(disabled: boolean)}
+	<button
+		class="nimble-button nimble-button--apply-damage"
+		class:nimble-button--recommended={dispositionState === 'recommended'}
+		class:nimble-button--discouraged={dispositionState === 'discouraged'}
+		aria-label={applyDamageTooltip}
+		data-tooltip={applyDamageTooltip}
+		data-tooltip-direction="UP"
+		{disabled}
+		onclick={applyDamage}
+	>
+		{applyDamageLabel}
+	</button>
+{/snippet}
+
+{#if packet}
+	{@render applyButton(!canApplyDamage)}
+{:else}
+	<div class="nimble-apply-damage">
+		{@render applyButton(!canApplyDamage || damageApplied)}
+		{#if canUndoDamage}
+			<button
+				class="nimble-button nimble-apply-damage__undo"
+				type="button"
+				aria-label={localize('NIMBLE.chat.undoDamage')}
+				data-tooltip={localize('NIMBLE.chat.undoDamage')}
+				data-tooltip-direction="UP"
+				onclick={undoDamage}
+			>
+				<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+			</button>
+		{/if}
+	</div>
+{/if}
 
 <style lang="scss">
+	.nimble-apply-damage {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin-top: 0.5rem;
+
+		.nimble-button--apply-damage {
+			flex: 1 1 auto;
+			width: auto;
+			margin-top: 0;
+		}
+	}
+
+	.nimble-apply-damage__undo {
+		flex: 0 0 auto;
+		width: 2.25rem;
+		height: 2.25rem;
+	}
+
 	.nimble-button--apply-damage {
 		--damage-button-color: var(--color-level-error, #7a1e1e);
 

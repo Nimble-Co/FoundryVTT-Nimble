@@ -194,6 +194,9 @@ describe('heroActionsTab', () => {
 			const hero = dicePoolHero();
 			hero.items.push(weaponItem('bow', 'Bow', { properties: ['range'], attackType: 'range' }));
 			hero.items.push(weaponItem('dagger', 'Dagger', { properties: ['thrown'] }));
+			hero.items.push(
+				weaponItem('stowed', 'Stowed Sword', { equipped: false, properties: ['thrown'] }),
+			);
 
 			const opportunity = row(
 				heroActionsTab(hero, dicePoolContext()).reactionGroups,

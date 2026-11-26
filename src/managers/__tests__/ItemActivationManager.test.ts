@@ -2401,6 +2401,43 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
 		});
 
+		it('skips the window for a damage formula choice when the item skips it', async () => {
+			Object.assign(mockActor, {
+				rules: [
+					{
+						type: 'damageFormulaChoice',
+						id: 'vb-longbow',
+						label: 'Versatile Bowmaster',
+						itemIdentifier: 'longbow',
+						from: '1d8',
+						to: '2d4',
+					},
+				],
+			});
+			Object.assign(mockItem, { identifier: 'longbow', name: 'Longbow' });
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '1d8+@dexterity',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = { effects: [damageNode], skipRollDialog: true };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			await manager.getData();
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8+@dexterity',
+				expect.anything(),
+				expect.anything(),
+			);
+		});
+
 		/** A pool and a fixed consumer that may allow a use with no charge. */
 		function makeItemSpendACharge(allowFree: boolean) {
 			makeItemSpendVariableCharges();
@@ -3484,6 +3521,81 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
 			expect(ui.notifications?.warn).toHaveBeenCalledWith(
 				'Test Item: you have no weapon of this kind.',
+			);
+		});
+
+		it('skips the window when the item skips it, though the default weapon has a damage formula choice', async () => {
+			Object.assign(mockActor, {
+				rules: [
+					{
+						type: 'damageFormulaChoice',
+						id: 'vb-longbow',
+						label: 'Versatile Bowmaster',
+						itemIdentifier: 'longbow',
+						from: '1d8',
+						to: '2d4',
+					},
+				],
+			});
+			const weapons = [weapon('Longbow', '1d8+@dexterity', 'range', true)];
+			(mockActor as unknown as { items: unknown }).items = weapons;
+			globals.fromUuidSync = vi.fn((uuid: string) => weapons.find((each) => each.uuid === uuid));
+			mockItem.type = 'feature';
+			(mockItem.system.activation as Record<string, unknown>).weaponAttack = 'ranged';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{},
+			);
+			const damageNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '0',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+			manager.activationData = {
+				effects: [damageNode],
+				targets: {},
+				skipRollDialog: true,
+			} as never;
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			await manager.getData();
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8+@dexterity',
+				expect.anything(),
+				expect.anything(),
+			);
+		});
+
+		it('does not ask on a fast forward, and rolls the weapon dice', async () => {
+			Object.assign(mockActor, {
+				rules: [
+					{
+						type: 'damageFormulaChoice',
+						id: 'vb-longbow',
+						label: 'Versatile Bowmaster',
+						itemIdentifier: 'longbow',
+						from: '1d8',
+						to: '2d4',
+					},
+				],
+			});
+
+			await attackWith('ranged', [weapon('Longbow', '1d8+@dexterity', 'range', true)], {
+				fastForward: true,
+			});
+
+			expect(MockItemActivationConfigDialog).not.toHaveBeenCalled();
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8+@dexterity',
+				expect.anything(),
+				expect.anything(),
 			);
 		});
 

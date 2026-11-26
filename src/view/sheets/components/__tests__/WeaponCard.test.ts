@@ -120,4 +120,26 @@ describe('WeaponCard', () => {
 
 		expect(screen.queryByText('Active')).toBeNull();
 	});
+
+	it('shows a short warning for an unmet requirement and keeps the detail on the tooltip', () => {
+		const { container } = render(WeaponCard, {
+			name: 'Greatsword',
+			properties: ['2-Handed'],
+			damage: '3d4',
+			notice: 'Requires Strength 2. You have 0. Weapons used without proficiency cannot crit.',
+			noticeLabel: 'Not enough Strength',
+			onclick: vi.fn(),
+		});
+
+		expect(screen.getByText('Not enough Strength')).toBeInTheDocument();
+		expect(
+			screen.queryByText(
+				'Requires Strength 2. You have 0. Weapons used without proficiency cannot crit.',
+			),
+		).toBeNull();
+		expect(container.querySelector('.weapon-card__notice')).toHaveAttribute(
+			'data-tooltip',
+			'Requires Strength 2. You have 0. Weapons used without proficiency cannot crit.',
+		);
+	});
 });
