@@ -113,6 +113,7 @@ describe('ruleEventDispatch', () => {
 
 	it('registers the expected hook event names', () => {
 		expect(handlers.has('nimble.damageApplied')).toBe(true);
+		expect(handlers.has(systemHookName('attackMissed'))).toBe(true);
 		expect(handlers.has('combatTurn')).toBe(true);
 		expect(handlers.has('updateActor')).toBe(true);
 		expect(handlers.has('nimble.saveResolved')).toBe(true);

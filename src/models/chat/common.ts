@@ -533,6 +533,13 @@ export const damageBack = () => ({
 				initial: '',
 			}),
 			key: new fields.StringField({ required: false, nullable: false, blank: true, initial: '' }),
+			missed: new fields.BooleanField({ required: false, nullable: false, initial: false }),
+			endsEffectUuid: new fields.StringField({
+				required: false,
+				nullable: false,
+				blank: true,
+				initial: '',
+			}),
 		}),
 		{ required: false, nullable: false, initial: [] },
 	),

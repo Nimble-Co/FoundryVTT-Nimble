@@ -9,7 +9,7 @@ import { choiceLabels } from './_rollUseRule.js';
 import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
-const TRIGGER_CHOICES = ['damaged', 'attacked', 'tempHpReduced'] as const;
+const TRIGGER_CHOICES = ['damaged', 'attacked', 'missed', 'tempHpReduced'] as const;
 const AMOUNT_CHOICES = ['taken', 'critDice', 'formula', 'none'] as const;
 
 type DamageBackTrigger = (typeof TRIGGER_CHOICES)[number];
@@ -53,7 +53,10 @@ function schema() {
 				initial: true,
 				label: key('onlyCrits', 'label'),
 				hint: key('onlyCrits', 'hint'),
-				showWhen: (data: Record<string, unknown>) => triggerOf(data) !== 'attacked',
+				showWhen: (data: Record<string, unknown>) => {
+					const trigger = triggerOf(data);
+					return trigger !== 'attacked' && trigger !== 'missed';
+				},
 			}),
 		),
 		answeredAttack: new fields.BooleanField(
@@ -152,8 +155,8 @@ interface AnsweredAttack {
 
 /**
  * The one who attacks the owner takes damage and/or gets an effect: when the owner takes damage
- * from the attack, when the owner is attacked, or when the attack takes the temp HP of the
- * effect that holds the rule. Read on the GM client.
+ * from the attack, when the owner is attacked, when an attack misses the owner, or when the
+ * attack takes the temp HP of the effect that holds the rule. Read on the GM client.
  */
 class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 	static override group = 'triggers';
@@ -204,13 +207,14 @@ class DamageBackRule extends NimbleBaseRule<DamageBackRule.Schema> {
 		);
 	}
 
-	/** Whether the rule answers this event of an attack. A crit counts only for damage. */
+	/** Whether the rule answers this event. A crit counts only for damage taken or temp HP lost. */
 	answersAttack(attack: AnsweredAttack): boolean {
 		if (!this.isOnActor || !this.test()) return false;
 		const trigger = this.trigger ?? 'damaged';
 		if ((attack.trigger ?? 'damaged') !== trigger) return false;
 		if (!matchesAttackDelivery(this.attackDelivery, attack.delivery ?? null)) return false;
-		return trigger === 'attacked' || !this.onlyCrits || attack.isCritical;
+		const ignoresCrits = trigger === 'attacked' || trigger === 'missed';
+		return ignoresCrits || !this.onlyCrits || attack.isCritical;
 	}
 }
 

@@ -3655,10 +3655,11 @@
 				"effectGroup": { "label": "Effect" },
 				"trigger": {
 					"label": "When",
-					"hint": "Takes damage: when the damage of the attack is applied. Is attacked: when the attack card is made, a miss too. Temp HP: when the damage of the attack takes temp HP that this effect gave; on an item it never acts.",
+					"hint": "Takes damage: when the damage of the attack is applied. Is attacked: when the attack card is made, a miss too. Misses: only when an attack misses the owner. Temp HP: when the damage of the attack takes temp HP that this effect gave; on an item it never acts.",
 					"choices": {
 						"damaged": "The owner takes damage from an attack",
 						"attacked": "The owner is attacked",
+						"missed": "An attack misses the owner",
 						"tempHpReduced": "The attack takes the temp HP of this effect"
 					}
 				},
@@ -3680,7 +3681,7 @@
 				},
 				"amount": {
 					"label": "Amount",
-					"hint": "The damage the owner took, what the attack's crit dice came to, a formula, or no damage. When the owner is attacked, no damage was taken yet: use a formula.",
+					"hint": "The damage the owner took, what the attack's crit dice came to, a formula, or no damage. When the owner is attacked or an attack misses, no damage was taken yet: use a formula.",
 					"choices": {
 						"taken": "The damage taken",
 						"critDice": "The crit dice",

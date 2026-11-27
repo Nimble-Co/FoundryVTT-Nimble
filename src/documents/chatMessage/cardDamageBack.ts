@@ -32,11 +32,15 @@ export interface DamageBackRecord {
 	damageType?: string;
 	/** Rule, holder, attacker and card: a second read of the card makes no second record. */
 	key?: string;
+	/** From a miss: it waits for a click, and a reroll into a hit removes it. */
+	missed?: boolean;
+	/** A miss record ends this effect when it is dealt. */
+	endsEffectUuid?: string;
 }
 
 export type DamageBackAction = 'deal' | 'double';
 
-type DamageBackTrigger = 'damaged' | 'attacked' | 'tempHpReduced';
+type DamageBackTrigger = 'damaged' | 'attacked' | 'missed' | 'tempHpReduced';
 
 interface DamageBackRuleLike {
 	id?: string | null;
@@ -237,15 +241,16 @@ export class CardDamageBack {
 		const damageType = rule.amount === 'formula' ? (rule.damageType ?? '') : '';
 		let amount = 0;
 		let roll: Record<string, unknown> | null = null;
+		const fromDamageTaken = context.trigger !== 'attacked' && context.trigger !== 'missed';
 		if (rule.amount === 'formula' && rule.formula?.trim()) {
 			const rolled = await rollAmount(rule.formula.trim(), rule.rollData(), {
 				purpose: 'for the attacker',
 			});
 			amount = rolled.amount;
 			roll = rolled.roll ? (rolled.roll.toJSON() as Record<string, unknown>) : null;
-		} else if (context.trigger !== 'attacked' && rule.amount === 'critDice') {
+		} else if (fromDamageTaken && rule.amount === 'critDice') {
 			amount = context.critDiceTotal;
-		} else if (context.trigger !== 'attacked' && (rule.amount ?? 'taken') === 'taken') {
+		} else if (fromDamageTaken && (rule.amount ?? 'taken') === 'taken') {
 			amount = context.taken;
 		}
 		if (amount > 0 && !ignoreArmor && this.#host.damageAfterDefenses) {
@@ -302,9 +307,13 @@ export class CardDamageBack {
 		for (const { record, attacker, rule } of records) {
 			if (record.key && known.has(record.key)) continue;
 			if (record.key) known.add(record.key);
+			const effect = endingEffectOf(rule);
+			if (record.missed) {
+				added.push({ ...record, dealt: false, endsEffectUuid: effect?.uuid ?? '' });
+				continue;
+			}
 			if (automatic) await this.#deliver(record, attacker);
 			added.push({ ...record, dealt: automatic });
-			const effect = endingEffectOf(rule);
 			if (effect?.uuid) ending.set(effect.uuid, effect);
 		}
 		if (added.length > 0) {
@@ -329,12 +338,13 @@ export class CardDamageBack {
 	}
 
 	/**
-	 * Each creature the card attacks gives its Attacked rules to each attacker of the card. With
-	 * `answered`, only the rules of that effect that also answer the attack it reacts to.
+	 * Each holder gives the rules of this card moment to each attacker. With `answered`, only the
+	 * rules of that effect that also answer the attack it reacts to.
 	 */
-	async afterAttack(
+	async #giveBack(
 		holders: readonly AttackedCreature[],
-		answered: { effectId: string } | null = null,
+		trigger: 'attacked' | 'missed',
+		answered: { effectId: string } | null,
 	): Promise<void> {
 		const attackers = this.#attackers();
 		if (attackers.length < 1 || holders.length < 1) return;
@@ -347,24 +357,41 @@ export class CardDamageBack {
 						if (!rule.answeredAttack || rule.parentDocument?.id !== answered.effectId) continue;
 					}
 					for (const attacker of attackers) {
-						const attack = {
-							trigger: 'attacked' as const,
-							isCritical: false,
-							delivery: attacker.delivery,
-						};
+						const attack = { trigger, isCritical: false, delivery: attacker.delivery };
 						if (rule.answersAttack?.(attack) !== true) continue;
 						const record = await this.#recordFor(rule, holder, attacker, {
-							trigger: 'attacked',
+							trigger,
 							taken: 0,
 							critDiceTotal: 0,
 						});
-						if (record) records.push({ record, attacker: attacker.actor, rule });
+						if (!record) continue;
+						records.push({
+							record: trigger === 'missed' ? { ...record, missed: true } : record,
+							attacker: attacker.actor,
+							rule,
+						});
 					}
 				}
 			}
 			return this.#add(records);
 		});
 		await this.#endAnswered(ending);
+	}
+
+	/**
+	 * Each creature the card attacks gives its Attacked rules to each attacker of the card. With
+	 * `answered`, only the rules of that effect that also answer the attack it reacts to.
+	 */
+	async afterAttack(
+		holders: readonly AttackedCreature[],
+		answered: { effectId: string } | null = null,
+	): Promise<void> {
+		await this.#giveBack(holders, 'attacked', answered);
+	}
+
+	/** Each creature an attack misses gives its miss rules to each attacker of the card. */
+	async afterMiss(holders: readonly AttackedCreature[]): Promise<void> {
+		await this.#giveBack(holders, 'missed', null);
 	}
 
 	/**
@@ -487,9 +514,20 @@ export class CardDamageBack {
 		viaSocket = false,
 	): Promise<void> {
 		if (!game.user?.isGM) return;
-		await queueReactionWrite(this.#host.id() ?? '', () =>
+		const ending = await queueReactionWrite(this.#host.id() ?? '', () =>
 			this.#apply(recordId, action, requestingUserId, viaSocket),
 		);
+		await this.#endAnswered(ending);
+	}
+
+	/** A reroll turned the miss into a hit: remove the miss records not dealt yet. */
+	async dropMissed(): Promise<void> {
+		await queueReactionWrite(this.#host.id() ?? '', async () => {
+			const records = this.#host.records();
+			const kept = records.filter((record) => !record.missed || record.dealt);
+			if (kept.length === records.length) return;
+			await this.#host.update({ 'system.damageBack': kept });
+		});
 	}
 
 	async #apply(
@@ -497,14 +535,16 @@ export class CardDamageBack {
 		action: DamageBackAction,
 		requestingUserId: string,
 		viaSocket: boolean,
-	): Promise<void> {
-		const reject = (reasonKey: string) =>
+	): Promise<ActiveEffect[]> {
+		const reject = (reasonKey: string) => {
 			rejectCardRequest({
 				messageId: this.#host.id() ?? '',
 				entryId: recordId,
 				userId: requestingUserId,
 				reasonKey,
 			});
+			return [];
+		};
 		const records = this.#host.records();
 		const record = records.find((candidate) => candidate.id === recordId);
 		const actor = record
@@ -532,5 +572,10 @@ export class CardDamageBack {
 					: candidate,
 			),
 		});
+		const ending =
+			action === 'deal' && record.endsEffectUuid
+				? (fromUuidSync(record.endsEffectUuid as never) as { documentName?: string } | null)
+				: null;
+		return ending?.documentName === 'ActiveEffect' ? [ending as ActiveEffect] : [];
 	}
 }

@@ -36,6 +36,7 @@ import {
 } from '../utils/dicePool/poolGain.js';
 import { isActiveGM } from '../utils/isActiveGM.js';
 import { keyedQueue } from '../utils/keyedQueue.js';
+import { type AttackMissedPayload, missReportedFor } from './attackMiss.js';
 
 const DYING_STATUS_ID = 'dying';
 
@@ -154,11 +155,29 @@ function handleDamageApplied(payload: NimbleDamageAppliedPayload): void {
 		'onItemUsed',
 		context,
 	);
+	if (payload.isMiss && missReportedFor(payload.card, payload.targetActor)) return;
 	void dispatch(payload.targetActor, 'onAttackReceived', {
 		...context,
 		discardedCritTriggers:
 			context.discardedCritTriggers && payload.discardedCritTriggersFired !== true,
 	});
+}
+
+/**
+ * The target's side only. The attacker's `onItemUsed` waits for Apply Damage, as on a hit: a
+ * reroll can still turn the miss into a hit.
+ */
+function handleAttackMissed(payload: AttackMissedPayload): void {
+	const context: ItemUsedContext = {
+		sourceItem: payload.sourceItem as unknown as ItemUsedContext['sourceItem'],
+		sourceActor: payload.sourceActor as unknown as ItemUsedContext['sourceActor'],
+		targetActor: payload.targetActor as unknown as ItemUsedContext['targetActor'],
+		card: payload.card as ChatMessage | null,
+		isCritical: false,
+		isMiss: true,
+		discardedCritTriggers: false,
+	};
+	void dispatch(payload.targetActor as unknown as ActorWithRules, 'onAttackReceived', context);
 }
 
 function handleDiscardedCritTriggered(payload: NimbleDiscardedCritTriggeredPayload): void {
@@ -492,6 +511,7 @@ export default function registerRuleEventDispatch(): void {
 	didRegister = true;
 
 	onHook(systemHookName('damageApplied'), handleDamageApplied as HookFn);
+	onHook(systemHookName('attackMissed'), handleAttackMissed as HookFn);
 	onHook(systemHookName('discardedCritTriggered'), handleDiscardedCritTriggered as HookFn);
 	onHook(systemHookName('useItem'), handleUseItem as HookFn);
 	onHook('combatTurn', handleCombatTurn as HookFn);

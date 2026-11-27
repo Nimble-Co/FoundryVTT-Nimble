@@ -138,7 +138,28 @@
 			"system": {
 				"macro": "",
 				"identifier": "",
-				"rules": [],
+				"rules": [
+					{
+						"type": "damageBack",
+						"disabled": false,
+						"id": "HmMn3vR8tYb6cJdE",
+						"identifier": "",
+						"label": "Haha, Missed Me!",
+						"predicate": {},
+						"priority": 1,
+						"trigger": "missed",
+						"attackDelivery": "any",
+						"notOnAllies": false,
+						"onlyCrits": false,
+						"answeredAttack": false,
+						"amount": "formula",
+						"formula": "1",
+						"damageType": "psychic",
+						"ignoreArmor": true,
+						"woundDoubles": false,
+						"attackerEffectId": ""
+					}
+				],
 				"activation": {
 					"acquireTargetsFromTemplate": false,
 					"cost": {

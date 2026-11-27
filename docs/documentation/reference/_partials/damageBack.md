@@ -4,13 +4,14 @@ The Attacker Takes rule (type `damageBack`) puts damage, an effect, or both on t
 
 - **The owner takes damage from an attack:** the rule acts when the GM applies the damage of the card. The amount can be what the owner took after armor and reductions, or what the attack's crit dice came to. **Only against crits** limits it to crits.
 - **The owner is attacked:** the rule acts when the attack card appears in chat, also on a miss. Each attacker on the card gets it, including each member of a minion group. Use **A formula** for the damage, because the owner has taken no damage yet.
+- **An attack misses the owner:** the rule acts only when the attack misses. A hit does not. The attack card gets the line, and the line always waits for a click, because a reroll can still turn the miss into a hit. When a reroll does, a line not dealt yet goes away. Use **A formula**, because the owner took none. The first target is the one that counts. An area, an opportunity attack, a minion group attack, and damage that waits for a later roll are not covered.
 - **The attack takes the temp HP of this effect:** the rule acts when the damage of the card takes some of the temp HP that its own effect gave. A hit that takes them to 0 counts too. Each attacker that hit gets it, including each member of a minion group that hit. On an item, this moment never comes, because only an effect gives temp HP of its own.
 
 **Attacks** limits the rule to melee or ranged attacks. A monster attack with no attack type is melee. **Not on allies** leaves out an attacker on the owner's side, by token disposition. The owner never counts as its own attacker. When the system reads a card again, it does not add a second line.
 
-**A formula** rolls once for each attacker, with a **Damage type**. **Ignore armor** is on by default. Turn it off and the attacker's armor, resistances, immunities and reductions apply. **Effect on the attacker** is an effect of the item, with Apply to the actor off, that goes on each attacker. **A Wound doubles it** puts a button on the card. With it, the owner or the GM can suffer 1 Wound to deal the amount one more time. On an effect, **Ends after it answers** ends that effect when the rule answers an attack. Other rules that answer the same attack keep their effects.
+**A formula** rolls once for each attacker, with a **Damage type**. **Ignore armor** is on by default. Turn it off and the attacker's armor, resistances, immunities and reductions apply. **Effect on the attacker** is an effect of the item, with Apply to the actor off, that goes on each attacker. **A Wound doubles it** puts a button on the card. With it, the owner or the GM can suffer 1 Wound to deal the amount one more time. On an effect, **Ends after it answers** ends that effect when the rule answers an attack. For a miss, it ends when the line is dealt. Other rules that answer the same attack keep their effects.
 
-With **Feature Effects** off, the system puts nothing on the attacker. The line has a **Deal** or **Apply** button instead, and an effect that ends after it answers waits for **End**.
+With **Feature Effects** off, the system puts nothing on the attacker. The line has a **Deal** or **Apply** button instead, and an effect that ends after it answers waits for **End**. A miss line has that button with Feature Effects on too, and its **Deal** also ends the effect.
 
 ::: details The attack a reaction answers
 A reaction spell cast from its row in the Defend window answers that attack. When its effect has a rule with **Also the attack it answers** on, that rule also acts on the attack it answers. Cast from the sheet, the effect acts only on later attacks.
@@ -32,3 +33,7 @@ A reaction spell cast from its row in the Defend window answers that attack. Whe
 **Example: Spines.** Melee attackers take 3 damage.
 
 - On the monster feature, an **Attacker Takes** rule with **When** → `The owner is attacked`, **Attacks** → `Melee`, **Amount** → `A formula`, **Damage** → `3`
+
+**Example: Haha, Missed Me!** Whenever an attack misses you, deal 1 psychic damage in return.
+
+- On the monster feature, an **Attacker Takes** rule with **When** → `An attack misses the owner`, **Amount** → `A formula`, **Damage** → `1`, **Damage type** → `Psychic`
